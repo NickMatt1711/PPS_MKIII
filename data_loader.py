@@ -76,8 +76,9 @@ def load_excel_data(uploaded_file):
     plant_df, inventory_df, demand_df = load_core_sheets(xls)
     transition_sheets = find_transition_sheets(xls)
     
-    # Process plant data
+    # Process plant data - FIXED: Use 'Plant' column for lines
     plants = plant_df['Plant'].tolist()
+    lines = plants  # In this context, plants are the production lines
     capacities = dict(zip(plant_df['Plant'], plant_df['Capacity per day']))
     
     # Process shutdown periods
@@ -108,42 +109,63 @@ def load_excel_data(uploaded_file):
     min_run_days = {}
     max_run_days = {}
     
-    # Process allowed lines
+    # Process allowed lines - FIXED: Properly parse the Lines column
     allowed_lines = {}
     for _, row in inventory_df.iterrows():
         grade = row['Grade Name']
         lines_str = row.get('Lines', '')
         if pd.notna(lines_str):
+            # Parse comma-separated lines, strip whitespace
             allowed_lines[grade] = [line.strip() for line in str(lines_str).split(',')]
         else:
-            allowed_lines[grade] = plants  # Default to all plants
+            allowed_lines[grade] = lines  # Default to all lines if not specified
         
         # Process run days per plant
-        min_run = row.get('Min. Run Days', 1)
-        max_run = row.get('Max. Run Days', num_days)
-        for plant in allowed_lines[grade]:
-            min_run_days[(grade, plant)] = min_run
-            max_run_days[(grade, plant)] = max_run
+        min_run = int(row.get('Min. Run Days', 1))
+        max_run = int(row.get('Max. Run Days', num_days))
+        for line in allowed_lines[grade]:
+            min_run_days[(grade, line)] = min_run
+            max_run_days[(grade, line)] = max_run
     
     # Process demand data
     demand = {}
-    for _, row in demand_df.iterrows():
-        date_idx = dates.index(pd.to_datetime(row['Date']))
+    for idx, row in demand_df.iterrows():
+        date = pd.to_datetime(row['Date'])
+        date_idx = dates.index(date)
         for grade in grades:
-            demand[(grade, date_idx)] = row[grade]
+            demand_value = row.get(grade, 0)
+            if pd.notna(demand_value):
+                demand[(grade, date_idx)] = int(demand_value)
+            else:
+                demand[(grade, date_idx)] = 0
     
-    # Process transition rules
+    # Process transition rules - FIXED: Better plant name extraction
     transition_rules = {}
     for sheet_name, df in transition_sheets.items():
+        # Extract plant name from sheet name (e.g., "Transition_Plant1" -> "Plant1")
         plant_name = sheet_name.replace('Transition_', '').replace('transition_', '')
+        
+        # If the extracted name is not in plants, try to find the best match
         if plant_name not in plants:
-            plant_name = sheet_name  # Use sheet name as fallback
+            # Check if any plant name is contained in the sheet name
+            for plant in plants:
+                if plant.lower() in sheet_name.lower():
+                    plant_name = plant
+                    break
+            # If still not found, use the first plant as default
+            if plant_name not in plants and plants:
+                plant_name = plants[0]
         
         rules = {}
         for from_grade in df.index:
+            if from_grade not in grades:
+                continue  # Skip grades not in our inventory
             allowed_next = []
             for to_grade in df.columns:
-                if df.loc[from_grade, to_grade] in ['Yes', True, 1, '1']:
+                if to_grade not in grades:
+                    continue  # Skip grades not in our inventory
+                cell_value = df.loc[from_grade, to_grade]
+                if str(cell_value).lower() in ['yes', 'true', '1', 'y', 'x']:
                     allowed_next.append(to_grade)
             rules[from_grade] = allowed_next
         transition_rules[plant_name] = rules
@@ -151,9 +173,10 @@ def load_excel_data(uploaded_file):
     # Process rerun and penalty data
     rerun_allowed, min_inv_penalty, min_closing_penalty = process_rerun_and_penalty_data(inventory_df)
     
-    # Build instance dictionary
+    # Build instance dictionary - FIXED: Include both 'plants' and 'lines'
     instance = {
         'plants': plants,
+        'lines': lines,  # FIXED: Add lines explicitly
         'grades': grades,
         'dates': dates,
         'capacities': capacities,
@@ -175,5 +198,11 @@ def load_excel_data(uploaded_file):
         'inventory_df': inventory_df,
         'demand_df': demand_df
     }
+    
+    # Debug information
+    print(f"Loaded {len(plants)} plants/lines: {plants}")
+    print(f"Loaded {len(grades)} grades: {grades}")
+    print(f"Transition rules for plants: {list(transition_rules.keys())}")
+    print(f"Allowed lines per grade: {allowed_lines}")
     
     return instance
