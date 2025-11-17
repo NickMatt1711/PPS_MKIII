@@ -26,7 +26,6 @@ def footer():
     </div>
     """, unsafe_allow_html=True)
 
-# NEW: Enhanced sidebar with penalty controls
 def render_sidebar_inputs(default_transition=10, default_stockout=10, default_timelimit=10, default_buffer=3):
     """
     Enhanced sidebar with min inventory penalty controls
@@ -83,3 +82,7 @@ def render_sidebar_inputs(default_transition=10, default_stockout=10, default_ti
     )
     
     return transition_penalty, stockout_penalty, time_limit, buffer_days, min_inv_penalty, min_closing_penalty
+
+# Simple function for run button message
+def render_run_button_message():
+    st.info("Click the 'Run Optimization' button to start the enhanced solver with inventory penalties and rerun constraints.")
