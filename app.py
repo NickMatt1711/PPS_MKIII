@@ -141,37 +141,86 @@ if not run_clicked:
 # ----------------------------------------
 # 7. RUN OPTIMIZER
 # ----------------------------------------
-st.markdown("---")
-st.markdown('<div class="section-header">⚙️ Optimization Results</div>', unsafe_allow_html=True)
+st.header("⚙️ Optimization Results")
 
-progress_bar = st.progress(0)
-status_text = st.empty()
+# Add debug info
+st.subheader("🔍 Problem Details")
+st.write(f"Number of grades: {len(instance.get('grades', []))}")
+st.write(f"Number of production lines: {len(instance.get('lines', []))}")
+st.write(f"Planning horizon: {len(instance.get('dates', []))} days")
+st.write(f"Force start dates: {instance.get('force_start_date', {})}")
+st.write(f"Shutdown periods: {instance.get('shutdown_day_indices', {})}")
 
-status_text.markdown('<div class="info-box">🔄 Preprocessing data...</div>', unsafe_allow_html=True)
-progress_bar.progress(10)
+with st.spinner("Running CP-SAT solver..."):
+    solver_result = solve(
+        instance,
+        {
+            "time_limit_min": time_limit,
+            "stockout_penalty": stockout_penalty,
+            "transition_penalty": transition_penalty,
+            "buffer_days": buffer_days,
+            "num_search_workers": 8,
+        }
+    )
 
-with st.spinner("⚡ Running CP-SAT solver..."):
-    try:
-        solver_result = solve(
-            instance,
-            {
-                "time_limit_min": time_limit,
-                "stockout_penalty": stockout_penalty,
-                "transition_penalty": transition_penalty,
-                "buffer_days": buffer_days,
-                "num_search_workers": 8,
-            }
-        )
-    except Exception as e:
-        progress_bar.empty()
-        status_text.empty()
-        st.error(f"❌ Solver error: {e}")
-        import traceback
-        with st.expander("🔍 View Error Details"):
-            st.code(traceback.format_exc())
-        st.stop()
+st.subheader("Solver Status")
+st.write(f"Status: **{solver_result['status']}**")
 
-progress_bar.progress(100)
+if solver_result["status"] == "INFEASIBLE":
+    st.error("❌ Problem is infeasible - constraints cannot all be satisfied")
+    
+    # Show potential conflict areas
+    st.subheader("🔍 Potential Issues:")
+    
+    # Check force_start_date constraints
+    force_starts = instance.get('force_start_date', {})
+    if force_starts:
+        st.write("**Force Start Dates:**")
+        for grade_plant, date in force_starts.items():
+            if date:  # Only show if date is not None
+                grade, plant = grade_plant
+                st.write(f"- {grade} on {plant}: {date}")
+    
+    # Check shutdown periods
+    shutdowns = instance.get('shutdown_day_indices', {})
+    if shutdowns:
+        st.write("**Shutdown Periods:**")
+        for line, days in shutdowns.items():
+            if days:  # Only show if there are shutdown days
+                st.write(f"- {line}: {len(days)} shutdown days")
+    
+    # Check demand vs capacity
+    total_demand = sum(instance.get('demand', {}).values())
+    total_capacity = sum(instance.get('capacities', {}).values()) * len(instance.get('dates', []))
+    st.write(f"**Capacity Analysis:**")
+    st.write(f"- Total demand: {total_demand}")
+    st.write(f"- Total capacity: {total_capacity}")
+    if total_demand > total_capacity:
+        st.error(f"  ⚠️ Total demand ({total_demand}) exceeds total capacity ({total_capacity})")
+    
+    st.stop()
+
+if solver_result["best"] is None:
+    st.error("❌ Solver could not find a feasible solution.")
+    st.stop()
+
+st.success("Optimization completed successfully!")
+
+# Show key metrics from new solution format
+if solver_result["best"] and 'transitions' in solver_result["best"]:
+    st.subheader("📈 Key Metrics")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Objective Value", f"{solver_result['best']['objective']:,.0f}")
+    with col2:
+        total_transitions = solver_result["best"]['transitions']['total']
+        st.metric("Total Transitions", total_transitions)
+    with col3:
+        total_stockouts = sum(sum(solver_result["best"]['stockout'][g].values()) for g in instance['grades'])
+        st.metric("Total Stockouts", f"{total_stockouts:,.0f} MT")
+    with col4:
+        st.metric("Planning Horizon", f"{len(instance['dates'])} days")
 
 # ----------------------------------------
 # 8. CHECK SOLVER STATUS
