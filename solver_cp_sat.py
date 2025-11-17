@@ -1,38 +1,12 @@
 # solver_cp_sat.py
 """
-CP-SAT solver implementing final rules:
-- One grade per line per day
-- Transition penalty when grade changes (only if allowed by transition matrix)
-- Unmet demand explicit variable and penalized
-- Min/Max run days enforced via start flags
-- Rerun flag (from inventory) constrains multiple starts
-- Inventory recursion, capacity, shutdowns
+CP-SAT solver implementing final rules with enforcement of force_start_date.
 """
 
 from ortools.sat.python import cp_model
 import time
 
 def solve(instance, parameters):
-    """
-    instance: dict with keys:
-      - grades: list[str]
-      - lines: list[str]
-      - dates: list[date]
-      - capacities: dict line->int
-      - demand: dict (grade, day_index) -> int
-      - initial_inventory: dict grade->int
-      - max_inventory: dict grade->int
-      - min_closing_inventory: dict grade->int
-      - min_run_days: dict (grade,line)->int
-      - max_run_days: dict (grade,line)->int
-      - allowed_lines: dict grade->list[line]
-      - rerun_allowed: dict (grade,line)->bool
-      - transition_rules: dict line -> dict(prev_grade -> list[allowed_next])
-      - shutdown_day_indices: dict line -> set(day_indices)
-    parameters:
-      - time_limit_min, stockout_penalty, transition_penalty, num_search_workers
-    Returns dict with solver status, best solution mapping, and meta.
-    """
     grades = instance['grades']
     lines = instance['lines']
     dates = instance['dates']
@@ -40,28 +14,28 @@ def solve(instance, parameters):
 
     model = cp_model.CpModel()
 
-    # Variables
-    assign = {}   # (line, d, g) -> Bool
+    # Variables: assign (line, d, g) booleans
+    assign = {}
     for line in lines:
         for d in range(num_days):
             for g in grades:
                 if line in instance['allowed_lines'].get(g, []):
                     assign[(line, d, g)] = model.NewBoolVar(f"assign_{line}_{d}_{g}")
 
-    # production amounts per (line,d,g)
+    # production per (line,d,g)
     production = {}
     for (line, d, g) in assign:
         cap = int(instance['capacities'].get(line, 0))
         production[(line, d, g)] = model.NewIntVar(0, cap, f"prod_{line}_{d}_{g}")
 
+    bigM = 10**9
     # prod_sum per grade/day
     prod_sum = {}
-    bigM = 10**9
     for g in grades:
         for d in range(num_days):
             prod_sum[(g, d)] = model.NewIntVar(0, bigM, f"prod_sum_{g}_{d}")
 
-    # inventory per grade per day (0..num_days)
+    # inventory per grade (0..num_days)
     inventory = {}
     for g in grades:
         for d in range(num_days + 1):
@@ -73,13 +47,12 @@ def solve(instance, parameters):
         for d in range(num_days):
             unmet[(g, d)] = model.NewIntVar(0, bigM, f"unmet_{g}_{d}")
 
-    # prod_day (line,d) boolean indicates any production on that line/day
+    # prod_day and continuity/change detection
     prod_day = {}
     for line in lines:
         for d in range(num_days):
             prod_day[(line, d)] = model.NewBoolVar(f"prod_day_{line}_{d}")
 
-    # changed (line,d) boolean if transition occurs between d and d+1 on that line
     changed = {}
     has_continuity = {}
     for line in lines:
@@ -87,7 +60,7 @@ def solve(instance, parameters):
             changed[(line, d)] = model.NewBoolVar(f"changed_{line}_{d}")
             has_continuity[(line, d)] = model.NewBoolVar(f"has_cont_{line}_{d}")
 
-    # is_start to detect campaign start
+    # is_start flags for campaigns
     is_start = {}
     for g in grades:
         for line in lines:
@@ -95,7 +68,7 @@ def solve(instance, parameters):
                 if (line, d, g) in assign:
                     is_start[(g, line, d)] = model.NewBoolVar(f"is_start_{g}_{line}_{d}")
 
-    # Constraints
+    # Constraints ---------------------------------------------------------
 
     # Exactly one grade per line/day
     for line in lines:
@@ -104,7 +77,7 @@ def solve(instance, parameters):
             if vars_here:
                 model.Add(sum(vars_here) == 1)
 
-    # Link production to assign and line capacity
+    # Link production to assign and capacity
     for (line, d, g), prod_var in production.items():
         cap = int(instance['capacities'].get(line, 0))
         model.Add(prod_var <= cap * assign[(line, d, g)])
@@ -114,9 +87,6 @@ def solve(instance, parameters):
             cap = int(instance['capacities'].get(line, 0))
             if prods:
                 model.Add(sum(prods) <= cap)
-            else:
-                # if there are no production variables (unlikely) skip
-                pass
 
     # prod_day ties to assign
     for line in lines:
@@ -136,18 +106,15 @@ def solve(instance, parameters):
             else:
                 model.Add(prod_sum[(g, d)] == 0)
 
-    # inventory recursion
+    # inventory recursion + unmet
     for g in grades:
         init = int(instance.get('initial_inventory', {}).get(g, 0))
         model.Add(inventory[(g, 0)] == init)
         for d in range(num_days):
             demand_val = int(instance['demand'].get((g, d), 0))
-            # unmet >= demand - (inventory + production)
             model.Add(unmet[(g, d)] >= demand_val - (inventory[(g, d)] + prod_sum[(g, d)]))
             model.Add(unmet[(g, d)] >= 0)
-            # next inventory = inv + prod - demand + unmet  (equivalent to inv + prod - (demand - unmet))
             model.Add(inventory[(g, d + 1)] == inventory[(g, d)] + prod_sum[(g, d)] - demand_val + unmet[(g, d)])
-            # cap on inventory if provided
             max_inv = int(instance.get('max_inventory', {}).get(g, 10**9))
             model.Add(inventory[(g, d + 1)] <= max_inv)
 
@@ -156,7 +123,7 @@ def solve(instance, parameters):
         min_closing = int(instance.get('min_closing_inventory', {}).get(g, 0))
         model.Add(inventory[(g, num_days)] >= min_closing)
 
-    # Shutdown days: no assign allowed for that line at those indices
+    # shutdown days: no assign allowed
     for line in lines:
         shutdown_indices = instance.get('shutdown_day_indices', {}).get(line, set())
         for d in shutdown_indices:
@@ -164,7 +131,7 @@ def solve(instance, parameters):
                 if (line, d, g) in assign:
                     model.Add(assign[(line, d, g)] == 0)
 
-    # Transition rules: forbid disallowed transitions prev->curr
+    # Transition rules: forbid disallowed prev->curr
     for line in lines:
         rules = instance.get('transition_rules', {}).get(line, None)
         for d in range(1, num_days):
@@ -204,7 +171,7 @@ def solve(instance, parameters):
             model.AddBoolAnd([prod_day[(line, d)], prod_day[(line, d + 1)], has_continuity[(line, d)].Not()]).OnlyEnforceIf(changed[(line, d)])
             model.AddBoolOr([prod_day[(line, d)].Not(), prod_day[(line, d + 1)].Not(), has_continuity[(line, d)]]).OnlyEnforceIf(changed[(line, d)].Not())
 
-    # is_start detection for min/max run days
+    # is_start detection and run length enforcement
     for g in grades:
         for line in lines:
             for d in range(num_days):
@@ -238,12 +205,11 @@ def solve(instance, parameters):
                             block.append(assign[(line, dd, g)])
                     if block:
                         model.Add(sum(block) >= min_run * is_start[key])
-                        # upper bound to prevent arbitrarily long runs - summing <= max_run (independent of is_start)
                         model.Add(sum(block) <= max_run)
                     else:
                         model.Add(is_start[key] == 0)
 
-    # rerun_allowed: if False => sum(is_start for (g,line,*)) <= 1
+    # rerun_allowed
     for g in grades:
         for line in lines:
             starts = [is_start[(g, line, d)] for d in range(num_days) if (g, line, d) in is_start]
@@ -252,7 +218,32 @@ def solve(instance, parameters):
                 if not allowed:
                     model.Add(sum(starts) <= 1)
 
-    # OBJECTIVE: minimize stockout_penalty * unmet + transition_penalty * changed
+    # NEW: enforce force_start_date per grade (hard constraint)
+    # force_start_date: dict grade -> date object
+    for g, force_date in instance.get('force_start_date', {}).items():
+        if force_date is None:
+            continue
+        # compute earliest index where date >= force_date
+        eligible_idxs = [i for i, d in enumerate(dates) if d >= force_date]
+        if not eligible_idxs:
+            # no day in horizon satisfies force_date -> infeasible; add constraint that will fail
+            # add a dummy false constraint
+            model.Add(0 == 1).OnlyEnforceIf(model.NewBoolVar(f"force_impossible_{g}"))
+        else:
+            eligible_starts = []
+            for line in lines:
+                for d in eligible_idxs:
+                    key = (g, line, d)
+                    if key in is_start:
+                        eligible_starts.append(is_start[key])
+            # require at least one start on/after force date
+            if eligible_starts:
+                model.Add(sum(eligible_starts) >= 1)
+            else:
+                # no possible start variables => infeasible
+                model.Add(0 == 1).OnlyEnforceIf(model.NewBoolVar(f"force_impossible_{g}"))
+
+    # Objective
     stockout_penalty = int(parameters.get('stockout_penalty', 10))
     transition_penalty = int(parameters.get('transition_penalty', 10))
     obj_terms = []
@@ -264,14 +255,13 @@ def solve(instance, parameters):
             obj_terms.append(transition_penalty * changed[(line, d)])
     model.Minimize(sum(obj_terms))
 
-    # Solver
+    # Solve
     solver = cp_model.CpSolver()
     time_limit = parameters.get('time_limit_min', 10)
     solver.parameters.max_time_in_seconds = time_limit * 60.0
     solver.parameters.num_search_workers = parameters.get('num_search_workers', 8)
     solver.parameters.random_seed = 42
 
-    # Collect solutions via callback
     class Collector(cp_model.CpSolverSolutionCallback):
         def __init__(self):
             cp_model.CpSolverSolutionCallback.__init__(self)
@@ -287,7 +277,6 @@ def solve(instance, parameters):
                 'inventory': {},
                 'unmet': {}
             }
-            # collects assign
             for (line, d, g), var in assign.items():
                 if self.Value(var) == 1:
                     sol['assign'][(line, d)] = g
@@ -305,8 +294,8 @@ def solve(instance, parameters):
 
     collector = Collector()
     status = solver.SolveWithSolutionCallback(model, collector)
-
     status_name = solver.StatusName(status)
+
     result = {
         'status': status_name,
         'solver': solver,
