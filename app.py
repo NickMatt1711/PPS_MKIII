@@ -1,35 +1,33 @@
-import sys
 import os
-# Add current directory to Python path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+print("WORKING DIR:", os.getcwd())
+print("FILES:", os.listdir())
 
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 
 # === MODULE IMPORTS ===
-from PPS_MKIII.constants import (
+from constants import (
     DEFAULT_STOCKOUT_PENALTY,
     DEFAULT_TRANSITION_PENALTY,
     DEFAULT_TIME_LIMIT,
     DEFAULT_BUFFER_DAYS
 )
 
-from PPS_MKIII.data_loader import load_excel_data
-from PPS_MKIII.preview_tables import show_preview_tables
-from PPS_MKIII.ui_components import (
+from data_loader import load_excel_data
+from preview_tables import show_preview_tables
+from ui_components import (
     render_header,
     render_sidebar_inputs,
     render_run_button_message
 )
 
-from PPS_MKIII.solver_cp_sat import solve
-from PPS_MKIII.postprocessing import (
+from solver_cp_sat import solve
+from postprocessing import (
     convert_solver_output_to_display,
     plot_production_visuals,
     plot_inventory_charts
 )
-
 
 
 # ----------------------------------------
