@@ -1,4 +1,4 @@
-mport os
+import os
 print("WORKING DIR:", os.getcwd())
 print("FILES:", os.listdir())
 
