@@ -1,8 +1,21 @@
-import streamlit as st
-import pandas as pd
-from datetime import datetime
+mport os
+print("WORKING DIR:", os.getcwd())
+print("FILES:", os.listdir())
 
-# === MODULE IMPORTS (Fixed - removed pps_mkiii prefix) ===
+try:
+    import streamlit as st
+    import pandas as pd
+    from datetime import datetime
+    
+    # Try to import ortools to check if it's available
+    from ortools.sat.python import cp_model
+    
+except ImportError as e:
+    import streamlit as st
+    st.error(f"Missing dependency: {e}")
+    st.info("Please make sure all requirements are installed. Check the requirements.txt file.")
+    st.stop()
+
 # === MODULE IMPORTS ===
 from constants import (
     DEFAULT_STOCKOUT_PENALTY,
