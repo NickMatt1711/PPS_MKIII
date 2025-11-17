@@ -1,6 +1,7 @@
+import sys
 import os
-print("WORKING DIR:", os.getcwd())
-print("FILES:", os.listdir())
+# Add current directory to Python path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import streamlit as st
 import pandas as pd
