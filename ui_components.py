@@ -8,6 +8,22 @@ def inject_test1_css():
     .metric-card { background:white; border-radius:12px; padding:1rem; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
     [data-testid="stFileUploader"] { background: linear-gradient(135deg,#f5f7fa 0%,#e8eef5 100%); border-radius:12px; padding:1rem; border:2px dashed #667eea; }
     .chip { display:inline-block; padding:0.3rem 0.6rem; border-radius:12px; font-weight:600; }
+    .success-box {
+        padding: 1rem;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border: 1px solid #c3e6cb;
+        color: #155724;
+        font-weight: 500;
+    }
+    .info-box {
+        padding: 1rem;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+        font-weight: 500;
+    }
     </style>
     """, unsafe_allow_html=True)
 
