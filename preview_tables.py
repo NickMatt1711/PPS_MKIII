@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 
 def format_dates_if_any(df):
+    """Format datetime columns to readable date strings."""
     df2 = df.copy()
     for col in df2.columns:
         try:
@@ -12,55 +13,70 @@ def format_dates_if_any(df):
             pass
     return df2
 
-def show_core_previews(xls):
+def show_preview_tables(instance):
     """
-    Show Plant, Inventory, Demand and transition sheets in the preview.
-    Returns plant_df, inventory_df, demand_df, transition_map
+    Display preview tables for Plant, Inventory, and Demand data.
+    Also shows transition matrices if available.
     """
-    plant_df = pd.read_excel(xls, sheet_name='Plant')
-    inventory_df = pd.read_excel(xls, sheet_name='Inventory')
-    demand_df = pd.read_excel(xls, sheet_name='Demand')
-
+    plant_df = instance['plant_df']
+    inventory_df = instance['inventory_df']
+    demand_df = instance['demand_df']
+    
     st.markdown("### 📋 Data Preview & Validation")
     col1, col2, col3 = st.columns(3)
+    
     with col1:
         st.subheader("🏭 Plant Data")
         st.dataframe(format_dates_if_any(plant_df), use_container_width=True, height=300)
+    
     with col2:
         st.subheader("📦 Inventory Data")
         st.dataframe(format_dates_if_any(inventory_df), use_container_width=True, height=300)
+    
     with col3:
         st.subheader("📊 Demand Data")
         st.dataframe(format_dates_if_any(demand_df), use_container_width=True, height=300)
-
-    # Show transition sheets (those that contain 'transition' in the name)
-    all_names = xls.sheet_names
-    transition_sheets = [s for s in all_names if 'transition' in s.lower()]
-    if transition_sheets:
-        st.markdown("---")
-        st.subheader("🔁 Transition Matrices (detected)")
-        for s in transition_sheets:
+    
+    # Display shutdown information
+    st.markdown("---")
+    st.subheader("🔧 Scheduled Shutdowns")
+    shutdown_found = False
+    for _, row in plant_df.iterrows():
+        plant = row['Plant']
+        shutdown_start = row.get('Shutdown Start Date')
+        shutdown_end = row.get('Shutdown End Date')
+        
+        if pd.notna(shutdown_start) and pd.notna(shutdown_end):
             try:
-                df = pd.read_excel(xls, sheet_name=s, index_col=0)
-                st.markdown(f"**{s}**")
-                st.dataframe(df, use_container_width=True, height=240)
-            except Exception:
-                try:
-                    df = pd.read_excel(xls, sheet_name=s)
-                    st.markdown(f"**{s}**")
-                    st.dataframe(df, use_container_width=True, height=240)
-                except Exception as e:
-                    st.warning(f"Could not load transition sheet {s}: {e}")
+                start_date = pd.to_datetime(shutdown_start).date()
+                end_date = pd.to_datetime(shutdown_end).date()
+                duration = (end_date - start_date).days + 1
+                
+                if start_date > end_date:
+                    st.warning(f"⚠️ Invalid shutdown period for {plant}: Start date is after end date")
+                else:
+                    st.info(f"**{plant}**: Scheduled for shutdown from {start_date.strftime('%d-%b-%y')} to {end_date.strftime('%d-%b-%y')} ({duration} days)")
+                    shutdown_found = True
+            except Exception as e:
+                st.warning(f"⚠️ Invalid shutdown dates for {plant}: {e}")
+    
+    if not shutdown_found:
+        st.info("ℹ️ No plant shutdowns scheduled")
+    
+    # Display transition matrices
+    transition_rules = instance.get('transition_rules', {})
+    if transition_rules:
+        st.markdown("---")
+        st.subheader("🔄 Transition Matrices")
+        for plant, rules in transition_rules.items():
+            if rules:
+                st.markdown(f"**{plant} Transition Rules**")
+                # Convert rules dict to DataFrame for display
+                grades = list(set(list(rules.keys()) + [g for allowed in rules.values() for g in allowed]))
+                trans_df = pd.DataFrame(index=grades, columns=grades, data='No')
+                for prev_grade, allowed_list in rules.items():
+                    for next_grade in allowed_list:
+                        trans_df.loc[prev_grade, next_grade] = 'Yes'
+                st.dataframe(trans_df, use_container_width=True, height=240)
     else:
-        st.info("No transition sheets detected (no sheet names contain 'transition').")
-
-    # Return loaded dataframes for downstream use
-    transition_map = {}
-    for s in transition_sheets:
-        try:
-            df = pd.read_excel(xls, sheet_name=s, index_col=0)
-            transition_map[s] = df
-        except Exception:
-            transition_map[s] = None
-
-    return plant_df, inventory_df, demand_df, transition_map
+        st.info("ℹ️ No transition matrices detected")
