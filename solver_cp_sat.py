@@ -142,7 +142,10 @@ def solve(instance, parameters):
     buffer_days = parameters.get('buffer_days', 3)
     num_search_workers = parameters.get('num_search_workers', 8)
     
+    # FIXED: Buffer days are added to the planning horizon for production feasibility
+    # but constraints are only enforced on the actual demand period
     num_days = len(dates)
+    actual_demand_days = num_days - buffer_days  # Days with actual demand
     formatted_dates = [date.strftime('%d-%b-%y') for date in dates]
     
     model = cp_model.CpModel()
@@ -154,22 +157,17 @@ def solve(instance, parameters):
     def is_allowed_combination(grade, line):
         return line in allowed_lines.get(grade, [])
     
-    # Create production and assignment variables
+    # Create production and assignment variables for ALL days (including buffer)
     for grade in grades:
         for line in allowed_lines[grade]:
             for d in range(num_days):
                 key = (grade, line, d)
                 is_producing[key] = model.NewBoolVar(f'is_producing_{grade}_{line}_{d}')
                 
-                # Different capacity constraints for buffer days
-                if d < num_days - buffer_days:
-                    production_value = model.NewIntVar(0, capacities[line], f'production_{grade}_{line}_{d}')
-                    model.Add(production_value == capacities[line]).OnlyEnforceIf(is_producing[key])
-                    model.Add(production_value == 0).OnlyEnforceIf(is_producing[key].Not())
-                else:
-                    production_value = model.NewIntVar(0, capacities[line], f'production_{grade}_{line}_{d}')
-                    model.Add(production_value <= capacities[line] * is_producing[key])
-                
+                # Production can happen on all days (including buffer days)
+                production_value = model.NewIntVar(0, capacities[line], f'production_{grade}_{line}_{d}')
+                model.Add(production_value == capacities[line]).OnlyEnforceIf(is_producing[key])
+                model.Add(production_value == 0).OnlyEnforceIf(is_producing[key].Not())
                 production[key] = production_value
     
     def get_production_var(grade, line, d):
@@ -227,21 +225,22 @@ def solve(instance, parameters):
     for grade in grades:
         model.Add(inventory_vars[(grade, 0)] == initial_inventory.get(grade, 0))
     
-    # INVENTORY BALANCE with proper stockout handling (from old logic)
+    # INVENTORY BALANCE with proper stockout handling
     for grade in grades:
         for d in range(num_days):
             produced_today = sum(
                 get_production_var(grade, line, d) 
                 for line in allowed_lines[grade]
             )
-            demand_today = demand_data.get((grade, d), 0)
+            # FIXED: Only enforce demand constraints for actual demand days
+            demand_today = demand_data.get((grade, d), 0) if d < actual_demand_days else 0
             
             # Sophisticated inventory balance
             supplied = model.NewIntVar(0, 1000000, f'supplied_{grade}_{d}')
             model.Add(supplied <= inventory_vars[(grade, d)] + produced_today)
             model.Add(supplied <= demand_today)
             
-            # Stockout calculation
+            # Stockout calculation (only meaningful for demand days)
             model.Add(stockout_vars[(grade, d)] == demand_today - supplied)
             
             # Inventory update
@@ -251,12 +250,12 @@ def solve(instance, parameters):
     # OBJECTIVE FUNCTION
     objective = 0
     
-    # Stockout penalties
+    # Stockout penalties (only for actual demand days)
     for grade in grades:
-        for d in range(num_days):
+        for d in range(actual_demand_days):
             objective += stockout_penalty * stockout_vars[(grade, d)]
     
-    # Minimum inventory soft constraints (as penalties)
+    # Minimum inventory soft constraints (as penalties) - for all days
     for grade in grades:
         for d in range(num_days):
             if min_inventory.get(grade, 0) > 0:
@@ -268,9 +267,9 @@ def solve(instance, parameters):
                 model.Add(deficit >= 0)
                 objective += stockout_penalty * deficit
     
-    # Minimum Closing Inventory constraint (soft)
+    # Minimum Closing Inventory constraint (soft) - at end of actual demand period
     for grade in grades:
-        closing_inventory = inventory_vars[(grade, num_days - buffer_days)]
+        closing_inventory = inventory_vars[(grade, actual_demand_days)]
         min_closing = min_closing_inventory.get(grade, 0)
         
         if min_closing > 0:
@@ -284,10 +283,10 @@ def solve(instance, parameters):
         for d in range(1, num_days + 1):
             model.Add(inventory_vars[(grade, d)] <= max_inventory.get(grade, 1000000))
     
-    # Capacity constraints with buffer day relaxation
+    # Capacity constraints - FULL capacity required for all days
     for line in lines:
-        for d in range(num_days - buffer_days):
-            # Skip shutdown days for full capacity requirement
+        for d in range(num_days):
+            # Skip shutdown days
             if line in shutdown_periods and d in shutdown_periods[line]:
                 continue
             production_vars = [
@@ -297,15 +296,6 @@ def solve(instance, parameters):
             ]
             if production_vars:
                 model.Add(sum(production_vars) == capacities[line])
-        
-        for d in range(num_days - buffer_days, num_days):
-            production_vars = [
-                get_production_var(grade, line, d) 
-                for grade in grades 
-                if is_allowed_combination(grade, line)
-            ]
-            if production_vars:
-                model.Add(sum(production_vars) <= capacities[line])
     
     # Force Start Date constraints
     for grade_plant_key, start_date in force_start_date.items():
@@ -319,7 +309,7 @@ def solve(instance, parameters):
             except ValueError:
                 pass  # Force date not in planning horizon
     
-    # Run length constraints with shutdown awareness
+    # Run length constraints with shutdown awareness - apply to ALL days
     is_start_vars = {}
     run_end_vars = {}
     
@@ -329,7 +319,7 @@ def solve(instance, parameters):
             min_run = min_run_days.get(grade_plant_key, 1)
             max_run = max_run_days.get(grade_plant_key, 9999)
             
-            # Create start and end variables
+            # Create start and end variables for ALL days
             for d in range(num_days):
                 is_start = model.NewBoolVar(f'start_{grade}_{line}_{d}')
                 is_start_vars[(grade, line, d)] = is_start
@@ -361,7 +351,7 @@ def solve(instance, parameters):
                         model.Add(current_prod == 1).OnlyEnforceIf(is_end)
                         model.Add(is_end == 1).OnlyEnforceIf(current_prod)
             
-            # MINIMUM RUN DAYS with shutdown awareness
+            # MINIMUM RUN DAYS with shutdown awareness - apply to ALL days
             for d in range(num_days):
                 is_start = is_start_vars[(grade, line, d)]
                 
@@ -382,7 +372,7 @@ def solve(instance, parameters):
                             if future_prod is not None:
                                 model.Add(future_prod == 1).OnlyEnforceIf(is_start)
             
-            # MAXIMUM RUN DAYS
+            # MAXIMUM RUN DAYS - apply to ALL days
             for d in range(num_days - max_run):
                 consecutive_days = []
                 for k in range(max_run + 1):
@@ -396,7 +386,7 @@ def solve(instance, parameters):
                 if len(consecutive_days) == max_run + 1:
                     model.Add(sum(consecutive_days) <= max_run)
     
-    # Transition constraints
+    # Transition constraints - apply to ALL days
     for line in lines:
         if transition_rules.get(line):
             for d in range(num_days - 1):
@@ -414,7 +404,7 @@ def solve(instance, parameters):
                                 if prev_var is not None and current_var is not None:
                                     model.Add(prev_var + current_var <= 1)
     
-    # Transition penalties in objective
+    # Transition penalties in objective - apply to ALL days
     for line in lines:
         for d in range(num_days - 1):
             transition_vars = []
@@ -433,7 +423,7 @@ def solve(instance, parameters):
                     transition_vars.append(trans_var)
                     objective += transition_penalty * trans_var
     
-    # Rerun Allowed Constraints
+    # Rerun Allowed Constraints - apply to ALL days
     for grade in grades:
         for line in allowed_lines[grade]:
             grade_plant_key = (grade, line)
