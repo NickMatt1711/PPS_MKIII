@@ -17,6 +17,7 @@ def _build_grade_color_map(sorted_grades):
 def convert_solver_output_to_display(solver_result, instance):
     """
     Convert solver 'best' into display_result dict used by plotting functions.
+    Now handles the new solution format from robust solver.
     """
     best = solver_result.get('best')
     if not best:
@@ -27,42 +28,11 @@ def convert_solver_output_to_display(solver_result, instance):
     dates = instance['dates']
     formatted_dates = [d.strftime('%d-%b-%y') for d in dates]
 
-    # production: grade -> date_label -> qty
-    production = {g: {} for g in grades}
-    # is_producing: map (grade,line,day_index) -> True/False
-    is_producing_map = {}
-    # inventory: grade -> date_label -> inv
-    inventory = {g: {} for g in grades}
-    # unmet: grade -> date_label -> qty
-    stockout = {g: {} for g in grades}
-
-    # best['assign'] structure: (line, d) -> grade
-    for (line, d), g in best.get('assign', {}).items():
-        date_label = formatted_dates[d]
-        is_producing_map[(g, line, d)] = True
-
-    # production per (line,d) entries
-    for (line, d), entries in best.get('production', {}).items():
-        date_label = formatted_dates[d]
-        for g, qty in entries.items():
-            production[g].setdefault(date_label, 0)
-            production[g][date_label] += qty
-
-    # inventory entries: (g,d) -> val (d from 0..num_days)
-    for (g, d), val in best.get('inventory', {}).items():
-        # map inventory day-index to labels: we will store d-1 as label for day d>0
-        if d == 0:
-            inventory[g]['initial'] = val
-        elif 1 <= d <= len(formatted_dates):
-            inventory[g][formatted_dates[d-1]] = val
-        else:
-            inventory[g]['final'] = val
-
-    # unmet
-    for (g, d), val in best.get('unmet', {}).items():
-        date_label = formatted_dates[d]
-        stockout[g].setdefault(date_label, 0)
-        stockout[g][date_label] += val
+    # Use the data already structured in the solution
+    production = best.get('production', {})
+    inventory = best.get('inventory', {})
+    stockout = best.get('stockout', {})
+    is_producing_map = best.get('is_producing', {})
 
     return {
         'production': production,
@@ -71,7 +41,8 @@ def convert_solver_output_to_display(solver_result, instance):
         'inventory': inventory,
         'formatted_dates': formatted_dates,
         'dates': dates,
-        'objective': best.get('objective')
+        'objective': best.get('objective'),
+        'transitions': best.get('transitions', {'total': 0})
     }
 
 # ---------------------------
