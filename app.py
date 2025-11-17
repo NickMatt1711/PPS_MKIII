@@ -10,16 +10,18 @@ from datetime import datetime
 from constants import (
     DEFAULT_STOCKOUT_PENALTY,
     DEFAULT_TRANSITION_PENALTY,
-    DEFAULT_TIME_LIMIT,
-    DEFAULT_BUFFER_DAYS
+    DEFAULT_TIME_LIMIT_MIN,
+    DEFAULT_BUFFER_DAYS,
+    DEFAULT_MIN_INVENTORY_PENALTY,
+    DEFAULT_MIN_CLOSING_PENALTY
 )
 
-from data_loader import load_excel_data
+from data_loader import load_excel_data, process_rerun_and_penalty_data
 from preview_tables import show_preview_tables
 from ui_components import (
-    render_header,
-    render_sidebar_inputs,
-    render_run_button_message
+    header,
+    footer,
+    render_sidebar_inputs
 )
 
 from solver_cp_sat import solve
@@ -38,9 +40,9 @@ st.set_page_config(
 )
 
 # ----------------------------------------
-# 1. PAGE HEADER (From test(1).py UX)
+# 1. PAGE HEADER
 # ----------------------------------------
-render_header()
+header()
 
 # ----------------------------------------
 # 2. EXCEL UPLOAD
@@ -56,11 +58,25 @@ if uploaded_file is None:
     st.stop()
 
 # ----------------------------------------
-# 3. LOAD DATA
+# 3. LOAD AND PROCESS DATA
 # ----------------------------------------
 with st.spinner("Reading template..."):
     try:
         instance = load_excel_data(uploaded_file)
+        
+        # NEW: Process rerun and penalty data
+        if 'inventory_df' in instance:
+            rerun_allowed, min_inv_penalty, min_closing_penalty = process_rerun_and_penalty_data(instance['inventory_df'])
+            instance['rerun_allowed'] = rerun_allowed
+            instance['min_inv_penalty'] = min_inv_penalty
+            instance['min_closing_penalty'] = min_closing_penalty
+            
+            # Display rerun rules
+            st.sidebar.header("🔁 Rerun Rules")
+            for grade, allowed in rerun_allowed.items():
+                status = "✅ ALLOWED" if allowed else "❌ NOT ALLOWED"
+                st.sidebar.write(f"{grade}: {status}")
+                
     except Exception as e:
         st.error(f"Error reading template: {e}")
         st.stop()
@@ -74,17 +90,19 @@ st.header("📄 Input Data Preview")
 show_preview_tables(instance)
 
 # ----------------------------------------
-# 5. SIDEBAR PARAMETERS
+# 5. ENHANCED SIDEBAR PARAMETERS
 # ----------------------------------------
 (
     transition_penalty,
     stockout_penalty,
     time_limit,
-    buffer_days
+    buffer_days,
+    min_inv_penalty,
+    min_closing_penalty
 ) = render_sidebar_inputs(
     default_transition=DEFAULT_TRANSITION_PENALTY,
     default_stockout=DEFAULT_STOCKOUT_PENALTY,
-    default_timelimit=DEFAULT_TIME_LIMIT,
+    default_timelimit=DEFAULT_TIME_LIMIT_MIN,
     default_buffer=DEFAULT_BUFFER_DAYS,
 )
 
@@ -94,130 +112,67 @@ show_preview_tables(instance)
 run_clicked = st.button("🚀 Run Optimization")
 
 if not run_clicked:
-    render_run_button_message()
+    st.info("Click the button above to run the optimization with enhanced constraints.")
     st.stop()
 
 # ----------------------------------------
-# 7. RUN OPTIMIZER
+# 7. RUN ENHANCED OPTIMIZER
 # ----------------------------------------
 st.header("⚙️ Optimization Results")
 
-# Add debug info
-st.subheader("🔍 Problem Details")
-st.write(f"Number of grades: {len(instance.get('grades', []))}")
-st.write(f"Number of production lines: {len(instance.get('lines', []))}")
-st.write(f"Planning horizon: {len(instance.get('dates', []))} days")
-
-# Show force start dates
-force_starts = instance.get('force_start_date', {})
-if force_starts:
-    st.write("**Force Start Dates:**")
-    for grade_plant, date in force_starts.items():
-        if date:  # Only show if date is not None
-            grade, plant = grade_plant
-            st.write(f"- {grade} on {plant}: {date}")
-
-# Show shutdown periods
-shutdowns = instance.get('shutdown_day_indices', {})
-if shutdowns:
-    st.write("**Shutdown Periods:**")
-    for line, days in shutdowns.items():
-        if days:  # Only show if there are shutdown days
-            st.write(f"- {line}: {len(days)} shutdown days")
-
-# Check demand vs capacity
-total_demand = sum(instance.get('demand', {}).values())
-total_capacity = sum(instance.get('capacities', {}).values()) * len(instance.get('dates', []))
-st.write(f"**Capacity Analysis:**")
-st.write(f"- Total demand: {total_demand:,.0f} MT")
-st.write(f"- Total capacity: {total_capacity:,.0f} MT")
-if total_demand > total_capacity:
-    st.warning(f"⚠️ Total demand ({total_demand:,.0f} MT) exceeds total capacity ({total_capacity:,.0f} MT)")
-
-# Create progress elements
-progress_bar = st.progress(0)
-status_text = st.empty()
-
-with st.spinner("Running CP-SAT solver..."):
-    # Update progress
-    progress_bar.progress(30)
-    status_text.markdown('<div class="info-box">🔧 Building optimization model...</div>', unsafe_allow_html=True)
-    
-    try:
-        solver_result = solve(
-            instance,
-            {
-                "time_limit_min": time_limit,
-                "stockout_penalty": stockout_penalty,
-                "transition_penalty": transition_penalty,
-                "buffer_days": buffer_days,
-                "num_search_workers": 8,
-            }
-        )
-        
-        progress_bar.progress(100)
-        
-    except Exception as e:
-        progress_bar.progress(0)
-        status_text.markdown(f'<div class="info-box">❌ Solver error: {str(e)}</div>', unsafe_allow_html=True)
-        st.stop()
+with st.spinner("Running enhanced CP-SAT solver with inventory penalties..."):
+    solver_result = solve(
+        instance,
+        {
+            "time_limit_min": time_limit,
+            "stockout_penalty": stockout_penalty,
+            "transition_penalty": transition_penalty,
+            "min_inventory_penalty": min_inv_penalty,
+            "min_closing_penalty": min_closing_penalty,
+            "buffer_days": buffer_days,
+            "num_search_workers": 8,
+        }
+    )
 
 st.subheader("Solver Status")
 st.write(f"Status: **{solver_result['status']}**")
 
-if solver_result["status"] == "INFEASIBLE":
-    status_text.markdown('<div class="info-box">❌ Problem is infeasible</div>', unsafe_allow_html=True)
-    
-    st.error("❌ Problem is infeasible - constraints cannot all be satisfied")
-    
-    st.info("""
-    **Common issues that cause infeasibility:**
-    - Demand is too high compared to production capacity
-    - Minimum run days are too long for the available production days
-    - Minimum closing inventory requirements are too high
-    - Shutdown periods conflict with mandatory production requirements
-    - Transition rules are too restrictive
-    - Force start dates cannot be satisfied
-    
-    **Suggestions:**
-    - Reduce minimum run days requirements
-    - Lower minimum closing inventory targets  
-    - Increase production capacity
-    - Reduce demand forecasts
-    - Adjust shutdown periods
-    - Relax force start date constraints
-    """)
-    
-    st.stop()
-
 if solver_result["best"] is None:
-    status_text.markdown('<div class="info-box">❌ No feasible solution found</div>', unsafe_allow_html=True)
     st.error("❌ Solver could not find a feasible solution.")
     st.stop()
 
-# Show success based on status
-if solver_result["status"] == "OPTIMAL":
-    status_text.markdown('<div class="success-box">✅ Optimization completed optimally!</div>', unsafe_allow_html=True)
-else:
-    status_text.markdown('<div class="success-box">✅ Optimization completed with feasible solution!</div>', unsafe_allow_html=True)
-
 st.success("Optimization completed successfully!")
 
-# Show key metrics from new solution format
-if solver_result["best"] and 'transitions' in solver_result["best"]:
-    st.subheader("📈 Key Metrics")
-    col1, col2, col3, col4 = st.columns(4)
+# NEW: Display penalty analysis
+if solver_result["best"] and 'min_inv_violations' in solver_result["best"]:
+    violations = solver_result["best"]['min_inv_violations']
+    closing_violations = solver_result["best"]['min_closing_violations']
     
-    with col1:
-        st.metric("Objective Value", f"{solver_result['best']['objective']:,.0f}")
-    with col2:
-        total_transitions = solver_result["best"]['transitions']['total']
-        st.metric("Total Transitions", total_transitions)
-    with col3:
-        total_stockouts = sum(sum(solver_result["best"]['stockout'][g].values()) for g in instance['grades'])
-        st.metric("Total Stockouts", f"{total_stockouts:,.0f} MT")
-    with col4:
-        st.metric("Planning Horizon", f"{len(instance['dates'])} days")
+    if violations or closing_violations:
+        st.subheader("📊 Penalty Analysis")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if violations:
+                st.warning("Min Inventory Violations Detected")
+                viol_df = pd.DataFrame([
+                    {"Grade": g, "Day": d, "Violation": v} 
+                    for (g, d), v in violations.items()
+                ])
+                st.dataframe(viol_df, use_container_width=True)
+            else:
+                st.success("✅ No min inventory violations")
+        
+        with col2:
+            if closing_violations:
+                st.warning("Min Closing Inventory Violations Detected")
+                closing_df = pd.DataFrame([
+                    {"Grade": g, "Violation": v} 
+                    for g, v in closing_violations.items()
+                ])
+                st.dataframe(closing_df, use_container_width=True)
+            else:
+                st.success("✅ No min closing inventory violations")
 
 # ----------------------------------------
 # 8. CONVERT OUTPUT FOR VISUALIZATION
@@ -225,7 +180,7 @@ if solver_result["best"] and 'transitions' in solver_result["best"]:
 display_result = convert_solver_output_to_display(solver_result, instance)
 
 # ----------------------------------------
-# 9. PLOTLY VISUALS (UNCHANGED)
+# 9. PLOTLY VISUALS
 # ----------------------------------------
 st.header("📊 Production & Inventory Visualizations")
 
@@ -245,3 +200,8 @@ plot_inventory_charts(
 )
 
 st.success("📈 All visualizations rendered successfully.")
+
+# ----------------------------------------
+# 10. FOOTER
+# ----------------------------------------
+footer()
