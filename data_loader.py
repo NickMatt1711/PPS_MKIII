@@ -4,6 +4,27 @@ import streamlit as st
 from datetime import timedelta
 from constants import TRANSITION_KEYWORD
 
+def load_excel_data(uploaded_file):
+    """
+    Main function to load and process Excel data into instance dict
+    """
+    # This is a simplified version - you'll need to implement the full logic
+    # based on your original data loading code
+    xls = read_workbook_bytes(uploaded_file)
+    plant_df, inventory_df, demand_df, transition_map = load_core_sheets(xls)
+    
+    # Return a basic instance structure - you'll need to expand this
+    return {
+        'plant_df': plant_df,
+        'inventory_df': inventory_df, 
+        'demand_df': demand_df,
+        'transition_map': transition_map,
+        'grades': [],  # You'll need to populate these
+        'lines': [],   # from your data frames
+        'dates': [],   # based on your demand dates
+        # Add other required fields...
+    }
+
 def read_workbook_bytes(io_bytes):
     """
     Return a pandas.ExcelFile object for a bytes-like IO (BytesIO).
