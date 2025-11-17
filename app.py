@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 # === MODULE IMPORTS (Fixed - removed pps_mkiii prefix) ===
+# === MODULE IMPORTS ===
 from constants import (
     DEFAULT_STOCKOUT_PENALTY,
     DEFAULT_TRANSITION_PENALTY,
@@ -15,8 +16,7 @@ from preview_tables import show_preview_tables
 from ui_components import (
     render_header,
     render_sidebar_inputs,
-    render_run_button_message,
-    footer
+    render_run_button_message
 )
 
 from solver_cp_sat import solve
