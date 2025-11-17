@@ -8,10 +8,18 @@ from ortools.sat.python import cp_model
 import time
 
 def solve(instance, parameters):
+    # Debug: Check instance structure
+    print("Solver starting...")
+    print(f"Instance keys: {list(instance.keys())}")
+    
     grades = instance['grades']
-    lines = instance['lines']
+    lines = instance['lines']  # This should now be defined
     dates = instance['dates']
     num_days = len(dates)
+    
+    print(f"Grades: {grades}")
+    print(f"Lines: {lines}")
+    print(f"Number of days: {num_days}")
 
     model = cp_model.CpModel()
 
@@ -22,6 +30,8 @@ def solve(instance, parameters):
             for g in grades:
                 if line in instance['allowed_lines'].get(g, []):
                     assign[(line, d, g)] = model.NewBoolVar(f"assign_{line}_{d}_{g}")
+
+    print(f"Created {len(assign)} assignment variables")
 
     # production per (line,d,g)
     production = {}
@@ -93,6 +103,9 @@ def solve(instance, parameters):
             vars_here = [assign[(line, d, g)] for g in grades if (line, d, g) in assign]
             if vars_here:
                 model.Add(sum(vars_here) == 1)
+            else:
+                # If no variables (due to allowed_lines restrictions), add dummy constraint
+                pass
 
     # Link production to assign and capacity
     for (line, d, g), prod_var in production.items():
@@ -166,22 +179,23 @@ def solve(instance, parameters):
     # Transition rules: forbid disallowed prev->curr
     for line in lines:
         rules = instance.get('transition_rules', {}).get(line, None)
-        for d in range(1, num_days):
-            for prev_g in grades:
-                for curr_g in grades:
-                    if prev_g == curr_g:
-                        continue
-                    prev_key = (line, d - 1, prev_g)
-                    curr_key = (line, d, curr_g)
-                    if prev_key in assign and curr_key in assign:
-                        disallowed = False
-                        if rules is not None:
-                            allowed_next = rules.get(prev_g, None)
-                            if allowed_next is not None:
-                                if curr_g not in allowed_next:
-                                    disallowed = True
-                        if disallowed:
-                            model.Add(assign[prev_key] + assign[curr_key] <= 1)
+        if rules:
+            for d in range(1, num_days):
+                for prev_g in grades:
+                    for curr_g in grades:
+                        if prev_g == curr_g:
+                            continue
+                        prev_key = (line, d - 1, prev_g)
+                        curr_key = (line, d, curr_g)
+                        if prev_key in assign and curr_key in assign:
+                            disallowed = False
+                            if rules is not None:
+                                allowed_next = rules.get(prev_g, None)
+                                if allowed_next is not None:
+                                    if curr_g not in allowed_next:
+                                        disallowed = True
+                            if disallowed:
+                                model.Add(assign[prev_key] + assign[curr_key] <= 1)
 
     # Continuity detection and changed var
     for line in lines:
@@ -381,8 +395,10 @@ def solve(instance, parameters):
             self.solutions.append(sol)
 
     collector = Collector()
+    print("Starting solver...")
     status = solver.SolveWithSolutionCallback(model, collector)
     status_name = solver.StatusName(status)
+    print(f"Solver finished with status: {status_name}")
 
     result = {
         'status': status_name,
