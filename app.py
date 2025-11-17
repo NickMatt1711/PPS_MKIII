@@ -1,6 +1,10 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import os
+print("WORKING DIR:", os.getcwd())
+print("FILES:", os.listdir())
+
 
 # === MODULE IMPORTS ===
 from constants import (
