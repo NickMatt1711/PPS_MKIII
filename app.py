@@ -7,21 +7,28 @@ import pandas as pd
 from datetime import datetime
 
 # === MODULE IMPORTS ===
-from constants import (
+from pps_mkiii.constants import (
     DEFAULT_STOCKOUT_PENALTY,
     DEFAULT_TRANSITION_PENALTY,
     DEFAULT_TIME_LIMIT,
     DEFAULT_BUFFER_DAYS
 )
-from data_loader import load_excel_data
-from preview_tables import show_preview_tables
-from ui_components import render_header, render_sidebar_inputs, render_run_button_message
-from solver_cp_sat import solve
-from postprocessing import (
+
+from pps_mkiii.data_loader import load_excel_data
+from pps_mkiii.preview_tables import show_preview_tables
+from pps_mkiii.ui_components import (
+    render_header,
+    render_sidebar_inputs,
+    render_run_button_message
+)
+
+from pps_mkiii.solver_cp_sat import solve
+from pps_mkiii.postprocessing import (
     convert_solver_output_to_display,
     plot_production_visuals,
     plot_inventory_charts
 )
+
 
 
 # ----------------------------------------
