@@ -1,35 +1,36 @@
 import os
-print("WORKING DIR:", os.getcwd())
-print("FILES:", os.listdir())
-
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# === MODULE IMPORTS ===
-from constants import (
-    DEFAULT_STOCKOUT_PENALTY,
-    DEFAULT_TRANSITION_PENALTY,
-    DEFAULT_TIME_LIMIT_MIN,
-    DEFAULT_BUFFER_DAYS,
-    DEFAULT_MIN_INVENTORY_PENALTY,
-    DEFAULT_MIN_CLOSING_PENALTY
-)
-
-from data_loader import load_excel_data, process_rerun_and_penalty_data
-from preview_tables import show_preview_tables
-from ui_components import (
-    header,
-    footer,
-    render_sidebar_inputs
-)
-
-from solver_cp_sat import solve
-from postprocessing import (
-    convert_solver_output_to_display,
-    plot_production_visuals,
-    plot_inventory_charts
-)
+# Import from current directory (no package structure)
+try:
+    from constants import (
+        DEFAULT_STOCKOUT_PENALTY,
+        DEFAULT_TRANSITION_PENALTY,
+        DEFAULT_TIME_LIMIT_MIN,
+        DEFAULT_BUFFER_DAYS,
+        DEFAULT_MIN_INVENTORY_PENALTY,
+        DEFAULT_MIN_CLOSING_PENALTY
+    )
+    from data_loader import load_excel_data
+    from preview_tables import show_preview_tables
+    from ui_components import (
+        header,
+        footer,
+        render_sidebar_inputs,
+        render_run_button_message
+    )
+    from solver_cp_sat import solve
+    from postprocessing import (
+        convert_solver_output_to_display,
+        plot_production_visuals,
+        plot_inventory_charts
+    )
+except ImportError as e:
+    st.error(f"Import error: {e}")
+    st.info("Make sure all required files are in the same directory: constants.py, data_loader.py, preview_tables.py, ui_components.py, solver_cp_sat.py, postprocessing.py")
+    st.stop()
 
 # ----------------------------------------
 # STREAMLIT PAGE CONFIG
@@ -64,14 +65,9 @@ with st.spinner("Reading template..."):
     try:
         instance = load_excel_data(uploaded_file)
         
-        # NEW: Process rerun and penalty data
-        if 'inventory_df' in instance:
-            rerun_allowed, min_inv_penalty, min_closing_penalty = process_rerun_and_penalty_data(instance['inventory_df'])
-            instance['rerun_allowed'] = rerun_allowed
-            instance['min_inv_penalty'] = min_inv_penalty
-            instance['min_closing_penalty'] = min_closing_penalty
-            
-            # Display rerun rules
+        # Display rerun rules in sidebar
+        rerun_allowed = instance.get('rerun_allowed', {})
+        if rerun_allowed:
             st.sidebar.header("🔁 Rerun Rules")
             for grade, allowed in rerun_allowed.items():
                 status = "✅ ALLOWED" if allowed else "❌ NOT ALLOWED"
@@ -86,7 +82,6 @@ st.success("Template loaded successfully!")
 # ----------------------------------------
 # 4. PREVIEW INPUT TABLES
 # ----------------------------------------
-st.header("📄 Input Data Preview")
 show_preview_tables(instance)
 
 # ----------------------------------------
@@ -112,7 +107,7 @@ show_preview_tables(instance)
 run_clicked = st.button("🚀 Run Optimization")
 
 if not run_clicked:
-    st.info("Click the button above to run the optimization with enhanced constraints.")
+    render_run_button_message()
     st.stop()
 
 # ----------------------------------------
@@ -121,18 +116,22 @@ if not run_clicked:
 st.header("⚙️ Optimization Results")
 
 with st.spinner("Running enhanced CP-SAT solver with inventory penalties..."):
-    solver_result = solve(
-        instance,
-        {
-            "time_limit_min": time_limit,
-            "stockout_penalty": stockout_penalty,
-            "transition_penalty": transition_penalty,
-            "min_inventory_penalty": min_inv_penalty,
-            "min_closing_penalty": min_closing_penalty,
-            "buffer_days": buffer_days,
-            "num_search_workers": 8,
-        }
-    )
+    try:
+        solver_result = solve(
+            instance,
+            {
+                "time_limit_min": time_limit,
+                "stockout_penalty": stockout_penalty,
+                "transition_penalty": transition_penalty,
+                "min_inventory_penalty": min_inv_penalty,
+                "min_closing_penalty": min_closing_penalty,
+                "buffer_days": buffer_days,
+                "num_search_workers": 8,
+            }
+        )
+    except Exception as e:
+        st.error(f"Solver error: {e}")
+        st.stop()
 
 st.subheader("Solver Status")
 st.write(f"Status: **{solver_result['status']}**")
@@ -145,8 +144,8 @@ st.success("Optimization completed successfully!")
 
 # NEW: Display penalty analysis
 if solver_result["best"] and 'min_inv_violations' in solver_result["best"]:
-    violations = solver_result["best"]['min_inv_violations']
-    closing_violations = solver_result["best"]['min_closing_violations']
+    violations = solver_result["best"].get('min_inv_violations', {})
+    closing_violations = solver_result["best"].get('min_closing_violations', {})
     
     if violations or closing_violations:
         st.subheader("📊 Penalty Analysis")
