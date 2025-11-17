@@ -7,7 +7,6 @@ import streamlit as st
 import math
 
 def _build_grade_color_map(sorted_grades):
-    # generate a color map deterministically for grades
     palette = px.colors.qualitative.Plotly
     color_map = {}
     for i, g in enumerate(sorted_grades):
@@ -34,61 +33,35 @@ def convert_solver_output_to_display(solver_result, instance):
     stockout = {g: {} for g in grades}
     is_producing_map = {}
 
-    # DEBUG: Show what we're working with
-    st.write("🔍 Debug - Best solution keys:", list(best.keys()))
-    
-    # Process production data from the new format
+    # Process production data
     if 'production' in best:
-        st.write("🔍 Processing production data from new format")
         for grade, date_production in best['production'].items():
             for date_str, qty in date_production.items():
                 if qty > 0:
                     production[grade][date_str] = qty
-                    st.write(f"  - {grade} on {date_str}: {qty} MT")
 
-    # Process is_producing data from the new format
+    # Process production assignments
     if 'is_producing' in best:
-        st.write("🔍 Processing production assignments")
         for line, date_assignments in best['is_producing'].items():
             for date_str, grade in date_assignments.items():
-                if grade:  # Only if there's an assignment
-                    # Find the day index for this date
+                if grade:
                     try:
                         day_index = formatted_dates.index(date_str)
                         is_producing_map[(grade, line, day_index)] = True
-                        st.write(f"  - {line} on {date_str}: producing {grade}")
                     except ValueError:
-                        pass  # Date not found in formatted dates
+                        pass
 
     # Process inventory data
     if 'inventory' in best:
-        st.write("🔍 Processing inventory data")
         for grade, inv_data in best['inventory'].items():
             inventory[grade] = inv_data
-            for date_str, inv_val in inv_data.items():
-                st.write(f"  - {grade} inventory on {date_str}: {inv_val} MT")
 
     # Process stockout data
     if 'stockout' in best:
-        st.write("🔍 Processing stockout data")
         for grade, stockout_data in best['stockout'].items():
             for date_str, stockout_val in stockout_data.items():
                 if stockout_val > 0:
                     stockout[grade][date_str] = stockout_val
-                    st.write(f"  - {grade} stockout on {date_str}: {stockout_val} MT")
-
-    # If we still don't have production data, try to reconstruct from solver values
-    if not any(production[g] for g in grades) and solver_result.get('solver'):
-        st.write("🔍 Reconstructing production data from solver variables")
-        solver = solver_result['solver']
-        
-        # This would require access to the original model variables
-        # For now, we'll rely on the data already extracted
-        
-    # Final debug summary
-    total_production = sum(sum(production[g].values()) for g in grades)
-    st.write(f"📊 Total production across all grades: {total_production} MT")
-    st.write(f"📊 Production assignments found: {len(is_producing_map)}")
 
     return {
         'production': production,
@@ -121,45 +94,21 @@ def plot_production_visuals(display_result, instance, params):
     # Extract data
     is_producing_map = display_result.get('is_producing_map', {})
     production_data = display_result.get('production', {})
-    
-    # Debug information
-    st.write("🎯 Visualization Debug Info:")
-    st.write(f"- Grades: {sorted_grades}")
-    st.write(f"- Lines: {lines}")
-    st.write(f"- Planning horizon: {num_days} days")
-    st.write(f"- Production assignments found: {len(is_producing_map)}")
-    
-    for grade in sorted_grades:
-        grade_production = sum(production_data.get(grade, {}).values())
-        if grade_production > 0:
-            st.write(f"- {grade}: {grade_production} MT total production")
-
-    # Build production summary
-    prod_records = []
-    for g, day_map in production_data.items():
-        for date_label, qty in day_map.items():
-            prod_records.append({'Grade': g, 'Date': date_label, 'Quantity': qty})
-    
-    total_prod_df = pd.DataFrame(prod_records)
-    if not total_prod_df.empty:
-        st.write("📋 Production Summary Table:")
-        st.dataframe(total_prod_df, use_container_width=True)
 
     # Gantt Charts for each line
-    st.header("🏭 Production Gantt Charts")
+    st.header("🏭 Production Schedule")
     
     has_any_production = False
     
     for line in lines:
-        st.subheader(f"📅 {line} Production Schedule")
+        st.subheader(f"📅 {line}")
         
         gantt_data = []
         line_production_found = False
         
-        # Method 1: Use is_producing_map (most reliable)
+        # Use is_producing_map to create Gantt chart
         for d in range(num_days):
             date = dates[d]
-            date_str = date.strftime('%d-%b-%y')
             
             for grade in sorted_grades:
                 if (grade, line, d) in is_producing_map:
@@ -171,29 +120,6 @@ def plot_production_visuals(display_result, instance, params):
                     })
                     line_production_found = True
                     has_any_production = True
-                    st.write(f"  ✅ {line} producing {grade} on {date_str} (from is_producing_map)")
-        
-        # Method 2: Fallback to production quantities
-        if not line_production_found:
-            for d in range(num_days):
-                date = dates[d]
-                date_str = date.strftime('%d-%b-%y')
-                
-                for grade in sorted_grades:
-                    if grade in production_data and date_str in production_data[grade]:
-                        qty = production_data[grade][date_str]
-                        if qty > 0:
-                            # Check if this line can produce this grade
-                            if line in instance.get('allowed_lines', {}).get(grade, []):
-                                gantt_data.append({
-                                    "Grade": grade,
-                                    "Start": date,
-                                    "Finish": date + timedelta(days=1),
-                                    "Line": line
-                                })
-                                line_production_found = True
-                                has_any_production = True
-                                st.write(f"  ✅ {line} producing {grade} on {date_str} ({qty} MT)")
 
         if not gantt_data:
             st.info(f"No production scheduled for {line}")
@@ -275,23 +201,11 @@ def plot_production_visuals(display_result, instance, params):
         st.plotly_chart(fig, use_container_width=True)
 
     if not has_any_production:
-        st.error("""
-        **No production data found in the optimization results.**
-        
-        **Possible causes:**
-        1. **Infeasible problem** - Constraints cannot be satisfied
-        2. **All production in buffer days** - Try reducing buffer days to 0
-        3. **Data format issue** - Solution data not being processed correctly
-        
-        **Check:**
-        - Solver status should be OPTIMAL or FEASIBLE
-        - Total production should be greater than 0
-        - Verify that production constraints allow for production
-        """)
+        st.error("No production data found in the optimization results.")
         return
 
     # Production Schedule Tables
-    st.header("📋 Detailed Production Schedule")
+    st.header("📋 Production Campaigns")
     
     def color_grade(val):
         if val in grade_color_map:
@@ -354,27 +268,6 @@ def plot_production_visuals(display_result, instance, params):
         schedule_df = pd.DataFrame(schedule_data)
         styled_df = schedule_df.style.applymap(color_grade, subset=['Grade'])
         st.dataframe(styled_df, use_container_width=True)
-
-    # Production Summary
-    st.header("📊 Production Summary")
-    if not total_prod_df.empty:
-        # Pivot for better summary view
-        summary_df = total_prod_df.pivot_table(
-            index='Grade', 
-            columns='Date', 
-            values='Quantity', 
-            aggfunc='sum',
-            fill_value=0
-        )
-        st.dataframe(summary_df, use_container_width=True)
-        
-        # Total by grade
-        grade_totals = total_prod_df.groupby('Grade')['Quantity'].sum()
-        st.write("**Total Production by Grade:**")
-        for grade, total in grade_totals.items():
-            st.write(f"- {grade}: {total:,.0f} MT")
-    else:
-        st.info("No production summary data available")
 
 def plot_inventory_charts(display_result, instance, params):
     """
