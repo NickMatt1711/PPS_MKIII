@@ -404,66 +404,60 @@ def _add_run_length_constraints(model: cp_model.CpModel, variables: Dict, instan
     grades = instance['grades']
     lines = instance['lines']
     num_days = len(instance['dates'])
-    
+
     for grade in grades:
         for line in instance['allowed_lines'].get(grade, []):
             key = (grade, line)
             min_run = int(instance['min_run_days'].get(key, 1))
             max_run = int(instance['max_run_days'].get(key, 9999))
-            
-            # Detect campaign starts
+
+            # --- Detect campaign starts ---
             for d in range(num_days):
                 if (grade, line, d) not in variables['is_start']:
                     continue
-                
+
                 is_start = variables['is_start'][(grade, line, d)]
                 assign_today = variables['assign'].get((line, d, grade))
-                
+
                 if assign_today is None:
                     continue
-                
-                # is_start detection
+
+                # Must be assigned to start
                 model.Add(is_start <= assign_today)
-                
+
+                # Start if today's assignment is 1 and yesterday's is 0 or nonexistent
                 if d == 0:
-                    model.Add(is_start >= assign_today)
+                    model.Add(is_start >= assign_today) 
                 else:
                     prev_assign = variables['assign'].get((line, d - 1, grade))
                     if prev_assign is not None:
+                        # start = 1 if today=1 and yesterday=0
                         model.Add(is_start >= assign_today - prev_assign)
                     else:
                         model.Add(is_start >= assign_today)
-                
-                # Minimum run days enforcement
-                run_days = []
-                for k in range(min_run):
-                    if d + k < num_days:
-                        next_assign = variables['assign'].get((line, d + k, grade))
-                        if next_assign is not None:  
-                            run_days.append(next_assign)
-                
-                if len(run_days) >= min_run:
-                    for k in range(min_run):
-                        if d + k < num_days:
-                            next_assign = variables['assign'].get((line, d + k, grade))
+
+                # --- Enforce minimum run days ---
+                if min_run > 1:
+                    for offset in range(min_run):
+                        day_index = d + offset
+                        if day_index < num_days:
+                            next_assign = variables['assign'].get((line, day_index, grade))
                             if next_assign is not None:
                                 model.Add(next_assign == 1).OnlyEnforceIf(is_start)
-                                
-                elif run_days:
-                    # Can't satisfy min run, so can't start here
-                    model.Add(is_start == 0)
-            
-            # Maximum run days enforcement
-            for d in range(num_days - max_run):
-                consecutive = []
-                for k in range(max_run + 1):
-                    if d + k < num_days:
-                        assign_var = variables['assign'].get((line, d + k, grade))
+
+            # --- Enforce maximum run days ---
+            if max_run < num_days:
+                for d in range(num_days - max_run):
+                    consecutive = []
+                    for offset in range(max_run + 1):
+                        day_index = d + offset
+                        assign_var = variables['assign'].get((line, day_index, grade))
                         if assign_var is not None:
                             consecutive.append(assign_var)
-                
-                if len(consecutive) == max_run + 1:
-                    model.Add(sum(consecutive) <= max_run)
+
+                    # If all days exist, enforce limit
+                    if len(consecutive) == max_run + 1:
+                        model.Add(sum(consecutive) <= max_run)
 
 
 def _add_rerun_constraints(model: cp_model.CpModel, variables: Dict, instance: Dict) -> None:
