@@ -15,32 +15,12 @@ current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 
 # Import all modules
-from constants import (
-    DEFAULT_TRANSITION_PENALTY, 
-    DEFAULT_STOCKOUT_PENALTY, 
-    DEFAULT_TIME_LIMIT_MIN, 
-    DEFAULT_BUFFER_DAYS
-)
-from data_loader import load_excel_data, add_buffer_days, DataLoadError
-from preview_tables import show_preview_tables
-from ui_components import (
-    inject_custom_css,
-    render_header,
-    render_sidebar_inputs,
-    render_divider,
-    render_run_button_message,
-    render_optimization_status,
-    render_summary_metrics,
-    render_troubleshooting_guide,
-    render_footer
-)
-from solver_cp_sat import solve
-from postprocessing import (
-    convert_solver_output_to_display,
-    plot_production_visuals,
-    plot_inventory_charts,
-    render_production_summary
-)
+import constants
+import data_loader
+import preview_tables
+import ui_components
+import solver_cp_sat
+import postprocessing
 
 # ============================================================================
 # PAGE CONFIGURATION
@@ -54,7 +34,7 @@ st.set_page_config(
 )
 
 # Inject custom CSS
-inject_custom_css()
+ui_components.inject_custom_css()
 
 # ============================================================================
 # SESSION STATE INITIALIZATION
@@ -71,7 +51,7 @@ if 'display_result' not in st.session_state:
 # HEADER
 # ============================================================================
 
-render_header()
+ui_components.render_header()
 
 # ============================================================================
 # SIDEBAR - OPTIMIZATION PARAMETERS
@@ -82,11 +62,11 @@ render_header()
     stockout_penalty,
     time_limit,
     buffer_days
-) = render_sidebar_inputs(
-    default_transition=DEFAULT_TRANSITION_PENALTY,
-    default_stockout=DEFAULT_STOCKOUT_PENALTY,
-    default_timelimit=DEFAULT_TIME_LIMIT_MIN,
-    default_buffer=DEFAULT_BUFFER_DAYS,
+) = ui_components.render_sidebar_inputs(
+    default_transition=constants.DEFAULT_TRANSITION_PENALTY,
+    default_stockout=constants.DEFAULT_STOCKOUT_PENALTY,
+    default_timelimit=constants.DEFAULT_TIME_LIMIT_MIN,
+    default_buffer=constants.DEFAULT_BUFFER_DAYS,
 )
 
 # ============================================================================
@@ -135,17 +115,17 @@ if st.session_state.instance is None or uploaded_file:
     with st.spinner("Loading and validating data..."):
         try:
             # Load data
-            instance = load_excel_data(uploaded_file)
+            instance = data_loader.load_excel_data(uploaded_file)
             
             # Add buffer days
-            instance = add_buffer_days(instance, buffer_days)
+            instance = data_loader.add_buffer_days(instance, buffer_days)
             
             # Store in session
             st.session_state.instance = instance
             
             st.success("✅ Data loaded and validated successfully!")
             
-        except DataLoadError as e:
+        except data_loader.DataLoadError as e:
             st.error(f"❌ Data validation failed: {str(e)}")
             st.stop()
         except Exception as e:
@@ -155,7 +135,7 @@ if st.session_state.instance is None or uploaded_file:
                 st.code(traceback.format_exc())
             st.stop()
 
-render_divider()
+ui_components.render_divider()
 
 # ============================================================================
 # DATA PREVIEW
@@ -163,9 +143,9 @@ render_divider()
 
 st.markdown("## 📋 Step 3: Review Input Data")
 
-show_preview_tables(st.session_state.instance)
+preview_tables.show_preview_tables(st.session_state.instance)
 
-render_divider()
+ui_components.render_divider()
 
 # ============================================================================
 # OPTIMIZATION
@@ -185,7 +165,7 @@ st.markdown("---")
 run_button = st.button("▶️ Run Optimization", type="primary", use_container_width=True)
 
 if not run_button and st.session_state.solver_result is None:
-    render_run_button_message()
+    ui_components.render_run_button_message()
     st.stop()
 
 if run_button or st.session_state.solver_result is not None:
@@ -209,7 +189,7 @@ if run_button or st.session_state.solver_result is not None:
             
             # Solve
             try:
-                solver_result = solve(
+                solver_result = solver_cp_sat.solve(
                     st.session_state.instance,
                     {
                         'time_limit_min': time_limit,
@@ -225,7 +205,7 @@ if run_button or st.session_state.solver_result is not None:
                 status_text.info("📈 Processing results...")
                 
                 # Convert to display format
-                display_result = convert_solver_output_to_display(
+                display_result = postprocessing.convert_solver_output_to_display(
                     solver_result,
                     st.session_state.instance
                 )
@@ -242,7 +222,7 @@ if run_button or st.session_state.solver_result is not None:
                     st.code(traceback.format_exc())
                 st.stop()
     
-    render_divider()
+    ui_components.render_divider()
     
     # ========================================================================
     # RESULTS DISPLAY
@@ -254,7 +234,7 @@ if run_button or st.session_state.solver_result is not None:
     display_result = st.session_state.display_result
     
     # Show status
-    render_optimization_status(
+    ui_components.render_optimization_status(
         solver_result['status'],
         solver_result['runtime']
     )
@@ -262,7 +242,7 @@ if run_button or st.session_state.solver_result is not None:
     # Check if solution exists
     if display_result is None:
         st.error("❌ No feasible solution found.")
-        render_troubleshooting_guide()
+        ui_components.render_troubleshooting_guide()
         
         # Reset button
         if st.button("🔄 Try Again with Different Parameters"):
@@ -278,14 +258,14 @@ if run_button or st.session_state.solver_result is not None:
         for g in st.session_state.instance['grades']
     )
     
-    render_summary_metrics(
+    ui_components.render_summary_metrics(
         objective=display_result['objective'],
         transitions=display_result['transitions']['total'],
         stockouts=total_stockouts,
         planning_days=len(st.session_state.instance['dates'])
     )
     
-    render_divider()
+    ui_components.render_divider()
     
     # ========================================================================
     # VISUALIZATIONS
@@ -299,26 +279,26 @@ if run_button or st.session_state.solver_result is not None:
     ])
     
     with tab1:
-        plot_production_visuals(
+        postprocessing.plot_production_visuals(
             display_result,
             st.session_state.instance,
             {'buffer_days': buffer_days}
         )
     
     with tab2:
-        plot_inventory_charts(
+        postprocessing.plot_inventory_charts(
             display_result,
             st.session_state.instance,
             {'buffer_days': buffer_days}
         )
     
     with tab3:
-        render_production_summary(
+        postprocessing.render_production_summary(
             display_result,
             st.session_state.instance
         )
     
-    render_divider()
+    ui_components.render_divider()
     
     # ========================================================================
     # ACTION BUTTONS
@@ -348,4 +328,4 @@ if run_button or st.session_state.solver_result is not None:
 # FOOTER
 # ============================================================================
 
-render_footer()
+ui_components.render_footer()
