@@ -10,7 +10,7 @@ import pandas as pd
 from typing import Dict, Any
 
 # Use absolute import instead of relative import
-import constants
+from constants import DATE_FORMAT_DISPLAY
 
 
 def format_dates_in_dataframe(df: pd.DataFrame) -> pd.DataFrame:
