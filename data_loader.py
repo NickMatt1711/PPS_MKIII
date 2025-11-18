@@ -11,7 +11,7 @@ from datetime import date, timedelta
 import pandas as pd
 import streamlit as st
 
-from .constants import (
+from constants import (
     SHEET_PLANT, SHEET_INVENTORY, SHEET_DEMAND,
     PLANT_COLS, INVENTORY_COLS,
     TRANSITION_KEYWORD, TRANSITION_YES_VALUES,
