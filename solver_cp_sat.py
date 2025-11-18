@@ -446,8 +446,12 @@ def _add_run_length_constraints(model: cp_model.CpModel, variables: Dict, instan
                     for k in range(min_run):
                         if d + k < num_days:
                             next_assign = variables['assign'].get((line, d + k, grade))
-                            if next_assign:
-                                model.Add(next_assign == 1).OnlyEnforceIf(is_start)
+                            for i in range(len(variables.assignments) - 1):
+                                current_assign = variables.assignments[i]
+                                next_assign = variables.assignments[i + 1]
+                                
+                                # Add constraints that only apply when certain conditions are met
+                                model.Add(variable_you_care_about == some_value).OnlyEnforceIf([current_assign, next_assign])
                 elif run_days:
                     # Can't satisfy min run, so can't start here
                     model.Add(is_start == 0)
