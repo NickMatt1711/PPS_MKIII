@@ -8,7 +8,8 @@ Display and validate input data with interactive tables and summaries.
 import streamlit as st
 import pandas as pd
 from typing import Dict, Any
-from .constants import DATE_FORMAT_DISPLAY
+
+import constants
 
 
 def format_dates_in_dataframe(df: pd.DataFrame) -> pd.DataFrame:
@@ -25,7 +26,7 @@ def format_dates_in_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     for col in df_copy.columns:
         try:
             if pd.api.types.is_datetime64_any_dtype(df_copy[col]):
-                df_copy[col] = df_copy[col].dt.strftime(DATE_FORMAT_DISPLAY)
+                df_copy[col] = df_copy[col].dt.strftime(constants.DATE_FORMAT_DISPLAY)
         except Exception:
             pass
     return df_copy
@@ -105,8 +106,8 @@ def _show_plant_info(instance: Dict[str, Any]) -> None:
                 start_date = instance['dates'][shutdown_indices[0]]
                 end_date = instance['dates'][shutdown_indices[-1]]
                 st.info(
-                    f"**{line}**: {start_date.strftime(DATE_FORMAT_DISPLAY)} "
-                    f"to {end_date.strftime(DATE_FORMAT_DISPLAY)} "
+                    f"**{line}**: {start_date.strftime(constants.DATE_FORMAT_DISPLAY)} "
+                    f"to {end_date.strftime(constants.DATE_FORMAT_DISPLAY)} "
                     f"({len(shutdown_indices)} days)"
                 )
     else:
@@ -123,7 +124,7 @@ def _show_inventory_info(instance: Dict[str, Any]) -> None:
         allowed = ", ".join(instance['allowed_lines'].get(grade, []))
         
         force_start = instance['force_start_date'].get(grade, None)
-        force_str = force_start.strftime(DATE_FORMAT_DISPLAY) if force_start else "-"
+        force_str = force_start.strftime(constants.DATE_FORMAT_DISPLAY) if force_start else "-"
         
         inv_data.append({
             "Grade": grade,
@@ -170,7 +171,7 @@ def _show_demand_info(instance: Dict[str, Any]) -> None:
     dates = instance['dates']
     
     for d_idx, date in enumerate(dates):
-        row = {"Date": date.strftime(DATE_FORMAT_DISPLAY)}
+        row = {"Date": date.strftime(constants.DATE_FORMAT_DISPLAY)}
         for grade in instance['grades']:
             demand_qty = instance['demand'].get((grade, d_idx), 0)
             row[grade] = f"{demand_qty:,.1f}"
@@ -346,7 +347,7 @@ def _show_summary_statistics(instance: Dict[str, Any]) -> None:
         <div style="display: flex; align-items: center; gap: 1rem;">
             <div style="flex: 1;">
                 <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">
-                    Complexity: <span style="color: #{COLOR_SUCCESS if complexity == 'Low' else COLOR_INFO if complexity == 'Medium' else COLOR_WARNING};">{complexity}</span>
+                    Complexity: <span style="color: {constants.COLOR_SUCCESS if complexity == 'Low' else constants.COLOR_INFO if complexity == 'Medium' else constants.COLOR_WARNING};">{complexity}</span>
                 </div>
                 <div style="color: #757575;">{message}</div>
             </div>
@@ -402,7 +403,3 @@ def _show_summary_statistics(instance: Dict[str, Any]) -> None:
     
     for icon, message in checks:
         st.markdown(f"{icon} {message}")
-
-
-# Import for colors
-from .constants import COLOR_SUCCESS, COLOR_INFO, COLOR_WARNING
