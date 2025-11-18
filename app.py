@@ -1,99 +1,83 @@
-import os
+"""
+Main Application Entry Point
+=============================
+
+Streamlit app orchestrating the polymer production scheduling workflow.
+"""
+
 import streamlit as st
-import pandas as pd
-from datetime import datetime
+import time
+from pathlib import Path
 
-# Import from current directory (no package structure)
-try:
-    from constants import (
-        DEFAULT_STOCKOUT_PENALTY,
-        DEFAULT_TRANSITION_PENALTY,
-        DEFAULT_TIME_LIMIT_MIN,
-        DEFAULT_BUFFER_DAYS,
-        DEFAULT_MIN_INVENTORY_PENALTY,
-        DEFAULT_MIN_CLOSING_PENALTY
-    )
-    from data_loader import load_excel_data
-    from preview_tables import show_preview_tables
-    from ui_components import (
-        header,
-        footer,
-        render_sidebar_inputs,
-        render_run_button_message
-    )
-    from solver_cp_sat import solve
-    from postprocessing import (
-        convert_solver_output_to_display,
-        plot_production_visuals,
-        plot_inventory_charts
-    )
-except ImportError as e:
-    st.error(f"Import error: {e}")
-    st.info("Make sure all required files are in the same directory: constants.py, data_loader.py, preview_tables.py, ui_components.py, solver_cp_sat.py, postprocessing.py")
-    st.stop()
+# Import all modules
+from pps_mkiii.constants import (
+    DEFAULT_TIME_LIMIT_MIN,
+    DEFAULT_BUFFER_DAYS,
+    DEFAULT_STOCKOUT_PENALTY,
+    DEFAULT_TRANSITION_PENALTY,
+)
+from pps_mkiii.data_loader import load_excel_data, add_buffer_days, DataLoadError
+from pps_mkiii.preview_tables import show_preview_tables
+from pps_mkiii.ui_components import (
+    inject_custom_css,
+    render_header,
+    render_divider,
+    render_sidebar_inputs,
+    render_run_button_message,
+    render_summary_metrics,
+    render_optimization_status,
+    render_troubleshooting_guide,
+    render_footer,
+    render_loading_spinner,
+)
+from pps_mkiii.solver_cp_sat import solve
+from pps_mkiii.postprocessing import (
+    convert_solver_output_to_display,
+    plot_production_visuals,
+    plot_inventory_charts,
+    render_production_summary,
+)
 
-# ----------------------------------------
-# STREAMLIT PAGE CONFIG
-# ----------------------------------------
+# ============================================================================
+# PAGE CONFIGURATION
+# ============================================================================
+
 st.set_page_config(
-    page_title="Polymer Production Sequencer",
-    layout="wide"
+    page_title="Polymer Production Scheduler",
+    page_icon="🏭",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# ----------------------------------------
-# 1. PAGE HEADER
-# ----------------------------------------
-header()
+# Inject custom CSS
+inject_custom_css()
 
-# ----------------------------------------
-# 2. EXCEL UPLOAD
-# ----------------------------------------
-uploaded_file = st.file_uploader(
-    "Upload the Polymer Production Template (.xlsx)",
-    type=["xlsx"],
-    accept_multiple_files=False
-)
+# ============================================================================
+# SESSION STATE INITIALIZATION
+# ============================================================================
 
-if uploaded_file is None:
-    st.info("Please upload the template to continue.")
-    st.stop()
+if 'instance' not in st.session_state:
+    st.session_state.instance = None
+if 'solver_result' not in st.session_state:
+    st.session_state.solver_result = None
+if 'display_result' not in st.session_state:
+    st.session_state.display_result = None
 
-# ----------------------------------------
-# 3. LOAD AND PROCESS DATA
-# ----------------------------------------
-with st.spinner("Reading template..."):
-    try:
-        instance = load_excel_data(uploaded_file)
-        
-        # Display rerun rules in sidebar
-        rerun_allowed = instance.get('rerun_allowed', {})
-        if rerun_allowed:
-            st.sidebar.header("🔁 Rerun Rules")
-            for grade, allowed in rerun_allowed.items():
-                status = "✅ ALLOWED" if allowed else "❌ NOT ALLOWED"
-                st.sidebar.write(f"{grade}: {status}")
-                
-    except Exception as e:
-        st.error(f"Error reading template: {e}")
-        st.stop()
+# ============================================================================
+# HEADER
+# ============================================================================
 
-st.success("Template loaded successfully!")
+render_header()
 
-# ----------------------------------------
-# 4. PREVIEW INPUT TABLES
-# ----------------------------------------
-show_preview_tables(instance)
+# ============================================================================
+# SIDEBAR - OPTIMIZATION PARAMETERS
+# ============================================================================
 
-# ----------------------------------------
-# 5. ENHANCED SIDEBAR PARAMETERS
-# ----------------------------------------
 (
     transition_penalty,
     stockout_penalty,
     time_limit,
-    buffer_days,
-    min_inv_penalty,
-    min_closing_penalty
+    buffer_days
 ) = render_sidebar_inputs(
     default_transition=DEFAULT_TRANSITION_PENALTY,
     default_stockout=DEFAULT_STOCKOUT_PENALTY,
@@ -101,106 +85,263 @@ show_preview_tables(instance)
     default_buffer=DEFAULT_BUFFER_DAYS,
 )
 
-# ----------------------------------------
-# 6. RUN SOLVER BUTTON
-# ----------------------------------------
-run_clicked = st.button("🚀 Run Optimization")
+# ============================================================================
+# FILE UPLOAD
+# ============================================================================
 
-if not run_clicked:
+st.markdown("## 📁 Step 1: Upload Production Template")
+
+col1, col2 = st.columns([3, 1])
+
+with col1:
+    uploaded_file = st.file_uploader(
+        "Choose Excel File",
+        type=["xlsx"],
+        help="Upload the Polymer Production Template with Plant, Inventory, and Demand sheets",
+        label_visibility="collapsed"
+    )
+
+with col2:
+    # Provide sample template download
+    template_path = Path(__file__).parent / "polymer_production_template.xlsx"
+    if template_path.exists():
+        with open(template_path, "rb") as f:
+            st.download_button(
+                label="📥 Download Template",
+                data=f,
+                file_name="polymer_production_template.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True
+            )
+
+if uploaded_file is None:
+    st.info(
+        "👆 Please upload your production planning Excel file to begin.\n\n"
+        "If you don't have a file ready, download the template and fill it with your data."
+    )
+    st.stop()
+
+# ============================================================================
+# DATA LOADING & VALIDATION
+# ============================================================================
+
+if st.session_state.instance is None or uploaded_file:
+    st.markdown("## 🔍 Step 2: Data Validation")
+    
+    with st.spinner("Loading and validating data..."):
+        try:
+            # Load data
+            instance = load_excel_data(uploaded_file)
+            
+            # Add buffer days
+            instance = add_buffer_days(instance, buffer_days)
+            
+            # Store in session
+            st.session_state.instance = instance
+            
+            st.success("✅ Data loaded and validated successfully!")
+            
+        except DataLoadError as e:
+            st.error(f"❌ Data validation failed: {str(e)}")
+            st.stop()
+        except Exception as e:
+            st.error(f"❌ Unexpected error loading data: {str(e)}")
+            with st.expander("View Technical Details"):
+                import traceback
+                st.code(traceback.format_exc())
+            st.stop()
+
+render_divider()
+
+# ============================================================================
+# DATA PREVIEW
+# ============================================================================
+
+st.markdown("## 📋 Step 3: Review Input Data")
+
+show_preview_tables(st.session_state.instance)
+
+render_divider()
+
+# ============================================================================
+# OPTIMIZATION
+# ============================================================================
+
+st.markdown("## 🚀 Step 4: Run Optimization")
+
+# Show current parameter summary
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Time Limit", f"{time_limit} min")
+col2.metric("Stockout Penalty", stockout_penalty)
+col3.metric("Transition Penalty", transition_penalty)
+col4.metric("Buffer Days", buffer_days)
+
+st.markdown("---")
+
+run_button = st.button("▶️ Run Optimization", type="primary", use_container_width=True)
+
+if not run_button and st.session_state.solver_result is None:
     render_run_button_message()
     st.stop()
 
-# ----------------------------------------
-# 7. RUN ENHANCED OPTIMIZER
-# ----------------------------------------
-st.header("⚙️ Optimization Results")
-
-with st.spinner("Running enhanced CP-SAT solver with inventory penalties..."):
-    try:
-        solver_result = solve(
-            instance,
-            {
-                "time_limit_min": time_limit,
-                "stockout_penalty": stockout_penalty,
-                "transition_penalty": transition_penalty,
-                "min_inventory_penalty": min_inv_penalty,
-                "min_closing_penalty": min_closing_penalty,
-                "buffer_days": buffer_days,
-                "num_search_workers": 8,
-            }
-        )
-    except Exception as e:
-        st.error(f"Solver error: {e}")
-        st.stop()
-
-st.subheader("Solver Status")
-st.write(f"Status: **{solver_result['status']}**")
-
-if solver_result["best"] is None:
-    st.error("❌ Solver could not find a feasible solution.")
-    st.stop()
-
-st.success("Optimization completed successfully!")
-
-# NEW: Display penalty analysis
-if solver_result["best"] and 'min_inv_violations' in solver_result["best"]:
-    violations = solver_result["best"].get('min_inv_violations', {})
-    closing_violations = solver_result["best"].get('min_closing_violations', {})
+if run_button or st.session_state.solver_result is not None:
     
-    if violations or closing_violations:
-        st.subheader("📊 Penalty Analysis")
-        col1, col2 = st.columns(2)
+    if run_button:
+        # Run optimization
+        with st.spinner("🔧 Building optimization model..."):
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            status_text.info("📊 Preprocessing data...")
+            progress_bar.progress(20)
+            time.sleep(0.5)
+            
+            status_text.info("🔧 Building constraint model...")
+            progress_bar.progress(40)
+            time.sleep(0.5)
+            
+            status_text.info("⚡ Solving optimization problem...")
+            progress_bar.progress(60)
+            
+            # Solve
+            try:
+                solver_result = solve(
+                    st.session_state.instance,
+                    {
+                        'time_limit_min': time_limit,
+                        'stockout_penalty': stockout_penalty,
+                        'transition_penalty': transition_penalty,
+                        'buffer_days': buffer_days,
+                    }
+                )
+                
+                st.session_state.solver_result = solver_result
+                
+                progress_bar.progress(80)
+                status_text.info("📈 Processing results...")
+                
+                # Convert to display format
+                display_result = convert_solver_output_to_display(
+                    solver_result,
+                    st.session_state.instance
+                )
+                st.session_state.display_result = display_result
+                
+                progress_bar.progress(100)
+                status_text.empty()
+                progress_bar.empty()
+                
+            except Exception as e:
+                st.error(f"❌ Optimization failed: {str(e)}")
+                with st.expander("View Technical Details"):
+                    import traceback
+                    st.code(traceback.format_exc())
+                st.stop()
+    
+    render_divider()
+    
+    # ========================================================================
+    # RESULTS DISPLAY
+    # ========================================================================
+    
+    st.markdown("## 📊 Optimization Results")
+    
+    solver_result = st.session_state.solver_result
+    display_result = st.session_state.display_result
+    
+    # Show status
+    render_optimization_status(
+        solver_result['status'],
+        solver_result['runtime']
+    )
+    
+    # Check if solution exists
+    if display_result is None:
+        st.error("❌ No feasible solution found.")
+        render_troubleshooting_guide()
         
-        with col1:
-            if violations:
-                st.warning("Min Inventory Violations Detected")
-                viol_df = pd.DataFrame([
-                    {"Grade": g, "Day": d, "Violation": v} 
-                    for (g, d), v in violations.items()
-                ])
-                st.dataframe(viol_df, use_container_width=True)
-            else:
-                st.success("✅ No min inventory violations")
+        # Reset button
+        if st.button("🔄 Try Again with Different Parameters"):
+            st.session_state.solver_result = None
+            st.session_state.display_result = None
+            st.rerun()
         
-        with col2:
-            if closing_violations:
-                st.warning("Min Closing Inventory Violations Detected")
-                closing_df = pd.DataFrame([
-                    {"Grade": g, "Violation": v} 
-                    for g, v in closing_violations.items()
-                ])
-                st.dataframe(closing_df, use_container_width=True)
-            else:
-                st.success("✅ No min closing inventory violations")
+        st.stop()
+    
+    # Display summary metrics
+    total_stockouts = sum(
+        sum(display_result['stockout'].get(g, {}).values())
+        for g in st.session_state.instance['grades']
+    )
+    
+    render_summary_metrics(
+        objective=display_result['objective'],
+        transitions=display_result['transitions']['total'],
+        stockouts=total_stockouts,
+        planning_days=len(st.session_state.instance['dates'])
+    )
+    
+    render_divider()
+    
+    # ========================================================================
+    # VISUALIZATIONS
+    # ========================================================================
+    
+    # Create tabs for different views
+    tab1, tab2, tab3 = st.tabs([
+        "📅 Production Schedule",
+        "📦 Inventory Trends",
+        "📊 Production Summary"
+    ])
+    
+    with tab1:
+        plot_production_visuals(
+            display_result,
+            st.session_state.instance,
+            {'buffer_days': buffer_days}
+        )
+    
+    with tab2:
+        plot_inventory_charts(
+            display_result,
+            st.session_state.instance,
+            {'buffer_days': buffer_days}
+        )
+    
+    with tab3:
+        render_production_summary(
+            display_result,
+            st.session_state.instance
+        )
+    
+    render_divider()
+    
+    # ========================================================================
+    # ACTION BUTTONS
+    # ========================================================================
+    
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        if st.button("🔄 New Optimization", use_container_width=True):
+            st.session_state.instance = None
+            st.session_state.solver_result = None
+            st.session_state.display_result = None
+            st.rerun()
+    
+    with col2:
+        if st.button("⚙️ Adjust Parameters", use_container_width=True):
+            st.session_state.solver_result = None
+            st.session_state.display_result = None
+            st.rerun()
+    
+    with col3:
+        # Export functionality (placeholder for future)
+        st.button("📥 Export Results", use_container_width=True, disabled=True)
+        st.caption("Export feature coming soon")
 
-# ----------------------------------------
-# 8. CONVERT OUTPUT FOR VISUALIZATION
-# ----------------------------------------
-display_result = convert_solver_output_to_display(solver_result, instance)
+# ============================================================================
+# FOOTER
+# ============================================================================
 
-# ----------------------------------------
-# 9. PLOTLY VISUALS
-# ----------------------------------------
-st.header("📊 Production & Inventory Visualizations")
-
-# Production Gantt + schedule tables
-plot_production_visuals(
-    display_result,
-    instance,
-    {"buffer_days": buffer_days}
-)
-
-# Inventory charts per grade
-st.header("📦 Inventory Charts")
-plot_inventory_charts(
-    display_result,
-    instance,
-    {"buffer_days": buffer_days}
-)
-
-st.success("📈 All visualizations rendered successfully.")
-
-# ----------------------------------------
-# 10. FOOTER
-# ----------------------------------------
-footer()
+render_footer()
