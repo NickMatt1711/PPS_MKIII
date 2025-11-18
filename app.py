@@ -7,18 +7,22 @@ Streamlit app orchestrating the polymer production scheduling workflow.
 
 import streamlit as st
 import time
+import sys
 from pathlib import Path
 
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent))
+
 # Import all modules
-from pps_mkiii.constants import (
+from constants import (
     DEFAULT_TIME_LIMIT_MIN,
     DEFAULT_BUFFER_DAYS,
     DEFAULT_STOCKOUT_PENALTY,
     DEFAULT_TRANSITION_PENALTY,
 )
-from pps_mkiii.data_loader import load_excel_data, add_buffer_days, DataLoadError
-from pps_mkiii.preview_tables import show_preview_tables
-from pps_mkiii.ui_components import (
+from data_loader import load_excel_data, add_buffer_days, DataLoadError
+from preview_tables import show_preview_tables
+from ui_components import (
     inject_custom_css,
     render_header,
     render_divider,
@@ -30,8 +34,8 @@ from pps_mkiii.ui_components import (
     render_footer,
     render_loading_spinner,
 )
-from pps_mkiii.solver_cp_sat import solve
-from pps_mkiii.postprocessing import (
+from solver_cp_sat import solve
+from postprocessing import (
     convert_solver_output_to_display,
     plot_production_visuals,
     plot_inventory_charts,
