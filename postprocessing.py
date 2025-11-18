@@ -11,7 +11,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import timedelta
 from typing import Dict, Any, List
-from .constants import GRADE_COLORS, DATE_FORMAT_DISPLAY
+
+import constants
 
 
 def convert_solver_output_to_display(solver_result: Dict, instance: Dict) -> Dict[str, Any]:
@@ -32,7 +33,7 @@ def convert_solver_output_to_display(solver_result: Dict, instance: Dict) -> Dic
     grades = instance['grades']
     lines = instance['lines']
     dates = instance['dates']
-    formatted_dates = [d.strftime(DATE_FORMAT_DISPLAY) for d in dates]
+    formatted_dates = [d.strftime(constants.DATE_FORMAT_DISPLAY) for d in dates]
     
     # Build production summary
     production = {g: {} for g in grades}
@@ -101,7 +102,7 @@ def _build_grade_color_map(sorted_grades: List[str]) -> Dict[str, str]:
     """Generate consistent color mapping for grades."""
     color_map = {}
     for i, grade in enumerate(sorted_grades):
-        color_map[grade] = GRADE_COLORS[i % len(GRADE_COLORS)]
+        color_map[grade] = constants.GRADE_COLORS[i % len(constants.GRADE_COLORS)]
     return color_map
 
 
@@ -242,8 +243,8 @@ def _render_schedule_table(line: str, dates: List, sorted_grades: List[str],
                 duration = (end_date - start_day).days + 1
                 schedule_data.append({
                     "Grade": current_grade,
-                    "Start Date": start_day.strftime(DATE_FORMAT_DISPLAY),
-                    "End Date": end_date.strftime(DATE_FORMAT_DISPLAY),
+                    "Start Date": start_day.strftime(constants.DATE_FORMAT_DISPLAY),
+                    "End Date": end_date.strftime(constants.DATE_FORMAT_DISPLAY),
                     "Days": duration
                 })
             current_grade = grade_today
@@ -254,8 +255,8 @@ def _render_schedule_table(line: str, dates: List, sorted_grades: List[str],
         duration = (end_date - start_day).days + 1
         schedule_data.append({
             "Grade": current_grade,
-            "Start Date": start_day.strftime(DATE_FORMAT_DISPLAY),
-            "End Date": end_date.strftime(DATE_FORMAT_DISPLAY),
+            "Start Date": start_day.strftime(constants.DATE_FORMAT_DISPLAY),
+            "End Date": end_date.strftime(constants.DATE_FORMAT_DISPLAY),
             "Days": duration
         })
     
