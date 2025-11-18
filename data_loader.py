@@ -11,13 +11,8 @@ from datetime import date, timedelta
 import pandas as pd
 import streamlit as st
 
-from constants import (
-    SHEET_PLANT, SHEET_INVENTORY, SHEET_DEMAND,
-    PLANT_COLS, INVENTORY_COLS,
-    TRANSITION_KEYWORD, TRANSITION_YES_VALUES,
-    ERROR_MESSAGES, DATE_FORMAT_DISPLAY,
-    MIN_CAPACITY, MAX_CAPACITY,
-)
+# Use absolute imports
+import constants
 
 
 class DataLoadError(Exception):
@@ -64,9 +59,9 @@ def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
         _validate_sheets(excel_file)
         
         # Load core sheets
-        plant_df = pd.read_excel(excel_file, sheet_name=SHEET_PLANT)
-        inventory_df = pd.read_excel(excel_file, sheet_name=SHEET_INVENTORY)
-        demand_df = pd.read_excel(excel_file, sheet_name=SHEET_DEMAND)
+        plant_df = pd.read_excel(excel_file, sheet_name=constants.SHEET_PLANT)
+        inventory_df = pd.read_excel(excel_file, sheet_name=constants.SHEET_INVENTORY)
+        demand_df = pd.read_excel(excel_file, sheet_name=constants.SHEET_DEMAND)
         
         # Validate column names
         _validate_columns(plant_df, inventory_df, demand_df)
@@ -126,11 +121,11 @@ def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
 def _validate_sheets(excel_file: pd.ExcelFile) -> None:
     """Validate that all required sheets exist."""
     sheet_names = excel_file.sheet_names
-    required = [SHEET_PLANT, SHEET_INVENTORY, SHEET_DEMAND]
+    required = [constants.SHEET_PLANT, constants.SHEET_INVENTORY, constants.SHEET_DEMAND]
     
     for sheet in required:
         if sheet not in sheet_names:
-            raise DataLoadError(ERROR_MESSAGES["missing_sheet"].format(sheet))
+            raise DataLoadError(constants.ERROR_MESSAGES["missing_sheet"].format(sheet))
 
 
 def _validate_columns(plant_df: pd.DataFrame, 
@@ -138,23 +133,23 @@ def _validate_columns(plant_df: pd.DataFrame,
                      demand_df: pd.DataFrame) -> None:
     """Validate that required columns exist in each sheet."""
     # Plant sheet validation
-    required_plant = [PLANT_COLS["name"], PLANT_COLS["capacity"]]
+    required_plant = [constants.PLANT_COLS["name"], constants.PLANT_COLS["capacity"]]
     for col in required_plant:
         if col not in plant_df.columns:
             raise DataLoadError(
-                ERROR_MESSAGES["missing_column"].format(col, SHEET_PLANT)
+                constants.ERROR_MESSAGES["missing_column"].format(col, constants.SHEET_PLANT)
             )
     
     # Inventory sheet validation
     required_inventory = [
-        INVENTORY_COLS["grade"], INVENTORY_COLS["opening_inv"],
-        INVENTORY_COLS["min_inv"], INVENTORY_COLS["max_inv"],
-        INVENTORY_COLS["min_run"], INVENTORY_COLS["max_run"]
+        constants.INVENTORY_COLS["grade"], constants.INVENTORY_COLS["opening_inv"],
+        constants.INVENTORY_COLS["min_inv"], constants.INVENTORY_COLS["max_inv"],
+        constants.INVENTORY_COLS["min_run"], constants.INVENTORY_COLS["max_run"]
     ]
     for col in required_inventory:
         if col not in inventory_df.columns:
             raise DataLoadError(
-                ERROR_MESSAGES["missing_column"].format(col, SHEET_INVENTORY)
+                constants.ERROR_MESSAGES["missing_column"].format(col, constants.SHEET_INVENTORY)
             )
     
     # Demand sheet should have at least 2 columns (date + at least one grade)
@@ -176,22 +171,22 @@ def _parse_plant_data(plant_df: pd.DataFrame) -> Tuple[List[str], Dict[str, floa
     material_running = {}
     
     for _, row in plant_df.iterrows():
-        line_name = str(row[PLANT_COLS["name"]]).strip()
-        capacity = float(row[PLANT_COLS["capacity"]])
+        line_name = str(row[constants.PLANT_COLS["name"]]).strip()
+        capacity = float(row[constants.PLANT_COLS["capacity"]])
         
         if capacity <= 0:
-            raise DataLoadError(ERROR_MESSAGES["capacity_zero"].format(line_name))
+            raise DataLoadError(constants.ERROR_MESSAGES["capacity_zero"].format(line_name))
         
-        if not (MIN_CAPACITY <= capacity <= MAX_CAPACITY):
+        if not (constants.MIN_CAPACITY <= capacity <= constants.MAX_CAPACITY):
             st.warning(f"Unusual capacity for {line_name}: {capacity} MT/day")
         
         lines.append(line_name)
         capacities[line_name] = capacity
         
         # Parse material running info (optional)
-        if PLANT_COLS["material_running"] in row and PLANT_COLS["expected_days"] in row:
-            mat = row[PLANT_COLS["material_running"]]
-            exp_days = row[PLANT_COLS["expected_days"]]
+        if constants.PLANT_COLS["material_running"] in row and constants.PLANT_COLS["expected_days"] in row:
+            mat = row[constants.PLANT_COLS["material_running"]]
+            exp_days = row[constants.PLANT_COLS["expected_days"]]
             
             if pd.notna(mat) and pd.notna(exp_days):
                 try:
@@ -200,7 +195,7 @@ def _parse_plant_data(plant_df: pd.DataFrame) -> Tuple[List[str], Dict[str, floa
                     pass
     
     if not lines:
-        raise DataLoadError(ERROR_MESSAGES["no_plants"])
+        raise DataLoadError(constants.ERROR_MESSAGES["no_plants"])
     
     return lines, capacities, material_running
 
@@ -235,10 +230,10 @@ def _parse_inventory_data(inventory_df: pd.DataFrame, lines: List[str]) -> Tuple
     rerun_allowed = {}
     
     for _, row in inventory_df.iterrows():
-        grade = str(row[INVENTORY_COLS["grade"]]).strip()
+        grade = str(row[constants.INVENTORY_COLS["grade"]]).strip()
         
         # Parse allowed lines for this row
-        lines_value = row.get(INVENTORY_COLS["lines"], None)
+        lines_value = row.get(constants.INVENTORY_COLS["lines"], None)
         if pd.notna(lines_value) and str(lines_value).strip():
             row_lines = [l.strip() for l in str(lines_value).split(',')]
         else:
@@ -261,13 +256,13 @@ def _parse_inventory_data(inventory_df: pd.DataFrame, lines: List[str]) -> Tuple
             grade_set.add(grade)
             grades.append(grade)
             
-            initial_inventory[grade] = float(row.get(INVENTORY_COLS["opening_inv"], 0))
-            min_inventory[grade] = float(row.get(INVENTORY_COLS["min_inv"], 0))
-            max_inventory[grade] = float(row.get(INVENTORY_COLS["max_inv"], 1e9))
-            min_closing_inventory[grade] = float(row.get(INVENTORY_COLS["min_closing"], 0))
+            initial_inventory[grade] = float(row.get(constants.INVENTORY_COLS["opening_inv"], 0))
+            min_inventory[grade] = float(row.get(constants.INVENTORY_COLS["min_inv"], 0))
+            max_inventory[grade] = float(row.get(constants.INVENTORY_COLS["max_inv"], 1e9))
+            min_closing_inventory[grade] = float(row.get(constants.INVENTORY_COLS["min_closing"], 0))
             
             # Parse force start date
-            force_val = row.get(INVENTORY_COLS["force_start"], None)
+            force_val = row.get(constants.INVENTORY_COLS["force_start"], None)
             if pd.notna(force_val):
                 try:
                     force_start_date[grade] = pd.to_datetime(force_val).date()
@@ -280,11 +275,11 @@ def _parse_inventory_data(inventory_df: pd.DataFrame, lines: List[str]) -> Tuple
                 continue
             
             key = (grade, line)
-            min_run_days[key] = int(row.get(INVENTORY_COLS["min_run"], 1))
-            max_run_days[key] = int(row.get(INVENTORY_COLS["max_run"], 9999))
+            min_run_days[key] = int(row.get(constants.INVENTORY_COLS["min_run"], 1))
+            max_run_days[key] = int(row.get(constants.INVENTORY_COLS["max_run"], 9999))
             
             # Parse rerun allowed
-            rerun_val = row.get(INVENTORY_COLS["rerun"], "Yes")
+            rerun_val = row.get(constants.INVENTORY_COLS["rerun"], "Yes")
             if pd.notna(rerun_val):
                 rerun_str = str(rerun_val).strip().lower()
                 rerun_allowed[key] = rerun_str not in ['no', 'n', 'false', '0']
@@ -292,7 +287,7 @@ def _parse_inventory_data(inventory_df: pd.DataFrame, lines: List[str]) -> Tuple
                 rerun_allowed[key] = True
     
     if not grades:
-        raise DataLoadError(ERROR_MESSAGES["no_grades"])
+        raise DataLoadError(constants.ERROR_MESSAGES["no_grades"])
     
     return (grades, initial_inventory, min_inventory, max_inventory,
             min_closing_inventory, min_run_days, max_run_days,
@@ -346,13 +341,13 @@ def _parse_shutdown_data(plant_df: pd.DataFrame, dates: List[date]) -> Dict[str,
     """
     shutdown_day_indices = {}
     
-    if PLANT_COLS["shutdown_start"] not in plant_df.columns:
-        return {line: set() for line in plant_df[PLANT_COLS["name"]]}
+    if constants.PLANT_COLS["shutdown_start"] not in plant_df.columns:
+        return {line: set() for line in plant_df[constants.PLANT_COLS["name"]]}
     
     for _, row in plant_df.iterrows():
-        line = str(row[PLANT_COLS["name"]]).strip()
-        start_val = row.get(PLANT_COLS["shutdown_start"], None)
-        end_val = row.get(PLANT_COLS["shutdown_end"], None)
+        line = str(row[constants.PLANT_COLS["name"]]).strip()
+        start_val = row.get(constants.PLANT_COLS["shutdown_start"], None)
+        end_val = row.get(constants.PLANT_COLS["shutdown_end"], None)
         
         if pd.notna(start_val) and pd.notna(end_val):
             try:
@@ -374,8 +369,8 @@ def _parse_shutdown_data(plant_df: pd.DataFrame, dates: List[date]) -> Dict[str,
                 if shutdown_indices:
                     st.info(
                         f"🔧 Shutdown for {line}: "
-                        f"{start_date.strftime(DATE_FORMAT_DISPLAY)} to "
-                        f"{end_date.strftime(DATE_FORMAT_DISPLAY)} "
+                        f"{start_date.strftime(constants.DATE_FORMAT_DISPLAY)} to "
+                        f"{end_date.strftime(constants.DATE_FORMAT_DISPLAY)} "
                         f"({len(shutdown_indices)} days)"
                     )
             except Exception as e:
@@ -423,7 +418,7 @@ def _parse_transition_rules(excel_file: pd.ExcelFile,
                     allowed_next = []
                     for curr_grade in trans_df.columns:
                         cell_value = str(trans_df.loc[prev_grade, curr_grade]).lower()
-                        if any(yes_val in cell_value for yes_val in TRANSITION_YES_VALUES):
+                        if any(yes_val in cell_value for yes_val in constants.TRANSITION_YES_VALUES):
                             allowed_next.append(curr_grade)
                     rules[str(prev_grade)] = allowed_next
                 
