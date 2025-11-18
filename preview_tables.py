@@ -9,6 +9,7 @@ import streamlit as st
 import pandas as pd
 from typing import Dict, Any
 
+# Use absolute import instead of relative import
 import constants
 
 
