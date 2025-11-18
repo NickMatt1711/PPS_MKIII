@@ -429,7 +429,7 @@ def _add_run_length_constraints(model: cp_model.CpModel, variables: Dict, instan
                     model.Add(is_start >= assign_today)
                 else:
                     prev_assign = variables['assign'].get((line, d - 1, grade))
-                    if prev_assign:
+                    if prev_assign is not None:
                         model.Add(is_start >= assign_today - prev_assign)
                     else:
                         model.Add(is_start >= assign_today)
@@ -459,7 +459,7 @@ def _add_run_length_constraints(model: cp_model.CpModel, variables: Dict, instan
                 for k in range(max_run + 1):
                     if d + k < num_days:
                         assign_var = variables['assign'].get((line, d + k, grade))
-                        if assign_var:
+                        if assign_var is not None:
                             consecutive.append(assign_var)
                 
                 if len(consecutive) == max_run + 1:
