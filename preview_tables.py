@@ -7,10 +7,9 @@ Display and validate input data with interactive tables and summaries.
 
 import streamlit as st
 import pandas as pd
-from typing import Dict, Any
+from datetime import datetime
 
-# Use absolute import instead of relative import
-from constants import DATE_FORMAT_DISPLAY
+from . import constants
 
 
 def format_dates_in_dataframe(df: pd.DataFrame) -> pd.DataFrame:
