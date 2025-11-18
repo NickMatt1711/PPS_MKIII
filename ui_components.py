@@ -7,15 +7,8 @@ Reusable Streamlit components for consistent UI/UX throughout the application.
 
 import streamlit as st
 from typing import Tuple, Dict, Any, Optional
-from .constants import (
-    COLOR_PRIMARY, COLOR_SECONDARY, COLOR_SUCCESS,
-    COLOR_WARNING, COLOR_ERROR, COLOR_INFO,
-    DEFAULT_TIME_LIMIT_MIN, DEFAULT_BUFFER_DAYS,
-    DEFAULT_STOCKOUT_PENALTY, DEFAULT_TRANSITION_PENALTY,
-    DEFAULT_CONTINUITY_BONUS,
-    MIN_STOCKOUT_PENALTY, MAX_STOCKOUT_PENALTY,
-    MIN_TRANSITION_PENALTY, MAX_TRANSITION_PENALTY,
-)
+
+import constants
 
 
 def inject_custom_css() -> None:
@@ -287,10 +280,10 @@ def render_status_badge(text: str, badge_type: str = "info") -> None:
 
 
 def render_sidebar_inputs(
-    default_transition: int = DEFAULT_TRANSITION_PENALTY,
-    default_stockout: int = DEFAULT_STOCKOUT_PENALTY,
-    default_timelimit: int = DEFAULT_TIME_LIMIT_MIN,
-    default_buffer: int = DEFAULT_BUFFER_DAYS,
+    default_transition: int = constants.DEFAULT_TRANSITION_PENALTY,
+    default_stockout: int = constants.DEFAULT_STOCKOUT_PENALTY,
+    default_timelimit: int = constants.DEFAULT_TIME_LIMIT_MIN,
+    default_buffer: int = constants.DEFAULT_BUFFER_DAYS,
 ) -> Tuple[int, int, int, int]:
     """
     Render sidebar parameter inputs.
@@ -321,16 +314,16 @@ def render_sidebar_inputs(
         st.markdown("### Objective Weights")
         stockout_penalty = st.number_input(
             "🎯 Stockout Penalty",
-            min_value=MIN_STOCKOUT_PENALTY,
-            max_value=MAX_STOCKOUT_PENALTY,
+            min_value=constants.MIN_STOCKOUT_PENALTY,
+            max_value=constants.MAX_STOCKOUT_PENALTY,
             value=default_stockout,
             help="Cost weight for inventory shortages"
         )
         
         transition_penalty = st.number_input(
             "🔄 Transition Penalty",
-            min_value=MIN_TRANSITION_PENALTY,
-            max_value=MAX_TRANSITION_PENALTY,
+            min_value=constants.MIN_TRANSITION_PENALTY,
+            max_value=constants.MAX_TRANSITION_PENALTY,
             value=default_transition,
             help="Cost weight for grade changeovers"
         )
