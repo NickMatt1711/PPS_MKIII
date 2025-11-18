@@ -9,12 +9,7 @@ import time
 from typing import Dict, List, Any, Set
 from ortools.sat.python import cp_model
 
-from .constants import (
-    DEFAULT_NUM_SEARCH_WORKERS,
-    DEFAULT_RANDOM_SEED,
-    STATUS_OPTIMAL,
-    STATUS_FEASIBLE,
-)
+import constants
 
 
 class ProductionSolutionCallback(cp_model.CpSolverSolutionCallback):
@@ -126,8 +121,8 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
     # Configure solver
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = parameters.get('time_limit_min', 10) * 60.0
-    solver.parameters.num_search_workers = parameters.get('num_search_workers', DEFAULT_NUM_SEARCH_WORKERS)
-    solver.parameters.random_seed = DEFAULT_RANDOM_SEED
+    solver.parameters.num_search_workers = parameters.get('num_search_workers', constants.DEFAULT_NUM_SEARCH_WORKERS)
+    solver.parameters.random_seed = constants.DEFAULT_RANDOM_SEED
     solver.parameters.log_search_progress = True
     
     # Solve with callback
