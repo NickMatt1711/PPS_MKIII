@@ -1,10 +1,6 @@
-streamlit==1.32.0
-pandas==2.1.2
-numpy==1.26.2
-openpyxl==3.1.2
-plotly==5.18.0
-matplotlib==3.8.2
-
-# OR-Tools (must be pinned for Streamlit Cloud compatibility)
-ortools==9.6.2534
-protobuf<4.0.0
+numpy>=1.26
+pandas>=2.2.2
+streamlit>=1.29
+pillow
+openpyxl
+ortools>=9.10
