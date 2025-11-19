@@ -3,12 +3,12 @@ Main Streamlit application orchestrating UI and solver.
 """
 
 import streamlit as st
-from .constants import DEFAULT_PARAMS
-from .data_loader import parse_input_excel, get_sample_workbook
-from .preview_tables import show_preview
-from .ui_components import render_header, step_indicator, metric_row, results_tabs
-from .solver_cp_sat import solve_schedule
-from .postprocessing import gantt_figure_from_schedule, inventory_df_from_results
+from constants import DEFAULT_PARAMS
+from data_loader import parse_input_excel, get_sample_workbook
+from preview_tables import show_preview
+from ui_components import render_header, step_indicator, metric_row, results_tabs
+from solver_cp_sat import solve_schedule
+from postprocessing import gantt_figure_from_schedule, inventory_df_from_results
 import io
 
 st.set_page_config(page_title="Polymer Production Scheduler", layout="wide", initial_sidebar_state="collapsed")
