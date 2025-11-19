@@ -4,3 +4,4 @@ streamlit>=1.29
 pillow
 openpyxl
 ortools>=9.10
+plotly>=5.18.0
