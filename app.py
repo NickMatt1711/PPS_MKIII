@@ -37,7 +37,7 @@ if st.session_state.step == 1:
             st.session_state.uploaded_file = uploaded.read()
             st.success("File uploaded")
             st.session_state.step = 2
-            st.experimental_rerun()
+            st.rerun()
     with col2:
         sample = get_sample_workbook()
         if sample:
@@ -67,16 +67,16 @@ elif st.session_state.step == 2:
         with col1:
             if st.button("← Back"):
                 st.session_state.step = 1
-                st.experimental_rerun()
+                st.rerun()
         with col2:
             if st.button("Run Optimization ▶️"):
                 st.session_state.step = 3
-                st.experimental_rerun()
+                st.rerun()
     except Exception as e:
         st.error(f"Error parsing workbook: {e}")
         if st.button("Back"):
             st.session_state.step = 1
-            st.experimental_rerun()
+            st.rerun()
 
 # STEP 3: Run solver & show results
 elif st.session_state.step == 3:
@@ -84,7 +84,7 @@ elif st.session_state.step == 3:
         st.error("No parsed inputs available. Please re-upload.")
         if st.button("Back to Upload"):
             st.session_state.step = 1
-            st.experimental_rerun()
+            st.rerun()
     else:
         inputs = st.session_state.parsed_inputs
         params = st.session_state.params
@@ -136,10 +136,10 @@ elif st.session_state.step == 3:
         with col1:
             if st.button("← Configure"):
                 st.session_state.step = 2
-                st.experimental_rerun()
+                st.rerun()
         with col2:
             if st.button("New Upload"):
                 st.session_state.step = 1
                 st.session_state.uploaded_file = None
                 st.session_state.parsed_inputs = None
-                st.experimental_rerun()
+                st.rerun()
