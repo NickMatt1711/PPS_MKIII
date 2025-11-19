@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Tuple, Any
-from .constants import SAMPLE_TEMPLATE
+from constants import SAMPLE_TEMPLATE
 
 def get_sample_workbook():
     try:
