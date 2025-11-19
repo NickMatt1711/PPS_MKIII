@@ -1,331 +1,145 @@
 """
-Main Application Entry Point
-=============================
-
-Streamlit app orchestrating the polymer production scheduling workflow.
+Main Streamlit application orchestrating UI and solver.
 """
 
 import streamlit as st
-import time
-import sys
-from pathlib import Path
+from .constants import DEFAULT_PARAMS
+from .data_loader import parse_input_excel, get_sample_workbook
+from .preview_tables import show_preview
+from .ui_components import render_header, step_indicator, metric_row, results_tabs
+from .solver_cp_sat import solve_schedule
+from .postprocessing import gantt_figure_from_schedule, inventory_df_from_results
+import io
 
-# Add parent directory to path for imports
-current_dir = Path(__file__).parent
-sys.path.insert(0, str(current_dir))
+st.set_page_config(page_title="Polymer Production Scheduler", layout="wide", initial_sidebar_state="collapsed")
 
-# Import all modules
-import constants
-import data_loader
-import preview_tables
-import ui_components
-import solver_cp_sat
-import postprocessing
+# session init
+if 'step' not in st.session_state:
+    st.session_state.step = 1
+if 'uploaded_file' not in st.session_state:
+    st.session_state.uploaded_file = None
+if 'params' not in st.session_state:
+    st.session_state.params = DEFAULT_PARAMS.copy()
+if 'parsed_inputs' not in st.session_state:
+    st.session_state.parsed_inputs = None
+if 'solution' not in st.session_state:
+    st.session_state.solution = None
 
-# ============================================================================
-# PAGE CONFIGURATION
-# ============================================================================
+render_header()
+step_indicator(st.session_state.step)
 
-st.set_page_config(
-    page_title="Polymer Production Scheduler",
-    page_icon="🏭",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Inject custom CSS
-ui_components.inject_custom_css()
-
-# ============================================================================
-# SESSION STATE INITIALIZATION
-# ============================================================================
-
-if 'instance' not in st.session_state:
-    st.session_state.instance = None
-if 'solver_result' not in st.session_state:
-    st.session_state.solver_result = None
-if 'display_result' not in st.session_state:
-    st.session_state.display_result = None
-
-# ============================================================================
-# HEADER
-# ============================================================================
-
-ui_components.render_header()
-
-# ============================================================================
-# SIDEBAR - OPTIMIZATION PARAMETERS
-# ============================================================================
-
-(
-    transition_penalty,
-    stockout_penalty,
-    time_limit,
-    buffer_days
-) = ui_components.render_sidebar_inputs(
-    default_transition=constants.DEFAULT_TRANSITION_PENALTY,
-    default_stockout=constants.DEFAULT_STOCKOUT_PENALTY,
-    default_timelimit=constants.DEFAULT_TIME_LIMIT_MIN,
-    default_buffer=constants.DEFAULT_BUFFER_DAYS,
-)
-
-# ============================================================================
-# FILE UPLOAD
-# ============================================================================
-
-st.markdown("## 📁 Step 1: Upload Production Template")
-
-col1, col2 = st.columns([3, 1])
-
-with col1:
-    uploaded_file = st.file_uploader(
-        "Choose Excel File",
-        type=["xlsx"],
-        help="Upload the Polymer Production Template with Plant, Inventory, and Demand sheets",
-        label_visibility="collapsed"
-    )
-
-with col2:
-    # Provide sample template download
-    template_path = current_dir / "polymer_production_template.xlsx"
-    if template_path.exists():
-        with open(template_path, "rb") as f:
-            st.download_button(
-                label="📥 Download Template",
-                data=f,
-                file_name="polymer_production_template.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True
-            )
-
-if uploaded_file is None:
-    st.info(
-        "👆 Please upload your production planning Excel file to begin.\n\n"
-        "If you don't have a file ready, download the template and fill it with your data."
-    )
-    st.stop()
-
-# ============================================================================
-# DATA LOADING & VALIDATION
-# ============================================================================
-
-if st.session_state.instance is None or uploaded_file:
-    st.markdown("## 🔍 Step 2: Data Validation")
-    
-    with st.spinner("Loading and validating data..."):
-        try:
-            # Load data
-            instance = data_loader.load_excel_data(uploaded_file)
-            
-            # Add buffer days
-            instance = data_loader.add_buffer_days(instance, buffer_days)
-            
-            # Store in session
-            st.session_state.instance = instance
-            
-            st.success("✅ Data loaded and validated successfully!")
-            
-        except data_loader.DataLoadError as e:
-            st.error(f"❌ Data validation failed: {str(e)}")
-            st.stop()
-        except Exception as e:
-            st.error(f"❌ Unexpected error loading data: {str(e)}")
-            with st.expander("View Technical Details"):
-                import traceback
-                st.code(traceback.format_exc())
-            st.stop()
-
-ui_components.render_divider()
-
-# ============================================================================
-# DATA PREVIEW
-# ============================================================================
-
-st.markdown("## 📋 Step 3: Review Input Data")
-
-preview_tables.show_preview_tables(st.session_state.instance)
-
-ui_components.render_divider()
-
-# ============================================================================
-# OPTIMIZATION
-# ============================================================================
-
-st.markdown("## 🚀 Step 4: Run Optimization")
-
-# Show current parameter summary
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Time Limit", f"{time_limit} min")
-col2.metric("Stockout Penalty", stockout_penalty)
-col3.metric("Transition Penalty", transition_penalty)
-col4.metric("Buffer Days", buffer_days)
-
-st.markdown("---")
-
-run_button = st.button("▶️ Run Optimization", type="primary", use_container_width=True)
-
-if not run_button and st.session_state.solver_result is None:
-    ui_components.render_run_button_message()
-    st.stop()
-
-if run_button or st.session_state.solver_result is not None:
-    
-    if run_button:
-        # Run optimization
-        with st.spinner("🔧 Building optimization model..."):
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            
-            status_text.info("📊 Preprocessing data...")
-            progress_bar.progress(20)
-            time.sleep(0.5)
-            
-            status_text.info("🔧 Building constraint model...")
-            progress_bar.progress(40)
-            time.sleep(0.5)
-            
-            status_text.info("⚡ Solving optimization problem...")
-            progress_bar.progress(60)
-            
-            # Solve
-            try:
-                solver_result = solver_cp_sat.solve(
-                    st.session_state.instance,
-                    {
-                        'time_limit_min': time_limit,
-                        'stockout_penalty': stockout_penalty,
-                        'transition_penalty': transition_penalty,
-                        'buffer_days': buffer_days,
-                    }
-                )
-                
-                st.session_state.solver_result = solver_result
-                
-                progress_bar.progress(80)
-                status_text.info("📈 Processing results...")
-                
-                # Convert to display format
-                display_result = postprocessing.convert_solver_output_to_display(
-                    solver_result,
-                    st.session_state.instance
-                )
-                st.session_state.display_result = display_result
-                
-                progress_bar.progress(100)
-                status_text.empty()
-                progress_bar.empty()
-                
-            except Exception as e:
-                st.error(f"❌ Optimization failed: {str(e)}")
-                with st.expander("View Technical Details"):
-                    import traceback
-                    st.code(traceback.format_exc())
-                st.stop()
-    
-    ui_components.render_divider()
-    
-    # ========================================================================
-    # RESULTS DISPLAY
-    # ========================================================================
-    
-    st.markdown("## 📊 Optimization Results")
-    
-    solver_result = st.session_state.solver_result
-    display_result = st.session_state.display_result
-    
-    # Show status
-    ui_components.render_optimization_status(
-        solver_result['status'],
-        solver_result['runtime']
-    )
-    
-    # Check if solution exists
-    if display_result is None:
-        st.error("❌ No feasible solution found.")
-        ui_components.render_troubleshooting_guide()
-        
-        # Reset button
-        if st.button("🔄 Try Again with Different Parameters"):
-            st.session_state.solver_result = None
-            st.session_state.display_result = None
-            st.rerun()
-        
-        st.stop()
-    
-    # Display summary metrics
-    total_stockouts = sum(
-        sum(display_result['stockout'].get(g, {}).values())
-        for g in st.session_state.instance['grades']
-    )
-    
-    ui_components.render_summary_metrics(
-        objective=display_result['objective'],
-        transitions=display_result['transitions']['total'],
-        stockouts=total_stockouts,
-        planning_days=len(st.session_state.instance['dates'])
-    )
-    
-    ui_components.render_divider()
-    
-    # ========================================================================
-    # VISUALIZATIONS
-    # ========================================================================
-    
-    # Create tabs for different views
-    tab1, tab2, tab3 = st.tabs([
-        "📅 Production Schedule",
-        "📦 Inventory Trends",
-        "📊 Production Summary"
-    ])
-    
-    with tab1:
-        postprocessing.plot_production_visuals(
-            display_result,
-            st.session_state.instance,
-            {'buffer_days': buffer_days}
-        )
-    
-    with tab2:
-        postprocessing.plot_inventory_charts(
-            display_result,
-            st.session_state.instance,
-            {'buffer_days': buffer_days}
-        )
-    
-    with tab3:
-        postprocessing.render_production_summary(
-            display_result,
-            st.session_state.instance
-        )
-    
-    ui_components.render_divider()
-    
-    # ========================================================================
-    # ACTION BUTTONS
-    # ========================================================================
-    
-    col1, col2, col3 = st.columns([1, 1, 1])
-    
+# STEP 1: Upload
+if st.session_state.step == 1:
+    col1, col2 = st.columns([3,1])
     with col1:
-        if st.button("🔄 New Optimization", use_container_width=True):
-            st.session_state.instance = None
-            st.session_state.solver_result = None
-            st.session_state.display_result = None
-            st.rerun()
-    
+        uploaded = st.file_uploader("Upload Excel file (Plant, Inventory, Demand)", type=["xlsx"])
+        if uploaded:
+            st.session_state.uploaded_file = uploaded.read()
+            st.success("File uploaded")
+            st.session_state.step = 2
+            st.experimental_rerun()
     with col2:
-        if st.button("⚙️ Adjust Parameters", use_container_width=True):
-            st.session_state.solver_result = None
-            st.session_state.display_result = None
-            st.rerun()
-    
-    with col3:
-        # Export functionality (placeholder for future)
-        st.button("📥 Export Results", use_container_width=True, disabled=True)
-        st.caption("Export feature coming soon")
+        sample = get_sample_workbook()
+        if sample:
+            st.download_button("Download template", data=sample, file_name="polymer_production_template.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-# ============================================================================
-# FOOTER
-# ============================================================================
+# STEP 2: Configure & Preview
+elif st.session_state.step == 2:
+    try:
+        excel_bytes = st.session_state.uploaded_file
+        inputs = parse_input_excel(excel_bytes, buffer_days=st.session_state.params["buffer_days"])
+        # attach allowed_lines into inputs (data_loader returns via parse_input_excel)
+        inputs["allowed_lines"] = inputs.get("allowed_lines") if inputs.get("allowed_lines") else inputs.get("allowed_lines", {})
+        st.session_state.parsed_inputs = inputs
+        st.header("Configure Optimization")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.session_state.params["time_limit_min"] = st.number_input("Time limit (min)", min_value=1, max_value=120, value=st.session_state.params["time_limit_min"])
+            st.session_state.params["buffer_days"] = st.number_input("Buffer days", min_value=0, max_value=14, value=st.session_state.params["buffer_days"])
+        with col2:
+            st.session_state.params["stockout_penalty"] = st.number_input("Stockout penalty", min_value=1, value=st.session_state.params["stockout_penalty"])
+            st.session_state.params["transition_penalty"] = st.number_input("Transition penalty", min_value=0, value=st.session_state.params["transition_penalty"])
+        st.markdown("---")
+        st.subheader("Data Preview")
+        show_preview(inputs["plant_df"], inputs["inventory_df"], inputs["demand_df"])
+        st.markdown("---")
+        col1, col2 = st.columns([1,1])
+        with col1:
+            if st.button("← Back"):
+                st.session_state.step = 1
+                st.experimental_rerun()
+        with col2:
+            if st.button("Run Optimization ▶️"):
+                st.session_state.step = 3
+                st.experimental_rerun()
+    except Exception as e:
+        st.error(f"Error parsing workbook: {e}")
+        if st.button("Back"):
+            st.session_state.step = 1
+            st.experimental_rerun()
 
-ui_components.render_footer()
+# STEP 3: Run solver & show results
+elif st.session_state.step == 3:
+    if st.session_state.parsed_inputs is None:
+        st.error("No parsed inputs available. Please re-upload.")
+        if st.button("Back to Upload"):
+            st.session_state.step = 1
+            st.experimental_rerun()
+    else:
+        inputs = st.session_state.parsed_inputs
+        params = st.session_state.params
+        st.markdown("### 🔧 Running optimization")
+        progress = st.progress(0)
+        status_text = st.empty()
+        try:
+            status_text.info("Building & solving model...")
+            progress.progress(10)
+            # Microprogress callback (ignored for now)
+            def on_progress(pct, msg):
+                try:
+                    progress.progress(min(100, max(0, pct)))
+                    status_text.info(msg)
+                except Exception:
+                    pass
+            # run solver (this may take time)
+            result = solve_schedule(inputs, params, on_progress=on_progress)
+            st.session_state.solution = result
+            progress.progress(100)
+            status_text.success("Solver finished")
+            # prepare visuals
+            if result.get("final"):
+                final = result["final"]
+                production_df = []
+                for g, mapping in final["production"].items():
+                    for date, val in mapping.items():
+                        production_df.append({"Grade": g, "Date": date, "Produced": val})
+                import pandas as pd
+                production_df = pd.DataFrame(production_df)
+                inventory_df = inventory_df_from_results(final.get("inventory", {}))
+                gantt_fig = gantt_figure_from_schedule(final.get("schedule", {}))
+                # KPIs
+                objective = final.get("objective", "N/A")
+                total_transitions = sum(final.get("schedule", {}).get(l, {}).get(list(inputs["formatted_dates"])[0], 0) for l in inputs["lines"]) if False else sum(0 for _ in [])
+                # Show KPI cards (simple)
+                metric_row({"Objective": f"{objective}", "Producing Grades": str(len(final["production"].keys())), "Horizon days": str(inputs["num_days"])})
+                results_tabs(production_df, inventory_df, gantt_fig)
+            else:
+                st.warning("No feasible solution found.")
+                if "solutions" in result and result["solutions"]:
+                    st.write("Intermediate solutions captured.")
+        except Exception as e:
+            st.error(f"Solver error: {e}")
+            import traceback
+            st.code(traceback.format_exc())
+        st.markdown("---")
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button("← Configure"):
+                st.session_state.step = 2
+                st.experimental_rerun()
+        with col2:
+            if st.button("New Upload"):
+                st.session_state.step = 1
+                st.session_state.uploaded_file = None
+                st.session_state.parsed_inputs = None
+                st.experimental_rerun()
