@@ -6,6 +6,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from constants import GRADE_PALETTE
+from typing import Dict, Any, List
 
 def build_gantt_df(schedule: Dict[str, Dict[str, Any]]):
     rows = []
