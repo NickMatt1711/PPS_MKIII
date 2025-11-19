@@ -5,7 +5,7 @@ Transform solver results to DataFrames and Plotly figures for display.
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from .constants import GRADE_PALETTE
+from constants import GRADE_PALETTE
 
 def build_gantt_df(schedule: Dict[str, Dict[str, Any]]):
     rows = []
