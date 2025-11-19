@@ -11,6 +11,12 @@ from solver_cp_sat import solve_schedule
 from postprocessing import gantt_figure_from_schedule, inventory_df_from_results
 import io
 
+from solver_debug import debug_find_cause
+res = debug_find_cause(inputs, params)
+st.write("DEBUG FEASIBILITY REPORT (paste to chat):")
+st.json(res)
+st.stop()
+
 st.set_page_config(page_title="Polymer Production Scheduler", layout="wide", initial_sidebar_state="collapsed")
 
 # session init
