@@ -137,7 +137,7 @@ def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
                     date_val = demand_df.iloc[i, 0]
                     date_obj = pd.to_datetime(date_val).date()
                     qty = demand_df[grade].iloc[i]
-                    demand_data[grade][date_obj] = float(qty) if pd.notna(qty) else 0
+                    demand_data[grade][date_obj] = int(float(qty)) if pd.notna(qty) else 0
             else:
                 for d in demand_period_dates:
                     demand_data[grade][d] = 0
