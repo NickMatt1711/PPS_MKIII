@@ -318,10 +318,17 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
                     if transition_rules.get(line) and grade1 in transition_rules[line] and grade2 not in transition_rules[line][grade1]:
                         continue
                     trans_var = model.NewBoolVar(f'trans_{line}_{d}_{grade1}_to_{grade2}')
-                    model.AddBoolAnd([is_producing[(grade1, line, d)], is_producing[(grade2, line, d + 1)]]).OnlyEnforceI
-                    model.AddBoolAnd([is_producing[(grade1, line, d)], is_producing[(grade2, line, d + 1)]]).OnlyEnforceIf(trans_var)
+
+                    # trans_var = 1 exactly when both consecutive days match grade1 → grade2
+                    model.AddBoolAnd([
+                        is_producing[(grade1, line, d)],
+                        is_producing[(grade2, line, d + 1)]
+                    ]).OnlyEnforceIf(trans_var)
+                    
+                    # If either side is zero, then transition cannot activate
                     model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade1, line, d)].Not())
                     model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade2, line, d + 1)].Not())
+
                     objective += transition_penalty * trans_var
     
     model.Minimize(objective)
