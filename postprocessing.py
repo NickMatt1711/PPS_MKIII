@@ -248,7 +248,7 @@ def plot_inventory_charts(display_result: Dict, instance: Dict, params: Dict) ->
             val = inv_map.get(label, inv_map.get('initial', 0) if d == 0 else 0)
             inventory_values.append(val)
         
-        last_actual_day = max(0, num_days - buffer_days - 1)
+        last_actual_day = max(0, num_days - 1)
         
         # Key statistics
         start_val = inventory_values[0]
