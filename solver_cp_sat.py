@@ -2,6 +2,7 @@ from ortools.sat.python import cp_model
 import time
 from typing import Dict, Any
 
+
 # -----------------------------
 # Solution Callback
 # -----------------------------
@@ -18,89 +19,64 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
         self.formatted_dates = formatted_dates
         self.num_days = num_days
         self.solutions = []
-        self.solution_times = []
         self.start_time = time.time()
 
     def on_solution_callback(self):
         current_time = time.time() - self.start_time
-        self.solution_times.append(current_time)
-        current_obj = self.ObjectiveValue()
-
         solution = {
-            'objective': current_obj,
+            'objective': self.ObjectiveValue(),
             'time': current_time,
             'production': {},
             'inventory': {},
             'stockout': {},
-            'is_producing': {},
+            'schedule': {},
             'transitions': {}
         }
 
-        # Production schedule
+        # Inventory and stockouts
         for grade in self.grades:
-            solution['production'][grade] = {}
-            for line in self.lines:
-                for d in range(self.num_days):
-                    key = (grade, line, d)
-                    if key in self.production:
-                        value = self.Value(self.production[key])
-                        if value > 0:
-                            date_key = self.formatted_dates[d]
-                            solution['production'][grade].setdefault(date_key, 0)
-                            solution['production'][grade][date_key] += value
+            solution['inventory'][grade] = {
+                'initial': self.Value(self.inventory[(grade, 0)]),
+                'daily': [self.Value(self.inventory[(grade, d)]) for d in range(1, self.num_days + 1)]
+            }
+            solution['stockout'][grade] = [self.Value(self.stockout[(grade, d)]) for d in range(self.num_days)]
 
-        # Inventory
-        for grade in self.grades:
-            solution['inventory'][grade] = {}
-            for d in range(self.num_days + 1):
-                key = (grade, d)
-                if key in self.inventory:
-                    if d < self.num_days:
-                        solution['inventory'][grade][self.formatted_dates[d] if d > 0 else 'initial'] = self.Value(self.inventory[key])
-                    else:
-                        solution['inventory'][grade]['final'] = self.Value(self.inventory[key])
-
-        # Stockouts
-        for grade in self.grades:
-            solution['stockout'][grade] = {}
-            for d in range(self.num_days):
-                key = (grade, d)
-                if key in self.stockout:
-                    value = self.Value(self.stockout[key])
-                    if value > 0:
-                        solution['stockout'][grade][self.formatted_dates[d]] = value
-
-        # Schedule
-        for line in self.lines:
-            solution['is_producing'][line] = {}
-            for d in range(self.num_days):
-                date_key = self.formatted_dates[d]
-                solution['is_producing'][line][date_key] = None
-                for grade in self.grades:
-                    key = (grade, line, d)
-                    if key in self.is_producing and self.Value(self.is_producing[key]) == 1:
-                        solution['is_producing'][line][date_key] = grade
-                        break
-
-        # Transitions
+        # Production schedule per plant
         transition_count_per_line = {line: 0 for line in self.lines}
         total_transitions = 0
         for line in self.lines:
-            last_grade = None
+            runs = []
+            current_grade = None
+            start_day = None
             for d in range(self.num_days):
-                current_grade = None
+                active_grade = None
                 for grade in self.grades:
-                    key = (grade, line, d)
-                    if key in self.is_producing and self.Value(self.is_producing[key]) == 1:
-                        current_grade = grade
+                    if (grade, line, d) in self.is_producing and self.Value(self.is_producing[(grade, line, d)]) == 1:
+                        active_grade = grade
                         break
-                if current_grade is not None:
-                    if last_grade is not None and current_grade != last_grade:
-                        transition_count_per_line[line] += 1
-                        total_transitions += 1
-                    last_grade = current_grade
-        solution['transitions'] = {'per_line': transition_count_per_line, 'total': total_transitions}
+                if active_grade != current_grade:
+                    if current_grade is not None:
+                        runs.append({
+                            'grade': current_grade,
+                            'start': self.formatted_dates[start_day],
+                            'end': self.formatted_dates[d - 1],
+                            'days': (d - start_day)
+                        })
+                        if active_grade is not None:
+                            transition_count_per_line[line] += 1
+                            total_transitions += 1
+                    current_grade = active_grade
+                    start_day = d if active_grade else None
+            if current_grade is not None:
+                runs.append({
+                    'grade': current_grade,
+                    'start': self.formatted_dates[start_day],
+                    'end': self.formatted_dates[self.num_days - 1],
+                    'days': (self.num_days - start_day)
+                })
+            solution['schedule'][line] = runs
 
+        solution['transitions'] = {'per_line': transition_count_per_line, 'total': total_transitions}
         self.solutions.append(solution)
 
     def num_solutions(self):
@@ -111,10 +87,12 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
 # Main Solver Function
 # -----------------------------
 def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    # Extract parameters
     time_limit_min = parameters.get('time_limit_min', 10)
     stockout_penalty = parameters.get('stockout_penalty', 10)
     transition_penalty = parameters.get('transition_penalty', 10)
 
+    # Extract instance data
     grades = instance['grades']
     lines = instance['lines']
     capacities = instance['capacities']
@@ -142,10 +120,13 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
     production = {}
     inventory_vars = {}
     stockout_vars = {}
+    is_start_vars = {}
+    is_end_vars = {}
 
     def is_allowed_combination(grade, line):
         return line in allowed_lines.get(grade, [])
 
+    # Production and is_producing
     for grade in grades:
         for line in allowed_lines[grade]:
             for d in range(num_days):
@@ -155,18 +136,19 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
                 model.Add(production_value <= capacities[line] * is_producing[key])
                 production[key] = production_value
 
+    # Inventory and stockouts
     for grade in grades:
         for d in range(num_days + 1):
             inventory_vars[(grade, d)] = model.NewIntVar(0, 100000, f'inventory_{grade}_{d}')
-
     for grade in grades:
         for d in range(num_days):
             stockout_vars[(grade, d)] = model.NewIntVar(0, 100000, f'stockout_{grade}_{d}')
 
-    # Constraints
+    # Initial inventory
     for grade in grades:
         model.Add(inventory_vars[(grade, 0)] == initial_inventory[grade])
 
+    # Inventory balance
     for grade in grades:
         for d in range(num_days):
             produced_today = sum(production[(grade, line, d)] for line in allowed_lines[grade])
@@ -178,6 +160,7 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
             model.Add(inventory_vars[(grade, d + 1)] == inventory_vars[(grade, d)] + produced_today - supplied)
             model.Add(inventory_vars[(grade, d + 1)] >= 0)
 
+    # Shutdown constraints
     for line in lines:
         if line in shutdown_periods:
             for d in shutdown_periods[line]:
@@ -186,14 +169,17 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
                         model.Add(is_producing[(grade, line, d)] == 0)
                         model.Add(production[(grade, line, d)] == 0)
 
+    # Capacity constraints
     for line in lines:
         for d in range(num_days):
             model.Add(sum(production[(grade, line, d)] for grade in grades if is_allowed_combination(grade, line)) <= capacities[line])
 
+    # Inventory limits
     for grade in grades:
         for d in range(1, num_days + 1):
             model.Add(inventory_vars[(grade, d)] <= max_inventory[grade])
 
+    # Force start dates
     for (grade, plant), start_date in force_start_date.items():
         if start_date and plant in lines:
             try:
@@ -202,11 +188,60 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
             except ValueError:
                 pass
 
+    # Material running info
     for plant, (material, expected_days) in material_running_info.items():
         for d in range(min(expected_days, num_days)):
             if is_allowed_combination(material, plant):
                 model.Add(is_producing[(material, plant, d)] == 1)
 
+    # Min/Max run days
+    for grade in grades:
+        for line in allowed_lines[grade]:
+            for d in range(num_days):
+                is_start = model.NewBoolVar(f'start_{grade}_{line}_{d}')
+                is_end = model.NewBoolVar(f'end_{grade}_{line}_{d}')
+                is_start_vars[(grade, line, d)] = is_start
+                is_end_vars[(grade, line, d)] = is_end
+
+                current = is_producing[(grade, line, d)]
+                prev = is_producing.get((grade, line, d - 1), None)
+                next_ = is_producing.get((grade, line, d + 1), None)
+
+                if prev:
+                    model.AddBoolAnd([current, prev.Not()]).OnlyEnforceIf(is_start)
+                    model.AddBoolOr([current.Not(), prev]).OnlyEnforceIf(is_start.Not())
+                else:
+                    model.Add(is_start == current)
+
+                if next_:
+                    model.AddBoolAnd([current, next_.Not()]).OnlyEnforceIf(is_end)
+                    model.AddBoolOr([current.Not(), next_]).OnlyEnforceIf(is_end.Not())
+                else:
+                    model.Add(is_end == current)
+
+            # Enforce min run days
+            min_run = min_run_days.get((grade, line), 1)
+            for d in range(num_days):
+                if d + min_run <= num_days:
+                    for k in range(min_run):
+                        if (grade, line, d + k) in is_producing:
+                            model.Add(is_producing[(grade, line, d + k)] == 1).OnlyEnforceIf(is_start_vars[(grade, line, d)])
+
+            # Enforce max run days
+            max_run = max_run_days.get((grade, line), 9999)
+            for d in range(num_days - max_run):
+                consecutive = [is_producing[(grade, line, d + k)] for k in range(max_run + 1) if (grade, line, d + k) in is_producing]
+                if len(consecutive) == max_run + 1:
+                    model.Add(sum(consecutive) <= max_run)
+
+    # Rerun restrictions
+    for grade in grades:
+        for line in allowed_lines[grade]:
+            if not rerun_allowed.get((grade, line), True):
+                starts = [is_start_vars[(grade, line, d)] for d in range(num_days)]
+                model.Add(sum(starts) <= 1)
+
+    # Transition rules
     for line in lines:
         if transition_rules.get(line):
             for d in range(num_days - 1):
@@ -255,3 +290,4 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
         "solutions": callback.solutions,
         "best": callback.solutions[-1] if callback.solutions else None,
         "runtime": time.time() - start_time
+    }
