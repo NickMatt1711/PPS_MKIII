@@ -22,10 +22,9 @@ class DataLoadError(Exception):
 def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
     """
     Load and validate Excel data following the exact logic from original implementation.
-    CORRECTED: Proper date range handling
-    
-    Returns:
-        Dictionary containing all problem instance data matching original structure
+    CORRECTED: Proper date range handling and separation of:
+       - demand_period_dates (actual demand horizon shown to user)
+       - dates (planning horizon used by solver after buffer days)
     """
     try:
         uploaded_file.seek(0)
@@ -39,14 +38,14 @@ def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
         inventory_df = pd.read_excel(excel_file, sheet_name=constants.SHEET_INVENTORY)
         demand_df = pd.read_excel(excel_file, sheet_name=constants.SHEET_DEMAND)
         
-        # Parse plants/lines (matching original logic exactly)
+        # Parse plants/lines
         lines = list(plant_df['Plant'])
         capacities = {row['Plant']: row['Capacity per day'] for _, row in plant_df.iterrows()}
         
-        # Parse grades from demand
+        # Parse grades from demand sheet
         grades = [col for col in demand_df.columns if col != demand_df.columns[0]]
         
-        # Initialize inventory parameters (matching original structure)
+        # Initialize inventory parameters
         initial_inventory = {}
         min_inventory = {}
         max_inventory = {}
@@ -59,7 +58,7 @@ def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
         
         grade_inventory_defined = set()
         
-        # Process inventory sheet (exact logic from original)
+        # Process inventory sheet
         for _, row in inventory_df.iterrows():
             grade = row['Grade Name']
             
@@ -75,7 +74,7 @@ def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
                 if plant not in allowed_lines[grade]:
                     allowed_lines[grade].append(plant)
             
-            # Global inventory parameters (only set once per grade)
+            # Inventory parameters per grade
             if grade not in grade_inventory_defined:
                 initial_inventory[grade] = row['Opening Inventory'] if pd.notna(row['Opening Inventory']) else 0
                 min_inventory[grade] = row['Min. Inventory'] if pd.notna(row['Min. Inventory']) else 0
@@ -85,26 +84,26 @@ def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
             
             # Plant-specific parameters
             for plant in plants_for_row:
-                grade_plant_key = (grade, plant)
-                min_run_days[grade_plant_key] = int(row['Min. Run Days']) if pd.notna(row['Min. Run Days']) else 1
-                max_run_days[grade_plant_key] = int(row['Max. Run Days']) if pd.notna(row['Max. Run Days']) else 9999
+                key = (grade, plant)
+                min_run_days[key] = int(row['Min. Run Days']) if pd.notna(row['Min. Run Days']) else 1
+                max_run_days[key] = int(row['Max. Run Days']) if pd.notna(row['Max. Run Days']) else 9999
                 
                 # Force start date
                 if pd.notna(row['Force Start Date']):
                     try:
-                        force_start_date[grade_plant_key] = pd.to_datetime(row['Force Start Date']).date()
+                        force_start_date[key] = pd.to_datetime(row['Force Start Date']).date()
                     except:
-                        force_start_date[grade_plant_key] = None
+                        force_start_date[key] = None
                 else:
-                    force_start_date[grade_plant_key] = None
+                    force_start_date[key] = None
                 
                 # Rerun allowed
                 rerun_val = row['Rerun Allowed']
                 if pd.notna(rerun_val):
                     val_str = str(rerun_val).strip().lower()
-                    rerun_allowed[grade_plant_key] = val_str not in ['no', 'n', 'false', '0']
+                    rerun_allowed[key] = val_str not in ['no', 'n', 'false', '0']
                 else:
-                    rerun_allowed[grade_plant_key] = True
+                    rerun_allowed[key] = True
         
         # Material running info
         material_running_info = {}
@@ -119,39 +118,37 @@ def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
                 except (ValueError, TypeError):
                     pass
         
-        # CORRECTED: Parse demand data - get EXACT date range from demand sheet
-        demand_data = {}
-        
-        # Get dates from demand sheet - these are the ACTUAL demand period dates
+        # =============== DEMAND DATE HANDLING (CORRECTED) ====================
+        # Extract ACTUAL demand period dates (this must be displayed to user)
         date_series = pd.to_datetime(demand_df.iloc[:, 0])
-        demand_period_dates = sorted([d.date() for d in date_series])
+        demand_period_dates = sorted(list(set([d.date() for d in date_series])))
         
-        # Remove any duplicates
-        demand_period_dates = sorted(list(set(demand_period_dates)))
+        st.info(
+            f"📅 Demand period: {len(demand_period_dates)} days "
+            f"({demand_period_dates[0].strftime('%d-%b-%y')} to {demand_period_dates[-1].strftime('%d-%b-%y')})"
+        )
         
-        st.info(f"📅 Demand period: {len(demand_period_dates)} days ({demand_period_dates[0].strftime('%d-%b-%y')} to {demand_period_dates[-1].strftime('%d-%b-%y')})")
-        
-        # Parse demand for each grade (only for demand period)
+        # Demand dict - only the actual demand dates
+        demand_data = {}
         for grade in grades:
             demand_data[grade] = {}
             if grade in demand_df.columns:
                 for i in range(len(demand_df)):
                     date_val = demand_df.iloc[i, 0]
                     date_obj = pd.to_datetime(date_val).date()
-                    demand_qty = demand_df[grade].iloc[i]
-                    demand_data[grade][date_obj] = float(demand_qty) if pd.notna(demand_qty) else 0
+                    qty = demand_df[grade].iloc[i]
+                    demand_data[grade][date_obj] = float(qty) if pd.notna(qty) else 0
             else:
-                for date_obj in demand_period_dates:
-                    demand_data[grade][date_obj] = 0
+                for d in demand_period_dates:
+                    demand_data[grade][d] = 0
         
-        # CORRECTED: dates list will be extended with buffer days in add_buffer_days()
-        # For now, just use the demand period dates
-        dates = demand_period_dates
+        # Planning horizon initially equals demand horizon (buffer added later)
+        dates = demand_period_dates.copy()
         
-        # Parse shutdown periods (using demand period dates for now)
+        # Shutdown periods (based only on demand horizon for now)
         shutdown_periods = _process_shutdown_dates(plant_df, dates)
         
-        # Load transition matrices (exact logic from original)
+        # Load transition matrices
         transition_dfs = {}
         for i in range(len(plant_df)):
             plant_name = plant_df['Plant'].iloc[i]
@@ -162,16 +159,16 @@ def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
                 f'Transition{plant_name.replace(" ", "")}',
             ]
             
-            transition_df_found = None
+            found = None
             for sheet_name in possible_sheet_names:
                 try:
                     excel_file.seek(0)
-                    transition_df_found = pd.read_excel(excel_file, sheet_name=sheet_name, index_col=0)
+                    found = pd.read_excel(excel_file, sheet_name=sheet_name, index_col=0)
                     break
                 except:
                     continue
             
-            transition_dfs[plant_name] = transition_df_found
+            transition_dfs[plant_name] = found
         
         # Process transition rules
         transition_rules = {}
@@ -179,20 +176,22 @@ def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
             if df is not None:
                 transition_rules[line] = {}
                 for prev_grade in df.index:
-                    allowed_transitions = []
-                    for current_grade in df.columns:
-                        if str(df.loc[prev_grade, current_grade]).lower() == 'yes':
-                            allowed_transitions.append(current_grade)
-                    transition_rules[line][prev_grade] = allowed_transitions
+                    allowed = [
+                        current_grade
+                        for current_grade in df.columns
+                        if str(df.loc[prev_grade, current_grade]).lower() == 'yes'
+                    ]
+                    transition_rules[line][prev_grade] = allowed
             else:
                 transition_rules[line] = None
         
-        # Build instance dict (matching original structure exactly)
+        # Build final instance
         instance = {
             'grades': grades,
             'lines': lines,
-            'dates': dates,  # Will be extended in add_buffer_days()
-            'num_days': len(dates),  # Will be updated in add_buffer_days()
+            'dates': dates,                     # planning dates (with buffer later)
+            'demand_period_dates': demand_period_dates,  # TRUE demand dates (NO BUFFER)
+            'num_days': len(dates),
             'capacities': capacities,
             'demand_data': demand_data,
             'initial_inventory': initial_inventory,
@@ -230,10 +229,7 @@ def _validate_sheets(excel_file: pd.ExcelFile) -> None:
 
 def _process_shutdown_dates(plant_df: pd.DataFrame, dates: List[date]) -> Dict[str, List[int]]:
     """
-    Process shutdown dates for each plant - exact logic from original.
-    
-    Returns:
-        Dict mapping plant -> list of shutdown day indices
+    Process shutdown dates for each plant following original rules.
     """
     shutdown_periods = {}
     
@@ -248,22 +244,26 @@ def _process_shutdown_dates(plant_df: pd.DataFrame, dates: List[date]) -> Dict[s
                 end_date = pd.to_datetime(shutdown_end).date()
                 
                 if start_date > end_date:
-                    st.warning(f"⚠️ Shutdown start date after end date for {plant}. Ignoring shutdown.")
+                    st.warning(f"⚠️ Shutdown start > end for {plant}. Ignoring.")
                     shutdown_periods[plant] = []
                     continue
                 
-                shutdown_days = []
-                for d, date in enumerate(dates):
-                    if start_date <= date <= end_date:
-                        shutdown_days.append(d)
+                shutdown_days = [
+                    i for i, d in enumerate(dates)
+                    if start_date <= d <= end_date
+                ]
                 
                 if shutdown_days:
                     shutdown_periods[plant] = shutdown_days
-                    st.info(f"🔧 Shutdown scheduled for {plant}: {start_date.strftime('%d-%b-%y')} to {end_date.strftime('%d-%b-%y')} ({len(shutdown_days)} days)")
+                    st.info(
+                        f"🔧 Shutdown for {plant}: "
+                        f"{start_date.strftime('%d-%b-%y')} to {end_date.strftime('%d-%b-%y')} "
+                        f"({len(shutdown_days)} days)"
+                    )
                 else:
                     shutdown_periods[plant] = []
-                    st.info(f"ℹ️ Shutdown period for {plant} is outside planning horizon")
-                    
+                    st.info(f"ℹ️ Shutdown for {plant} is outside demand horizon")
+            
             except Exception as e:
                 st.warning(f"⚠️ Invalid shutdown dates for {plant}: {e}")
                 shutdown_periods[plant] = []
@@ -275,9 +275,9 @@ def _process_shutdown_dates(plant_df: pd.DataFrame, dates: List[date]) -> Dict[s
 
 def add_buffer_days(instance: Dict[str, Any], buffer_days: int) -> Dict[str, Any]:
     """
-    CORRECTED: Extend planning horizon by adding buffer days ONLY at the end.
-    Buffer days purpose: Allow production runs starting near end of demand period
-    to complete their minimum run days requirement.
+    CORRECTED:
+    Adds buffer days ONLY to planning horizon (instance['dates'])
+    but DOES NOT change demand_period_dates (used for display).
     """
     if buffer_days <= 0:
         return instance
@@ -288,27 +288,25 @@ def add_buffer_days(instance: Dict[str, Any], buffer_days: int) -> Dict[str, Any
     
     st.info(f"📅 Original demand period: {original_num_days} days")
     
-    # Add buffer days AFTER the demand period
-    buffer_dates = []
-    for i in range(1, buffer_days + 1):
-        buffer_dates.append(last_date + timedelta(days=i))
+    # Add buffer days
+    buffer_dates = [(last_date + timedelta(days=i)) for i in range(1, buffer_days + 1)]
     
-    # Extend dates list
+    # Extend planning horizon
     instance['dates'].extend(buffer_dates)
     instance['num_days'] = len(instance['dates'])
     
-    # Set demand to ZERO for all buffer days
+    # Set demand = 0 for buffer days
     for grade in instance['grades']:
-        for buffer_date in buffer_dates:
-            instance['demand_data'][grade][buffer_date] = 0
+        for bd in buffer_dates:
+            instance['demand_data'][grade][bd] = 0
     
-    # Update shutdown periods if they extend into buffer period
-    for line in instance['lines']:
-        if line in instance['shutdown_periods'] and instance['shutdown_periods'][line]:
-            # Shutdown periods are stored as day indices, no need to update
-            pass
-    
-    st.success(f"✅ Planning horizon extended: {instance['num_days']} days ({original_num_days} demand + {buffer_days} buffer)")
-    st.info(f"📅 Buffer period: {buffer_dates[0].strftime('%d-%b-%y')} to {buffer_dates[-1].strftime('%d-%b-%y')}")
+    st.success(
+        f"✅ Planning horizon: {instance['num_days']} days "
+        f"({original_num_days} demand + {buffer_days} buffer)"
+    )
+    st.info(
+        f"📅 Buffer period: {buffer_dates[0].strftime('%d-%b-%y')} "
+        f"to {buffer_dates[-1].strftime('%d-%b-%y')}"
+    )
     
     return instance
