@@ -269,7 +269,7 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
     transition_vars = []
     for line in lines:
         rules = transition_rules.get(line)
-        if rules is None:
+        if not rules:
             continue
         for d in range(num_days - 1):
             for prev_grade in grades:
@@ -280,6 +280,7 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
                     if allowed == "No":
                         prev_var = get_is_producing_var(prev_grade, line, d)
                         next_var = get_is_producing_var(next_grade, line, d + 1)
+                        # ✅ Only check existence, not truth value
                         if prev_var is not None and next_var is not None:
                             model.AddBoolOr([prev_var.Not(), next_var.Not()])
             
