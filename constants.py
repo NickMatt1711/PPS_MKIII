@@ -19,7 +19,7 @@ DEFAULT_RANDOM_SEED: int = 42
 
 # Objective function weights
 DEFAULT_STOCKOUT_PENALTY: int = 10
-DEFAULT_TRANSITION_PENALTY: int = 50
+DEFAULT_TRANSITION_PENALTY: int = 10
 
 # Constraint parameters
 MIN_RUN_DAYS_DEFAULT: int = 1
