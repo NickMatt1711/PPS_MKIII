@@ -12,7 +12,7 @@ from typing import Dict, List
 # ============================================================================
 
 # Default solver settings
-DEFAULT_TIME_LIMIT_MIN: int = 10
+DEFAULT_TIME_LIMIT_MIN: int = 5
 DEFAULT_BUFFER_DAYS: int = 3
 DEFAULT_NUM_SEARCH_WORKERS: int = 8
 DEFAULT_RANDOM_SEED: int = 42
