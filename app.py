@@ -10,36 +10,13 @@ import time
 import io
 from pathlib import Path
 
-# TEMP DEBUG: reveal real import error
-import traceback, importlib
-
-modules = [
-    "constants",
-    "data_loader",
-    "preview_tables",
-    "ui_components",
-    "solver_cp_sat",
-    "postprocessing",
-]
-
-st.write("Running import diagnostics...")
-
-for m in modules:
-    try:
-        importlib.import_module(m)
-        st.success(f"Imported `{m}` successfully")
-    except Exception as e:
-        st.error(f"FAILED to import `{m}`: {e}")
-        st.code(traceback.format_exc())
-
-from pathlib import Path
-
-st.write("Current working directory:", Path.cwd())
-st.write("Files in working directory:", [p.name for p in Path('.').iterdir()])
-
-template = Path("polymer_production_template.xlsx")
-st.write("Template exists:", template.exists())
-  # Prevent rest of app from running
+# Import all modules
+import constants
+import data_loader
+import preview_tables
+import ui_components
+import solver_cp_sat
+import postprocessing
 
 # ============================================================================
 # PAGE CONFIGURATION
