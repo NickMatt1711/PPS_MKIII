@@ -126,19 +126,29 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
     # Forbidden transitions
     # -------------------------
     for line in lines:
-        rules = transition_rules.get(line, {})
+        rules = transition_rules.get(line)
+        if rules is None:
+            continue  # no transition rules defined for this line
+    
         for d in range(num_days - 1):
             for prev_grade in grades:
                 for next_grade in grades:
                     if prev_grade == next_grade:
                         continue
-                    allowed = rules.get(prev_grade, {}).get(next_grade, "Yes")
+    
+                    # Safe: rules is a dict
+                    allowed_next = rules.get(prev_grade)
+                    if allowed_next is None:
+                        allowed = "Yes"  # default if row missing
+                    else:
+                        allowed = allowed_next.get(next_grade, "Yes")  # default Yes if column missing
+    
                     if allowed == "No":
                         prev_var = get_is_producing(prev_grade, line, d)
                         next_var = get_is_producing(next_grade, line, d + 1)
                         if prev_var is not None and next_var is not None:
-                            # forbid transition
                             model.AddBoolOr([prev_var.Not(), next_var.Not()])
+
 
     # -------------------------
     # Objective
