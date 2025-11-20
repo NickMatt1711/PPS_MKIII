@@ -10,13 +10,29 @@ import time
 import io
 from pathlib import Path
 
-# Import all modules
-import constants
-import data_loader
-import preview_tables
-import ui_components
-import solver_cp_sat
-import postprocessing
+# TEMP DEBUG: reveal real import error
+import traceback, importlib
+
+modules = [
+    "constants",
+    "data_loader",
+    "preview_tables",
+    "ui_components",
+    "solver_cp_sat",
+    "postprocessing",
+]
+
+st.write("Running import diagnostics...")
+
+for m in modules:
+    try:
+        importlib.import_module(m)
+        st.success(f"Imported `{m}` successfully")
+    except Exception as e:
+        st.error(f"FAILED to import `{m}`: {e}")
+        st.code(traceback.format_exc())
+
+st.stop()  # Prevent rest of app from running
 
 # ============================================================================
 # PAGE CONFIGURATION
