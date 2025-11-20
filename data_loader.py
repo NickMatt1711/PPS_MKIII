@@ -122,12 +122,7 @@ def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
         # Extract ACTUAL demand period dates (this must be displayed to user)
         date_series = pd.to_datetime(demand_df.iloc[:, 0])
         demand_period_dates = sorted(list(set([d.date() for d in date_series])))
-        
-        st.info(
-            f"📅 Demand period: {len(demand_period_dates)} days "
-            f"({demand_period_dates[0].strftime('%d-%b-%y')} to {demand_period_dates[-1].strftime('%d-%b-%y')})"
-        )
-        
+              
         # Demand dict - only the actual demand dates
         demand_data = {}
         for grade in grades:
