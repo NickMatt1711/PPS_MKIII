@@ -266,7 +266,7 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
     
     # Transition rules enforcement
     for line in lines:
-        if line in transition_rules:  # If we have a transition rule for the current line
+        if line in transition_rules and transition_rules[line] is not None:  # Check for None before accessing
             for d in range(num_days - 1):  # For each day, except the last
                 for prev_grade in grades:
                     # Only check transitions for valid grades on this line
@@ -279,11 +279,11 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
                                 # If transition is not allowed, enforce no production of both grades
                                 prev_var = get_is_producing_var(prev_grade, line, d)
                                 current_var = get_is_producing_var(current_grade, line, d + 1)
-
+    
                                 if prev_var is not None and current_var is not None:
                                     # Enforce that we cannot produce both grades consecutively if the transition is not allowed
                                     model.Add(prev_var + current_var <= 1)
-    
+
     # Minimize the objective (stockout penalties)
     for grade in grades:
         for d in range(num_days):
