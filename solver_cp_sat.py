@@ -3,7 +3,9 @@ CP-SAT Solver Module
 ====================
 
 Implements the EXACT solver logic from "Old Logic with Sidebar.py"
-Follows the proven working implementation without modifications.
+WITH CORRECTED transition logic:
+1. Prohibited transitions are HARD CONSTRAINTS (forbidden)
+2. Transition penalty only applies to VALID transitions (to minimize changeovers)
 """
 
 import time
@@ -15,6 +17,7 @@ import streamlit as st
 def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any]:
     """
     Solve using EXACT logic from original working implementation.
+    CORRECTED: Transition rules are now properly enforced.
     """
     # Extract parameters
     buffer_days = parameters.get('buffer_days', 3)
@@ -273,23 +276,108 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
                 if len(consecutive_days) == max_run + 1:
                     model.Add(sum(consecutive_days) <= max_run)
     
-    # Transition rules
+    # ========================================================================
+    # CORRECTED TRANSITION LOGIC
+    # ========================================================================
+    # Two separate concerns:
+    # 1. HARD CONSTRAINTS: Forbidden transitions (transition matrix = "No")
+    # 2. OBJECTIVE: Minimize number of valid transitions (to reduce changeovers)
+    
+    # Part 1: HARD CONSTRAINTS - Forbid prohibited transitions
     for line in lines:
-        if transition_rules.get(line):
+        rules = transition_rules.get(line)
+        if rules is not None:  # Transition matrix exists for this line
             for d in range(num_days - 1):
                 for prev_grade in grades:
-                    if prev_grade in transition_rules[line] and is_allowed_combination(prev_grade, line):
-                        allowed_next = transition_rules[line][prev_grade]
-                        for current_grade in grades:
-                            if (current_grade != prev_grade and 
-                                current_grade not in allowed_next and 
-                                is_allowed_combination(current_grade, line)):
-                                
-                                prev_var = get_is_producing_var(prev_grade, line, d)
-                                current_var = get_is_producing_var(current_grade, line, d + 1)
-                                
-                                if prev_var is not None and current_var is not None:
-                                    model.Add(prev_var + current_var <= 1)
+                    if not is_allowed_combination(prev_grade, line):
+                        continue
+                    
+                    # Get allowed next grades from transition matrix
+                    allowed_next_grades = rules.get(prev_grade, [])
+                    
+                    for curr_grade in grades:
+                        if not is_allowed_combination(curr_grade, line):
+                            continue
+                        
+                        # Skip if same grade (no transition)
+                        if prev_grade == curr_grade:
+                            continue
+                        
+                        # Check if this transition is FORBIDDEN
+                        is_forbidden = (curr_grade not in allowed_next_grades)
+                        
+                        if is_forbidden:
+                            # HARD CONSTRAINT: This transition is NOT allowed
+                            prev_var = get_is_producing_var(prev_grade, line, d)
+                            curr_var = get_is_producing_var(curr_grade, line, d + 1)
+                            
+                            if prev_var is not None and curr_var is not None:
+                                # Cannot have both: prev_grade on day d AND curr_grade on day d+1
+                                model.Add(prev_var + curr_var <= 1)
+    
+    # Part 2: OBJECTIVE - Minimize number of VALID transitions
+    # Create transition indicator variables for each line
+    transition_vars = []
+    
+    for line in lines:
+        for d in range(num_days - 1):
+            # Create a variable that is 1 if ANY transition happens on this line between day d and d+1
+            transition_indicator = model.NewBoolVar(f'any_transition_{line}_{d}')
+            
+            # Check if a transition occurs (grade changes between consecutive days)
+            # We need to detect if the line is producing on both days but with different grades
+            
+            # Strategy: transition_indicator = 1 if:
+            # - Line produces something on day d AND
+            # - Line produces something on day d+1 AND
+            # - The grades are different
+            
+            # Create "same grade continues" indicators for each grade
+            same_grade_continues = []
+            
+            for grade in grades:
+                if not is_allowed_combination(grade, line):
+                    continue
+                
+                prev_var = get_is_producing_var(grade, line, d)
+                next_var = get_is_producing_var(grade, line, d + 1)
+                
+                if prev_var is not None and next_var is not None:
+                    # This grade continues if producing on both days
+                    continues = model.NewBoolVar(f'continues_{line}_{d}_{grade}')
+                    model.AddBoolAnd([prev_var, next_var]).OnlyEnforceIf(continues)
+                    model.AddBoolOr([prev_var.Not(), next_var.Not()]).OnlyEnforceIf(continues.Not())
+                    same_grade_continues.append(continues)
+            
+            if same_grade_continues:
+                # At least one grade continues (no transition)
+                has_continuity = model.NewBoolVar(f'has_continuity_{line}_{d}')
+                model.AddMaxEquality(has_continuity, same_grade_continues)
+                
+                # Check if line is producing on both days
+                prod_vars_d = [get_is_producing_var(g, line, d) for g in grades if is_allowed_combination(g, line) and get_is_producing_var(g, line, d) is not None]
+                prod_vars_d_plus_1 = [get_is_producing_var(g, line, d+1) for g in grades if is_allowed_combination(g, line) and get_is_producing_var(g, line, d+1) is not None]
+                
+                if prod_vars_d and prod_vars_d_plus_1:
+                    prod_today = model.NewBoolVar(f'prod_today_{line}_{d}')
+                    prod_tomorrow = model.NewBoolVar(f'prod_tomorrow_{line}_{d}')
+                    
+                    model.AddMaxEquality(prod_today, prod_vars_d)
+                    model.AddMaxEquality(prod_tomorrow, prod_vars_d_plus_1)
+                    
+                    # Transition occurs if: producing both days AND no continuity
+                    model.AddBoolAnd([prod_today, prod_tomorrow, has_continuity.Not()]).OnlyEnforceIf(transition_indicator)
+                    model.AddBoolOr([prod_today.Not(), prod_tomorrow.Not(), has_continuity]).OnlyEnforceIf(transition_indicator.Not())
+                    
+                    transition_vars.append(transition_indicator)
+                else:
+                    model.Add(transition_indicator == 0)
+            else:
+                model.Add(transition_indicator == 0)
+    
+    # Add transition penalty to objective (only for valid transitions)
+    for trans_var in transition_vars:
+        objective += transition_penalty * trans_var
     
     # Rerun allowed constraints
     for grade in grades:
@@ -305,24 +393,6 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
     for grade in grades:
         for d in range(num_days):
             objective += stockout_penalty * stockout_vars[(grade, d)]
-    
-    # Transition penalties (NO continuity bonus - removed as redundant)
-    for line in lines:
-        for d in range(num_days - 1):
-            for grade1 in grades:
-                if line not in allowed_lines[grade1]:
-                    continue
-                for grade2 in grades:
-                    if line not in allowed_lines[grade2] or grade1 == grade2:
-                        continue
-                    if transition_rules.get(line) and grade1 in transition_rules[line] and grade2 not in transition_rules[line][grade1]:
-                        continue
-                    trans_var = model.NewBoolVar(f'trans_{line}_{d}_{grade1}_to_{grade2}')
-                    model.AddBoolAnd([is_producing[(grade1, line, d)], is_producing[(grade2, line, d + 1)]]).OnlyEnforceI
-                    model.AddBoolAnd([is_producing[(grade1, line, d)], is_producing[(grade2, line, d + 1)]]).OnlyEnforceIf(trans_var)
-                    model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade1, line, d)].Not())
-                    model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade2, line, d + 1)].Not())
-                    objective += transition_penalty * trans_var
     
     model.Minimize(objective)
     
