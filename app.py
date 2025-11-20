@@ -32,6 +32,14 @@ for m in modules:
         st.error(f"FAILED to import `{m}`: {e}")
         st.code(traceback.format_exc())
 
+from pathlib import Path
+
+st.write("Current working directory:", Path.cwd())
+st.write("Files in working directory:", [p.name for p in Path('.').iterdir()])
+
+template = Path("polymer_production_template.xlsx")
+st.write("Template exists:", template.exists())
+
 st.stop()  # Prevent rest of app from running
 
 # ============================================================================
