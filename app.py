@@ -34,20 +34,21 @@ st.set_page_config(
 # SESSION STATE INITIALIZATION
 # ============================================================================
 
+# Navigation
 if 'step' not in st.session_state:
     st.session_state.step = 1  # 1: Upload, 2: Preview & Config, 3: Results
 
-# FIX: store raw original instance only
+# The *original* clean instance loaded from Excel
 if 'raw_instance' not in st.session_state:
     st.session_state.raw_instance = None
 
-# Solver output
+# Solver outputs
 if 'solver_result' not in st.session_state:
     st.session_state.solver_result = None
 if 'display_result' not in st.session_state:
     st.session_state.display_result = None
 
-# Optimization parameters
+# Optimization parameters (persistent)
 if 'optimization_params' not in st.session_state:
     st.session_state.optimization_params = {
         'buffer_days': 3,
@@ -56,11 +57,11 @@ if 'optimization_params' not in st.session_state:
         'transition_penalty': 50,
     }
 
-# Inject custom CSS
+# Inject UI CSS
 ui_components.inject_custom_css()
 
 # ============================================================================
-# UI HEADER
+# HEADER
 # ============================================================================
 
 ui_components.render_header()
@@ -75,14 +76,15 @@ step_status = [
     'active' if st.session_state.step == 3 else ''
 ]
 
-# (Existing step UI unchanged)
-# ...
+# (existing step UI not shown here to save space — keep unchanged)
+# --------------------------------------------------------------------
 
 # ============================================================================
 # STEP 1: UPLOAD DATA
 # ============================================================================
 
 if st.session_state.step == 1:
+
     col1, col2 = st.columns([4, 1])
 
     with col1:
@@ -94,14 +96,16 @@ if st.session_state.step == 1:
         )
     
         if uploaded_file is not None:
+
             st.session_state.uploaded_file = uploaded_file
 
-            # FIX: Remove ALL previous solver artifacts & raw data
+            # RESET ONLY solver artifacts — keep saved parameters
             st.session_state.raw_instance = None
             st.session_state.solver_result = None
             st.session_state.display_result = None
 
             st.success("✅ File uploaded successfully!")
+
             time.sleep(0.4)
             st.session_state.step = 2
             st.rerun()
@@ -118,7 +122,8 @@ if st.session_state.step == 1:
                     use_container_width=True
                 )
 
-    # (Help cards unchanged)
+    # (Help cards remain unchanged)
+    # --------------------------------------------------------------------
 
 # ============================================================================
 # STEP 2: PREVIEW & CONFIGURE
@@ -126,27 +131,80 @@ if st.session_state.step == 1:
 
 elif st.session_state.step == 2:
     try:
-        # FIX: Load RAW instance only if not already loaded
+
+        # Load raw Excel instance if not loaded already
         if st.session_state.raw_instance is None:
             uploaded_file = st.session_state.uploaded_file
             uploaded_file.seek(0)
-            
+
             with st.spinner("Loading and validating data..."):
                 raw_instance = data_loader.load_excel_data(uploaded_file)
-                st.session_state.raw_instance = raw_instance  # FIX: store only raw data
+                st.session_state.raw_instance = raw_instance
                 st.success("✅ Data loaded successfully!")
 
         raw_instance = st.session_state.raw_instance
 
-        # PREVIEW ALWAYS USES RAW DATA — NO BUFFER DAYS HERE
+        # === ALWAYS PREVIEW RAW (no buffer days) ===
         preview_tables.show_preview_tables(raw_instance)
 
         ui_components.render_divider()
 
-        # (Configuration UI unchanged)
-        # ...
+        # =========================================================================
+        # OPTIMIZATION PARAMETERS UI (RESTORED)
+        # =========================================================================
 
-        # Buttons
+        st.markdown("""
+        <div class="material-card">
+            <div class="card-title">⚙️ Optimization Parameters</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        params = st.session_state.optimization_params
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("#### Core Settings")
+            params['time_limit_min'] = st.number_input(
+                "⏱️ Time Limit (minutes)",
+                min_value=1,
+                max_value=120,
+                value=params['time_limit_min'],
+                help="Maximum solver runtime"
+            )
+
+            params['buffer_days'] = st.number_input(
+                "📅 Planning Buffer (days)",
+                min_value=0,
+                max_value=7,
+                value=params['buffer_days'],
+                help="Additional empty buffer days for planning horizon"
+            )
+
+        with col2:
+            st.markdown("#### Objective Weights")
+            params['stockout_penalty'] = st.number_input(
+                "🎯 Stockout Penalty",
+                min_value=1,
+                max_value=10000,
+                value=params['stockout_penalty'],
+                help="Penalty weight for inventory shortages"
+            )
+
+            params['transition_penalty'] = st.number_input(
+                "🔄 Transition Penalty",
+                min_value=1,
+                max_value=10000,
+                value=params['transition_penalty'],
+                help="Penalty weight for grade transitions"
+            )
+
+        ui_components.render_divider()
+
+        # =========================================================================
+        # ACTION BUTTONS
+        # =========================================================================
+
         col1, col2, col3 = st.columns([1, 2, 1])
 
         with col1:
@@ -161,7 +219,7 @@ elif st.session_state.step == 2:
                 st.rerun()
 
     except Exception as e:
-        st.error(f"❌ Error processing file: {str(e)}")
+        st.error(f"❌ Error loading data: {str(e)}")
         if st.button("← Back to Upload"):
             st.session_state.step = 1
             st.session_state.raw_instance = None
@@ -173,66 +231,82 @@ elif st.session_state.step == 2:
 
 elif st.session_state.step == 3:
     try:
+
         if st.session_state.solver_result is None:
+
             st.markdown("""
             <div class="material-card">
                 <div class="card-title">⚡ Running Optimization</div>
             </div>
             """, unsafe_allow_html=True)
 
-            progress_bar = st.progress(0)
-            status_text = st.empty()
+            progress = st.progress(0)
+            status = st.empty()
 
-            time.sleep(0.5)
+            time.sleep(0.3)
 
-            # FIX: Start from a fresh deep copy of RAW DATA
-            params = st.session_state.optimization_params
+            # Fresh copy of raw data
             raw_instance = st.session_state.raw_instance
             instance = copy.deepcopy(raw_instance)
 
-            status_text.markdown('<div class="alert-box info">📊 Preprocessing data...</div>', unsafe_allow_html=True)
-            progress_bar.progress(10)
-            time.sleep(0.4)
+            params = st.session_state.optimization_params
 
-            # FIX: Apply buffer days ONLY to this temporary copy
+            status.markdown('<div class="alert-box info">📊 Preprocessing data...</div>', unsafe_allow_html=True)
+            progress.progress(15)
+            time.sleep(0.3)
+
+            # Add buffer days ONLY ONCE to temporary copy
             instance = data_loader.add_buffer_days(instance, params['buffer_days'])
 
-            status_text.markdown('<div class="alert-box info">🔧 Building model...</div>', unsafe_allow_html=True)
-            progress_bar.progress(30)
-            time.sleep(0.4)
+            status.markdown('<div class="alert-box info">🔧 Building optimization model...</div>', unsafe_allow_html=True)
+            progress.progress(40)
+            time.sleep(0.3)
 
-            status_text.markdown('<div class="alert-box info">⚡ Running solver...</div>', unsafe_allow_html=True)
-            progress_bar.progress(50)
+            status.markdown('<div class="alert-box info">⚡ Running solver...</div>', unsafe_allow_html=True)
+            progress.progress(65)
 
-            # SOLVE
             solver_result = solver_cp_sat.solve(instance, params)
             st.session_state.solver_result = solver_result
 
-            progress_bar.progress(80)
-            status_text.markdown('<div class="alert-box info">📈 Processing results...</div>', unsafe_allow_html=True)
+            progress.progress(85)
+            status.markdown('<div class="alert-box info">📈 Processing results...</div>', unsafe_allow_html=True)
 
             display_result = postprocessing.convert_solver_output_to_display(solver_result, instance)
             st.session_state.display_result = display_result
 
-            progress_bar.progress(100)
-            status_text.empty()
-            progress_bar.empty()
+            progress.progress(100)
+            time.sleep(0.3)
+            status.empty()
+            progress.empty()
 
-        # --- RENDER RESULTS ---
+        # ---------------------------- RESULTS DISPLAY ----------------------------
         solver_result = st.session_state.solver_result
         display_result = st.session_state.display_result
         raw_instance = st.session_state.raw_instance
+        params = st.session_state.optimization_params
 
         ui_components.render_optimization_status(
-            solver_result['status'], solver_result['runtime']
+            solver_result['status'],
+            solver_result['runtime']
         )
 
         ui_components.render_divider()
 
         if display_result is None:
-            # (Unfeasible UI unchanged)
-            # ...
-            pass
+            st.markdown("""
+            <div class="alert-box warning">
+                <strong>❌ No Feasible Solution Found</strong><br>
+                The optimizer could not identify a valid production schedule.
+            </div>
+            """, unsafe_allow_html=True)
+
+            ui_components.render_troubleshooting_guide()
+
+            if st.button("🔧 Adjust Parameters", use_container_width=True):
+                st.session_state.step = 2
+                st.session_state.solver_result = None
+                st.session_state.display_result = None
+                st.rerun()
 
         else:
             total_stockouts = sum(
@@ -253,8 +327,10 @@ elif st.session_state.step == 3:
 
             with tab1:
                 postprocessing.plot_production_visuals(display_result, raw_instance, params)
+
             with tab2:
                 postprocessing.render_production_summary(display_result, raw_instance)
+
             with tab3:
                 postprocessing.plot_inventory_charts(display_result, raw_instance, params)
 
@@ -265,7 +341,6 @@ elif st.session_state.step == 3:
             with col1:
                 if st.button("🔄 New Optimization", use_container_width=True):
                     st.session_state.step = 1
-                    st.session_state.uploaded_file = None
                     st.session_state.raw_instance = None
                     st.session_state.solver_result = None
                     st.session_state.display_result = None
@@ -273,7 +348,6 @@ elif st.session_state.step == 3:
 
             with col2:
                 if st.button("🔧 Adjust Parameters", use_container_width=True):
-                    # FIX: Do NOT reset raw_instance
                     st.session_state.step = 2
                     st.session_state.solver_result = None
                     st.session_state.display_result = None
