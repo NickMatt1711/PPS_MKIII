@@ -262,6 +262,7 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
 
     def on_solution_callback(self):
         solution = {'objective': self.ObjectiveValue(), 'production': {}, 'inventory': {}, 'stockout': {}, 'is_producing': {}}
+        # Extract production
         for grade in self.grades:
             solution['production'][grade] = {}
             for line in self.lines:
@@ -273,12 +274,14 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
                             date_key = self.formatted_dates[d]
                             solution['production'][grade].setdefault(date_key, 0)
                             solution['production'][grade][date_key] += val
+        # Inventory
         for grade in self.grades:
             solution['inventory'][grade] = {}
             for d in range(self.num_days + 1):
                 key = (grade, d)
                 if key in self.inventory:
                     solution['inventory'][grade][self.formatted_dates[d] if d < self.num_days else 'final'] = self.Value(self.inventory[key])
+        # Stockout
         for grade in self.grades:
             solution['stockout'][grade] = {}
             for d in range(self.num_days):
@@ -287,6 +290,7 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
                     val = self.Value(self.stockout[key])
                     if val > 0:
                         solution['stockout'][grade][self.formatted_dates[d]] = val
+        # Schedule
         for line in self.lines:
             solution['is_producing'][line] = {}
             for d in range(self.num_days):
@@ -297,4 +301,23 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
                     if key in self.is_producing and self.Value(self.is_producing[key]) == 1:
                         solution['is_producing'][line][date_key] = grade
                         break
+        # Transitions
+        transition_count_per_line = {line: 0 for line in self.lines}
+        total_transitions = 0
+        for line in self.lines:
+            last_grade = None
+            for d in range(self.num_days):
+                current_grade = None
+                for grade in self.grades:
+                    key = (grade, line, d)
+                    if key in self.is_producing and self.Value(self.is_producing[key]) == 1:
+                        current_grade = grade
+                        break
+                if current_grade is not None:
+                    if last_grade is not None and current_grade != last_grade:
+                        transition_count_per_line[line] += 1
+                        total_transitions += 1
+                    last_grade = current_grade
+        solution['transitions'] = {'per_line': transition_count_per_line, 'total': total_transitions}
+    
         self.solutions.append(solution)
