@@ -281,8 +281,6 @@ def add_buffer_days(instance: Dict[str, Any], buffer_days: int) -> Dict[str, Any
     original_num_days = len(dates)
     last_date = dates[-1]
     
-    st.info(f"📅 Original demand period: {original_num_days} days")
-    
     # Add buffer days
     buffer_dates = [(last_date + timedelta(days=i)) for i in range(1, buffer_days + 1)]
     
@@ -293,15 +291,5 @@ def add_buffer_days(instance: Dict[str, Any], buffer_days: int) -> Dict[str, Any
     # Set demand = 0 for buffer days
     for grade in instance['grades']:
         for bd in buffer_dates:
-            instance['demand_data'][grade][bd] = 0
-    
-    st.success(
-        f"✅ Planning horizon: {instance['num_days']} days "
-        f"({original_num_days} demand + {buffer_days} buffer)"
-    )
-    st.info(
-        f"📅 Buffer period: {buffer_dates[0].strftime('%d-%b-%y')} "
-        f"to {buffer_dates[-1].strftime('%d-%b-%y')}"
-    )
-    
+            instance['demand_data'][grade][bd] = 0    
     return instance
