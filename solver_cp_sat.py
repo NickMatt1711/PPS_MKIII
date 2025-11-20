@@ -170,24 +170,34 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
     
     # Capacity constraints
     for line in lines:
+        # Part 1: DEMAND PERIOD DAYS (must use full capacity unless shutdown)
         for d in range(num_days - buffer_days):
+            # Check if this is a shutdown day
             if line in shutdown_periods and d in shutdown_periods[line]:
+                # Shutdown day - already enforced zero production above
                 continue
+            
+            # NOT a shutdown day - MUST use full capacity
             production_vars = [
                 get_production_var(grade, line, d) 
                 for grade in grades 
                 if is_allowed_combination(grade, line)
             ]
+            
             if production_vars:
+                # CRITICAL: Must produce EXACTLY at capacity on non-shutdown days
                 model.Add(sum(production_vars) == capacities[line])
         
+        # Part 2: BUFFER PERIOD DAYS (flexible capacity for completing runs)
         for d in range(num_days - buffer_days, num_days):
             production_vars = [
                 get_production_var(grade, line, d) 
                 for grade in grades 
                 if is_allowed_combination(grade, line)
             ]
+            
             if production_vars:
+                # Buffer days: Can use UP TO capacity (not mandatory)
                 model.Add(sum(production_vars) <= capacities[line])
     
     # Force start date constraints
