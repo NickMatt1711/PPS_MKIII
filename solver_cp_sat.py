@@ -135,7 +135,7 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
             
             supplied = model.NewIntVar(0, 100000, f'supplied_{grade}_{d}')
             model.Add(supplied <= inventory_vars[(grade, d)] + produced_today)
-            model.Add(supplied <= demand_today)
+            model.Add(supplied <= int(demand_today))
             model.Add(stockout_vars[(grade, d)] == demand_today - supplied)
             model.Add(inventory_vars[(grade, d + 1)] == inventory_vars[(grade, d)] + produced_today - supplied)
             model.Add(inventory_vars[(grade, d + 1)] >= 0)
