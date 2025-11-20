@@ -269,18 +269,18 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
     transition_vars = []
     for line in lines:
         rules = transition_rules.get(line)
-        if not rules:
+        if rules is None:
             continue
         for d in range(num_days - 1):
             for prev_grade in grades:
                 for next_grade in grades:
-                    if next_grade == prev_grade:
+                    if prev_grade == next_grade:
                         continue
                     allowed = rules.get(prev_grade, {}).get(next_grade, "Yes")
                     if allowed == "No":
                         prev_var = get_is_producing_var(prev_grade, line, d)
                         next_var = get_is_producing_var(next_grade, line, d + 1)
-                        if prev_var and next_var:
+                        if prev_var is not None and next_var is not None:
                             model.AddBoolOr([prev_var.Not(), next_var.Not()])
             
             # Objective: penalize valid transitions
