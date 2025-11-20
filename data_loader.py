@@ -6,7 +6,7 @@ Handles Excel file parsing, validation, and transformation into solver-ready for
 Follows the exact logic from "Old Logic with Sidebar.py"
 """
 
-import io
+from io import BytesIO
 from typing import Dict, List, Set, Tuple, Optional, Any
 from datetime import date, timedelta
 import pandas as pd
@@ -20,7 +20,7 @@ class DataLoadError(Exception):
     pass
 
 
-def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
+def load_excel_data(uploaded_file: BytesIO) -> Dict[str, Any]:
     """
     Load and validate Excel data following the exact logic from original implementation.
     
