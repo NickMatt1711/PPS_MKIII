@@ -30,7 +30,7 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
     lines = instance['lines']
     dates = instance['dates']
     num_days = instance['num_days']
-    capacities = int(instance['capacities'])
+    capacities = instance['capacities']
     demand_data = int(instance['demand_data'])
     initial_inventory = int(instance['initial_inventory'])
     min_inventory = int(instance['min_inventory'])
