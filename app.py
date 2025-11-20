@@ -39,8 +39,7 @@ st.write("Files in working directory:", [p.name for p in Path('.').iterdir()])
 
 template = Path("polymer_production_template.xlsx")
 st.write("Template exists:", template.exists())
-
-st.stop()  # Prevent rest of app from running
+  # Prevent rest of app from running
 
 # ============================================================================
 # PAGE CONFIGURATION
