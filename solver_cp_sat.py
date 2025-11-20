@@ -8,13 +8,11 @@ from typing import Dict, Any
 from ortools.sat.python import cp_model
 
 def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any]:
-    # Extract parameters
     buffer_days = parameters.get('buffer_days', 3)
     time_limit_min = parameters.get('time_limit_min', 10)
     stockout_penalty = parameters.get('stockout_penalty', 10)
     transition_penalty = parameters.get('transition_penalty', 50)
 
-    # Extract problem data
     grades = instance['grades']
     lines = instance['lines']
     dates = instance['dates']
@@ -36,7 +34,6 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
 
     model = cp_model.CpModel()
 
-    # Variables
     is_producing = {}
     production = {}
 
@@ -109,7 +106,7 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
             model.Add(inventory_vars[(grade, d + 1)] == inventory_vars[(grade, d)] + produced_today - supplied)
             model.Add(inventory_vars[(grade, d + 1)] >= 0)
 
-    # === Enforce Inventory Constraints as Hard ===
+    # Hard inventory constraints
     for grade in grades:
         for d in range(num_days):
             if min_inventory[grade] > 0:
@@ -147,24 +144,23 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
             except ValueError:
                 pass
 
-    # === Robust Min/Max Run Day Constraints ===
+    # Robust Min/Max Run Day Constraints
     for grade in grades:
         for line in allowed_lines[grade]:
             grade_plant_key = (grade, line)
             min_run = min_run_days.get(grade_plant_key, 1)
             max_run = max_run_days.get(grade_plant_key, 9999)
 
-            # Min run: enforce continuity if run starts
             for d in range(num_days):
                 is_start = model.NewBoolVar(f'start_{grade}_{line}_{d}')
                 current_prod = get_is_producing_var(grade, line, d)
                 if d > 0:
                     prev_prod = get_is_producing_var(grade, line, d - 1)
-                    if current_prod and prev_prod:
+                    if current_prod is not None and prev_prod is not None:
                         model.AddBoolAnd([current_prod, prev_prod.Not()]).OnlyEnforceIf(is_start)
                         model.AddBoolOr([current_prod.Not(), prev_prod]).OnlyEnforceIf(is_start.Not())
                 else:
-                    if current_prod:
+                    if current_prod is not None:
                         model.Add(current_prod == 1).OnlyEnforceIf(is_start)
 
                 max_possible_run = 0
@@ -175,16 +171,15 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
                     for k in range(min_run):
                         if d + k < num_days and not (line in shutdown_periods and (d + k) in shutdown_periods[line]):
                             future_prod = get_is_producing_var(grade, line, d + k)
-                            if future_prod:
+                            if future_prod is not None:
                                 model.Add(future_prod == 1).OnlyEnforceIf(is_start)
 
-            # Max run: sliding window
             for d in range(num_days - max_run):
                 consecutive_days = []
                 for k in range(max_run + 1):
                     if d + k < num_days and not (line in shutdown_periods and (d + k) in shutdown_periods[line]):
                         prod_var = get_is_producing_var(grade, line, d + k)
-                        if prod_var:
+                        if prod_var is not None:
                             consecutive_days.append(prod_var)
                 if len(consecutive_days) == max_run + 1:
                     model.Add(sum(consecutive_days) <= max_run)
@@ -197,7 +192,7 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
                 if starts:
                     model.Add(sum(starts) <= 1)
 
-    # Transition rules: hard constraints for invalid transitions
+    # Transition rules
     for line in lines:
         if transition_rules.get(line):
             for d in range(num_days - 1):
@@ -208,10 +203,10 @@ def solve(instance: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any
                             if current_grade != prev_grade and current_grade not in allowed_next and is_allowed_combination(current_grade, line):
                                 prev_var = get_is_producing_var(prev_grade, line, d)
                                 current_var = get_is_producing_var(current_grade, line, d + 1)
-                                if prev_var and current_var:
+                                if prev_var is not None and current_var is not None:
                                     model.Add(prev_var + current_var <= 1)
 
-    # Objective: minimize stockouts + transitions
+    # Objective
     for grade in grades:
         for d in range(num_days):
             objective += stockout_penalty * stockout_vars[(grade, d)]
