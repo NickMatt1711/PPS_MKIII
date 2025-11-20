@@ -1,185 +1,278 @@
 """
-Excel parsing, validation, and preparation of structures used by solver.
+Data Loading and Preprocessing Module
+======================================
+
+Handles Excel file parsing, validation, and transformation into solver-ready format.
+Follows the exact logic from "Old Logic with Sidebar.py"
 """
 
+import io
+from typing import Dict, List, Set, Tuple, Optional, Any
+from datetime import date, timedelta
 import pandas as pd
-from datetime import timedelta
-from pathlib import Path
-from typing import Dict, List, Tuple, Any
-from constants import SAMPLE_TEMPLATE
+import streamlit as st
 
-def get_sample_workbook():
+import constants
+
+
+class DataLoadError(Exception):
+    """Custom exception for data loading errors."""
+    pass
+
+
+def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
+    """
+    Load and validate Excel data following the exact logic from original implementation.
+    
+    Returns:
+        Dictionary containing all problem instance data matching original structure
+    """
     try:
-        if SAMPLE_TEMPLATE.exists():
-            return SAMPLE_TEMPLATE.read_bytes()
-        return None
-    except Exception:
-        return None
+        uploaded_file.seek(0)
+        excel_file = pd.ExcelFile(uploaded_file)
+        
+        # Validate required sheets
+        _validate_sheets(excel_file)
+        
+        # Load core sheets
+        plant_df = pd.read_excel(excel_file, sheet_name=constants.SHEET_PLANT)
+        inventory_df = pd.read_excel(excel_file, sheet_name=constants.SHEET_INVENTORY)
+        demand_df = pd.read_excel(excel_file, sheet_name=constants.SHEET_DEMAND)
+        
+        # Parse plants/lines (matching original logic exactly)
+        lines = list(plant_df['Plant'])
+        capacities = {row['Plant']: row['Capacity per day'] for _, row in plant_df.iterrows()}
+        
+        # Parse grades from demand
+        grades = [col for col in demand_df.columns if col != demand_df.columns[0]]
+        
+        # Initialize inventory parameters (matching original structure)
+        initial_inventory = {}
+        min_inventory = {}
+        max_inventory = {}
+        min_closing_inventory = {}
+        min_run_days = {}
+        max_run_days = {}
+        force_start_date = {}
+        allowed_lines = {grade: [] for grade in grades}
+        rerun_allowed = {}
+        
+        grade_inventory_defined = set()
+        
+        # Process inventory sheet (exact logic from original)
+        for _, row in inventory_df.iterrows():
+            grade = row['Grade Name']
+            
+            # Parse allowed lines
+            lines_value = row['Lines']
+            if pd.notna(lines_value) and lines_value != '':
+                plants_for_row = [x.strip() for x in str(lines_value).split(',')]
+            else:
+                plants_for_row = lines
+            
+            # Add plants to allowed_lines
+            for plant in plants_for_row:
+                if plant not in allowed_lines[grade]:
+                    allowed_lines[grade].append(plant)
+            
+            # Global inventory parameters (only set once per grade)
+            if grade not in grade_inventory_defined:
+                initial_inventory[grade] = row['Opening Inventory'] if pd.notna(row['Opening Inventory']) else 0
+                min_inventory[grade] = row['Min. Inventory'] if pd.notna(row['Min. Inventory']) else 0
+                max_inventory[grade] = row['Max. Inventory'] if pd.notna(row['Max. Inventory']) else 1000000000
+                min_closing_inventory[grade] = row['Min. Closing Inventory'] if pd.notna(row['Min. Closing Inventory']) else 0
+                grade_inventory_defined.add(grade)
+            
+            # Plant-specific parameters
+            for plant in plants_for_row:
+                grade_plant_key = (grade, plant)
+                min_run_days[grade_plant_key] = int(row['Min. Run Days']) if pd.notna(row['Min. Run Days']) else 1
+                max_run_days[grade_plant_key] = int(row['Max. Run Days']) if pd.notna(row['Max. Run Days']) else 9999
+                
+                # Force start date
+                if pd.notna(row['Force Start Date']):
+                    try:
+                        force_start_date[grade_plant_key] = pd.to_datetime(row['Force Start Date']).date()
+                    except:
+                        force_start_date[grade_plant_key] = None
+                else:
+                    force_start_date[grade_plant_key] = None
+                
+                # Rerun allowed
+                rerun_val = row['Rerun Allowed']
+                if pd.notna(rerun_val):
+                    val_str = str(rerun_val).strip().lower()
+                    rerun_allowed[grade_plant_key] = val_str not in ['no', 'n', 'false', '0']
+                else:
+                    rerun_allowed[grade_plant_key] = True
+        
+        # Material running info
+        material_running_info = {}
+        for _, row in plant_df.iterrows():
+            plant = row['Plant']
+            material = row['Material Running']
+            expected_days = row['Expected Run Days']
+            
+            if pd.notna(material) and pd.notna(expected_days):
+                try:
+                    material_running_info[plant] = (str(material).strip(), int(expected_days))
+                except (ValueError, TypeError):
+                    pass
+        
+        # Parse demand data (exact logic from original)
+        demand_data = {}
+        dates = sorted(list(set(demand_df.iloc[:, 0].dt.date.tolist())))
+        
+        for grade in grades:
+            if grade in demand_df.columns:
+                demand_data[grade] = {demand_df.iloc[i, 0].date(): demand_df[grade].iloc[i] for i in range(len(demand_df))}
+            else:
+                demand_data[grade] = {date: 0 for date in dates}
+        
+        # Parse shutdown periods
+        shutdown_periods = _process_shutdown_dates(plant_df, dates)
+        
+        # Load transition matrices (exact logic from original)
+        transition_dfs = {}
+        for i in range(len(plant_df)):
+            plant_name = plant_df['Plant'].iloc[i]
+            
+            possible_sheet_names = [
+                f'Transition_{plant_name}',
+                f'Transition_{plant_name.replace(" ", "_")}',
+                f'Transition{plant_name.replace(" ", "")}',
+            ]
+            
+            transition_df_found = None
+            for sheet_name in possible_sheet_names:
+                try:
+                    excel_file.seek(0)
+                    transition_df_found = pd.read_excel(excel_file, sheet_name=sheet_name, index_col=0)
+                    break
+                except:
+                    continue
+            
+            transition_dfs[plant_name] = transition_df_found
+        
+        # Process transition rules
+        transition_rules = {}
+        for line, df in transition_dfs.items():
+            if df is not None:
+                transition_rules[line] = {}
+                for prev_grade in df.index:
+                    allowed_transitions = []
+                    for current_grade in df.columns:
+                        if str(df.loc[prev_grade, current_grade]).lower() == 'yes':
+                            allowed_transitions.append(current_grade)
+                    transition_rules[line][prev_grade] = allowed_transitions
+            else:
+                transition_rules[line] = None
+        
+        # Build instance dict (matching original structure exactly)
+        instance = {
+            'grades': grades,
+            'lines': lines,
+            'dates': dates,
+            'num_days': len(dates),
+            'capacities': capacities,
+            'demand_data': demand_data,
+            'initial_inventory': initial_inventory,
+            'min_inventory': min_inventory,
+            'max_inventory': max_inventory,
+            'min_closing_inventory': min_closing_inventory,
+            'min_run_days': min_run_days,
+            'max_run_days': max_run_days,
+            'force_start_date': force_start_date,
+            'allowed_lines': allowed_lines,
+            'rerun_allowed': rerun_allowed,
+            'shutdown_periods': shutdown_periods,
+            'transition_rules': transition_rules,
+            'material_running_info': material_running_info,
+        }
+        
+        return instance
+        
+    except Exception as e:
+        if isinstance(e, DataLoadError):
+            raise
+        else:
+            raise DataLoadError(f"Error loading Excel data: {str(e)}")
 
-def process_shutdown_dates(plant_df: pd.DataFrame, dates: List) -> Dict[str, List[int]]:
+
+def _validate_sheets(excel_file: pd.ExcelFile) -> None:
+    """Validate that all required sheets exist."""
+    sheet_names = excel_file.sheet_names
+    required = [constants.SHEET_PLANT, constants.SHEET_INVENTORY, constants.SHEET_DEMAND]
+    
+    for sheet in required:
+        if sheet not in sheet_names:
+            raise DataLoadError(constants.ERROR_MESSAGES["missing_sheet"].format(sheet))
+
+
+def _process_shutdown_dates(plant_df: pd.DataFrame, dates: List[date]) -> Dict[str, List[int]]:
+    """
+    Process shutdown dates for each plant - exact logic from original.
+    
+    Returns:
+        Dict mapping plant -> list of shutdown day indices
+    """
     shutdown_periods = {}
+    
     for _, row in plant_df.iterrows():
-        plant = row["Plant"]
-        s = row.get("Shutdown Start Date")
-        e = row.get("Shutdown End Date")
-        if pd.notna(s) and pd.notna(e):
+        plant = row['Plant']
+        shutdown_start = row.get('Shutdown Start Date')
+        shutdown_end = row.get('Shutdown End Date')
+        
+        if pd.notna(shutdown_start) and pd.notna(shutdown_end):
             try:
-                start = pd.to_datetime(s).date()
-                end = pd.to_datetime(e).date()
-                if start > end:
+                start_date = pd.to_datetime(shutdown_start).date()
+                end_date = pd.to_datetime(shutdown_end).date()
+                
+                if start_date > end_date:
+                    st.warning(f"⚠️ Shutdown start date after end date for {plant}. Ignoring shutdown.")
                     shutdown_periods[plant] = []
                     continue
-                shutdown_days = [d for d, dt in enumerate(dates) if start <= dt <= end]
-                shutdown_periods[plant] = shutdown_days
-            except Exception:
+                
+                shutdown_days = []
+                for d, date in enumerate(dates):
+                    if start_date <= date <= end_date:
+                        shutdown_days.append(d)
+                
+                if shutdown_days:
+                    shutdown_periods[plant] = shutdown_days
+                    st.info(f"🔧 Shutdown scheduled for {plant}: {start_date.strftime('%d-%b-%y')} to {end_date.strftime('%d-%b-%y')} ({len(shutdown_days)} days)")
+                else:
+                    shutdown_periods[plant] = []
+                    st.info(f"ℹ️ Shutdown period for {plant} is outside planning horizon")
+                    
+            except Exception as e:
+                st.warning(f"⚠️ Invalid shutdown dates for {plant}: {e}")
                 shutdown_periods[plant] = []
         else:
             shutdown_periods[plant] = []
+    
     return shutdown_periods
 
-def load_transition_matrices(excel_bytes: bytes, plant_df: pd.DataFrame) -> Dict[str, Any]:
-    transition_dfs = {}
-    import io
-    xl = pd.ExcelFile(io.BytesIO(excel_bytes))
-    for plant in plant_df['Plant'].tolist():
-        possible_names = [
-            f"Transition_{plant}",
-            f"Transition_{plant.replace(' ', '_')}",
-            f"Transition{plant.replace(' ', '')}"
-        ]
-        found = None
-        for nm in possible_names:
-            if nm in xl.sheet_names:
-                df = pd.read_excel(xl, sheet_name=nm, index_col=0)
-                found = df
-                break
-        transition_dfs[plant] = found
-    return transition_dfs
 
-def parse_input_excel(excel_bytes: bytes, buffer_days: int = 3):
-    import io
-    xl = pd.ExcelFile(io.BytesIO(excel_bytes))
-    # Required sheets
-    plant_df = pd.read_excel(xl, sheet_name="Plant")
-    inventory_df = pd.read_excel(xl, sheet_name="Inventory")
-    demand_df = pd.read_excel(xl, sheet_name="Demand")
-    # Dates from demand
-    date_col = demand_df.columns[0]
-    dates = sorted(list(set(pd.to_datetime(demand_df[date_col]).dt.date.tolist())))
-    last = dates[-1]
+def add_buffer_days(instance: Dict[str, Any], buffer_days: int) -> Dict[str, Any]:
+    """
+    Extend planning horizon by adding buffer days - exact logic from original.
+    """
+    if buffer_days <= 0:
+        return instance
+    
+    dates = instance['dates']
+    last_date = dates[-1]
+    
     for i in range(1, buffer_days + 1):
-        dates.append(last + timedelta(days=i))
-    formatted_dates = [d.strftime("%d-%b-%y") for d in dates]
-    # Grades
-    grades = [c for c in demand_df.columns if c != date_col]
-    # demand_data by grade: dict grade -> {date: demand}
-    demand_data = {}
-    for g in grades:
-        if g in demand_df.columns:
-            demand_data[g] = {
-                pd.to_datetime(demand_df.iloc[i, 0]).date(): demand_df[g].iloc[i]
-                for i in range(len(demand_df))
-            }
-        else:
-            demand_data[g] = {d: 0 for d in dates}
-    # Fill buffer days zero demand
-    for g in grades:
-        for d in dates[-buffer_days:]:
-            demand_data[g].setdefault(d, 0)
-    # Inventory parsing: allowed_lines, initial_inventory, min/max etc.
-    allowed_lines = {g: [] for g in grades}
-    initial_inventory = {}
-    min_inventory = {}
-    max_inventory = {}
-    min_closing_inventory = {}
-    min_run_days = {}
-    max_run_days = {}
-    force_start_date = {}
-    rerun_allowed = {}
-    grade_inventory_defined = set()
-    for _, row in inventory_df.iterrows():
-        grade = row['Grade Name']
-        lines_val = row.get('Lines')
-        if pd.notna(lines_val) and str(lines_val).strip() != "":
-            plants_for_row = [x.strip() for x in str(lines_val).split(',')]
-        else:
-            plants_for_row = plant_df['Plant'].tolist()
-        for p in plants_for_row:
-            if p not in allowed_lines[grade]:
-                allowed_lines[grade].append(p)
-        if grade not in grade_inventory_defined:
-            initial_inventory[grade] = row.get('Opening Inventory', 0) if pd.notna(row.get('Opening Inventory')) else 0
-            min_inventory[grade] = row.get('Min. Inventory', 0) if pd.notna(row.get('Min. Inventory')) else 0
-            max_inventory[grade] = row.get('Max. Inventory', 10**9) if pd.notna(row.get('Max. Inventory')) else 10**9
-            min_closing_inventory[grade] = row.get('Min. Closing Inventory', 0) if pd.notna(row.get('Min. Closing Inventory')) else 0
-            grade_inventory_defined.add(grade)
-        for p in plants_for_row:
-            key = (grade, p)
-            min_run_days[key] = int(row.get('Min. Run Days')) if pd.notna(row.get('Min. Run Days')) else 1
-            max_run_days[key] = int(row.get('Max. Run Days')) if pd.notna(row.get('Max. Run Days')) else 9999
-            if pd.notna(row.get('Force Start Date')):
-                try:
-                    force_start_date[key] = pd.to_datetime(row.get('Force Start Date')).date()
-                except Exception:
-                    force_start_date[key] = None
-            else:
-                force_start_date[key] = None
-            rv = row.get('Rerun Allowed')
-            if pd.notna(rv):
-                val = str(rv).strip().lower()
-                rerun_allowed[key] = val not in ['no', 'n', 'false', '0']
-            else:
-                rerun_allowed[key] = True
-    # material_running_info
-    material_running_info = {}
-    for _, row in plant_df.iterrows():
-        plant = row['Plant']
-        material = row.get('Material Running')
-        expected = row.get('Expected Run Days')
-        if pd.notna(material) and pd.notna(expected):
-            try:
-                material_running_info[plant] = (str(material).strip(), int(expected))
-            except Exception:
-                pass
-    # capacities
-    capacities = {row['Plant']: int(row['Capacity per day']) for _, row in plant_df.iterrows()}
-    # shutdown periods
-    shutdown_periods = process_shutdown_dates(plant_df, dates)
-    # transitions
-    transition_dfs = load_transition_matrices(excel_bytes, plant_df)
-    transition_rules = {}
-    for plant, df in transition_dfs.items():
-        if df is None:
-            transition_rules[plant] = None
-        else:
-            transition_rules[plant] = {}
-            for prev in df.index:
-                allowed = []
-                for cur in df.columns:
-                    if str(df.loc[prev, cur]).strip().lower() == "yes":
-                        allowed.append(cur)
-                transition_rules[plant][prev] = allowed
-    return {
-        "plant_df": plant_df,
-        "inventory_df": inventory_df,
-        "demand_df": demand_df,
-        "dates": dates,
-        "formatted_dates": formatted_dates,
-        "num_days": len(dates),
-        "grades": grades,
-        "lines": list(plant_df['Plant']),
-        "capacities": capacities,
-        "demand_data": demand_data,
-        "initial_inventory": initial_inventory,
-        "min_inventory": min_inventory,
-        "max_inventory": max_inventory,
-        "min_closing_inventory": min_closing_inventory,
-        "min_run_days": min_run_days,
-        "max_run_days": max_run_days,
-        "force_start_date": force_start_date,
-        "rerun_allowed": rerun_allowed,
-        "material_running_info": material_running_info,
-        "shutdown_periods": shutdown_periods,
-        "transition_rules": transition_rules,
-        "transition_dfs": transition_dfs,
-    }
+        dates.append(last_date + timedelta(days=i))
+    
+    instance['num_days'] = len(dates)
+    
+    # Set demand to zero for buffer days
+    for grade in instance['grades']:
+        for date in dates[-buffer_days:]:
+            if date not in instance['demand_data'][grade]:
+                instance['demand_data'][grade][date] = 0
+    
+    return instance
