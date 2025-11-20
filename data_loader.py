@@ -2,11 +2,10 @@
 Data Loading and Preprocessing Module
 ======================================
 
-Handles Excel file parsing, validation, and transformation into solver-ready format.
-Follows the exact logic from "Old Logic with Sidebar.py"
+CORRECTED: Proper buffer day calculation and demand period handling
 """
 
-from io import BytesIO
+import io
 from typing import Dict, List, Set, Tuple, Optional, Any
 from datetime import date, timedelta
 import pandas as pd
@@ -20,9 +19,10 @@ class DataLoadError(Exception):
     pass
 
 
-def load_excel_data(uploaded_file: BytesIO) -> Dict[str, Any]:
+def load_excel_data(uploaded_file: io.BytesIO) -> Dict[str, Any]:
     """
     Load and validate Excel data following the exact logic from original implementation.
+    CORRECTED: Proper date range handling
     
     Returns:
         Dictionary containing all problem instance data matching original structure
@@ -119,17 +119,36 @@ def load_excel_data(uploaded_file: BytesIO) -> Dict[str, Any]:
                 except (ValueError, TypeError):
                     pass
         
-        # Parse demand data (exact logic from original)
+        # CORRECTED: Parse demand data - get EXACT date range from demand sheet
         demand_data = {}
-        dates = sorted(list(set(demand_df.iloc[:, 0].dt.date.tolist())))
         
+        # Get dates from demand sheet - these are the ACTUAL demand period dates
+        date_series = pd.to_datetime(demand_df.iloc[:, 0])
+        demand_period_dates = sorted([d.date() for d in date_series])
+        
+        # Remove any duplicates
+        demand_period_dates = sorted(list(set(demand_period_dates)))
+        
+        st.info(f"📅 Demand period: {len(demand_period_dates)} days ({demand_period_dates[0].strftime('%d-%b-%y')} to {demand_period_dates[-1].strftime('%d-%b-%y')})")
+        
+        # Parse demand for each grade (only for demand period)
         for grade in grades:
+            demand_data[grade] = {}
             if grade in demand_df.columns:
-                demand_data[grade] = {demand_df.iloc[i, 0].date(): demand_df[grade].iloc[i] for i in range(len(demand_df))}
+                for i in range(len(demand_df)):
+                    date_val = demand_df.iloc[i, 0]
+                    date_obj = pd.to_datetime(date_val).date()
+                    demand_qty = demand_df[grade].iloc[i]
+                    demand_data[grade][date_obj] = float(demand_qty) if pd.notna(demand_qty) else 0
             else:
-                demand_data[grade] = {date: 0 for date in dates}
+                for date_obj in demand_period_dates:
+                    demand_data[grade][date_obj] = 0
         
-        # Parse shutdown periods
+        # CORRECTED: dates list will be extended with buffer days in add_buffer_days()
+        # For now, just use the demand period dates
+        dates = demand_period_dates
+        
+        # Parse shutdown periods (using demand period dates for now)
         shutdown_periods = _process_shutdown_dates(plant_df, dates)
         
         # Load transition matrices (exact logic from original)
@@ -172,8 +191,8 @@ def load_excel_data(uploaded_file: BytesIO) -> Dict[str, Any]:
         instance = {
             'grades': grades,
             'lines': lines,
-            'dates': dates,
-            'num_days': len(dates),
+            'dates': dates,  # Will be extended in add_buffer_days()
+            'num_days': len(dates),  # Will be updated in add_buffer_days()
             'capacities': capacities,
             'demand_data': demand_data,
             'initial_inventory': initial_inventory,
@@ -256,23 +275,40 @@ def _process_shutdown_dates(plant_df: pd.DataFrame, dates: List[date]) -> Dict[s
 
 def add_buffer_days(instance: Dict[str, Any], buffer_days: int) -> Dict[str, Any]:
     """
-    Extend planning horizon by adding buffer days - exact logic from original.
+    CORRECTED: Extend planning horizon by adding buffer days ONLY at the end.
+    Buffer days purpose: Allow production runs starting near end of demand period
+    to complete their minimum run days requirement.
     """
     if buffer_days <= 0:
         return instance
     
     dates = instance['dates']
+    original_num_days = len(dates)
     last_date = dates[-1]
     
+    st.info(f"📅 Original demand period: {original_num_days} days")
+    
+    # Add buffer days AFTER the demand period
+    buffer_dates = []
     for i in range(1, buffer_days + 1):
-        dates.append(last_date + timedelta(days=i))
+        buffer_dates.append(last_date + timedelta(days=i))
     
-    instance['num_days'] = len(dates)
+    # Extend dates list
+    instance['dates'].extend(buffer_dates)
+    instance['num_days'] = len(instance['dates'])
     
-    # Set demand to zero for buffer days
+    # Set demand to ZERO for all buffer days
     for grade in instance['grades']:
-        for date in dates[-buffer_days:]:
-            if date not in instance['demand_data'][grade]:
-                instance['demand_data'][grade][date] = 0
+        for buffer_date in buffer_dates:
+            instance['demand_data'][grade][buffer_date] = 0
+    
+    # Update shutdown periods if they extend into buffer period
+    for line in instance['lines']:
+        if line in instance['shutdown_periods'] and instance['shutdown_periods'][line]:
+            # Shutdown periods are stored as day indices, no need to update
+            pass
+    
+    st.success(f"✅ Planning horizon extended: {instance['num_days']} days ({original_num_days} demand + {buffer_days} buffer)")
+    st.info(f"📅 Buffer period: {buffer_dates[0].strftime('%d-%b-%y')} to {buffer_dates[-1].strftime('%d-%b-%y')}")
     
     return instance
