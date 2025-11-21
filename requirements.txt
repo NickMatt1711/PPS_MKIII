@@ -1,3 +1,4 @@
+'''
 numpy>=1.26
 pandas>=2.2.2
 streamlit>=1.29
@@ -5,6 +6,7 @@ pillow
 openpyxl
 ortools>=9.10
 plotly>=5.18.0
+'''
 
 # Core Dependencies
 streamlit>=1.31.0
