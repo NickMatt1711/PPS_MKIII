@@ -1,143 +1,201 @@
 """
-Global Constants and Configuration
-===================================
+Global constants and configuration for the Polymer Production Scheduler.
 
-Centralized configuration for the Polymer Production Scheduler.
+This module contains all application-wide constants including:
+- Optimization parameters
+- UI configuration
+- Validation rules
+- Color schemes
 """
 
 from typing import Dict, List
 
 # ============================================================================
-# OPTIMIZATION PARAMETERS
+# OPTIMIZATION DEFAULTS
 # ============================================================================
 
-# Default solver settings
-DEFAULT_TIME_LIMIT_MIN: int = 5
-DEFAULT_BUFFER_DAYS: int = 3
-DEFAULT_NUM_SEARCH_WORKERS: int = 8
-DEFAULT_RANDOM_SEED: int = 42
+# Solver parameters
+DEFAULT_TIME_LIMIT = 10  # minutes
+DEFAULT_BUFFER_DAYS = 3  # days
+DEFAULT_NUM_SEARCH_WORKERS = 8
+DEFAULT_RANDOM_SEED = 42
 
-# Objective function weights
-DEFAULT_STOCKOUT_PENALTY: int = 10
-DEFAULT_TRANSITION_PENALTY: int = 10
+# Objective weights (hierarchical)
+DEFAULT_STOCKOUT_PENALTY = 1000  # Critical: sales impact
+DEFAULT_TRANSITION_PENALTY = 100  # Important: operations cost
+DEFAULT_INVENTORY_HOLDING_COST = 1  # Efficiency: storage cost
+DEFAULT_CLOSING_INVENTORY_MULTIPLIER = 3  # Extra weight for closing targets
 
-# Constraint parameters
-MIN_RUN_DAYS_DEFAULT: int = 1
-MAX_RUN_DAYS_DEFAULT: int = 9999
-MIN_INVENTORY_DEFAULT: float = 0.0
-MAX_INVENTORY_DEFAULT: float = 1e9
-
-# ============================================================================
-# EXCEL TEMPLATE CONFIGURATION
-# ============================================================================
-
-# Required sheet names
-SHEET_PLANT: str = "Plant"
-SHEET_INVENTORY: str = "Inventory"
-SHEET_DEMAND: str = "Demand"
-
-# Plant sheet columns
-PLANT_COLS: Dict[str, str] = {
-    "name": "Plant",
-    "capacity": "Capacity per day",
-    "material_running": "Material Running",
-    "expected_days": "Expected Run Days",
-    "shutdown_start": "Shutdown Start Date",
-    "shutdown_end": "Shutdown End Date",
-}
-
-# Inventory sheet columns
-INVENTORY_COLS: Dict[str, str] = {
-    "grade": "Grade Name",
-    "opening_inv": "Opening Inventory",
-    "min_inv": "Min. Inventory",
-    "max_inv": "Max. Inventory",
-    "min_run": "Min. Run Days",
-    "max_run": "Max. Run Days",
-    "force_start": "Force Start Date",
-    "lines": "Lines",
-    "rerun": "Rerun Allowed",
-    "min_closing": "Min. Closing Inventory",
-}
-
-# Transition sheet naming pattern
-TRANSITION_KEYWORD: str = "transition"
-TRANSITION_YES_VALUES: List[str] = ["yes", "y", "true", "1"]
+# Solver advanced parameters
+DEFAULT_LINEARIZATION_LEVEL = 2
+DEFAULT_PROBING_LEVEL = 2
+DEFAULT_SYMMETRY_LEVEL = 4
 
 # ============================================================================
-# UI/UX CONFIGURATION
+# DATA VALIDATION
 # ============================================================================
 
-# Color scheme - Material Design inspired
-COLOR_PRIMARY: str = "#667eea"
-COLOR_SECONDARY: str = "#764ba2"
-COLOR_SUCCESS: str = "#4caf50"
-COLOR_WARNING: str = "#ff9800"
-COLOR_ERROR: str = "#f44336"
-COLOR_INFO: str = "#2196f3"
+# Required Excel sheet names
+REQUIRED_SHEETS = ["Plant", "Inventory", "Demand"]
 
-# Plotly color palette for grades
-GRADE_COLORS: List[str] = [
-    "#667eea", "#764ba2", "#f093fb", "#4facfe",
-    "#43e97b", "#fa709a", "#feca57", "#ff6348",
-    "#ee5a6f", "#c44569", "#786fa6", "#f8b500",
+# Required Plant sheet columns
+PLANT_REQUIRED_COLUMNS = [
+    "Plant",
+    "Capacity per day",
+    "Material Running",
+    "Expected Run Days",
+    "Shutdown Start Date",
+    "Shutdown End Date"
 ]
 
-# Status messages
-STATUS_OPTIMAL: str = "OPTIMAL"
-STATUS_FEASIBLE: str = "FEASIBLE"
-STATUS_INFEASIBLE: str = "INFEASIBLE"
-STATUS_UNKNOWN: str = "UNKNOWN"
+# Required Inventory sheet columns
+INVENTORY_REQUIRED_COLUMNS = [
+    "Grade Name",
+    "Opening Inventory",
+    "Min. Inventory",
+    "Max. Inventory",
+    "Min. Run Days",
+    "Max. Run Days",
+    "Force Start Date",
+    "Lines",
+    "Rerun Allowed",
+    "Min. Closing Inventory"
+]
+
+# Transition sheet detection keyword
+TRANSITION_KEYWORD = "transition"
+
+# Value constraints
+MAX_INVENTORY_VALUE = 1000000000
+MAX_RUN_DAYS = 9999
+MIN_RUN_DAYS = 1
 
 # ============================================================================
-# VALIDATION RULES
+# UI CONFIGURATION
 # ============================================================================
 
-# File validation
-MAX_FILE_SIZE_MB: int = 50
-ALLOWED_FILE_EXTENSIONS: List[str] = ["xlsx"]
+# Color schemes for grades (Plotly qualitative palettes)
+GRADE_COLOR_PALETTES = [
+    "Vivid",
+    "Bold",
+    "Pastel",
+    "Set1",
+    "Set2",
+    "Set3"
+]
 
-# Data validation
-MIN_PLANNING_DAYS: int = 1
-MAX_PLANNING_DAYS: int = 365
-MIN_CAPACITY: float = 0.1
-MAX_CAPACITY: float = 10000.0
+DEFAULT_COLOR_PALETTE = "Vivid"
 
-# Constraint validation
-MIN_STOCKOUT_PENALTY: int = 1
-MAX_STOCKOUT_PENALTY: int = 10000
-MIN_TRANSITION_PENALTY: int = 1
-MAX_TRANSITION_PENALTY: int = 10000
+# Chart dimensions
+GANTT_HEIGHT = 350
+INVENTORY_CHART_HEIGHT = 420
+TABLE_HEIGHT = 300
+
+# Date formatting
+DATE_FORMAT = "%d-%b-%y"
+DATE_FORMAT_LONG = "%d-%B-%Y"
+
+# ============================================================================
+# UI TEXT AND LABELS
+# ============================================================================
+
+APP_TITLE = "🏭 Polymer Production Scheduler"
+APP_SUBTITLE = "Optimized Multi-Plant Production Planning"
+
+STEP_LABELS = {
+    1: "Upload Data",
+    2: "Configure & Preview",
+    3: "View Results"
+}
+
+TAB_LABELS = {
+    "production": "📅 Production Schedule",
+    "summary": "📊 Summary Analytics",
+    "inventory": "📦 Inventory Trends"
+}
+
+METRIC_LABELS = {
+    "objective": "Objective Value",
+    "transitions": "Transitions",
+    "stockouts": "Stockouts",
+    "solve_time": "Solve Time"
+}
+
+# ============================================================================
+# BUSINESS RULES
+# ============================================================================
+
+# Rerun allowed default values
+RERUN_NOT_ALLOWED_VALUES = ["no", "n", "false", "0"]
+
+# Transition matrix allowed values
+TRANSITION_ALLOWED_VALUE = "yes"
 
 # ============================================================================
 # ERROR MESSAGES
 # ============================================================================
 
-ERROR_MESSAGES: Dict[str, str] = {
-    "missing_sheet": "Required sheet '{}' not found in Excel file",
-    "missing_column": "Required column '{}' not found in sheet '{}'",
-    "invalid_data": "Invalid data in column '{}': {}",
-    "no_grades": "No grades found in inventory sheet",
-    "no_plants": "No plants found in plant sheet",
-    "invalid_date": "Invalid date format in column '{}': {}",
-    "capacity_zero": "Plant '{}' has zero or negative capacity",
-    "shutdown_invalid": "Shutdown dates for plant '{}' are invalid",
+ERROR_MESSAGES = {
+    "file_upload": "Please upload an Excel file to continue.",
+    "missing_sheet": "Missing required sheet: {sheet_name}",
+    "missing_column": "Missing required column '{column}' in sheet '{sheet}'",
+    "invalid_data": "Invalid data in {location}: {details}",
+    "solver_infeasible": "No feasible solution found. Please review constraints.",
+    "solver_timeout": "Solver timed out. Consider increasing time limit.",
+    "unknown_error": "An unexpected error occurred: {error}"
 }
 
 # ============================================================================
-# DISPLAY CONFIGURATION
+# SUCCESS MESSAGES
 # ============================================================================
 
-# Date format for display
-DATE_FORMAT_DISPLAY: str = "%d-%b-%y"
-DATE_FORMAT_INPUT: str = "%Y-%m-%d"
-
-# Table display limits
-MAX_PREVIEW_ROWS: int = 100
+SUCCESS_MESSAGES = {
+    "file_uploaded": "✅ File uploaded successfully!",
+    "optimal_solution": "✅ Optimal solution found!",
+    "feasible_solution": "✅ Feasible solution found!",
+    "data_validated": "✅ Data validation passed"
+}
 
 # ============================================================================
-# LOGGING CONFIGURATION
+# WARNING MESSAGES
 # ============================================================================
 
-LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-LOG_LEVEL: str = "INFO"
+WARNING_MESSAGES = {
+    "shutdown_invalid": "⚠️ Shutdown start date after end date for {plant}. Ignoring shutdown.",
+    "shutdown_outside_horizon": "ℹ️ Shutdown period for {plant} is outside planning horizon",
+    "no_transition_matrix": "ℹ️ No transition matrix found for {plant}. Assuming no transition constraints.",
+    "invalid_force_date": "⚠️ Force start date '{date}' for grade '{grade}' on plant '{plant}' not found in demand dates"
+}
+
+# ============================================================================
+# CSS CLASSES
+# ============================================================================
+
+CSS_CLASSES = {
+    "metric_primary": "primary",
+    "metric_success": "success",
+    "metric_warning": "warning",
+    "metric_info": "info",
+    "chip_success": "chip success",
+    "chip_warning": "chip warning",
+    "chip_info": "chip info",
+    "alert_info": "alert-box info",
+    "alert_success": "alert-box success",
+    "alert_warning": "alert-box warning"
+}
+
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+def get_error_message(key: str, **kwargs) -> str:
+    """Get formatted error message."""
+    return ERROR_MESSAGES.get(key, ERROR_MESSAGES["unknown_error"]).format(**kwargs)
+
+def get_success_message(key: str) -> str:
+    """Get success message."""
+    return SUCCESS_MESSAGES.get(key, "")
+
+def get_warning_message(key: str, **kwargs) -> str:
+    """Get formatted warning message."""
+    return WARNING_MESSAGES.get(key, "").format(**kwargs)
