@@ -5,3 +5,28 @@ pillow
 openpyxl
 ortools>=9.10
 plotly>=5.18.0
+
+# Core Dependencies
+streamlit>=1.31.0
+pandas>=2.1.4
+numpy>=1.26.3
+
+# Optimization
+ortools>=9.8.3296
+
+# Visualization
+plotly>=5.18.0
+matplotlib>=3.8.2
+
+# Excel Processing
+openpyxl>=3.1.2
+xlrd>=2.0.1
+
+# Utilities
+python-dateutil>=2.8.2
+
+# Development Dependencies (optional)
+pytest>=7.4.3
+black>=23.12.1
+flake8>=7.0.0
+mypy>=1.8.0
