@@ -1,21 +1,23 @@
 """
-UI Components Module
-====================
+UI components and styling for Polymer Production Scheduler.
 
-Reusable Streamlit components matching test(1).py UI style.
+This module provides:
+- Modern Material Design styling
+- Reusable Streamlit components
+- Step indicators and progress tracking
+- Responsive layouts
 """
 
 import streamlit as st
-from typing import Tuple
+from typing import Dict, Any, Tuple
 
-import constants
+from .constants import APP_TITLE, APP_SUBTITLE, STEP_LABELS
 
 
-def inject_custom_css() -> None:
-    """Inject modern Material Design CSS - matches test(1).py."""
+def inject_custom_css():
+    """Inject modern Material Design CSS into Streamlit app."""
     st.markdown("""
     <style>
-        /* Hide sidebar completely */
         [data-testid="stSidebar"] {
             display: none;
         }
@@ -32,7 +34,6 @@ def inject_custom_css() -> None:
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
         
-        /* Material Design App Bar */
         .app-bar {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -57,7 +58,84 @@ def inject_custom_css() -> None:
             font-weight: 400;
         }
         
-        /* Material Cards */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2rem 0 3rem 0;
+            position: relative;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            flex: 1;
+            max-width: 200px;
+        }
+        
+        .step-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.125rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2;
+            background: white;
+            border: 3px solid #e0e0e0;
+            color: #9e9e9e;
+        }
+        
+        .step-circle.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: scale(1.1);
+        }
+        
+        .step-circle.completed {
+            background: #4caf50;
+            border-color: #4caf50;
+            color: white;
+        }
+        
+        .step-label {
+            margin-top: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #757575;
+            text-align: center;
+        }
+        
+        .step-label.active {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .step-label.completed {
+            color: #4caf50;
+        }
+        
+        .step-line {
+            position: absolute;
+            top: 24px;
+            left: 50%;
+            right: -50%;
+            height: 3px;
+            background: #e0e0e0;
+            z-index: 1;
+        }
+        
+        .step-line.completed {
+            background: #4caf50;
+        }
+        
         .material-card {
             background: #F0F2FF;
             border-radius: 16px;
@@ -78,9 +156,45 @@ def inject_custom_css() -> None:
             text-align: center;
             color: #212121;
             margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center; 
         }
         
-        /* Metrics */
+        .stButton > button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stButton > button:hover {
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        [data-testid="stFileUploader"] {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+            border: 2px dashed #667eea;
+            border-radius: 16px;
+            padding: 1rem 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        [data-testid="stFileUploader"]:hover {
+            border-color: #764ba2;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e3e9f7 100%);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+        }
+        
         .metric-card {
             background: white;
             border-radius: 12px;
@@ -109,7 +223,7 @@ def inject_custom_css() -> None:
         
         .metric-card.warning {
             border-left-color: #ff9800;
-            background: linear-gradient(135deg, #fff8f0 0%, #ffffff 100%
+            background: linear-gradient(135deg, #fff8f0 0%, #ffffff 100%);
         }
         
         .metric-card.info {
@@ -139,43 +253,31 @@ def inject_custom_css() -> None:
             margin-top: 0.25rem;
         }
         
-        /* Buttons */
-        .stButton > button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 0.75rem 2rem;
-            font-weight: 600;
-            font-size: 1rem;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .stButton > button:hover {
-            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
-            transform: translateY(-2px);
-        }
-        
-        /* File uploader */
-        [data-testid="stFileUploader"] {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
-            border: 2px dashed #667eea;
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.375rem 0.875rem;
             border-radius: 16px;
-            padding: 1rem 1rem;
-            text-align: center;
-            transition: all 0.3s ease;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            margin: 0.25rem;
         }
         
-        [data-testid="stFileUploader"]:hover {
-            border-color: #764ba2;
-            background: linear-gradient(135deg, #f0f4ff 0%, #e3e9f7 100%);
-            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+        .chip.success {
+            background: #e8f5e9;
+            color: #2e7d32;
         }
         
-        /* Tabs */
+        .chip.warning {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        
+        .chip.info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
         .stTabs [data-baseweb="tab-list"] {
             gap: 0.5rem;
             background: white;
@@ -205,12 +307,16 @@ def inject_custom_css() -> None:
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
         
-        /* Progress bar */
         .stProgress > div > div > div > div {
             background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
         }
         
-        /* Alert boxes */
+        .dataframe {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
         .alert-box {
             padding: 1rem 1.5rem;
             border-radius: 8px;
@@ -239,26 +345,12 @@ def inject_custom_css() -> None:
             color: #e65100;
         }
         
-        /* Divider */
         .divider {
             height: 1px;
             background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
             margin: 2rem 0;
         }
         
-        /* Number input */
-        .stNumberInput > div > div > input {
-            border-radius: 8px;
-            border: 2px solid #e0e0e0;
-            transition: all 0.3s ease;
-        }
-        
-        .stNumberInput > div > div > input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        /* Styled list */
         .styled-list {
             list-style: none;
             padding-left: 0;
@@ -281,114 +373,182 @@ def inject_custom_css() -> None:
     """, unsafe_allow_html=True)
 
 
-def render_header() -> None:
-    """Render the application header."""
-    st.markdown("""
+def render_header():
+    """Render application header with title and subtitle."""
+    st.markdown(f"""
     <div class="app-bar">
-        <h1>🏭 Polymer Production Scheduler</h1>
-        <p>Optimized Multi-Plant Production Planning</p>
+        <h1>{APP_TITLE}</h1>
+        <p>{APP_SUBTITLE}</p>
     </div>
     """, unsafe_allow_html=True)
 
 
-def render_divider() -> None:
-    """Render a styled divider."""
+def render_step_indicator(current_step: int):
+    """
+    Render step indicator for multi-step workflow.
+    
+    Args:
+        current_step: Current step number (1, 2, or 3)
+    """
+    step_status = [
+        'active' if current_step == 1 else 'completed',
+        'active' if current_step == 2 else ('completed' if current_step > 2 else ''),
+        'active' if current_step == 3 else ''
+    ]
+    
+    st.markdown(f"""
+    <div class="step-indicator">
+        <div class="step">
+            <div class="step-circle {step_status[0]}">
+                {'✓' if current_step > 1 else '1'}
+            </div>
+            <div class="step-label {step_status[0]}">{STEP_LABELS[1]}</div>
+            <div class="step-line {step_status[0] if current_step > 1 else ''}"></div>
+        </div>
+        <div class="step">
+            <div class="step-circle {step_status[1]}">
+                {'✓' if current_step > 2 else '2'}
+            </div>
+            <div class="step-label {step_status[1]}">{STEP_LABELS[2]}</div>
+            <div class="step-line {step_status[1] if current_step > 2 else ''}"></div>
+        </div>
+        <div class="step">
+            <div class="step-circle {step_status[2]}">3</div>
+            <div class="step-label {step_status[2]}">{STEP_LABELS[3]}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_metric_card(label: str, value: str, subtitle: str = "", card_type: str = "primary"):
+    """
+    Render a metric card.
+    
+    Args:
+        label: Metric label
+        value: Metric value (formatted)
+        subtitle: Optional subtitle text
+        card_type: Card style type (primary, success, warning, info)
+    """
+    subtitle_html = f'<div class="metric-subtitle">{subtitle}</div>' if subtitle else ''
+    
+    return f"""
+    <div class="metric-card {card_type}">
+        <div class="metric-label">{label}</div>
+        <div class="metric-value">{value}</div>
+        {subtitle_html}
+    </div>
+    """
+
+
+def render_material_card(title: str, content: str):
+    """
+    Render a material design card.
+    
+    Args:
+        title: Card title
+        content: Card content (HTML)
+    """
+    return f"""
+    <div class="material-card">
+        <div class="card-title">{title}</div>
+        {content}
+    </div>
+    """
+
+
+def render_chip(text: str, chip_type: str = "info"):
+    """
+    Render a chip/badge.
+    
+    Args:
+        text: Chip text
+        chip_type: Chip style (success, warning, info)
+    """
+    return f'<span class="chip {chip_type}">{text}</span>'
+
+
+def render_alert(message: str, alert_type: str = "info"):
+    """
+    Render an alert box.
+    
+    Args:
+        message: Alert message
+        alert_type: Alert style (info, success, warning)
+    """
+    return f'<div class="alert-box {alert_type}">{message}</div>'
+
+
+def render_divider():
+    """Render a horizontal divider."""
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
 
-def render_summary_metrics(objective: float, transitions: int, stockouts: float, planning_days: int) -> None:
-    """Render summary metrics in a grid layout."""
-    col1, col2, col3, col4 = st.columns(4)
+def render_optimization_params_form() -> Dict[str, Any]:
+    """
+    Render optimization parameters form and return selected values.
+    
+    Returns:
+        Dictionary with parameter values
+    """
+    st.markdown("""
+    <div class="material-card">
+        <div class="card-title">⚙️ Optimization Parameters</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown(f"""
-        <div class="metric-card primary">
-            <div class="metric-label">Objective Value</div>
-            <div class="metric-value">{objective:,.0f}</div>
-            <div class="metric-subtitle">Lower is Better</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("#### Core Settings")
+        time_limit_min = st.number_input(
+            "⏱️ Time Limit (minutes)",
+            min_value=1,
+            max_value=120,
+            value=10,
+            help="Maximum solver runtime"
+        )
+        
+        buffer_days = st.number_input(
+            "📅 Planning Buffer (days)",
+            min_value=0,
+            max_value=7,
+            value=3,
+            help="Additional days for safety planning"
+        )
     
     with col2:
-        st.markdown(f"""
-        <div class="metric-card info">
-            <div class="metric-label">Transitions</div>
-            <div class="metric-value">{transitions}</div>
-            <div class="metric-subtitle">Grade Changeovers</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("#### Objective Weights")
+        stockout_penalty = st.number_input(
+            "🎯 Stockout Penalty (per MT)",
+            min_value=1,
+            value=1000,
+            help="Cost weight for inventory shortages - CRITICAL for sales"
+        )
+        
+        transition_penalty = st.number_input(
+            "🔄 Transition Penalty (per changeover)",
+            min_value=1,
+            value=100,
+            help="Cost weight for grade changeovers - IMPORTANT for operations"
+        )
     
-    with col3:
-        card_type = "success" if stockouts == 0 else "warning"
-        st.markdown(f"""
-        <div class="metric-card {card_type}">
-            <div class="metric-label">Stockouts</div>
-            <div class="metric-value">{stockouts:,.0f}</div>
-            <div class="metric-subtitle">MT Unmet Demand</div>
-        </div>
-        """, unsafe_allow_html=True)
+    st.info("💡 **Business Priority**: Stockouts (sales impact) > Transitions (operations cost). Stockout penalty should typically be 5-10x higher than transition penalty.")
     
-    with col4:
-        st.markdown(f"""
-        <div class="metric-card info">
-            <div class="metric-label">Planning Horizon</div>
-            <div class="metric-value">{planning_days}</div>
-            <div class="metric-subtitle">Days</div>
-        </div>
-        """, unsafe_allow_html=True)
+    return {
+        'time_limit_min': time_limit_min,
+        'buffer_days': buffer_days,
+        'stockout_penalty': stockout_penalty,
+        'transition_penalty': transition_penalty
+    }
 
 
-def render_optimization_status(status: str, runtime: float) -> None:
-    """Render optimization status with appropriate styling."""
-    if status == "OPTIMAL":
-        st.markdown(f'<div class="alert-box success">✅ Optimal solution found in {runtime:.1f} seconds!</div>', unsafe_allow_html=True)
-    elif status == "FEASIBLE":
-        st.markdown(f'<div class="alert-box success">✅ Feasible solution found in {runtime:.1f} seconds!</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'<div class="alert-box warning">⚠️ Solver status: {status} (runtime: {runtime:.1f}s)</div>', unsafe_allow_html=True)
-
-
-def render_troubleshooting_guide() -> None:
-    """Render troubleshooting guide for infeasible solutions."""
-    with st.expander("🔍 Troubleshooting Guide", expanded=True):
-        st.markdown("""
-        ### Common Causes & Solutions
-        
-        #### 🔴 Capacity Issues
-        - **Problem**: Total demand exceeds production capacity
-        - **Solution**: Increase plant capacity or reduce demand forecasts
-        
-        #### 🔴 Constraint Conflicts
-        - **Problem**: Minimum run days too long for available windows
-        - **Solution**: Reduce minimum run day requirements
-        
-        #### 🔴 Inventory Issues
-        - **Problem**: Cannot meet minimum closing inventory targets
-        - **Solution**: Increase opening inventory or lower targets
-        
-        #### 🔴 Shutdown Conflicts
-        - **Problem**: Shutdown periods block critical production
-        - **Solution**: Reschedule shutdowns or increase opening inventory
-        
-        #### 🔴 Transition Restrictions
-        - **Problem**: Transition matrix too restrictive
-        - **Solution**: Allow more grade changeover combinations
-        
-        ### Recommended Actions
-        
-        1. Review and relax constraint parameters
-        2. Check for data entry errors in Excel file
-        3. Validate demand forecasts against capacity
-        4. Consider increasing buffer days for flexibility
-        """)
-
-
-def render_footer() -> None:
+def render_footer():
     """Render application footer."""
     render_divider()
     st.markdown("""
     <div style="text-align: center; color: #9e9e9e; font-size: 0.875rem; padding: 1rem 0;">
         <strong>Polymer Production Scheduler</strong> • Powered by OR-Tools & Streamlit<br>
-        Material Minimalism Design • Version 3.0
+        Modern Architecture • Hierarchical Objectives • v3.0
     </div>
     """, unsafe_allow_html=True)
