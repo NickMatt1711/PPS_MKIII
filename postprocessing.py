@@ -63,7 +63,9 @@ def create_gantt_chart(solution: Dict, line: str, dates: List, shutdown_periods:
     """Create Gantt chart for a production line"""
     
     grades = sorted(solution['is_producing'][line].keys())
-    grade_color_map = {grade: CHART_COLORS[i % len(CHART_COLORS)] for i, grade in enumerate(set(solution['is_producing'][line].values()) if solution['is_producing'][line].values())}
+    # Get unique grades from the production schedule
+    unique_grades = set(grade for grade in solution['is_producing'][line].values() if grade is not None)
+    grade_color_map = {grade: CHART_COLORS[i % len(CHART_COLORS)] for i, grade in enumerate(unique_grades)}
     
     gantt_data = []
     for date_str, grade in solution['is_producing'][line].items():
