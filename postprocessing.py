@@ -11,7 +11,7 @@ from typing import Dict, List
 from constants import CHART_COLORS
 
 
-def create_production_summary(solution: Dict, grades: List[str], lines: List[str]) -> pd.DataFrame:
+def create_production_summary(solution: Dict, grades: List[str], lines: List[str], solver) -> pd.DataFrame:
     """Create production summary DataFrame"""
     
     production_totals = {}
