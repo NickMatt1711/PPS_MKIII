@@ -354,6 +354,22 @@ def run_optimization():
 
 
 # ========== STAGE 2: RESULTS ==========
+def get_or_create_grade_colors(grades):
+    """
+    Keep consistent colors per grade across the app.
+    Colors stored in st.session_state[SS_GRADE_COLORS].
+    """
+    import random
+
+    # If some grades do not yet have colors, assign them
+    for g in grades:
+        if g not in st.session_state[SS_GRADE_COLORS]:
+            # Generate visually distinct random color
+            color = "#{:06x}".format(random.randint(0x222222, 0xDDDDDD))
+            st.session_state[SS_GRADE_COLORS][g] = color
+
+    return st.session_state[SS_GRADE_COLORS]
+
 def render_results_stage():
     """Stage 3: Display results"""
     
