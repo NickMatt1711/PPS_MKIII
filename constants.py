@@ -93,3 +93,4 @@ SS_EXCEL_DATA = "excel_data"
 SS_OPTIMIZATION_PARAMS = "opt_params"
 SS_SOLUTION = "solution"
 SS_SOLVER_STATUS = "solver_status"
+SS_GRADE_COLORS = "grade_colors"  # Store consistent grade colors
