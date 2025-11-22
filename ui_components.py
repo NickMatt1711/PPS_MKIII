@@ -297,13 +297,15 @@ def render_stage_progress(current_stage: int):
             </div>
         """
     
-    st.markdown(f"""
-        <div class="stage-container">
-            <div class="stage-progress">
-                {circles_html}
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    # Only render if we want to show it (temporarily hidden for fix)
+    # Commented out to hide the HTML rendering
+    # st.markdown(f"""
+    #     <div class="stage-container">
+    #         <div class="stage-progress">
+    #             {circles_html}
+    #         </div>
+    #     </div>
+    # """, unsafe_allow_html=True)
 
 
 def render_card(title: str, icon: str = ""):
