@@ -1,81 +1,71 @@
 """
-UI components and styling for Polymer Production Scheduler.
-
-This module provides:
-- Modern Material Design styling
-- Reusable Streamlit components
-- Step indicators and progress tracking
-- Responsive layouts
+Reusable UI components with modern material design
 """
 
 import streamlit as st
-from typing import Dict, Any, Tuple
-
-from .constants import APP_TITLE, APP_SUBTITLE, STEP_LABELS
+from constants import THEME_COLORS
 
 
-def inject_custom_css():
-    """Inject modern Material Design CSS into Streamlit app."""
-    st.markdown("""
+def apply_custom_css():
+    """Apply custom CSS for modern material design"""
+    st.markdown(f"""
     <style>
-        [data-testid="stSidebar"] {
-            display: none;
-        }
+        /* Global Styles */
+        .main {{
+            background-color: {THEME_COLORS['bg_light']};
+        }}
         
-        .main .block-container {
-            padding-top: 3rem;
-            padding-bottom: 3rem;
-            max-width: 1200px;
-        }
-        
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-        
-        .app-bar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        /* Header Styles */
+        .app-header {{
+            background: linear-gradient(135deg, {THEME_COLORS['primary']} 0%, #4A5FC1 100%);
             color: white;
-            text-align: center;
-            padding: 2rem 3rem;
-            margin: -3rem -3rem 3rem -3rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
             border-radius: 16px;
-        }
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 16px rgba(94, 124, 226, 0.2);
+        }}
         
-        .app-bar h1 {
+        .app-header h1 {{
             margin: 0;
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 600;
             letter-spacing: -0.5px;
-        }
+        }}
         
-        .app-bar p {
+        .app-header p {{
             margin: 0.5rem 0 0 0;
             font-size: 1rem;
             opacity: 0.95;
             font-weight: 400;
-        }
+        }}
         
-        .step-indicator {
+        /* Stage Progress Bar */
+        .stage-container {{
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }}
+        
+        .stage-progress {{
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            margin: 2rem 0 3rem 0;
             position: relative;
-        }
+            margin-bottom: 1rem;
+        }}
         
-        .step {
+        .stage-step {{
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative;
+            z-index: 2;
             flex: 1;
-            max-width: 200px;
-        }
+        }}
         
-        .step-circle {
+        .stage-circle {{
             width: 48px;
             height: 48px;
             border-radius: 50%;
@@ -83,472 +73,282 @@ def inject_custom_css():
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 1.125rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2;
-            background: white;
-            border: 3px solid #e0e0e0;
-            color: #9e9e9e;
-        }
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }}
         
-        .step-circle.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: #667eea;
+        .stage-circle.active {{
+            background: {THEME_COLORS['primary']};
             color: white;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-            transform: scale(1.1);
-        }
+            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.3);
+        }}
         
-        .step-circle.completed {
-            background: #4caf50;
-            border-color: #4caf50;
+        .stage-circle.completed {{
+            background: {THEME_COLORS['success']};
             color: white;
-        }
+        }}
         
-        .step-label {
-            margin-top: 0.75rem;
+        .stage-circle.inactive {{
+            background: {THEME_COLORS['border_light']};
+            color: {THEME_COLORS['text_secondary']};
+        }}
+        
+        .stage-label {{
             font-size: 0.875rem;
             font-weight: 500;
-            color: #757575;
-            text-align: center;
-        }
+            color: {THEME_COLORS['text_regular']};
+        }}
         
-        .step-label.active {
-            color: #667eea;
+        .stage-label.active {{
+            color: {THEME_COLORS['primary']};
             font-weight: 600;
-        }
+        }}
         
-        .step-label.completed {
-            color: #4caf50;
-        }
-        
-        .step-line {
-            position: absolute;
-            top: 24px;
-            left: 50%;
-            right: -50%;
-            height: 3px;
-            background: #e0e0e0;
-            z-index: 1;
-        }
-        
-        .step-line.completed {
-            background: #4caf50;
-        }
-        
-        .material-card {
-            background: #F0F2FF;
-            border-radius: 16px;
+        /* Card Styles */
+        .card {{
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             margin-bottom: 1.5rem;
-            padding: 2rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(0, 0, 0, 0.06);
-        }
+            border: 1px solid {THEME_COLORS['border_light']};
+        }}
         
-        .material-card:hover {
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-        }
-        
-        .card-title {
+        .card-header {{
             font-size: 1.25rem;
             font-weight: 600;
-            text-align: center;
-            color: #212121;
-            margin: 0 0 1rem 0;
+            color: {THEME_COLORS['text_primary']};
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
-            justify-content: center; 
-        }
+            gap: 0.5rem;
+        }}
         
-        .stButton > button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        /* Metric Cards */
+        .metric-card {{
+            background: linear-gradient(135deg, {THEME_COLORS['primary']} 0%, #4A5FC1 100%);
             color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 0.75rem 2rem;
-            font-weight: 600;
-            font-size: 1rem;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .stButton > button:hover {
-            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
-            transform: translateY(-2px);
-        }
-        
-        [data-testid="stFileUploader"] {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
-            border: 2px dashed #667eea;
-            border-radius: 16px;
-            padding: 1rem 1rem;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        [data-testid="stFileUploader"]:hover {
-            border-color: #764ba2;
-            background: linear-gradient(135deg, #f0f4ff 0%, #e3e9f7 100%);
-            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
-        }
-        
-        .metric-card {
-            background: white;
-            border-radius: 12px;
             padding: 1.5rem;
+            border-radius: 12px;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border-left: 4px solid;
-            transition: all 0.3s ease;
-            height: 100%;
-        }
+            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.2);
+            transition: transform 0.2s ease;
+        }}
         
-        .metric-card:hover {
+        .metric-card:hover {{
             transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        }
+            box-shadow: 0 6px 20px rgba(94, 124, 226, 0.3);
+        }}
         
-        .metric-card.primary {
-            border-left-color: #667eea;
-            background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%);
-        }
-        
-        .metric-card.success {
-            border-left-color: #4caf50;
-            background: linear-gradient(135deg, #f1f8f4 0%, #ffffff 100%);
-        }
-        
-        .metric-card.warning {
-            border-left-color: #ff9800;
-            background: linear-gradient(135deg, #fff8f0 0%, #ffffff 100%);
-        }
-        
-        .metric-card.info {
-            border-left-color: #2196f3;
-            background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
-        }
-        
-        .metric-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #757575;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-        
-        .metric-value {
+        .metric-value {{
             font-size: 2rem;
             font-weight: 700;
-            color: #212121;
-            line-height: 1.2;
-        }
+            margin: 0.5rem 0;
+        }}
         
-        .metric-subtitle {
-            font-size: 0.75rem;
-            color: #9e9e9e;
-            margin-top: 0.25rem;
-        }
+        .metric-label {{
+            font-size: 0.875rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }}
         
-        .chip {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.375rem 0.875rem;
-            border-radius: 16px;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            margin: 0.25rem;
-        }
-        
-        .chip.success {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-        
-        .chip.warning {
-            background: #fff3e0;
-            color: #e65100;
-        }
-        
-        .chip.info {
-            background: #e3f2fd;
-            color: #1565c0;
-        }
-        
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 0.5rem;
-            background: white;
-            padding: 0.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            display: flex;
-            width: 100%;
-        }
-        
-        .stTabs [data-baseweb="tab"] {
+        /* Alert Boxes */
+        .alert {{
+            padding: 1rem;
             border-radius: 8px;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            background: transparent;
-            border: none;
-            color: #757575;
-            transition: all 0.3s ease;
-            flex: 1;
-            text-align: center;
-            justify-content: center;
-        }
-        
-        .stTabs [aria-selected="true"] {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        }
-        
-        .stProgress > div > div > div > div {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .dataframe {
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        
-        .alert-box {
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            margin: 1rem 0;
-            border-left: 4px solid;
+            margin-bottom: 1rem;
             display: flex;
             align-items: flex-start;
             gap: 0.75rem;
-        }
+        }}
         
-        .alert-box.info {
-            background: #e3f2fd;
-            border-left-color: #2196f3;
-            color: #1565c0;
-        }
+        .alert-success {{
+            background: {THEME_COLORS['success_light']};
+            border-left: 4px solid {THEME_COLORS['success']};
+            color: #2D5016;
+        }}
         
-        .alert-box.success {
-            background: #e8f5e9;
-            border-left-color: #4caf50;
-            color: #2e7d32;
-        }
+        .alert-info {{
+            background: {THEME_COLORS['primary_light']};
+            border-left: 4px solid {THEME_COLORS['primary']};
+            color: #1E3A8A;
+        }}
         
-        .alert-box.warning {
-            background: #fff3e0;
-            border-left-color: #ff9800;
-            color: #e65100;
-        }
+        .alert-warning {{
+            background: {THEME_COLORS['warning_light']};
+            border-left: 4px solid {THEME_COLORS['warning']};
+            color: #7C4A03;
+        }}
         
-        .divider {
+        .alert-error {{
+            background: {THEME_COLORS['error_light']};
+            border-left: 4px solid {THEME_COLORS['error']};
+            color: #7F1D1D;
+        }}
+        
+        /* Buttons */
+        .stButton>button {{
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.2s ease;
+            background: {THEME_COLORS['primary']};
+            color: white;
+        }}
+        
+        .stButton>button:hover {{
+            background: #4A5FC1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.3);
+        }}
+        
+        /* DataFrames */
+        .dataframe {{
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid {THEME_COLORS['border_light']} !important;
+        }}
+        
+        /* File Uploader */
+        .uploadedFile {{
+            border: 2px dashed {THEME_COLORS['primary']} !important;
+            border-radius: 12px !important;
+            background: {THEME_COLORS['primary_light']} !important;
+        }}
+        
+        /* Tabs */
+        .stTabs [data-baseweb="tab-list"] {{
+            gap: 8px;
+            background: {THEME_COLORS['bg_light']};
+            padding: 0.5rem;
+            border-radius: 12px;
+        }}
+        
+        .stTabs [data-baseweb="tab"] {{
+            height: 50px;
+            padding: 0 24px;
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            border: 2px solid transparent;
+            color: {THEME_COLORS['text_regular']};
+        }}
+        
+        .stTabs [aria-selected="true"] {{
+            background: {THEME_COLORS['primary']};
+            color: white;
+        }}
+        
+        /* Progress Bar */
+        .stProgress > div > div > div > div {{
+            background: {THEME_COLORS['primary']};
+        }}
+        
+        /* Section Divider */
+        .section-divider {{
             height: 1px;
-            background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+            background: {THEME_COLORS['border_light']};
             margin: 2rem 0;
-        }
-        
-        .styled-list {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .styled-list li {
-            padding: 0.5rem 0 0.5rem 2rem;
-            position: relative;
-        }
-        
-        .styled-list li:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #4caf50;
-            font-weight: bold;
-            font-size: 1.25rem;
-        }
+        }}
     </style>
     """, unsafe_allow_html=True)
 
 
-def render_header():
-    """Render application header with title and subtitle."""
+def render_header(title: str, subtitle: str = ""):
+    """Render application header"""
+    subtitle_html = f"<p>{subtitle}</p>" if subtitle else ""
     st.markdown(f"""
-    <div class="app-bar">
-        <h1>{APP_TITLE}</h1>
-        <p>{APP_SUBTITLE}</p>
-    </div>
+        <div class="app-header">
+            <h1>{title}</h1>
+            {subtitle_html}
+        </div>
     """, unsafe_allow_html=True)
 
 
-def render_step_indicator(current_step: int):
-    """
-    Render step indicator for multi-step workflow.
-    
-    Args:
-        current_step: Current step number (1, 2, or 3)
-    """
-    step_status = [
-        'active' if current_step == 1 else 'completed',
-        'active' if current_step == 2 else ('completed' if current_step > 2 else ''),
-        'active' if current_step == 3 else ''
+def render_stage_progress(current_stage: int):
+    """Render wizard stage progress indicator"""
+    stages = [
+        ("1", "Upload"),
+        ("2", "Preview & Configure"),
+        ("3", "Results")
     ]
     
+    circles_html = ""
+    for idx, (num, label) in enumerate(stages):
+        if idx < current_stage:
+            status = "completed"
+            icon = "✓"
+        elif idx == current_stage:
+            status = "active"
+            icon = num
+        else:
+            status = "inactive"
+            icon = num
+        
+        label_class = "active" if idx == current_stage else ""
+        
+        circles_html += f"""
+            <div class="stage-step">
+                <div class="stage-circle {status}">{icon}</div>
+                <div class="stage-label {label_class}">{label}</div>
+            </div>
+        """
+    
     st.markdown(f"""
-    <div class="step-indicator">
-        <div class="step">
-            <div class="step-circle {step_status[0]}">
-                {'✓' if current_step > 1 else '1'}
+        <div class="stage-container">
+            <div class="stage-progress">
+                {circles_html}
             </div>
-            <div class="step-label {step_status[0]}">{STEP_LABELS[1]}</div>
-            <div class="step-line {step_status[0] if current_step > 1 else ''}"></div>
         </div>
-        <div class="step">
-            <div class="step-circle {step_status[1]}">
-                {'✓' if current_step > 2 else '2'}
-            </div>
-            <div class="step-label {step_status[1]}">{STEP_LABELS[2]}</div>
-            <div class="step-line {step_status[1] if current_step > 2 else ''}"></div>
-        </div>
-        <div class="step">
-            <div class="step-circle {step_status[2]}">3</div>
-            <div class="step-label {step_status[2]}">{STEP_LABELS[3]}</div>
-        </div>
-    </div>
     """, unsafe_allow_html=True)
 
 
-def render_metric_card(label: str, value: str, subtitle: str = "", card_type: str = "primary"):
-    """
-    Render a metric card.
-    
-    Args:
-        label: Metric label
-        value: Metric value (formatted)
-        subtitle: Optional subtitle text
-        card_type: Card style type (primary, success, warning, info)
-    """
-    subtitle_html = f'<div class="metric-subtitle">{subtitle}</div>' if subtitle else ''
-    
-    return f"""
-    <div class="metric-card {card_type}">
-        <div class="metric-label">{label}</div>
-        <div class="metric-value">{value}</div>
-        {subtitle_html}
-    </div>
-    """
+def render_card(title: str, icon: str = ""):
+    """Context manager for card layout"""
+    icon_html = f"{icon} " if icon else ""
+    st.markdown(f"""
+        <div class="card">
+            <div class="card-header">{icon_html}{title}</div>
+    """, unsafe_allow_html=True)
 
 
-def render_material_card(title: str, content: str):
-    """
-    Render a material design card.
-    
-    Args:
-        title: Card title
-        content: Card content (HTML)
-    """
-    return f"""
-    <div class="material-card">
-        <div class="card-title">{title}</div>
-        {content}
-    </div>
-    """
+def close_card():
+    """Close card div"""
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
-def render_chip(text: str, chip_type: str = "info"):
-    """
-    Render a chip/badge.
-    
-    Args:
-        text: Chip text
-        chip_type: Chip style (success, warning, info)
-    """
-    return f'<span class="chip {chip_type}">{text}</span>'
+def render_metric_card(label: str, value: str, col):
+    """Render a metric card in a column"""
+    with col:
+        st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">{label}</div>
+                <div class="metric-value">{value}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
 
 def render_alert(message: str, alert_type: str = "info"):
-    """
-    Render an alert box.
-    
-    Args:
-        message: Alert message
-        alert_type: Alert style (info, success, warning)
-    """
-    return f'<div class="alert-box {alert_type}">{message}</div>'
-
-
-def render_divider():
-    """Render a horizontal divider."""
-    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-
-
-def render_optimization_params_form() -> Dict[str, Any]:
-    """
-    Render optimization parameters form and return selected values.
-    
-    Returns:
-        Dictionary with parameter values
-    """
-    st.markdown("""
-    <div class="material-card">
-        <div class="card-title">⚙️ Optimization Parameters</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### Core Settings")
-        time_limit_min = st.number_input(
-            "⏱️ Time Limit (minutes)",
-            min_value=1,
-            max_value=120,
-            value=10,
-            help="Maximum solver runtime"
-        )
-        
-        buffer_days = st.number_input(
-            "📅 Planning Buffer (days)",
-            min_value=0,
-            max_value=7,
-            value=3,
-            help="Additional days for safety planning"
-        )
-    
-    with col2:
-        st.markdown("#### Objective Weights")
-        stockout_penalty = st.number_input(
-            "🎯 Stockout Penalty (per MT)",
-            min_value=1,
-            value=1000,
-            help="Cost weight for inventory shortages - CRITICAL for sales"
-        )
-        
-        transition_penalty = st.number_input(
-            "🔄 Transition Penalty (per changeover)",
-            min_value=1,
-            value=100,
-            help="Cost weight for grade changeovers - IMPORTANT for operations"
-        )
-    
-    st.info("💡 **Business Priority**: Stockouts (sales impact) > Transitions (operations cost). Stockout penalty should typically be 5-10x higher than transition penalty.")
-    
-    return {
-        'time_limit_min': time_limit_min,
-        'buffer_days': buffer_days,
-        'stockout_penalty': stockout_penalty,
-        'transition_penalty': transition_penalty
+    """Render an alert box"""
+    icons = {
+        'success': '✓',
+        'info': 'ℹ',
+        'warning': '⚠',
+        'error': '✕'
     }
-
-
-def render_footer():
-    """Render application footer."""
-    render_divider()
-    st.markdown("""
-    <div style="text-align: center; color: #9e9e9e; font-size: 0.875rem; padding: 1rem 0;">
-        <strong>Polymer Production Scheduler</strong> • Powered by OR-Tools & Streamlit<br>
-        Modern Architecture • Hierarchical Objectives • v3.0
-    </div>
+    icon = icons.get(alert_type, 'ℹ')
+    
+    st.markdown(f"""
+        <div class="alert alert-{alert_type}">
+            <span style="font-size: 1.25rem; font-weight: bold;">{icon}</span>
+            <span>{message}</span>
+        </div>
     """, unsafe_allow_html=True)
+
+
+def render_section_divider():
+    """Render a section divider"""
+    st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
