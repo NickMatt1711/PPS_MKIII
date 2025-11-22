@@ -44,6 +44,8 @@ if SS_OPTIMIZATION_PARAMS not in st.session_state:
     }
 if SS_SOLUTION not in st.session_state:
     st.session_state[SS_SOLUTION] = None
+if SS_GRADE_COLORS not in st.session_state:
+    st.session_state[SS_GRADE_COLORS] = {}
 
 
 # ========== STAGE 0: UPLOAD ==========
@@ -68,7 +70,20 @@ def render_upload_stage():
         
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
-            render_alert("File uploaded successfully! Click 'Next' to preview your data.", "success")
+            render_alert("File uploaded successfully! Processing...", "success")
+            
+            # Automatically load and validate data
+            file_buffer = io.BytesIO(uploaded_file.read())
+            loader = ExcelDataLoader(file_buffer)
+            success, data, errors, warnings = loader.load_and_validate()
+            
+            if success:
+                st.session_state[SS_EXCEL_DATA] = data
+                st.session_state[SS_STAGE] = 1
+                st.rerun()
+            else:
+                for error in errors:
+                    render_alert(error, "error")
     
     with col2:
         st.markdown("#### 📋 Required Sheets")
@@ -98,18 +113,7 @@ def render_upload_stage():
     col1, col2, col3 = st.columns([1, 1, 1])
     with col3:
         if st.button("Next: Preview Data →", type="primary", disabled=uploaded_file is None, use_container_width=True):
-            # Load and validate data
-            file_buffer = io.BytesIO(uploaded_file.read())
-            loader = ExcelDataLoader(file_buffer)
-            success, data, errors, warnings = loader.load_and_validate()
-            
-            if success:
-                st.session_state[SS_EXCEL_DATA] = data
-                st.session_state[SS_STAGE] = 1
-                st.rerun()
-            else:
-                for error in errors:
-                    render_alert(error, "error")
+            st.rerun()
 
 
 # ========== STAGE 1: PREVIEW & CONFIGURE ==========
@@ -121,72 +125,106 @@ def render_preview_stage():
     
     excel_data = st.session_state[SS_EXCEL_DATA]
     
-    # Data summary
-    render_data_summary(excel_data)
+    # Sheet preview tabs
+    st.markdown("### 📊 Data Preview")
+    
+    # Get all sheet names
+    required_sheets = ['Plant', 'Inventory', 'Demand']
+    transition_sheets = [k for k in excel_data.keys() if k.startswith('Transition_')]
+    
+    # Create tabs for all sheets
+    all_sheets = required_sheets + (['Transition Matrices'] if transition_sheets else [])
+    tabs = st.tabs(all_sheets)
+    
+    # Render each required sheet
+    for idx, sheet_name in enumerate(required_sheets):
+        with tabs[idx]:
+            if sheet_name in excel_data:
+                df_display = excel_data[sheet_name].copy()
+                
+                # Format dates
+                if sheet_name == 'Plant':
+                    for col_idx in [4, 5]:
+                        if col_idx < len(df_display.columns):
+                            col = df_display.columns[col_idx]
+                            if pd.api.types.is_datetime64_any_dtype(df_display[col]):
+                                df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
+                elif sheet_name == 'Inventory':
+                    if len(df_display.columns) > 7:
+                        col = df_display.columns[7]
+                        if pd.api.types.is_datetime64_any_dtype(df_display[col]):
+                            df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
+                elif sheet_name == 'Demand':
+                    col = df_display.columns[0]
+                    if pd.api.types.is_datetime64_any_dtype(df_display[col]):
+                        df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
+                
+                st.dataframe(df_display, use_container_width=True, height=400)
+    
+    # Render transition matrices in last tab
+    if transition_sheets:
+        with tabs[-1]:
+            for sheet_name in transition_sheets:
+                st.markdown(f"**{sheet_name}**")
+                st.dataframe(excel_data[sheet_name], use_container_width=True, height=300)
+                st.markdown("---")
     
     render_section_divider()
     
-    # Tabs for preview and configuration
-    tab1, tab2 = st.tabs(["📊 Data Preview", "⚙️ Optimization Settings"])
+    # Configuration parameters
+    st.markdown("### ⚙️ Optimization Parameters")
     
-    with tab1:
-        render_all_sheets(excel_data)
+    col1, col2 = st.columns(2)
     
-    with tab2:
-        st.markdown("### ⚙️ Optimization Parameters")
-        st.markdown("Configure the optimization solver parameters and objective weights.")
+    with col1:
+        st.markdown("#### ⏱️ Solver Configuration")
+        time_limit = st.number_input(
+            "Time limit (minutes)",
+            min_value=1,
+            max_value=120,
+            value=st.session_state[SS_OPTIMIZATION_PARAMS]['time_limit_min'],
+            help="Maximum time to run the optimization"
+        )
         
-        col1, col2 = st.columns(2)
+        buffer_days = st.number_input(
+            "Buffer days",
+            min_value=0,
+            max_value=7,
+            value=st.session_state[SS_OPTIMIZATION_PARAMS]['buffer_days'],
+            help="Additional planning buffer days"
+        )
+    
+    with col2:
+        st.markdown("#### 🎯 Objective Weights")
+        stockout_penalty = st.number_input(
+            "Stockout penalty",
+            min_value=1,
+            value=st.session_state[SS_OPTIMIZATION_PARAMS]['stockout_penalty'],
+            help="Penalty weight for stockouts"
+        )
         
-        with col1:
-            st.markdown("#### ⏱️ Solver Configuration")
-            time_limit = st.number_input(
-                "Time limit (minutes)",
-                min_value=1,
-                max_value=120,
-                value=st.session_state[SS_OPTIMIZATION_PARAMS]['time_limit_min'],
-                help="Maximum time to run the optimization"
-            )
-            
-            buffer_days = st.number_input(
-                "Buffer days",
-                min_value=0,
-                max_value=7,
-                value=st.session_state[SS_OPTIMIZATION_PARAMS]['buffer_days'],
-                help="Additional planning buffer days"
-            )
+        transition_penalty = st.number_input(
+            "Transition penalty",
+            min_value=1,
+            value=st.session_state[SS_OPTIMIZATION_PARAMS]['transition_penalty'],
+            help="Penalty for production transitions"
+        )
         
-        with col2:
-            st.markdown("#### 🎯 Objective Weights")
-            stockout_penalty = st.number_input(
-                "Stockout penalty",
-                min_value=1,
-                value=st.session_state[SS_OPTIMIZATION_PARAMS]['stockout_penalty'],
-                help="Penalty weight for stockouts"
-            )
-            
-            transition_penalty = st.number_input(
-                "Transition penalty",
-                min_value=1,
-                value=st.session_state[SS_OPTIMIZATION_PARAMS]['transition_penalty'],
-                help="Penalty for production transitions"
-            )
-            
-            continuity_bonus = st.number_input(
-                "Continuity bonus",
-                min_value=0,
-                value=st.session_state[SS_OPTIMIZATION_PARAMS]['continuity_bonus'],
-                help="Bonus for production continuity"
-            )
-        
-        # Update parameters
-        st.session_state[SS_OPTIMIZATION_PARAMS] = {
-            'time_limit_min': time_limit,
-            'buffer_days': buffer_days,
-            'stockout_penalty': stockout_penalty,
-            'transition_penalty': transition_penalty,
-            'continuity_bonus': continuity_bonus,
-        }
+        continuity_bonus = st.number_input(
+            "Continuity bonus",
+            min_value=0,
+            value=st.session_state[SS_OPTIMIZATION_PARAMS]['continuity_bonus'],
+            help="Bonus for production continuity"
+        )
+    
+    # Update parameters
+    st.session_state[SS_OPTIMIZATION_PARAMS] = {
+        'time_limit_min': time_limit,
+        'buffer_days': buffer_days,
+        'stockout_penalty': stockout_penalty,
+        'transition_penalty': transition_penalty,
+        'continuity_bonus': continuity_bonus,
+    }
     
     render_section_divider()
     
@@ -288,6 +326,7 @@ def run_optimization():
                 'status': status,
                 'solution': solution_callback.solutions[-1],
                 'solver': solver,
+                'solve_time': solution_callback.solutions[-1]['time'],
                 'data': {
                     'grades': inventory_data['grades'],
                     'lines': plant_data['lines'],
@@ -297,6 +336,7 @@ def run_optimization():
                     'allowed_lines': inventory_data['allowed_lines'],
                     'min_inventory': inventory_data['min_inventory'],
                     'max_inventory': inventory_data['max_inventory'],
+                    'initial_inventory': inventory_data['initial_inventory'],
                 }
             }
             
@@ -323,6 +363,10 @@ def render_results_stage():
     solution_data = st.session_state[SS_SOLUTION]
     solution = solution_data['solution']
     data = solution_data['data']
+    solve_time = solution_data.get('solve_time', 0)
+    
+    # Get or create consistent grade colors
+    grade_colors = get_or_create_grade_colors(data['grades'])
     
     # Key metrics
     st.markdown("### 📊 Key Performance Metrics")
@@ -334,7 +378,7 @@ def render_results_stage():
     
     total_stockouts = sum(sum(solution['stockout'][g].values()) for g in data['grades'])
     render_metric_card("Total Stockouts", f"{total_stockouts:,.0f} MT", col3)
-    render_metric_card("Planning Horizon", f"{data['num_days']} days", col4)
+    render_metric_card("Time Elapsed", f"{solve_time:.1f}s", col4)
     
     render_section_divider()
     
@@ -348,13 +392,20 @@ def render_results_stage():
             st.markdown(f"#### 🏭 {line}")
             
             # Gantt chart
-            fig = create_gantt_chart(solution, line, data['dates'], data['shutdown_periods'])
+            fig = create_gantt_chart(solution, line, data['dates'], data['shutdown_periods'], grade_colors)
             st.plotly_chart(fig, use_container_width=True)
             
             # Schedule table
-            schedule_df = create_schedule_table(solution, line, data['dates'])
+            schedule_df = create_schedule_table(solution, line, data['dates'], grade_colors)
             if not schedule_df.empty:
-                st.dataframe(schedule_df, use_container_width=True)
+                # Style the dataframe with grade colors
+                def style_grade_column(val):
+                    if val in grade_colors:
+                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
+                    return ''
+                
+                styled_df = schedule_df.style.applymap(style_grade_column, subset=['Grade'])
+                st.dataframe(styled_df, use_container_width=True)
             
             render_section_divider()
     
@@ -369,15 +420,27 @@ def render_results_stage():
                 data['min_inventory'][grade],
                 data['max_inventory'][grade],
                 data['allowed_lines'][grade],
-                data['shutdown_periods']
+                data['shutdown_periods'],
+                grade_colors,
+                data['initial_inventory'][grade]
             )
             st.plotly_chart(fig, use_container_width=True)
     
     with tab3:
         st.markdown("### 📊 Production Summary")
         
-        summary_df = create_production_summary(solution, data['grades'], data['lines'])
-        st.dataframe(summary_df, use_container_width=True)
+        summary_df = create_production_summary(solution, data['grades'], data['lines'], solution_data['solver'])
+        
+        # Style the summary table with grade colors
+        def style_summary_grade(val):
+            if val in grade_colors and val != 'Total':
+                return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
+            elif val == 'Total':
+                return 'background-color: #909399; color: white; font-weight: bold; text-align: center;'
+            return ''
+        
+        styled_summary = summary_df.style.applymap(style_summary_grade, subset=['Grade'])
+        st.dataframe(styled_summary, use_container_width=True)
         
         st.markdown("### 🔄 Transitions by Line")
         transitions_data = []
