@@ -437,7 +437,6 @@ def render_results_stage():
                 data['max_inventory'][grade],
                 data['allowed_lines'][grade],
                 data['shutdown_periods'],
-                grade_colors,
                 data['initial_inventory'][grade]
             )
             st.plotly_chart(fig, use_container_width=True)
