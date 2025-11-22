@@ -1,201 +1,95 @@
 """
-Global constants and configuration for the Polymer Production Scheduler.
-
-This module contains all application-wide constants including:
-- Optimization parameters
-- UI configuration
-- Validation rules
-- Color schemes
+Configuration and constants for the Polymer Production Scheduler
 """
 
-from typing import Dict, List
+# Application Configuration
+APP_TITLE = "Polymer Production Scheduler"
+APP_ICON = "🏭"
+VERSION = "3.0.0"
 
-# ============================================================================
-# OPTIMIZATION DEFAULTS
-# ============================================================================
+# Default Optimization Parameters
+DEFAULT_TIME_LIMIT_MIN = 10
+DEFAULT_BUFFER_DAYS = 3
+DEFAULT_STOCKOUT_PENALTY = 10
+DEFAULT_TRANSITION_PENALTY = 10
+DEFAULT_CONTINUITY_BONUS = 1
 
-# Solver parameters
-DEFAULT_TIME_LIMIT = 10  # minutes
-DEFAULT_BUFFER_DAYS = 3  # days
-DEFAULT_NUM_SEARCH_WORKERS = 8
-DEFAULT_RANDOM_SEED = 42
+# Solver Configuration
+SOLVER_NUM_WORKERS = 8
+SOLVER_RANDOM_SEED = 42
 
-# Objective weights (hierarchical)
-DEFAULT_STOCKOUT_PENALTY = 1000  # Critical: sales impact
-DEFAULT_TRANSITION_PENALTY = 100  # Important: operations cost
-DEFAULT_INVENTORY_HOLDING_COST = 1  # Efficiency: storage cost
-DEFAULT_CLOSING_INVENTORY_MULTIPLIER = 3  # Extra weight for closing targets
+# UI Theme Colors (Material Design Palette)
+THEME_COLORS = {
+    'primary': '#5E7CE2',
+    'primary_light': '#E8EEFF',
+    'secondary': '#67C23A',
+    'secondary_light': '#F0F9EB',
+    'accent': '#E6A23C',
+    'accent_light': '#FDF6EC',
+    'error': '#F56C6C',
+    'error_light': '#FEF0F0',
+    'success': '#67C23A',
+    'success_light': '#F0F9EB',
+    'warning': '#E6A23C',
+    'warning_light': '#FDF6EC',
+    'info': '#909399',
+    'info_light': '#F4F4F5',
+    'text_primary': '#303133',
+    'text_regular': '#606266',
+    'text_secondary': '#909399',
+    'border_base': '#DCDFE6',
+    'border_light': '#E4E7ED',
+    'bg_light': '#F5F7FA',
+    'bg_white': '#FFFFFF',
+}
 
-# Solver advanced parameters
-DEFAULT_LINEARIZATION_LEVEL = 2
-DEFAULT_PROBING_LEVEL = 2
-DEFAULT_SYMMETRY_LEVEL = 4
-
-# ============================================================================
-# DATA VALIDATION
-# ============================================================================
-
-# Required Excel sheet names
-REQUIRED_SHEETS = ["Plant", "Inventory", "Demand"]
-
-# Required Plant sheet columns
-PLANT_REQUIRED_COLUMNS = [
-    "Plant",
-    "Capacity per day",
-    "Material Running",
-    "Expected Run Days",
-    "Shutdown Start Date",
-    "Shutdown End Date"
+# Chart Colors (Soft Material Palette)
+CHART_COLORS = [
+    '#5E7CE2', '#67C23A', '#E6A23C', '#F56C6C', '#409EFF',
+    '#85CE61', '#EEBC59', '#EF7C8E', '#6CBFFF', '#95DE64',
+    '#FFD666', '#FF9C9C', '#40C9C6', '#73D897', '#FFC069',
 ]
 
-# Required Inventory sheet columns
-INVENTORY_REQUIRED_COLUMNS = [
-    "Grade Name",
-    "Opening Inventory",
-    "Min. Inventory",
-    "Max. Inventory",
-    "Min. Run Days",
-    "Max. Run Days",
-    "Force Start Date",
-    "Lines",
-    "Rerun Allowed",
-    "Min. Closing Inventory"
-]
+# File Upload Configuration
+ALLOWED_EXTENSIONS = ['xlsx']
+MAX_FILE_SIZE_MB = 50
 
-# Transition sheet detection keyword
-TRANSITION_KEYWORD = "transition"
+# Required Excel Sheets
+REQUIRED_SHEETS = ['Plant', 'Inventory', 'Demand']
+OPTIONAL_SHEET_PREFIX = 'Transition_'
 
-# Value constraints
-MAX_INVENTORY_VALUE = 1000000000
-MAX_RUN_DAYS = 9999
-MIN_RUN_DAYS = 1
-
-# ============================================================================
-# UI CONFIGURATION
-# ============================================================================
-
-# Color schemes for grades (Plotly qualitative palettes)
-GRADE_COLOR_PALETTES = [
-    "Vivid",
-    "Bold",
-    "Pastel",
-    "Set1",
-    "Set2",
-    "Set3"
-]
-
-DEFAULT_COLOR_PALETTE = "Vivid"
-
-# Chart dimensions
-GANTT_HEIGHT = 350
-INVENTORY_CHART_HEIGHT = 420
-TABLE_HEIGHT = 300
-
-# Date formatting
-DATE_FORMAT = "%d-%b-%y"
-DATE_FORMAT_LONG = "%d-%B-%Y"
-
-# ============================================================================
-# UI TEXT AND LABELS
-# ============================================================================
-
-APP_TITLE = "🏭 Polymer Production Scheduler"
-APP_SUBTITLE = "Optimized Multi-Plant Production Planning"
-
-STEP_LABELS = {
-    1: "Upload Data",
-    2: "Configure & Preview",
-    3: "View Results"
+# Excel Column Names
+PLANT_COLUMNS = {
+    'plant': 'Plant',
+    'capacity': 'Capacity per day',
+    'material_running': 'Material Running',
+    'expected_days': 'Expected Run Days',
+    'shutdown_start': 'Shutdown Start Date',
+    'shutdown_end': 'Shutdown End Date',
 }
 
-TAB_LABELS = {
-    "production": "📅 Production Schedule",
-    "summary": "📊 Summary Analytics",
-    "inventory": "📦 Inventory Trends"
+INVENTORY_COLUMNS = {
+    'grade': 'Grade Name',
+    'opening': 'Opening Inventory',
+    'min_inv': 'Min. Inventory',
+    'max_inv': 'Max. Inventory',
+    'min_run': 'Min. Run Days',
+    'max_run': 'Max. Run Days',
+    'force_start': 'Force Start Date',
+    'lines': 'Lines',
+    'rerun': 'Rerun Allowed',
+    'min_closing': 'Min. Closing Inventory',
 }
 
-METRIC_LABELS = {
-    "objective": "Objective Value",
-    "transitions": "Transitions",
-    "stockouts": "Stockouts",
-    "solve_time": "Solve Time"
-}
+# Wizard Stage Names
+STAGE_UPLOAD = "upload"
+STAGE_PREVIEW = "preview"
+STAGE_RESULTS = "results"
 
-# ============================================================================
-# BUSINESS RULES
-# ============================================================================
-
-# Rerun allowed default values
-RERUN_NOT_ALLOWED_VALUES = ["no", "n", "false", "0"]
-
-# Transition matrix allowed values
-TRANSITION_ALLOWED_VALUE = "yes"
-
-# ============================================================================
-# ERROR MESSAGES
-# ============================================================================
-
-ERROR_MESSAGES = {
-    "file_upload": "Please upload an Excel file to continue.",
-    "missing_sheet": "Missing required sheet: {sheet_name}",
-    "missing_column": "Missing required column '{column}' in sheet '{sheet}'",
-    "invalid_data": "Invalid data in {location}: {details}",
-    "solver_infeasible": "No feasible solution found. Please review constraints.",
-    "solver_timeout": "Solver timed out. Consider increasing time limit.",
-    "unknown_error": "An unexpected error occurred: {error}"
-}
-
-# ============================================================================
-# SUCCESS MESSAGES
-# ============================================================================
-
-SUCCESS_MESSAGES = {
-    "file_uploaded": "✅ File uploaded successfully!",
-    "optimal_solution": "✅ Optimal solution found!",
-    "feasible_solution": "✅ Feasible solution found!",
-    "data_validated": "✅ Data validation passed"
-}
-
-# ============================================================================
-# WARNING MESSAGES
-# ============================================================================
-
-WARNING_MESSAGES = {
-    "shutdown_invalid": "⚠️ Shutdown start date after end date for {plant}. Ignoring shutdown.",
-    "shutdown_outside_horizon": "ℹ️ Shutdown period for {plant} is outside planning horizon",
-    "no_transition_matrix": "ℹ️ No transition matrix found for {plant}. Assuming no transition constraints.",
-    "invalid_force_date": "⚠️ Force start date '{date}' for grade '{grade}' on plant '{plant}' not found in demand dates"
-}
-
-# ============================================================================
-# CSS CLASSES
-# ============================================================================
-
-CSS_CLASSES = {
-    "metric_primary": "primary",
-    "metric_success": "success",
-    "metric_warning": "warning",
-    "metric_info": "info",
-    "chip_success": "chip success",
-    "chip_warning": "chip warning",
-    "chip_info": "chip info",
-    "alert_info": "alert-box info",
-    "alert_success": "alert-box success",
-    "alert_warning": "alert-box warning"
-}
-
-# ============================================================================
-# HELPER FUNCTIONS
-# ============================================================================
-
-def get_error_message(key: str, **kwargs) -> str:
-    """Get formatted error message."""
-    return ERROR_MESSAGES.get(key, ERROR_MESSAGES["unknown_error"]).format(**kwargs)
-
-def get_success_message(key: str) -> str:
-    """Get success message."""
-    return SUCCESS_MESSAGES.get(key, "")
-
-def get_warning_message(key: str, **kwargs) -> str:
-    """Get formatted warning message."""
-    return WARNING_MESSAGES.get(key, "").format(**kwargs)
+# Session State Keys
+SS_STAGE = "wizard_stage"
+SS_UPLOADED_FILE = "uploaded_file"
+SS_EXCEL_DATA = "excel_data"
+SS_OPTIMIZATION_PARAMS = "opt_params"
+SS_SOLUTION = "solution"
+SS_SOLVER_STATUS = "solver_status"
