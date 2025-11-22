@@ -1,5 +1,5 @@
 """
-CP-SAT Solver for production optimization (FINAL PATCHED VERSION)
+CP-SAT Solver for production optimization
 """
 
 from ortools.sat.python import cp_model
