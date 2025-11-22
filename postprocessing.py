@@ -59,13 +59,11 @@ def create_production_summary(solution: Dict, grades: List[str], lines: List[str
     return pd.DataFrame(data)
 
 
-def create_gantt_chart(solution: Dict, line: str, dates: List, shutdown_periods: Dict) -> go.Figure:
+def create_gantt_chart(solution: Dict, line: str, dates: List, shutdown_periods: Dict, grade_colors: Dict) -> go.Figure:
     """Create Gantt chart for a production line"""
     
     grades = sorted(solution['is_producing'][line].keys())
-    # Get unique grades from the production schedule
-    unique_grades = set(grade for grade in solution['is_producing'][line].values() if grade is not None)
-    grade_color_map = {grade: CHART_COLORS[i % len(CHART_COLORS)] for i, grade in enumerate(unique_grades)}
+    grade_color_map = grade_colors
     
     gantt_data = []
     for date_str, grade in solution['is_producing'][line].items():
