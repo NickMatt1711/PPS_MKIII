@@ -295,7 +295,15 @@ def build_and_solve_model(
     # Initial inventory
     for grade in grades:
         model.Add(inventory_vars[(grade, 0)] == int(initial_inventory.get(grade, 0)))
-
+    
+    def get_production_var(grade, line, d):
+        key = (grade, line, d)
+        return production.get(key, 0)
+    
+    def get_is_producing_var(grade, line, d):
+        key = (grade, line, d)
+        return is_producing.get(key)
+        
     # Inventory balance
     for grade in grades:
         for d in range(num_days):
