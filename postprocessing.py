@@ -131,7 +131,7 @@ def create_gantt_chart(solution: Dict, line: str, dates: List, shutdown_periods:
     return fig
 
 
-def create_schedule_table(solution: Dict, line: str, dates: List) -> pd.DataFrame:
+def create_schedule_table(solution: Dict, line: str, dates: List, grade_colors: Dict) -> pd.DataFrame:
     """Create production schedule table for a line"""
     
     schedule_data = []
