@@ -301,8 +301,8 @@ def build_and_solve_model(
         for d in range(num_days):
             # Sum production safely (no OR/ truthiness!)
             produced_today = sum(
-                (get_prod(grade, line, d) if get_prod(grade, line, d) is not None else 0)
-                for line in allowed_lines.get(grade, [])
+                get_production_var(grade, line, d) 
+                for line in allowed_lines[grade]
             )
 
             demand = demand_data.get(grade, {}).get(dates[d], 0)
