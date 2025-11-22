@@ -170,15 +170,23 @@ def create_schedule_table(solution: Dict, line: str, dates: List, grade_colors: 
     return pd.DataFrame(schedule_data) if schedule_data else pd.DataFrame()
 
 
-def create_inventory_chart(solution: Dict, grade: str, dates: List, min_inventory: float, max_inventory: float, allowed_lines: List[str], 
-                           shutdown_periods: Dict, grade_colors: Dict,initial_inventory: float) -> go.Figure:
+def create_inventory_chart(solution: Dict, grade: str, dates: List, 
+                           min_inventory: float, max_inventory: float,
+                           allowed_lines: List[str], shutdown_periods: Dict,
+                           initial_inventory: float): -> go.Figure:
     """Create inventory level chart for a grade"""
     
     inventory_values = []
+    # Inject opening inventory on the first day
+    first_date_str = dates[0].strftime('%d-%b-%y')
+    if first_date_str not in solution['inventory'][grade]:
+        solution['inventory'][grade][first_date_str] = initial_inventory
+             
     for date in dates:
         date_str = date.strftime('%d-%b-%y')
-        inv = solution['inventory'][grade].get(date_str, 0)
+        inv = solution['inventory'][grade].get(date_str, initial_inventory if date == dates[0] else 0)
         inventory_values.append(inv)
+
     
     fig = go.Figure()
     
