@@ -112,7 +112,7 @@ def render_upload_stage():
     st.markdown("<br>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 1, 1])
     with col3:
-        if st.button("Next: Preview Data →", type="primary", disabled=uploaded_file is None, use_container_width=True):
+        if st.button("Next: Preview Data →", type="primary", disabled=uploaded_file is None, width='stretch'):
             st.rerun()
 
 
@@ -274,6 +274,9 @@ def render_optimization_stage():
     
     # Run the actual optimization
     run_optimization()
+
+
+def run_optimization():
     """Execute the optimization"""
     
     excel_data = st.session_state[SS_EXCEL_DATA]
@@ -427,7 +430,7 @@ def render_results_stage():
             
             # Gantt chart
             fig = create_gantt_chart(solution, line, data['dates'], data['shutdown_periods'], grade_colors)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
             
             # Schedule table
             schedule_df = create_schedule_table(solution, line, data['dates'], grade_colors)
@@ -456,21 +459,18 @@ def render_results_stage():
                 data['allowed_lines'][grade],
                 data['shutdown_periods'],
                 grade_colors,
-                data['initial_inventory'][grade],
-                data.get('buffer_days', 0)
+                data['initial_inventory'][grade]
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
     
     with tab3:
         st.markdown("### 📊 Production Summary")
         
         summary_df = create_production_summary(
             solution, 
-            solution_data.get('production_vars', {}),
-            solution_data['solver'],
             data['grades'], 
-            data['lines'],
-            data['num_days']
+            data['lines'], 
+            solution_data['solver']
         )
         
         # Style the summary table with grade colors
