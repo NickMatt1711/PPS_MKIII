@@ -44,10 +44,15 @@ def toggle_theme():
     st.session_state.dark_mode = not st.session_state.dark_mode
 
 def get_current_theme():
-    """Get current theme colors based on mode"""
+    """Get current theme colors based on mode - SAFE VERSION"""
     base_colors = THEME_COLORS.copy()
-    # Check if dark_mode exists in session state, default to False if not
-    is_dark_mode = st.session_state.get('dark_mode', False)
+    
+    # Ultra-safe session state access
+    try:
+        is_dark_mode = st.session_state.get('dark_mode', False)
+    except:
+        is_dark_mode = False
+    
     if is_dark_mode:
         base_colors.update(DARK_THEME)
     else:
