@@ -166,7 +166,20 @@ def render_preview_stage():
         with tabs[-1]:
             for sheet_name in transition_sheets:
                 st.markdown(f"**{sheet_name}**")
-                st.dataframe(excel_data[sheet_name], use_container_width=True, height=300)
+                df_display = excel_data[sheet_name].copy()
+                
+                # Style the transition matrix - highlight Yes in green, No in red
+                def highlight_transitions(val):
+                    if pd.notna(val):
+                        val_str = str(val).strip().lower()
+                        if val_str == 'yes':
+                            return 'background-color: #C6EFCE; color: #006100; font-weight: bold;'
+                        elif val_str == 'no':
+                            return 'background-color: #FFC7CE; color: #9C0006; font-weight: bold;'
+                    return ''
+                
+                styled_df = df_display.style.applymap(highlight_transitions)
+                st.dataframe(styled_df, use_container_width=True, height=300)
                 st.markdown("---")
     
     render_section_divider()
@@ -238,10 +251,29 @@ def render_preview_stage():
     
     with col3:
         if st.button("🎯 Run Optimization", type="primary", use_container_width=True):
-            run_optimization()
+            # Show optimization in progress
+            st.session_state[SS_STAGE] = 1.5  # Intermediate stage for optimization
+            st.rerun()
 
 
-def run_optimization():
+# ========== STAGE 1.5: OPTIMIZATION IN PROGRESS ==========
+def render_optimization_stage():
+    """Stage 1.5: Show optimization in progress with animation"""
+    
+    render_header(f"{APP_ICON} {APP_TITLE}", "Optimization in Progress")
+    render_stage_progress(1)  # Still on preview stage visually
+    
+    # Create animated optimization screen
+    st.markdown("""
+        <div class="optimization-container">
+            <div class="spinner"></div>
+            <div class="optimization-text">⚡ Optimizing Production Schedule...</div>
+            <div class="optimization-subtext">This may take a few moments. Please wait.</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Run the actual optimization
+    run_optimization()
     """Execute the optimization"""
     
     excel_data = st.session_state[SS_EXCEL_DATA]
@@ -321,17 +353,19 @@ def run_optimization():
         if solution_callback.num_solutions() > 0:
             status_text.markdown("✅ Optimization completed successfully!")
             
-            # Store solution
+            # Store solution with production_vars reference
             st.session_state[SS_SOLUTION] = {
                 'status': status,
                 'solution': solution_callback.solutions[-1],
                 'solver': solver,
                 'solve_time': solution_callback.solutions[-1]['time'],
+                'production_vars': solution_callback.production,  # Store for summary calculation
                 'data': {
                     'grades': inventory_data['grades'],
                     'lines': plant_data['lines'],
                     'dates': dates,
                     'num_days': num_days,
+                    'buffer_days': params['buffer_days'],
                     'shutdown_periods': shutdown_periods,
                     'allowed_lines': inventory_data['allowed_lines'],
                     'min_inventory': inventory_data['min_inventory'],
@@ -422,14 +456,22 @@ def render_results_stage():
                 data['allowed_lines'][grade],
                 data['shutdown_periods'],
                 grade_colors,
-                data['initial_inventory'][grade]
+                data['initial_inventory'][grade],
+                data.get('buffer_days', 0)
             )
             st.plotly_chart(fig, use_container_width=True)
     
     with tab3:
         st.markdown("### 📊 Production Summary")
         
-        summary_df = create_production_summary(solution, data['grades'], data['lines'], solution_data['solver'])
+        summary_df = create_production_summary(
+            solution, 
+            solution_data.get('production_vars', {}),
+            solution_data['solver'],
+            data['grades'], 
+            data['lines'],
+            data['num_days']
+        )
         
         # Style the summary table with grade colors
         def style_summary_grade(val):
@@ -478,6 +520,8 @@ def main():
         render_upload_stage()
     elif current_stage == 1:
         render_preview_stage()
+    elif current_stage == 1.5:
+        render_optimization_stage()
     elif current_stage == 2:
         render_results_stage()
 
