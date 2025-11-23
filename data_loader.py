@@ -293,19 +293,25 @@ def process_shutdown_dates(shutdown_periods: Dict, dates: List) -> Dict:
 
 
 def process_transition_rules(transition_dfs: Dict) -> Dict:
-    """Process transition matrices"""
+    """Process transition matrices - extract plant name from sheet name"""
     transition_rules = {}
     
-    for line, df in transition_dfs.items():
+    for sheet_name, df in transition_dfs.items():
+        # Extract plant name from sheet name (e.g., "Transition_Plant1" -> "Plant1")
+        if sheet_name.startswith('Transition_'):
+            plant_name = sheet_name.replace('Transition_', '')
+        else:
+            plant_name = sheet_name
+        
         if df is not None:
-            transition_rules[line] = {}
+            transition_rules[plant_name] = {}
             for prev_grade in df.index:
                 allowed_transitions = []
                 for current_grade in df.columns:
                     if str(df.loc[prev_grade, current_grade]).lower() == 'yes':
                         allowed_transitions.append(current_grade)
-                transition_rules[line][prev_grade] = allowed_transitions
+                transition_rules[plant_name][prev_grade] = allowed_transitions
         else:
-            transition_rules[line] = None
+            transition_rules[plant_name] = None
     
     return transition_rules
