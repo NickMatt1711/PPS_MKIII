@@ -23,45 +23,38 @@ def get_or_create_grade_colors(grades: List[str]) -> Dict[str, str]:
 
 
 def create_production_summary(solution: Dict, grades: List[str], lines: List[str], solver) -> pd.DataFrame:
-    """Create production summary DataFrame"""
-    
-    from ortools.sat.python import cp_model
+    """Create production summary DataFrame with actual quantities"""
     
     production_totals = {}
     grade_totals = {}
     plant_totals = {line: 0 for line in lines}
     stockout_totals = {}
     
-    # Get actual production data from solution
+    # Initialize totals
     for grade in grades:
         production_totals[grade] = {line: 0 for line in lines}
         grade_totals[grade] = 0
         stockout_totals[grade] = 0
-        
-        # Sum production per line from solution variables
-        for line in lines:
-            prod_key = f'production_{grade}_{line}'
-            # Check if this grade-line combination exists in production
-            if 'production' in solution and grade in solution['production']:
-                for date, prod_val in solution['production'][grade].items():
-                    # This is aggregated already, we need the original per-line data
-                    pass
-        
-        # Calculate from solution structure
-        for line in lines:
-            line_prod = 0
-            if 'is_producing' in solution and line in solution['is_producing']:
-                for date, prod_grade in solution['is_producing'][line].items():
-                    if prod_grade == grade:
-                        # Assume full capacity production (will be replaced with actual values)
-                        line_prod += 1  # Placeholder
-            production_totals[grade][line] = line_prod
-            grade_totals[grade] += line_prod
-            plant_totals[line] += line_prod
-        
-        # Sum stockouts
-        for date, stockout in solution['stockout'].get(grade, {}).items():
-            stockout_totals[grade] += stockout
+    
+    # Calculate production from actual solution data
+    if 'production' in solution:
+        for grade in grades:
+            if grade in solution['production']:
+                for line in lines:
+                    line_key = f"{line}"  # Adjust based on your actual key structure
+                    if line_key in solution['production'][grade]:
+                        for date, production_qty in solution['production'][grade][line_key].items():
+                            if isinstance(production_qty, (int, float)):
+                                production_totals[grade][line] += production_qty
+                                grade_totals[grade] += production_qty
+                                plant_totals[line] += production_qty
+    
+    # Calculate stockouts
+    for grade in grades:
+        if grade in solution.get('stockout', {}):
+            for date, stockout_qty in solution['stockout'][grade].items():
+                if isinstance(stockout_qty, (int, float)):
+                    stockout_totals[grade] += stockout_qty
     
     # Build DataFrame
     data = []
@@ -77,7 +70,7 @@ def create_production_summary(solution: Dict, grades: List[str], lines: List[str
     totals_row = {'Grade': 'Total'}
     for line in lines:
         totals_row[line] = plant_totals[line]
-    totals_row['Total Produced'] = sum(plant_totals.values())
+    totals_row['Total Produced'] = sum(grade_totals.values())
     totals_row['Total Stockout'] = sum(stockout_totals.values())
     data.append(totals_row)
     
@@ -244,34 +237,60 @@ def create_inventory_chart(solution: Dict, grade: str, dates: List,
                            min_inventory: float, max_inventory: float,
                            allowed_lines: List[str], shutdown_periods: Dict,
                            grade_colors: Dict, initial_inventory: float) -> go.Figure:
-    """Create inventory level chart for a grade"""
+    """Create corrected inventory level chart for a grade"""
     
-    # Build inventory values including opening inventory
-    inventory_dates = [dates[0]] + dates  # Add day before for opening
-    inventory_values = [initial_inventory]  # Start with opening inventory
+    # Build inventory timeline correctly
+    inventory_dates = []
+    inventory_values = []
     
+    # Add opening inventory at the start
+    inventory_dates.append(dates[0])
+    inventory_values.append(initial_inventory)
+    
+    # Add daily inventory levels
     for date in dates:
         date_str = date.strftime('%d-%b-%y')
-        inv = solution['inventory'][grade].get(date_str, 0)
-        inventory_values.append(inv)
+        if grade in solution.get('inventory', {}) and date_str in solution['inventory'][grade]:
+            inv_value = solution['inventory'][grade][date_str]
+            if isinstance(inv_value, (int, float)):
+                inventory_dates.append(date)
+                inventory_values.append(inv_value)
+    
+    # If no inventory data found, create empty chart
+    if len(inventory_values) <= 1:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="No inventory data available",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5, showarrow=False,
+            font=dict(size=16)
+        )
+        fig.update_layout(
+            title=f"Inventory Level - {grade}",
+            xaxis_title="Date",
+            yaxis_title="Inventory Volume (MT)",
+            height=400
+        )
+        return fig
     
     fig = go.Figure()
     
+    # Add inventory trace
     fig.add_trace(go.Scatter(
         x=inventory_dates,
         y=inventory_values,
         mode="lines+markers",
-        name=grade,
+        name=f"{grade} Inventory",
         line=dict(color=grade_colors.get(grade, CHART_COLORS[0]), width=3),
         marker=dict(size=6),
-        hovertemplate="Date: %{x|%d-%b-%y}<br>Inventory: %{y:.0f} MT<extra></extra>"
+        hovertemplate="Date: %{x|%d-%b-%y}<br>Inventory: %{y:,.0f} MT<extra></extra>"
     ))
     
-    # Add shutdown periods for allowed plants
+    # Add shutdown periods
     for line in allowed_lines:
         if line in shutdown_periods and shutdown_periods[line]:
             shutdown_days = shutdown_periods[line]
-            if shutdown_days:
+            if shutdown_days and len(dates) > max(shutdown_days):
                 start_shutdown = dates[shutdown_days[0]]
                 end_shutdown = dates[shutdown_days[-1]]
                 
@@ -288,83 +307,33 @@ def create_inventory_chart(solution: Dict, grade: str, dates: List,
                     annotation_font_color="red"
                 )
     
-    # Add min/max lines
+    # Add min/max inventory lines
     fig.add_hline(
         y=min_inventory,
         line=dict(color="red", width=2, dash="dash"),
-        annotation_text=f"Min: {min_inventory:,.0f}",
+        annotation_text=f"Min: {min_inventory:,.0f} MT",
         annotation_position="top left",
         annotation_font_color="red"
     )
+    
     fig.add_hline(
         y=max_inventory,
         line=dict(color="green", width=2, dash="dash"),
-        annotation_text=f"Max: {max_inventory:,.0f}",
-        annotation_position="bottom left",
+        annotation_text=f"Max: {max_inventory:,.0f} MT",
+        annotation_position="top left",
         annotation_font_color="green"
     )
     
-    # Add key point annotations
-    if len(inventory_values) > 1:
-        start_val = inventory_values[0]
-        end_val = inventory_values[-1]
-        highest_val = max(inventory_values)
-        lowest_val = min(inventory_values)
-        
-        start_x = inventory_dates[0]
-        end_x = inventory_dates[-1]
-        highest_x = inventory_dates[inventory_values.index(highest_val)]
-        lowest_x = inventory_dates[inventory_values.index(lowest_val)]
-        
-        annotations = [
-            dict(
-                x=start_x, y=start_val,
-                text=f"Opening: {start_val:.0f}",
-                showarrow=True, arrowhead=2,
-                ax=-40, ay=30,
-                font=dict(color="black", size=11),
-                bgcolor="white", bordercolor="gray",
-                borderwidth=1, borderpad=4, opacity=0.9
-            ),
-            dict(
-                x=end_x, y=end_val,
-                text=f"Closing: {end_val:.0f}",
-                showarrow=True, arrowhead=2,
-                ax=40, ay=30,
-                font=dict(color="black", size=11),
-                bgcolor="white", bordercolor="gray",
-                borderwidth=1, borderpad=4, opacity=0.9
-            ),
-            dict(
-                x=highest_x, y=highest_val,
-                text=f"Peak: {highest_val:.0f}",
-                showarrow=True, arrowhead=2,
-                ax=0, ay=-40,
-                font=dict(color="darkgreen", size=11),
-                bgcolor="white", bordercolor="gray",
-                borderwidth=1, borderpad=4, opacity=0.9
-            ),
-            dict(
-                x=lowest_x, y=lowest_val,
-                text=f"Trough: {lowest_val:.0f}",
-                showarrow=True, arrowhead=2,
-                ax=0, ay=40,
-                font=dict(color="firebrick", size=11),
-                bgcolor="white", bordercolor="gray",
-                borderwidth=1, borderpad=4, opacity=0.9
-            )
-        ]
-        
-        for ann in annotations:
-            fig.add_annotation(**ann)
-    
+    # Update layout
     fig.update_layout(
         title=f"Inventory Level - {grade}",
         xaxis=dict(
             title="Date",
             showgrid=True,
             gridcolor="lightgray",
-            tickformat="%d-%b"
+            tickformat="%d-%b",
+            tickmode='array',
+            tickvals=dates[::max(1, len(dates)//10)]  # Show reasonable number of ticks
         ),
         yaxis=dict(
             title="Inventory Volume (MT)",
@@ -373,7 +342,7 @@ def create_inventory_chart(solution: Dict, grade: str, dates: List,
         ),
         plot_bgcolor="white",
         paper_bgcolor="white",
-        height=420,
+        height=450,
         showlegend=False,
         margin=dict(l=60, r=80, t=80, b=60)
     )
