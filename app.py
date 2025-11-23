@@ -159,7 +159,7 @@ def render_preview_stage():
                     if pd.api.types.is_datetime64_any_dtype(df_display[col]):
                         df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
                 
-                st.dataframe(df_display, use_container_width=True, height=400)
+                st.dataframe(df_display, width="stretch", height=400)
     
     # Render transition matrices in last tab
     if transition_sheets:
@@ -178,8 +178,8 @@ def render_preview_stage():
                             return 'background-color: #FFC7CE; color: #9C0006; font-weight: bold;'
                     return ''
                 
-                styled_df = df_display.style.applymap(highlight_transitions)
-                st.dataframe(styled_df, use_container_width=True, height=300)
+                styled_df = df_display.style.map(highlight_transitions)
+                st.dataframe(styled_df, width="stretch", height=300)
                 st.markdown("---")
     
     render_section_divider()
@@ -245,12 +245,12 @@ def render_preview_stage():
     col1, col2, col3 = st.columns([1, 1, 1])
     
     with col1:
-        if st.button("← Back to Upload", use_container_width=True):
+        if st.button("← Back to Upload", width="stretch"):
             st.session_state[SS_STAGE] = 0
             st.rerun()
     
     with col3:
-        if st.button("🎯 Run Optimization", type="primary", use_container_width=True):
+        if st.button("🎯 Run Optimization", type="primary", width="stretch"):
             # Show optimization in progress
             st.session_state[SS_STAGE] = 1.5  # Intermediate stage for optimization
             st.rerun()
@@ -438,8 +438,8 @@ def render_results_stage():
                         return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
                     return ''
                 
-                styled_df = schedule_df.style.applymap(style_grade_column, subset=['Grade'])
-                st.dataframe(styled_df, use_container_width=True)
+                styled_df = schedule_df.style.map(style_grade_column, subset=['Grade'])
+                st.dataframe(styled_df, width="stretch")
             
             render_section_divider()
     
@@ -481,15 +481,15 @@ def render_results_stage():
                 return 'background-color: #909399; color: white; font-weight: bold; text-align: center;'
             return ''
         
-        styled_summary = summary_df.style.applymap(style_summary_grade, subset=['Grade'])
-        st.dataframe(styled_summary, use_container_width=True)
+        styled_summary = summary_df.style.map(style_summary_grade, subset=['Grade'])
+        st.dataframe(styled_summary, width="stretch")
         
         st.markdown("### 🔄 Transitions by Line")
         transitions_data = []
         for line, count in solution['transitions']['per_line'].items():
             transitions_data.append({'Line': line, 'Transitions': count})
         transitions_df = pd.DataFrame(transitions_data)
-        st.dataframe(transitions_df, use_container_width=True)
+        st.dataframe(transitions_df, width="stretch")
     
     render_section_divider()
     
@@ -497,12 +497,12 @@ def render_results_stage():
     col1, col2, col3 = st.columns([1, 1, 1])
     
     with col1:
-        if st.button("← Back to Configuration", use_container_width=True):
+        if st.button("← Back to Configuration", width="stretch"):
             st.session_state[SS_STAGE] = 1
             st.rerun()
     
     with col2:
-        if st.button("🔄 New Optimization", use_container_width=True):
+        if st.button("🔄 New Optimization", width="stretch"):
             st.session_state[SS_STAGE] = 0
             st.session_state[SS_UPLOADED_FILE] = None
             st.session_state[SS_EXCEL_DATA] = None
