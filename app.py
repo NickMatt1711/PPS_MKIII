@@ -393,7 +393,7 @@ def run_optimization():
 
 # ========== STAGE 2: RESULTS ==========
 def render_results_stage():
-    """Stage 3: Display results"""
+    """Stage 3: Display results with enhanced visuals"""
     
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization Results")
     render_stage_progress(2)
@@ -420,8 +420,13 @@ def render_results_stage():
     
     render_section_divider()
     
-    # Results tabs
-    tab1, tab2, tab3 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables"])
+    # Results tabs with more options
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📅 Production Schedule", 
+        "📦 Inventory Analysis", 
+        "📊 Performance Metrics",
+        "🔧 Detailed Summary"
+    ])
     
     with tab1:
         st.markdown("### 📅 Production Schedule")
@@ -429,9 +434,9 @@ def render_results_stage():
         for line in data['lines']:
             st.markdown(f"#### 🏭 {line}")
             
-            # Gantt chart
+            # Enhanced Gantt chart with shutdown periods
             fig = create_gantt_chart(solution, line, data['dates'], data['shutdown_periods'], grade_colors)
-            st.plotly_chart(fig, width='stretch')
+            st.plotly_chart(fig, use_container_width=True)
             
             # Schedule table
             schedule_df = create_schedule_table(solution, line, data['dates'], grade_colors)
@@ -443,7 +448,9 @@ def render_results_stage():
                     return ''
                 
                 styled_df = schedule_df.style.map(style_grade_column, subset=['Grade'])
-                st.dataframe(styled_df, width="stretch")
+                st.dataframe(styled_df, use_container_width=True)
+            else:
+                st.info(f"No production scheduled for {line}")
             
             render_section_divider()
     
@@ -460,12 +467,40 @@ def render_results_stage():
                 data['allowed_lines'][grade],
                 data['shutdown_periods'],
                 grade_colors,
-                data['initial_inventory'][grade]
+                data['initial_inventory'][grade],
+                data.get('buffer_days', 0)
             )
-            st.plotly_chart(fig, width='stretch')
+            st.plotly_chart(fig, use_container_width=True)
     
     with tab3:
-        st.markdown("### 📊 Production Summary")
+        st.markdown("### 📊 Performance Metrics")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Line utilization chart
+            util_fig, util_df = create_line_utilization_chart(
+                solution, data['lines'], 
+                data.get('capacities', {}), 
+                data['num_days'],
+                data.get('buffer_days', 0)
+            )
+            st.plotly_chart(util_fig, use_container_width=True)
+            st.dataframe(util_df, use_container_width=True)
+        
+        with col2:
+            # Transition analysis
+            trans_fig, trans_df = create_transition_analysis(solution, data['lines'])
+            st.plotly_chart(trans_fig, use_container_width=True)
+            st.dataframe(trans_df, use_container_width=True)
+        
+        # Stockout analysis
+        stockout_fig, stockout_df = create_stockout_analysis(solution, data['grades'])
+        st.plotly_chart(stockout_fig, use_container_width=True)
+        st.dataframe(stockout_df, use_container_width=True)
+    
+    with tab4:
+        st.markdown("### 🔧 Detailed Production Summary")
         
         summary_df = create_production_summary(
             solution, 
@@ -483,14 +518,24 @@ def render_results_stage():
             return ''
         
         styled_summary = summary_df.style.map(style_summary_grade, subset=['Grade'])
-        st.dataframe(styled_summary, width="stretch")
+        st.dataframe(styled_summary, use_container_width=True)
         
-        st.markdown("### 🔄 Transitions by Line")
-        transitions_data = []
-        for line, count in solution['transitions']['per_line'].items():
-            transitions_data.append({'Line': line, 'Transitions': count})
-        transitions_df = pd.DataFrame(transitions_data)
-        st.dataframe(transitions_df, width="stretch")
+        # Additional metrics
+        st.markdown("### 📈 Additional Metrics")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            total_production = summary_df[summary_df['Grade'] == 'Total']['Total Production (MT)'].iloc[0]
+            st.metric("Total Production", f"{total_production:,.0f} MT")
+        
+        with col2:
+            total_days = summary_df[summary_df['Grade'] == 'Total']['Production Days'].iloc[0]
+            st.metric("Total Production Days", f"{total_days}")
+        
+        with col3:
+            avg_utilization = util_df['Utilization (%)'].mean()
+            st.metric("Average Line Utilization", f"{avg_utilization:.1f}%")
     
     render_section_divider()
     
@@ -498,12 +543,12 @@ def render_results_stage():
     col1, col2, col3 = st.columns([1, 1, 1])
     
     with col1:
-        if st.button("← Back to Configuration", width="stretch"):
+        if st.button("← Back to Configuration", use_container_width=True):
             st.session_state[SS_STAGE] = 1
             st.rerun()
     
     with col2:
-        if st.button("🔄 New Optimization", width="stretch"):
+        if st.button("🔄 New Optimization", use_container_width=True):
             st.session_state[SS_STAGE] = 0
             st.session_state[SS_UPLOADED_FILE] = None
             st.session_state[SS_EXCEL_DATA] = None
