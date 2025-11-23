@@ -24,7 +24,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Apply custom CSS
+# Initialize theme and apply custom CSS
+init_theme()
 apply_custom_css()
 
 # Initialize session state
