@@ -46,7 +46,9 @@ def toggle_theme():
 def get_current_theme():
     """Get current theme colors based on mode"""
     base_colors = THEME_COLORS.copy()
-    if st.session_state.dark_mode:
+    # Check if dark_mode exists in session state, default to False if not
+    is_dark_mode = st.session_state.get('dark_mode', False)
+    if is_dark_mode:
         base_colors.update(DARK_THEME)
     else:
         base_colors.update(LIGHT_THEME)
@@ -406,8 +408,9 @@ def apply_custom_css():
 
 def render_theme_toggle():
     """Render theme toggle button"""
-    theme_icon = "🌙" if st.session_state.dark_mode else "☀️"
-    theme_text = "Dark" if st.session_state.dark_mode else "Light"
+    is_dark_mode = st.session_state.get('dark_mode', False)
+    theme_icon = "🌙" if is_dark_mode else "☀️"
+    theme_text = "Dark" if is_dark_mode else "Light"
     
     st.markdown(f"""
         <div class="theme-toggle-container">
