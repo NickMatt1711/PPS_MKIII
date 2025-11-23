@@ -102,11 +102,11 @@ def apply_custom_css():
         .stage-label {{
             font-size: 0.875rem;
             font-weight: 500;
-            color: {THEME_COLORS['text_primary']};  /* Changed from text_regular to primary for better visibility */
+            color: #374151 !important;  /* Force dark gray color */
         }}
         
         .stage-label.active {{
-            color: {THEME_COLORS['primary']};
+            color: {THEME_COLORS['primary']} !important;
             font-weight: 600;
         }}
         
