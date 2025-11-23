@@ -24,9 +24,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Apply custom CSS
-apply_custom_css()
-
 # Initialize session state
 if SS_STAGE not in st.session_state:
     st.session_state[SS_STAGE] = 0
