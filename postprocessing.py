@@ -1,445 +1,530 @@
 """
-Post-processing and visualization of optimization results
+Polymer Production Scheduler - Main Application
+A wizard-based Streamlit app for multi-plant production optimization
 """
 
 import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from datetime import timedelta
-from typing import Dict, List
-from constants import CHART_COLORS, SS_GRADE_COLORS
+import io
+from ortools.sat.python import cp_model
+
+# Import modules
+from constants import *
+from ui_components import *
+from data_loader import *
+from preview_tables import *
+from solver_cp_sat import build_and_solve_model
+from postprocessing import *
 
 
-def get_or_create_grade_colors(grades: List[str]) -> Dict[str, str]:
-    """Get or create consistent color mapping for grades"""
-    if SS_GRADE_COLORS not in st.session_state:
-        sorted_grades = sorted(grades)
-        st.session_state[SS_GRADE_COLORS] = {
-            grade: CHART_COLORS[i % len(CHART_COLORS)] 
-            for i, grade in enumerate(sorted_grades)
-        }
-    return st.session_state[SS_GRADE_COLORS]
+# Page configuration
+st.set_page_config(
+    page_title=APP_TITLE,
+    page_icon=APP_ICON,
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# Apply custom CSS
+apply_custom_css()
+
+# Initialize session state
+if SS_STAGE not in st.session_state:
+    st.session_state[SS_STAGE] = 0
+if SS_UPLOADED_FILE not in st.session_state:
+    st.session_state[SS_UPLOADED_FILE] = None
+if SS_EXCEL_DATA not in st.session_state:
+    st.session_state[SS_EXCEL_DATA] = None
+if SS_OPTIMIZATION_PARAMS not in st.session_state:
+    st.session_state[SS_OPTIMIZATION_PARAMS] = {
+        'time_limit_min': DEFAULT_TIME_LIMIT_MIN,
+        'buffer_days': DEFAULT_BUFFER_DAYS,
+        'stockout_penalty': DEFAULT_STOCKOUT_PENALTY,
+        'transition_penalty': DEFAULT_TRANSITION_PENALTY,
+        'continuity_bonus': DEFAULT_CONTINUITY_BONUS,
+    }
+if SS_SOLUTION not in st.session_state:
+    st.session_state[SS_SOLUTION] = None
+if SS_GRADE_COLORS not in st.session_state:
+    st.session_state[SS_GRADE_COLORS] = {}
 
 
-def create_production_summary(solution: Dict, grades: List[str], lines: List[str], solver) -> pd.DataFrame:
-    """Create production summary DataFrame with actual production quantities"""
+# ========== STAGE 0: UPLOAD ==========
+def render_upload_stage():
+    """Stage 1: File upload"""
     
-    production_totals = {}
-    grade_totals = {}
-    plant_totals = {line: 0 for line in lines}
-    stockout_totals = {}
+    render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
+    render_stage_progress(0)
     
-    # Initialize totals
-    for grade in grades:
-        production_totals[grade] = {line: 0 for line in lines}
-        grade_totals[grade] = 0
-        stockout_totals[grade] = 0
+    st.markdown("### 📤 Upload Production Data")
+    st.markdown("Upload an Excel file containing your production planning data.")
     
-    # Extract actual production quantities from solution
-    # Method 1: Check if we have production quantities in the solution
-    if 'production_quantity' in solution:
-        # New structure with production quantities
-        for grade in grades:
-            if grade in solution['production_quantity']:
-                for line in lines:
-                    if line in solution['production_quantity'][grade]:
-                        total_qty = sum(solution['production_quantity'][grade][line].values())
-                        production_totals[grade][line] = total_qty
-                        grade_totals[grade] += total_qty
-                        plant_totals[line] += total_qty
+    # Upload section
+    col1, col2 = st.columns([2, 1])
     
-    # Method 2: If using old structure, calculate from production variables
-    elif 'production' in solution:
-        for grade in grades:
-            if grade in solution['production']:
-                for line in lines:
-                    line_key = line  # Try direct line key
-                    if line_key in solution['production'][grade]:
-                        total_qty = 0
-                        for date, qty in solution['production'][grade][line_key].items():
-                            if isinstance(qty, (int, float)) and qty > 0:
-                                total_qty += qty
-                        production_totals[grade][line] = total_qty
-                        grade_totals[grade] += total_qty
-                        plant_totals[line] += total_qty
-    
-    # Method 3: Fallback - estimate from is_producing and capacity (if available)
-    else:
-        # This is the old logic that counts days - we need to replace this
-        # For now, let's assume each production day produces 1000 MT as placeholder
-        DEFAULT_DAILY_PRODUCTION = 1000
-        
-        for grade in grades:
-            for line in lines:
-                production_days = 0
-                if 'is_producing' in solution and line in solution['is_producing']:
-                    for date, prod_grade in solution['is_producing'][line].items():
-                        if prod_grade == grade:
-                            production_days += 1
-                
-                production_qty = production_days * DEFAULT_DAILY_PRODUCTION
-                production_totals[grade][line] = production_qty
-                grade_totals[grade] += production_qty
-                plant_totals[line] += production_qty
-    
-    # Calculate stockouts
-    for grade in grades:
-        if grade in solution.get('stockout', {}):
-            for date, stockout_qty in solution['stockout'][grade].items():
-                if isinstance(stockout_qty, (int, float)):
-                    stockout_totals[grade] += stockout_qty
-    
-    # Build DataFrame
-    data = []
-    for grade in grades:
-        row = {'Grade': grade}
-        for line in lines:
-            row[line] = production_totals[grade][line]
-        row['Total Produced'] = grade_totals[grade]
-        row['Total Stockout'] = stockout_totals[grade]
-        data.append(row)
-    
-    # Totals row
-    totals_row = {'Grade': 'Total'}
-    for line in lines:
-        totals_row[line] = plant_totals[line]
-    totals_row['Total Produced'] = sum(grade_totals.values())
-    totals_row['Total Stockout'] = sum(stockout_totals.values())
-    data.append(totals_row)
-    
-    df = pd.DataFrame(data)
-    
-    # Format numbers with commas for thousands
-    numeric_columns = lines + ['Total Produced', 'Total Stockout']
-    for col in numeric_columns:
-        if col in df.columns:
-            df[col] = df[col].apply(lambda x: f"{x:,.0f}" if isinstance(x, (int, float)) else x)
-    
-    return df
-
-
-def create_gantt_chart(solution: Dict, line: str, dates: List, shutdown_periods: Dict, grade_colors: Dict) -> go.Figure:
-    """Create Gantt chart for a production line - matching old logic design"""
-    
-    gantt_data = []
-    for date_str, grade in solution['is_producing'][line].items():
-        if grade:
-            date = pd.to_datetime(date_str, format='%d-%b-%y').date()
-            gantt_data.append({
-                "Grade": grade,
-                "Start": date,
-                "Finish": date + timedelta(days=1),
-                "Line": line
-            })
-    
-    if not gantt_data:
-        fig = go.Figure()
-        fig.add_annotation(
-            text="No production data available",
-            xref="paper", yref="paper",
-            x=0.5, y=0.5, showarrow=False,
-            font=dict(size=16)
+    with col1:
+        uploaded_file = st.file_uploader(
+            "Choose an Excel file",
+            type=ALLOWED_EXTENSIONS,
+            help="Upload an Excel file with Plant, Inventory, and Demand sheets"
         )
-        return fig
-    
-    gantt_df = pd.DataFrame(gantt_data)
-    sorted_grades = sorted(gantt_df['Grade'].unique())
-    
-    fig = px.timeline(
-        gantt_df,
-        x_start="Start",
-        x_end="Finish",
-        y="Grade",
-        color="Grade",
-        color_discrete_map=grade_colors,
-        category_orders={"Grade": sorted_grades},
-        title=f"Production Schedule - {line}"
-    )
-    
-    # Add shutdown period visualization (matching old logic)
-    if line in shutdown_periods and shutdown_periods[line]:
-        shutdown_days = shutdown_periods[line]
-        if shutdown_days:
-            start_shutdown = dates[shutdown_days[0]]
-            end_shutdown = dates[shutdown_days[-1]] + timedelta(days=1)
+        
+        if uploaded_file is not None:
+            st.session_state[SS_UPLOADED_FILE] = uploaded_file
+            render_alert("File uploaded successfully! Processing...", "success")
             
-            fig.add_vrect(
-                x0=start_shutdown,
-                x1=end_shutdown,
-                fillcolor="red",
-                opacity=0.2,
-                layer="below",
-                line_width=0,
-                annotation_text="Shutdown",
-                annotation_position="top left",
-                annotation_font_size=14,
-                annotation_font_color="red"
+            # Automatically load and validate data
+            file_buffer = io.BytesIO(uploaded_file.read())
+            loader = ExcelDataLoader(file_buffer)
+            success, data, errors, warnings = loader.load_and_validate()
+            
+            if success:
+                st.session_state[SS_EXCEL_DATA] = data
+                st.session_state[SS_STAGE] = 1
+                st.rerun()
+            else:
+                for error in errors:
+                    render_alert(error, "error")
+    
+    with col2:
+        st.markdown("#### 📋 Required Sheets")
+        for sheet in REQUIRED_SHEETS:
+            st.markdown(f"✓ **{sheet}**")
+        st.markdown("#### 🔄 Optional Sheets")
+        st.markdown("• Transition matrices")
+    
+    render_section_divider()
+    
+    # Information section
+    with st.expander("ℹ️ What data do I need?", expanded=False):
+        st.markdown("""
+        Your Excel file should contain:
+        
+        **Plant Sheet**: Plant names, capacities, material running, shutdown periods
+        
+        **Inventory Sheet**: Grade names, inventory levels, run constraints, allowed lines
+        
+        **Demand Sheet**: Daily demand forecasts for each grade
+        
+        **Transition Sheets (Optional)**: Grade transition rules for each plant
+        """)
+    
+    # Navigation
+    st.markdown("<br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col3:
+        if st.button("Next: Preview Data →", type="primary", disabled=uploaded_file is None, use_container_width=True):
+            st.rerun()
+
+
+# ========== STAGE 1: PREVIEW & CONFIGURE ==========
+def render_preview_stage():
+    """Stage 2: Preview data and configure parameters"""
+    
+    render_header(f"{APP_ICON} {APP_TITLE}", "Review data and configure optimization")
+    render_stage_progress(1)
+    
+    excel_data = st.session_state[SS_EXCEL_DATA]
+    
+    # Sheet preview tabs
+    st.markdown("### 📊 Data Preview")
+    
+    # Get all sheet names
+    required_sheets = ['Plant', 'Inventory', 'Demand']
+    transition_sheets = [k for k in excel_data.keys() if k.startswith('Transition_')]
+    
+    # Create tabs for all sheets
+    all_sheets = required_sheets + (['Transition Matrices'] if transition_sheets else [])
+    tabs = st.tabs(all_sheets)
+    
+    # Render each required sheet
+    for idx, sheet_name in enumerate(required_sheets):
+        with tabs[idx]:
+            if sheet_name in excel_data:
+                df_display = excel_data[sheet_name].copy()
+                
+                # Format dates
+                if sheet_name == 'Plant':
+                    for col_idx in [4, 5]:
+                        if col_idx < len(df_display.columns):
+                            col = df_display.columns[col_idx]
+                            if pd.api.types.is_datetime64_any_dtype(df_display[col]):
+                                df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
+                elif sheet_name == 'Inventory':
+                    if len(df_display.columns) > 7:
+                        col = df_display.columns[7]
+                        if pd.api.types.is_datetime64_any_dtype(df_display[col]):
+                            df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
+                elif sheet_name == 'Demand':
+                    col = df_display.columns[0]
+                    if pd.api.types.is_datetime64_any_dtype(df_display[col]):
+                        df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
+                
+                st.dataframe(df_display, width="stretch", height=400)
+    
+    # Render transition matrices in last tab
+    if transition_sheets:
+        with tabs[-1]:
+            for sheet_name in transition_sheets:
+                st.markdown(f"**{sheet_name}**")
+                df_display = excel_data[sheet_name].copy()
+                
+                # Style the transition matrix - highlight Yes in green, No in red
+                def highlight_transitions(val):
+                    if pd.notna(val):
+                        val_str = str(val).strip().lower()
+                        if val_str == 'yes':
+                            return 'background-color: #C6EFCE; color: #006100; font-weight: bold;'
+                        elif val_str == 'no':
+                            return 'background-color: #FFC7CE; color: #9C0006; font-weight: bold;'
+                    return ''
+                
+                styled_df = df_display.style.map(highlight_transitions)
+                st.dataframe(styled_df, width="stretch", height=300)
+                st.markdown("---")
+    
+    render_section_divider()
+    
+    # Configuration parameters
+    st.markdown("### ⚙️ Optimization Parameters")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### ⏱️ Solver Configuration")
+        time_limit = st.number_input(
+            "Time limit (minutes)",
+            min_value=1,
+            max_value=120,
+            value=st.session_state[SS_OPTIMIZATION_PARAMS]['time_limit_min'],
+            help="Maximum time to run the optimization"
+        )
+        
+        buffer_days = st.number_input(
+            "Buffer days",
+            min_value=0,
+            max_value=7,
+            value=st.session_state[SS_OPTIMIZATION_PARAMS]['buffer_days'],
+            help="Additional planning buffer days"
+        )
+    
+    with col2:
+        st.markdown("#### 🎯 Objective Weights")
+        stockout_penalty = st.number_input(
+            "Stockout penalty",
+            min_value=1,
+            value=st.session_state[SS_OPTIMIZATION_PARAMS]['stockout_penalty'],
+            help="Penalty weight for stockouts"
+        )
+        
+        transition_penalty = st.number_input(
+            "Transition penalty",
+            min_value=1,
+            value=st.session_state[SS_OPTIMIZATION_PARAMS]['transition_penalty'],
+            help="Penalty for production transitions"
+        )
+        
+        continuity_bonus = st.number_input(
+            "Continuity bonus",
+            min_value=0,
+            value=st.session_state[SS_OPTIMIZATION_PARAMS]['continuity_bonus'],
+            help="Bonus for production continuity"
+        )
+    
+    # Update parameters
+    st.session_state[SS_OPTIMIZATION_PARAMS] = {
+        'time_limit_min': time_limit,
+        'buffer_days': buffer_days,
+        'stockout_penalty': stockout_penalty,
+        'transition_penalty': transition_penalty,
+        'continuity_bonus': continuity_bonus,
+    }
+    
+    render_section_divider()
+    
+    # Navigation and optimization button
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        if st.button("← Back to Upload", width="stretch"):
+            st.session_state[SS_STAGE] = 0
+            st.rerun()
+    
+    with col3:
+        if st.button("🎯 Run Optimization", type="primary", width="stretch"):
+            # Show optimization in progress
+            st.session_state[SS_STAGE] = 1.5  # Intermediate stage for optimization
+            st.rerun()
+
+
+# ========== STAGE 1.5: OPTIMIZATION IN PROGRESS ==========
+def render_optimization_stage():
+    """Stage 1.5: Show optimization in progress with animation"""
+    
+    render_header(f"{APP_ICON} {APP_TITLE}", "Optimization in Progress")
+    render_stage_progress(1)  # Still on preview stage visually
+    
+    # Create animated optimization screen
+    st.markdown("""
+        <div class="optimization-container">
+            <div class="spinner"></div>
+            <div class="optimization-text">⚡ Optimizing Production Schedule...</div>
+            <div class="optimization-subtext">This may take a few moments. Please wait.</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Run the actual optimization
+    run_optimization()
+    """Execute the optimization"""
+    
+    excel_data = st.session_state[SS_EXCEL_DATA]
+    params = st.session_state[SS_OPTIMIZATION_PARAMS]
+    
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    try:
+        # Process plant data
+        status_text.markdown("🔄 Processing plant data...")
+        plant_data = process_plant_data(excel_data['Plant'])
+        progress_bar.progress(0.1)
+        
+        # Process inventory data
+        status_text.markdown("🔄 Processing inventory data...")
+        inventory_data = process_inventory_data(excel_data['Inventory'], plant_data['lines'])
+        progress_bar.progress(0.2)
+        
+        # Process demand data
+        status_text.markdown("🔄 Processing demand data...")
+        demand_data, dates, num_days = process_demand_data(
+            excel_data['Demand'],
+            params['buffer_days']
+        )
+        formatted_dates = [date.strftime('%d-%b-%y') for date in dates]
+        progress_bar.progress(0.3)
+        
+        # Process shutdown periods
+        status_text.markdown("🔄 Processing shutdown periods...")
+        shutdown_periods = process_shutdown_dates(plant_data['shutdown_periods'], dates)
+        progress_bar.progress(0.35)
+        
+        # Process transition rules
+        status_text.markdown("🔄 Processing transition rules...")
+        transition_dfs = {k: v for k, v in excel_data.items() if k.startswith('Transition_')}
+        transition_rules = process_transition_rules(transition_dfs)
+        progress_bar.progress(0.4)
+        
+        # Build and solve model
+        status_text.markdown("⚡ Running optimization...")
+        
+        def progress_callback(pct, msg):
+            progress_bar.progress(0.4 + pct * 0.6)
+            status_text.markdown(f"⚡ {msg}")
+        
+        status, solution_callback, solver = build_and_solve_model(
+            grades=inventory_data['grades'],
+            lines=plant_data['lines'],
+            dates=dates,
+            formatted_dates=formatted_dates,
+            num_days=num_days,
+            capacities=plant_data['capacities'],
+            initial_inventory=inventory_data['initial_inventory'],
+            min_inventory=inventory_data['min_inventory'],
+            max_inventory=inventory_data['max_inventory'],
+            min_closing_inventory=inventory_data['min_closing_inventory'],
+            demand_data=demand_data,
+            allowed_lines=inventory_data['allowed_lines'],
+            min_run_days=inventory_data['min_run_days'],
+            max_run_days=inventory_data['max_run_days'],
+            force_start_date=inventory_data['force_start_date'],
+            rerun_allowed=inventory_data['rerun_allowed'],
+            material_running_info=plant_data['material_running'],
+            shutdown_periods=shutdown_periods,
+            transition_rules=transition_rules,
+            buffer_days=params['buffer_days'],
+            stockout_penalty=params['stockout_penalty'],
+            transition_penalty=params['transition_penalty'],
+            continuity_bonus=params['continuity_bonus'],
+            time_limit_min=params['time_limit_min'],
+            progress_callback=progress_callback
+        )
+        
+        progress_bar.progress(1.0)
+        
+        if solution_callback.num_solutions() > 0:
+            status_text.markdown("✅ Optimization completed successfully!")
+            
+            # Store solution with production_vars reference
+            st.session_state[SS_SOLUTION] = {
+                'status': status,
+                'solution': solution_callback.solutions[-1],
+                'solver': solver,
+                'solve_time': solution_callback.solutions[-1]['time'],
+                'production_vars': solution_callback.production,  # Store for summary calculation
+                'data': {
+                    'grades': inventory_data['grades'],
+                    'lines': plant_data['lines'],
+                    'dates': dates,
+                    'num_days': num_days,
+                    'buffer_days': params['buffer_days'],
+                    'shutdown_periods': shutdown_periods,
+                    'allowed_lines': inventory_data['allowed_lines'],
+                    'min_inventory': inventory_data['min_inventory'],
+                    'max_inventory': inventory_data['max_inventory'],
+                    'initial_inventory': inventory_data['initial_inventory'],
+                }
+            }
+            
+            st.session_state[SS_STAGE] = 2
+            st.success("✅ Optimization complete! View results below.")
+            st.rerun()
+        else:
+            status_text.markdown("❌ No solution found")
+            render_alert("No feasible solution found. Please check your constraints.", "error")
+    
+    except Exception as e:
+        status_text.markdown("❌ Optimization failed")
+        render_alert(f"Error during optimization: {str(e)}", "error")
+        st.exception(e)
+
+
+# ========== STAGE 2: RESULTS ==========
+def render_results_stage():
+    """Stage 3: Display results"""
+    
+    render_header(f"{APP_ICON} {APP_TITLE}", "Optimization Results")
+    render_stage_progress(2)
+    
+    solution_data = st.session_state[SS_SOLUTION]
+    solution = solution_data['solution']
+    data = solution_data['data']
+    solve_time = solution_data.get('solve_time', 0)
+    
+    # Get or create consistent grade colors
+    grade_colors = get_or_create_grade_colors(data['grades'])
+    
+    # Key metrics
+    st.markdown("### 📊 Key Performance Metrics")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    render_metric_card("Objective Value", f"{solution['objective']:,.0f}", col1)
+    render_metric_card("Total Transitions", str(solution['transitions']['total']), col2)
+    
+    total_stockouts = sum(sum(solution['stockout'][g].values()) for g in data['grades'])
+    render_metric_card("Total Stockouts", f"{total_stockouts:,.0f} MT", col3)
+    render_metric_card("Time Elapsed", f"{solve_time:.1f}s", col4)
+    
+    render_section_divider()
+    
+    # Results tabs
+    tab1, tab2, tab3 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables"])
+    
+    with tab1:
+        st.markdown("### 📅 Production Schedule")
+        
+        for line in data['lines']:
+            st.markdown(f"#### 🏭 {line}")
+            
+            # Gantt chart
+            fig = create_gantt_chart(solution, line, data['dates'], data['shutdown_periods'], grade_colors)
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Schedule table
+            schedule_df = create_schedule_table(solution, line, data['dates'], grade_colors)
+            if not schedule_df.empty:
+                # Style the dataframe with grade colors
+                def style_grade_column(val):
+                    if val in grade_colors:
+                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
+                    return ''
+                
+                styled_df = schedule_df.style.map(style_grade_column, subset=['Grade'])
+                st.dataframe(styled_df, width="stretch")
+            
+            render_section_divider()
+    
+    with tab2:
+        st.markdown("### 📦 Inventory Analysis")
+        
+        for grade in sorted(data['grades']):
+            st.markdown(f"#### {grade}")
+            
+            fig = create_inventory_chart(
+                solution, grade, data['dates'],
+                data['min_inventory'][grade],
+                data['max_inventory'][grade],
+                data['allowed_lines'][grade],
+                data['shutdown_periods'],
+                grade_colors,
+                data['initial_inventory'][grade],
+                data.get('buffer_days', 0)
             )
+            st.plotly_chart(fig, use_container_width=True)
     
-    # Match old logic layout exactly
-    fig.update_yaxes(
-        autorange="reversed",
-        title=None,
-        showgrid=True,
-        gridcolor="lightgray",
-        gridwidth=1
-    )
-    
-    fig.update_xaxes(
-        title="Date",
-        showgrid=True,
-        gridcolor="lightgray",
-        gridwidth=1,
-        tickvals=dates,
-        tickformat="%d-%b",
-        dtick="D1"
-    )
-    
-    fig.update_layout(
-        height=350,
-        bargap=0.2,
-        showlegend=True,
-        legend_title_text="Grade",
-        legend=dict(
-            traceorder="normal",
-            orientation="v",
-            yanchor="middle",
-            y=0.5,
-            xanchor="left",
-            x=1.02,
-            bgcolor="rgba(255,255,255,0)",
-            bordercolor="lightgray",
-            borderwidth=0
-        ),
-        xaxis=dict(showline=True, showticklabels=True),
-        yaxis=dict(showline=True),
-        margin=dict(l=60, r=160, t=60, b=60),
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        font=dict(size=12),
-    )
-    
-    return fig
-
-
-def create_schedule_table(solution: Dict, line: str, dates: List, grade_colors: Dict) -> pd.DataFrame:
-    """Create production schedule table for a line with colored grades"""
-    
-    schedule_data = []
-    current_grade = None
-    start_day = None
-    
-    sorted_dates = sorted(dates)
-    
-    for i, date in enumerate(sorted_dates):
-        date_str = date.strftime('%d-%b-%y')
-        grade_today = solution['is_producing'][line].get(date_str)
+    with tab3:
+        st.markdown("### 📊 Production Summary")
         
-        if grade_today != current_grade:
-            if current_grade is not None:
-                end_date = sorted_dates[i - 1]
-                duration = (end_date - start_day).days + 1
-                schedule_data.append({
-                    "Grade": current_grade,
-                    "Start Date": start_day.strftime("%d-%b-%y"),
-                    "End Date": end_date.strftime("%d-%b-%y"),
-                    "Days": duration
-                })
-            current_grade = grade_today
-            start_day = date
-    
-    if current_grade is not None:
-        end_date = sorted_dates[-1]
-        duration = (end_date - start_day).days + 1
-        schedule_data.append({
-            "Grade": current_grade,
-            "Start Date": start_day.strftime("%d-%b-%y"),
-            "End Date": end_date.strftime("%d-%b-%y"),
-            "Days": duration
-        })
-    
-    if not schedule_data:
-        return pd.DataFrame()
-    
-    df = pd.DataFrame(schedule_data)
-    
-    # Apply color styling
-    def color_grade(row):
-        grade = row['Grade']
-        if grade in grade_colors:
-            color = grade_colors[grade]
-            return [f'background-color: {color}; color: white; font-weight: bold; text-align: center;'] + [''] * (len(row) - 1)
-        return [''] * len(row)
-    
-    return df
-
-
-def create_inventory_chart(solution: Dict, grade: str, demand_dates: List, 
-                           min_inventory: float, max_inventory: float,
-                           allowed_lines: List[str], shutdown_periods: Dict,
-                           grade_colors: Dict, initial_inventory: float) -> go.Figure:
-    """Create corrected inventory level chart for a grade - only show demand period"""
-    
-    # Use only demand period dates, exclude buffer period
-    inventory_dates = []
-    inventory_values = []
-    
-    # Add opening inventory at the very start
-    if demand_dates:
-        inventory_dates.append(demand_dates[0])
-        inventory_values.append(initial_inventory)
-    
-    # Add daily inventory levels only for demand period
-    for date in demand_dates:
-        date_str = date.strftime('%d-%b-%y')
-        inv_value = 0
-        
-        # Get inventory from solution
-        if grade in solution.get('inventory', {}) and date_str in solution['inventory'][grade]:
-            inv_value = solution['inventory'][grade][date_str]
-        elif 'inventory_level' in solution and grade in solution['inventory_level']:
-            # Alternative solution structure
-            for inv_date, inv_qty in solution['inventory_level'][grade].items():
-                if inv_date == date_str:
-                    inv_value = inv_qty
-                    break
-        
-        if isinstance(inv_value, (int, float)):
-            inventory_dates.append(date)
-            inventory_values.append(inv_value)
-    
-    # If we have no valid data, create empty chart
-    if len(inventory_values) == 0:
-        fig = go.Figure()
-        fig.add_annotation(
-            text="No inventory data available for demand period",
-            xref="paper", yref="paper",
-            x=0.5, y=0.5, showarrow=False,
-            font=dict(size=14)
-        )
-        fig.update_layout(
-            title=f"Inventory Level - {grade}",
-            height=400,
-            plot_bgcolor="white",
-            paper_bgcolor="white"
-        )
-        return fig
-    
-    # Ensure we don't have the dip to 0 - use forward fill for missing values
-    cleaned_dates = []
-    cleaned_values = []
-    last_valid_value = initial_inventory
-    
-    for i, (date, value) in enumerate(zip(inventory_dates, inventory_values)):
-        if value > 0 or i == 0:  # Always include first point
-            last_valid_value = value
-        cleaned_dates.append(date)
-        cleaned_values.append(last_valid_value)
-    
-    fig = go.Figure()
-    
-    # Add inventory trace
-    fig.add_trace(go.Scatter(
-        x=cleaned_dates,
-        y=cleaned_values,
-        mode="lines+markers",
-        name=f"{grade} Inventory",
-        line=dict(color=grade_colors.get(grade, CHART_COLORS[0]), width=3),
-        marker=dict(size=6),
-        hovertemplate="Date: %{x|%d-%b-%y}<br>Inventory: %{y:,.0f} MT<extra></extra>"
-    ))
-    
-    # Add shutdown periods only if they occur during demand period
-    for line in allowed_lines:
-        if line in shutdown_periods and shutdown_periods[line]:
-            shutdown_days = shutdown_periods[line]
-            valid_shutdown_days = [day for day in shutdown_days if day < len(demand_dates)]
-            
-            if valid_shutdown_days:
-                start_shutdown = demand_dates[valid_shutdown_days[0]]
-                end_shutdown = demand_dates[valid_shutdown_days[-1]]
-                
-                fig.add_vrect(
-                    x0=start_shutdown,
-                    x1=end_shutdown + timedelta(days=1),
-                    fillcolor="red",
-                    opacity=0.1,
-                    layer="below",
-                    line_width=0,
-                    annotation_text=f"Shutdown: {line}",
-                    annotation_position="top left",
-                    annotation_font_size=10,
-                    annotation_font_color="red"
-                )
-    
-    # Add min/max inventory lines
-    fig.add_hline(
-        y=min_inventory,
-        line=dict(color="red", width=2, dash="dash"),
-        annotation_text=f"Min: {min_inventory:,.0f} MT",
-        annotation_position="top left",
-        annotation_font_color="red"
-    )
-    
-    fig.add_hline(
-        y=max_inventory,
-        line=dict(color="green", width=2, dash="dash"),
-        annotation_text=f"Max: {max_inventory:,.0f} MT",
-        annotation_position="top left",
-        annotation_font_color="green"
-    )
-    
-    # Add key annotations
-    if len(cleaned_values) > 1:
-        opening_val = cleaned_values[0]
-        closing_val = cleaned_values[-1]
-        
-        fig.add_annotation(
-            x=cleaned_dates[0], y=opening_val,
-            text=f"Opening: {opening_val:,.0f}",
-            showarrow=True,
-            arrowhead=2,
-            ax=-50,
-            ay=-30,
-            bgcolor="white",
-            bordercolor="gray",
-            borderwidth=1
+        summary_df = create_production_summary(
+            solution, 
+            solution_data.get('production_vars', {}),
+            solution_data['solver'],
+            data['grades'], 
+            data['lines'],
+            data['num_days']
         )
         
-        fig.add_annotation(
-            x=cleaned_dates[-1], y=closing_val,
-            text=f"Closing: {closing_val:,.0f}",
-            showarrow=True,
-            arrowhead=2,
-            ax=50,
-            ay=-30,
-            bgcolor="white",
-            bordercolor="gray",
-            borderwidth=1
-        )
+        # Style the summary table with grade colors
+        def style_summary_grade(val):
+            if val in grade_colors and val != 'Total':
+                return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
+            elif val == 'Total':
+                return 'background-color: #909399; color: white; font-weight: bold; text-align: center;'
+            return ''
+        
+        styled_summary = summary_df.style.map(style_summary_grade, subset=['Grade'])
+        st.dataframe(styled_summary, width="stretch")
+        
+        st.markdown("### 🔄 Transitions by Line")
+        transitions_data = []
+        for line, count in solution['transitions']['per_line'].items():
+            transitions_data.append({'Line': line, 'Transitions': count})
+        transitions_df = pd.DataFrame(transitions_data)
+        st.dataframe(transitions_df, width="stretch")
     
-    fig.update_layout(
-        title=f"Inventory Level - {grade} (Demand Period Only)",
-        xaxis=dict(
-            title="Date",
-            showgrid=True,
-            gridcolor="lightgray",
-            tickformat="%d-%b",
-            range=[demand_dates[0] if demand_dates else None, 
-                   demand_dates[-1] + timedelta(days=1) if demand_dates else None]
-        ),
-        yaxis=dict(
-            title="Inventory Volume (MT)",
-            showgrid=True,
-            gridcolor="lightgray",
-            range=[0, max(max_inventory * 1.1, max(cleaned_values) * 1.1) if cleaned_values else 1000]
-        ),
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        height=450,
-        showlegend=False,
-        margin=dict(l=60, r=80, t=80, b=60)
-    )
+    render_section_divider()
     
-    return fig
+    # Navigation
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        if st.button("← Back to Configuration", width="stretch"):
+            st.session_state[SS_STAGE] = 1
+            st.rerun()
+    
+    with col2:
+        if st.button("🔄 New Optimization", width="stretch"):
+            st.session_state[SS_STAGE] = 0
+            st.session_state[SS_UPLOADED_FILE] = None
+            st.session_state[SS_EXCEL_DATA] = None
+            st.session_state[SS_SOLUTION] = None
+            st.rerun()
+
+
+# ========== MAIN APP ==========
+def main():
+    """Main application controller"""
+    
+    current_stage = st.session_state[SS_STAGE]
+    
+    if current_stage == 0:
+        render_upload_stage()
+    elif current_stage == 1:
+        render_preview_stage()
+    elif current_stage == 1.5:
+        render_optimization_stage()
+    elif current_stage == 2:
+        render_results_stage()
+
+
+if __name__ == "__main__":
+    main()
