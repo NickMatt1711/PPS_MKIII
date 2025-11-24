@@ -1,6 +1,6 @@
 """
-Postprocessing utilities for solution visualization (FINAL VERSION)
-Fully aligned with Option A visuals + compatibility wrapper.
+Postprocessing utilities for solution visualization (FINAL REFACTORED VERSION)
+Fully aligned with Option A visuals + compatibility wrapper + robust fallbacks.
 """
 
 import pandas as pd
@@ -21,7 +21,10 @@ def _ensure_date(d: Any) -> date:
         return d.date()
     if isinstance(d, date):
         return d
-    return datetime.strptime(str(d), "%d-%b-%y").date()
+    try:
+        return datetime.strptime(str(d), "%d-%b-%y").date()
+    except Exception:
+        return datetime.strptime(str(d), "%Y-%m-%d").date()
 
 
 # ===============================================================
@@ -29,9 +32,7 @@ def _ensure_date(d: Any) -> date:
 # ===============================================================
 
 def build_grade_color_map(grades: List[str]) -> Dict[str, str]:
-    """
-    Consistent grade color mapping using px qualitative palette.
-    """
+    """Consistent grade color mapping using qualitative palette."""
     base_colors = px.colors.qualitative.Vivid
     return {grade: base_colors[i % len(base_colors)] for i, grade in enumerate(sorted(grades))}
 
@@ -41,10 +42,7 @@ def build_grade_color_map(grades: List[str]) -> Dict[str, str]:
 # ===============================================================
 
 def get_or_create_grade_colors(grades):
-    """
-    Compatibility wrapper so existing app.py continues to work.
-    Maps old function name to new color-map builder.
-    """
+    """Compatibility wrapper so existing app.py continues to work."""
     return build_grade_color_map(grades)
 
 
@@ -74,9 +72,8 @@ def create_gantt_chart(
     for d in range(len(dates)):
         ds = dates[d].strftime("%d-%b-%y")
 
-        for grade in grade_colors.keys():
-            if (grade in schedule and schedule[grade] == ds) or \
-               (schedule.get(ds) == grade):
+        for grade in grade_colors:
+            if schedule.get(ds) == grade:
                 gantt_rows.append({
                     "Grade": grade,
                     "Start": dates[d],
@@ -84,7 +81,6 @@ def create_gantt_chart(
                     "Line": line
                 })
 
-    # If nothing to plot
     if not gantt_rows:
         return None
 
@@ -98,20 +94,20 @@ def create_gantt_chart(
         color="Grade",
         color_discrete_map=grade_colors,
         category_orders={"Grade": sorted(grade_colors.keys())},
-        title=f"Production Schedule - {line}"
+        title=f"Production Schedule – {line}"
     )
 
     # Shutdown shading
     if line in shutdown_periods and shutdown_periods[line]:
-        d_list = shutdown_periods[line]
-        start_sd = dates[d_list[0]]
-        end_sd = dates[d_list[-1]] + timedelta(days=1)
+        sd = shutdown_periods[line]
+        x0 = dates[sd[0]]
+        x1 = dates[sd[-1]] + timedelta(days=1)
 
         fig.add_vrect(
-            x0=start_sd,
-            x1=end_sd,
+            x0=x0,
+            x1=x1,
             fillcolor="red",
-            opacity=0.15,
+            opacity=0.12,
             layer="below",
             line_width=0,
             annotation_text="Shutdown",
@@ -119,29 +115,17 @@ def create_gantt_chart(
             annotation_font_color="red"
         )
 
-    fig.update_yaxes(
-        autorange="reversed",
-        title=None,
-        showgrid=True,
-        gridcolor="lightgray"
-    )
-
-    fig.update_xaxes(
-        title="Date",
-        tickformat="%d-%b",
-        showgrid=True,
-        gridcolor="lightgray",
-        dtick="D1"
-    )
+    fig.update_yaxes(autorange="reversed", showgrid=True, gridcolor="lightgray")
+    fig.update_xaxes(tickformat="%d-%b", dtick="D1", showgrid=True, gridcolor="lightgray")
 
     fig.update_layout(
         height=350,
         bargap=0.2,
         plot_bgcolor="white",
         paper_bgcolor="white",
-        margin=dict(l=80, r=150, t=50, b=60),
+        margin=dict(l=80, r=160, t=60, b=60),
         font=dict(size=12),
-        legend_title_text="Grade"
+        legend_title_text="Grade",
     )
 
     return fig
@@ -157,24 +141,23 @@ def create_inventory_chart(
     dates: List[date],
     min_inv: float,
     max_inv: float,
-    allowed_lines: Dict[str, List[str]],
+    allowed_lines: Any,  # dict OR list
     shutdown_periods: Dict,
     grade_colors: Dict,
     initial_inv: float,
     buffer_days: int
 ):
     """
-    Inventory chart matching your UI style:
-    - timeline on X
-    - annotations: start, end, high, low
-    - shutdown vrect
-    - min/max lines
+    Full UI-style inventory chart:
+    - Lines + markers
+    - Shutdown shading
+    - Min/Max bands
+    - Start, End, High, Low annotations
     """
     dates = [_ensure_date(d) for d in dates]
 
-    inventory_dict = solution.get("inventory", {}).get(grade, {})
-
-    inv_vals = [inventory_dict.get(d.strftime("%d-%b-%y"), 0) for d in dates]
+    inv_dict = solution.get("inventory", {}).get(grade, {})
+    inv_vals = [inv_dict.get(d.strftime("%d-%b-%y"), 0) for d in dates]
 
     fig = go.Figure()
 
@@ -188,9 +171,15 @@ def create_inventory_chart(
         hovertemplate="Date: %{x|%d-%b-%y}<br>Inventory: %{y:.0f} MT<extra></extra>"
     ))
 
-    # Shutdown shading
-    lines_for_grade = allowed_lines.get(grade, [])
+    # ------------------------------
+    #  allowed_lines may be dict OR list
+    # ------------------------------
+    if isinstance(allowed_lines, dict):
+        lines_for_grade = allowed_lines.get(grade, [])
+    else:
+        lines_for_grade = allowed_lines  # fallback
 
+    # Shutdown shading
     shaded_once = False
     for line in lines_for_grade:
         if line in shutdown_periods and shutdown_periods[line]:
@@ -199,19 +188,18 @@ def create_inventory_chart(
             x1 = dates[sd[-1]] + timedelta(days=1)
 
             fig.add_vrect(
-                x0=x0,
-                x1=x1,
-                fillcolor="red",
-                opacity=0.1,
-                layer="below",
-                line_width=0,
+                x0=x0, x1=x1,
+                fillcolor="red", opacity=0.1,
+                layer="below", line_width=0,
                 annotation_text=f"Shutdown: {line}" if not shaded_once else "",
-                annotation_font_color="red",
-                annotation_position="top left"
+                annotation_position="top left",
+                annotation_font_color="red"
             )
             shaded_once = True
 
-    # Min/Max Lines
+    # ------------------
+    # Min/Max Limits
+    # ------------------
     if min_inv is not None:
         fig.add_hline(
             y=min_inv,
@@ -219,6 +207,7 @@ def create_inventory_chart(
             annotation_text=f"Min {min_inv:.0f}",
             annotation_position="top left"
         )
+
     if max_inv is not None:
         fig.add_hline(
             y=max_inv,
@@ -227,41 +216,39 @@ def create_inventory_chart(
             annotation_position="bottom left"
         )
 
-    # Calculate annotations
-    values = inv_vals
-    start_val = values[0]
-    end_val = values[-1]
-    high_val = max(values)
-    low_val = min(values)
+    # ------------------
+    # Annotations
+    # ------------------
+    start_val = inv_vals[0]
+    end_val = inv_vals[-1]
+    high_val = max(inv_vals)
+    low_val = min(inv_vals)
 
-    start_x = dates[0]
-    end_x = dates[-1]
-    high_x = dates[values.index(high_val)]
-    low_x = dates[values.index(low_val)]
+    ann_points = [
+        (dates[0], start_val, f"Start: {start_val:.0f}", -40, 30),
+        (dates[-1], end_val, f"End: {end_val:.0f}", 40, 30),
+        (dates[inv_vals.index(high_val)], high_val, f"High: {high_val:.0f}", 0, -40),
+        (dates[inv_vals.index(low_val)], low_val, f"Low: {low_val:.0f}", 0, 40),
+    ]
 
-    # Add annotations
-    for x, y, text, ax, ay in [
-        (start_x, start_val, f"Start: {start_val:.0f}", -40, 30),
-        (end_x, end_val, f"End: {end_val:.0f}", 40, 30),
-        (high_x, high_val, f"High: {high_val:.0f}", 0, -40),
-        (low_x, low_val, f"Low: {low_val:.0f}", 0, 40),
-    ]:
+    for x, y, text, ax, ay in ann_points:
         fig.add_annotation(
             x=x, y=y,
             text=text,
-            showarrow=True, arrowhead=2,
+            showarrow=True,
+            arrowhead=2,
             ax=ax, ay=ay,
-            bgcolor="white", bordercolor="gray",
+            bgcolor="white",
+            bordercolor="gray",
             opacity=0.9
         )
 
     fig.update_layout(
-        title=f"Inventory Level - {grade}",
+        title=f"Inventory Level – {grade}",
         xaxis=dict(
-            title="Date",
-            showgrid=True,
             tickformat="%d-%b",
             dtick="D1",
+            showgrid=True,
             gridcolor="lightgray"
         ),
         yaxis=dict(
@@ -273,8 +260,8 @@ def create_inventory_chart(
         paper_bgcolor="white",
         margin=dict(l=60, r=80, t=80, b=60),
         font=dict(size=12),
-        showlegend=False,
-        height=420
+        height=420,
+        showlegend=False
     )
 
     return fig
@@ -290,11 +277,7 @@ def create_schedule_table(
     dates: List[date],
     grade_colors: Dict
 ):
-    """
-    Generates a dataframe showing:
-    Grade | Start Date | End Date | Days
-    Exactly matching your tabular UI logic.
-    """
+    """Tabular schedule structure for Streamlit."""
     dates = [_ensure_date(d) for d in dates]
     schedule = solution.get("is_producing", {}).get(line, {})
 
@@ -335,10 +318,7 @@ def create_schedule_table(
 # ===============================================================
 
 def create_production_summary(solution, production_vars, solver, grades, lines, num_days):
-    """
-    Generates production summary table:
-    Grade | Line1 | Line2 | ... | Total Produced
-    """
+    """Builds production summary table."""
     rows = []
 
     for grade in sorted(grades):
@@ -352,7 +332,7 @@ def create_production_summary(solution, production_vars, solver, grades, lines, 
                 if key in production_vars:
                     try:
                         val += solver.Value(production_vars[key])
-                    except Exception:
+                    except:
                         pass
             row[line] = int(val)
             total += val
@@ -360,7 +340,7 @@ def create_production_summary(solution, production_vars, solver, grades, lines, 
         row["Total Produced"] = int(total)
         rows.append(row)
 
-    # Total Row
+    # Total row
     total_row = {"Grade": "Total"}
     for line in lines:
         total_row[line] = sum(r[line] for r in rows)
