@@ -269,7 +269,7 @@ def render_optimization_stage():
     """Stage 1.5: Show optimization in progress with animation"""
     
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization in Progress")
-    render_stage_progress(1)  # Still on preview stage visually
+    render_stage_progress(1)
     
     # Create animated optimization screen
     st.markdown("""
@@ -280,10 +280,7 @@ def render_optimization_stage():
         </div>
     """, unsafe_allow_html=True)
     
-    # Run the actual optimization
-    run_optimization()
-    """Execute the optimization"""
-    
+    # Execute the optimization inline
     excel_data = st.session_state[SS_EXCEL_DATA]
     params = st.session_state[SS_OPTIMIZATION_PARAMS]
     
