@@ -9,21 +9,27 @@ from constants import THEME_COLORS, SS_THEME
 def apply_custom_css(is_dark_mode=False):
     """Apply custom CSS for modern material design with theme support"""
     
-    # Theme-specific colors
+    # Theme-specific colors - IMPROVED AESTHETICS
     if is_dark_mode:
-        bg_main = "#0E1117"
-        bg_app = "#1E1E1E"
-        text_primary = "#FAFAFA"
-        text_secondary = "#B0B0B0"
-        card_bg = "#262730"
-        border_color = "#3A3A3A"
+        bg_main = "#0D1117"
+        bg_app = "#161B22"
+        text_primary = "#E6EDF3"
+        text_secondary = "#8B949E"
+        card_bg = "#1C2128"
+        border_color = "#30363D"
+        tab_bg = "#21262D"
+        primary_color = "#58A6FF"
+        primary_gradient = "linear-gradient(135deg, #58A6FF 0%, #1F6FEB 100%)"
     else:
         bg_main = "#FFFFFF"
-        bg_app = "#F5F7FA"
-        text_primary = "#303133"
-        text_secondary = "#909399"
+        bg_app = "#F6F8FA"
+        text_primary = "#24292F"
+        text_secondary = "#57606A"
         card_bg = "#FFFFFF"
-        border_color = "#E4E7ED"
+        border_color = "#D0D7DE"
+        tab_bg = "#F6F8FA"
+        primary_color = "#0969DA"
+        primary_gradient = "linear-gradient(135deg, #0969DA 0%, #033D8B 100%)"
     
     st.markdown(f"""
     <style>
@@ -48,13 +54,13 @@ def apply_custom_css(is_dark_mode=False):
         
         /* Header Styles */
         .app-header {{
-            background: linear-gradient(135deg, {THEME_COLORS['primary']} 0%, #4A5FC1 100%);
+            background: {primary_gradient};
             color: white;
             padding: 2rem;
-            border-radius: 16px;
+            border-radius: 12px;
             text-align: center;
             margin-bottom: 2rem;
-            box-shadow: 0 4px 16px rgba(94, 124, 226, 0.2);
+            box-shadow: 0 4px 12px rgba(9, 105, 218, 0.25);
         }}
         
         .app-header h1 {{
@@ -111,13 +117,13 @@ def apply_custom_css(is_dark_mode=False):
         }}
         
         .stage-circle.active {{
-            background: {THEME_COLORS['primary']};
+            background: {primary_color};
             color: white;
-            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.3);
+            box-shadow: 0 4px 12px rgba(9, 105, 218, 0.35);
         }}
         
         .stage-circle.completed {{
-            background: {THEME_COLORS['success']};
+            background: #1A7F37;
             color: white;
         }}
         
@@ -133,7 +139,7 @@ def apply_custom_css(is_dark_mode=False):
         }}
         
         .stage-label.active {{
-            color: {THEME_COLORS['primary']} !important;
+            color: {primary_color} !important;
             font-weight: 600;
         }}
         
@@ -159,18 +165,18 @@ def apply_custom_css(is_dark_mode=False):
         
         /* Metric Cards */
         .metric-card {{
-            background: linear-gradient(135deg, {THEME_COLORS['primary']} 0%, #4A5FC1 100%);
+            background: {primary_gradient};
             color: white;
             padding: 1.5rem;
             border-radius: 12px;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.2);
+            box-shadow: 0 4px 12px rgba(9, 105, 218, 0.25);
             transition: transform 0.2s ease;
         }}
         
         .metric-card:hover {{
             transform: translateY(-4px);
-            box-shadow: 0 6px 20px rgba(94, 124, 226, 0.3);
+            box-shadow: 0 6px 20px rgba(9, 105, 218, 0.35);
         }}
         
         .metric-value {{
@@ -198,14 +204,14 @@ def apply_custom_css(is_dark_mode=False):
         
         .alert-success {{
             background: {THEME_COLORS['success_light']};
-            border-left: 4px solid {THEME_COLORS['success']};
-            color: #2D5016;
+            border-left: 4px solid #1A7F37;
+            color: #0E4429;
         }}
         
         .alert-info {{
             background: {THEME_COLORS['primary_light']};
-            border-left: 4px solid {THEME_COLORS['primary']};
-            color: #1E3A8A;
+            border-left: 4px solid {primary_color};
+            color: #0550AE;
         }}
         
         .alert-warning {{
@@ -227,14 +233,14 @@ def apply_custom_css(is_dark_mode=False):
             font-weight: 600;
             border: none;
             transition: all 0.2s ease;
-            background: {THEME_COLORS['primary']};
+            background: {primary_color};
             color: white;
         }}
         
         .stButton>button:hover {{
-            background: #4A5FC1;
+            background: #0550AE;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.3);
+            box-shadow: 0 4px 12px rgba(9, 105, 218, 0.35);
         }}
         
         /* DataFrames */
@@ -254,7 +260,7 @@ def apply_custom_css(is_dark_mode=False):
         /* Equal width tabs - FIX FOR DISTRIBUTED WIDTH */
         .stTabs [data-baseweb="tab-list"] {{
             gap: 8px;
-            background: {THEME_COLORS['bg_light']};
+            background: {tab_bg};
             padding: 0.5rem;
             border-radius: 12px;
             display: flex;
@@ -264,27 +270,29 @@ def apply_custom_css(is_dark_mode=False):
         .stTabs [data-baseweb="tab"] {{
             height: 50px;
             padding: 0 24px;
-            background: white;
+            background: {card_bg};
             border-radius: 8px;
             font-weight: 600;
-            border: 2px solid transparent;
-            color: {THEME_COLORS['text_regular']};
+            border: 2px solid {border_color};
+            color: {text_secondary};
             flex: 1 1 0;
             min-width: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             white-space: nowrap;
+            transition: all 0.2s ease;
         }}
         
         .stTabs [aria-selected="true"] {{
-            background: {THEME_COLORS['primary']};
+            background: {primary_color};
             color: white;
+            border-color: {primary_color};
         }}
         
         /* Progress Bar */
         .stProgress > div > div > div > div {{
-            background: {THEME_COLORS['primary']};
+            background: {primary_color};
         }}
         
         /* Section Divider */
@@ -309,7 +317,7 @@ def apply_custom_css(is_dark_mode=False):
         
         .spinner {{
             border: 4px solid {border_color};
-            border-top: 4px solid {THEME_COLORS['primary']};
+            border-top: 4px solid {primary_color};
             border-radius: 50%;
             width: 60px;
             height: 60px;
@@ -368,13 +376,14 @@ def render_theme_toggle():
     if SS_THEME not in st.session_state:
         st.session_state[SS_THEME] = "light"
     
-    # Create toggle in sidebar
-    with st.sidebar:
-        current_theme = st.session_state[SS_THEME]
-        
-        if st.button("🌙 Dark Mode" if current_theme == "light" else "☀️ Light Mode", 
-                     use_container_width=True,
-                     key="theme_toggle"):
+    # Create toggle in main area (top right corner)
+    current_theme = st.session_state[SS_THEME]
+    
+    # Add button using columns to position it
+    col1, col2 = st.columns([6, 1])
+    with col2:
+        button_label = "🌙 Dark" if current_theme == "light" else "☀️ Light"
+        if st.button(button_label, key="theme_toggle", use_container_width=True):
             st.session_state[SS_THEME] = "dark" if current_theme == "light" else "light"
             st.rerun()
 
