@@ -379,7 +379,7 @@ def render_theme_toggle():
         current_theme = st.session_state[SS_THEME]
         
         if st.button("🌙 Dark Mode" if current_theme == "light" else "☀️ Light Mode", 
-                     width="stretch",
+                     use_container_width=True,
                      key="theme_toggle"):
             st.session_state[SS_THEME] = "dark" if current_theme == "light" else "light"
             st.rerun()
