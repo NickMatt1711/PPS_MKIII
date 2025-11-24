@@ -1,530 +1,653 @@
 """
-Polymer Production Scheduler - Main Application
-A wizard-based Streamlit app for multi-plant production optimization
+Reusable UI components with modern material design
 """
 
 import streamlit as st
-import io
-from ortools.sat.python import cp_model
-
-# Import modules
-from constants import *
-from ui_components import *
-from data_loader import *
-from preview_tables import *
-from solver_cp_sat import build_and_solve_model
-from postprocessing import *
+from constants import THEME_COLORS
 
 
-# Page configuration
-st.set_page_config(
-    page_title=APP_TITLE,
-    page_icon=APP_ICON,
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-
-# Apply custom CSS
-apply_custom_css()
-
-# Initialize session state
-if SS_STAGE not in st.session_state:
-    st.session_state[SS_STAGE] = 0
-if SS_UPLOADED_FILE not in st.session_state:
-    st.session_state[SS_UPLOADED_FILE] = None
-if SS_EXCEL_DATA not in st.session_state:
-    st.session_state[SS_EXCEL_DATA] = None
-if SS_OPTIMIZATION_PARAMS not in st.session_state:
-    st.session_state[SS_OPTIMIZATION_PARAMS] = {
-        'time_limit_min': DEFAULT_TIME_LIMIT_MIN,
-        'buffer_days': DEFAULT_BUFFER_DAYS,
-        'stockout_penalty': DEFAULT_STOCKOUT_PENALTY,
-        'transition_penalty': DEFAULT_TRANSITION_PENALTY,
-        'continuity_bonus': DEFAULT_CONTINUITY_BONUS,
-    }
-if SS_SOLUTION not in st.session_state:
-    st.session_state[SS_SOLUTION] = None
-if SS_GRADE_COLORS not in st.session_state:
-    st.session_state[SS_GRADE_COLORS] = {}
-
-
-# ========== STAGE 0: UPLOAD ==========
-def render_upload_stage():
-    """Stage 1: File upload"""
-    
-    render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
-    render_stage_progress(0)
-    
-    st.markdown("### 📤 Upload Production Data")
-    st.markdown("Upload an Excel file containing your production planning data.")
-    
-    # Upload section
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        uploaded_file = st.file_uploader(
-            "Choose an Excel file",
-            type=ALLOWED_EXTENSIONS,
-            help="Upload an Excel file with Plant, Inventory, and Demand sheets"
-        )
+def apply_custom_css():
+    """Apply custom CSS for modern material design - LIGHT MODE"""
+    st.markdown(f"""
+    <style>
+        /* Global Styles - Light Mode */
+        .main {{
+            background-color: #FFFFFF;
+        }}
         
-        if uploaded_file is not None:
-            st.session_state[SS_UPLOADED_FILE] = uploaded_file
-            render_alert("File uploaded successfully! Processing...", "success")
-            
-            # Automatically load and validate data
-            file_buffer = io.BytesIO(uploaded_file.read())
-            loader = ExcelDataLoader(file_buffer)
-            success, data, errors, warnings = loader.load_and_validate()
-            
-            if success:
-                st.session_state[SS_EXCEL_DATA] = data
-                st.session_state[SS_STAGE] = 1
-                st.rerun()
-            else:
-                for error in errors:
-                    render_alert(error, "error")
-    
-    with col2:
-        st.markdown("#### 📋 Required Sheets")
-        for sheet in REQUIRED_SHEETS:
-            st.markdown(f"✓ **{sheet}**")
-        st.markdown("#### 🔄 Optional Sheets")
-        st.markdown("• Transition matrices")
-    
-    render_section_divider()
-    
-    # Information section
-    with st.expander("ℹ️ What data do I need?", expanded=False):
-        st.markdown("""
-        Your Excel file should contain:
+        .stApp {{
+            background-color: #F5F7FA;
+        }}
         
-        **Plant Sheet**: Plant names, capacities, material running, shutdown periods
+        /* Header Styles */
+        .app-header {{
+            background: linear-gradient(135deg, {THEME_COLORS['primary']} 0%, #4A5FC1 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 16px rgba(94, 124, 226, 0.2);
+        }}
         
-        **Inventory Sheet**: Grade names, inventory levels, run constraints, allowed lines
+        .app-header h1 {{
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }}
         
-        **Demand Sheet**: Daily demand forecasts for each grade
+        .app-header p {{
+            margin: 0.5rem 0 0 0;
+            font-size: 1rem;
+            opacity: 0.95;
+            font-weight: 400;
+        }}
         
-        **Transition Sheets (Optional)**: Grade transition rules for each plant
-        """)
-    
-    # Navigation
-    st.markdown("<br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col3:
-        if st.button("Next: Preview Data →", type="primary", disabled=uploaded_file is None, use_container_width=True):
-            st.rerun()
+        /* Stage Progress Bar */
+        .stage-container {{
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid {THEME_COLORS['border_light']};
+        }}
+        
+        .stage-progress {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            margin-bottom: 1rem;
+        }}
+        
+        .stage-step {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+            flex: 1;
+        }}
+        
+        .stage-circle {{
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }}
+        
+        .stage-circle.active {{
+            background: {THEME_COLORS['primary']};
+            color: white;
+            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.3);
+        }}
+        
+        .stage-circle.completed {{
+            background: {THEME_COLORS['success']};
+            color: white;
+        }}
+        
+        .stage-circle.inactive {{
+            background: {THEME_COLORS['border_light']};
+            color: {THEME_COLORS['text_secondary']};
+        }}
+        
+        .stage-label {{
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: {THEME_COLORS['text_regular']};
+        }}
+        
+        .stage-label.active {{
+            color: {THEME_COLORS['primary']};
+            font-weight: 600;
+        }}
+        
+        /* Card Styles */
+        .card {{
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 1.5rem;
+            border: 1px solid {THEME_COLORS['border_light']};
+        }}
+        
+        .card-header {{
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: {THEME_COLORS['text_primary']};
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }}
+        
+        /* Metric Cards */
+        .metric-card {{
+            background: linear-gradient(135deg, {THEME_COLORS['primary']} 0%, #4A5FC1 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.2);
+            transition: transform 0.2s ease;
+        }}
+        
+        .metric-card:hover {{
+            transform: translateY(-4px);
+            box-shadow: 0 6px 20px rgba(94, 124, 226, 0.3);
+        }}
+        
+        .metric-value {{
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }}
+        
+        .metric-label {{
+            font-size: 0.875rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }}
+        
+        /* Alert Boxes */
+        .alert {{
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }}
+        
+        .alert-success {{
+            background: {THEME_COLORS['success_light']};
+            border-left: 4px solid {THEME_COLORS['success']};
+            color: #2D5016;
+        }}
+        
+        .alert-info {{
+            background: {THEME_COLORS['primary_light']};
+            border-left: 4px solid {THEME_COLORS['primary']};
+            color: #1E3A8A;
+        }}
+        
+        .alert-warning {{
+            background: {THEME_COLORS['warning_light']};
+            border-left: 4px solid {THEME_COLORS['warning']};
+            color: #7C4A03;
+        }}
+        
+        .alert-error {{
+            background: {THEME_COLORS['error_light']};
+            border-left: 4px solid {THEME_COLORS['error']};
+            color: #7F1D1D;
+        }}
+        
+        /* Buttons */
+        .stButton>button {{
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.2s ease;
+            background: {THEME_COLORS['primary']};
+            color: white;
+        }}
+        
+        .stButton>button:hover {{
+            background: #4A5FC1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.3);
+        }}
+        
+        /* DataFrames */
+        .dataframe {{
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid {THEME_COLORS['border_light']} !important;
+        }}
+        
+        /* File Uploader */
+        .uploadedFile {{
+            border: 2px dashed {THEME_COLORS['primary']} !important;
+            border-radius: 12px !important;
+            background: {THEME_COLORS['primary_light']} !important;
+        }}
+        
+        /* Equal width tabs - FIX FOR DISTRIBUTED WIDTH */
+        .stTabs [data-baseweb="tab-list"] {{
+            gap: 8px;
+            background: {THEME_COLORS['bg_light']};
+            padding: 0.5rem;
+            border-radius: 12px;
+            display: flex;
+            width: 100%;
+        }}
+        
+        .stTabs [data-baseweb="tab"] {{
+            height: 50px;
+            padding: 0 24px;
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            border: 2px solid transparent;
+            color: {THEME_COLORS['text_regular']};
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }}
+        
+        .stTabs [aria-selected="true"] {{
+            background: {THEME_COLORS['primary']};
+            color: white;
+        }}
+        
+        /* Progress Bar */
+        .stProgress > div > div > div > div {{
+            background: {THEME_COLORS['primary']};
+        }}
+        
+        /* Section Divider */
+        .section-divider {{
+            height: 1px;
+            background: {THEME_COLORS['border_light']};
+            margin: 2rem 0;
+        }}
+        
+        /* Optimization Animation Container */
+        .optimization-container {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            margin: 2rem 0;
+        }}
+        
+        .spinner {{
+            border: 4px solid {THEME_COLORS['border_light']};
+            border-top: 4px solid {THEME_COLORS['primary']};
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1.5rem;
+        }}
+        
+        @keyframes spin {{
+            0% {{ transform: rotate(0deg); }}
+            100% {{ transform: rotate(360deg); }}
+        }}
+        
+        .optimization-text {{
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: {THEME_COLORS['text_primary']};
+            margin-bottom: 0.5rem;
+        }}
+        
+        .optimization-subtext {{
+            font-size: 0.95rem;
+            color: {THEME_COLORS['text_secondary']};
+        }}
+    </style>
+    """, unsafe_allow_html=True)
+        
+        /* Header Styles */
+        .app-header {{
+            background: linear-gradient(135deg, {THEME_COLORS['primary']} 0%, #4A5FC1 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 16px rgba(94, 124, 226, 0.2);
+        }}
+        
+        .app-header h1 {{
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }}
+        
+        .app-header p {{
+            margin: 0.5rem 0 0 0;
+            font-size: 1rem;
+            opacity: 0.95;
+            font-weight: 400;
+        }}
+        
+        /* Stage Progress Bar */
+        .stage-container {{
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }}
+        
+        .stage-progress {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            margin-bottom: 1rem;
+        }}
+        
+        .stage-step {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+            flex: 1;
+        }}
+        
+        .stage-circle {{
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }}
+        
+        .stage-circle.active {{
+            background: {THEME_COLORS['primary']};
+            color: white;
+            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.3);
+        }}
+        
+        .stage-circle.completed {{
+            background: {THEME_COLORS['success']};
+            color: white;
+        }}
+        
+        .stage-circle.inactive {{
+            background: {THEME_COLORS['border_light']};
+            color: {THEME_COLORS['text_secondary']};
+        }}
+        
+        .stage-label {{
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: {THEME_COLORS['text_regular']};
+        }}
+        
+        .stage-label.active {{
+            color: {THEME_COLORS['primary']};
+            font-weight: 600;
+        }}
+        
+        /* Card Styles */
+        .card {{
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 1.5rem;
+            border: 1px solid {THEME_COLORS['border_light']};
+        }}
+        
+        .card-header {{
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: {THEME_COLORS['text_primary']};
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }}
+        
+        /* Metric Cards */
+        .metric-card {{
+            background: linear-gradient(135deg, {THEME_COLORS['primary']} 0%, #4A5FC1 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.2);
+            transition: transform 0.2s ease;
+        }}
+        
+        .metric-card:hover {{
+            transform: translateY(-4px);
+            box-shadow: 0 6px 20px rgba(94, 124, 226, 0.3);
+        }}
+        
+        .metric-value {{
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }}
+        
+        .metric-label {{
+            font-size: 0.875rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }}
+        
+        /* Alert Boxes */
+        .alert {{
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }}
+        
+        .alert-success {{
+            background: {THEME_COLORS['success_light']};
+            border-left: 4px solid {THEME_COLORS['success']};
+            color: #2D5016;
+        }}
+        
+        .alert-info {{
+            background: {THEME_COLORS['primary_light']};
+            border-left: 4px solid {THEME_COLORS['primary']};
+            color: #1E3A8A;
+        }}
+        
+        .alert-warning {{
+            background: {THEME_COLORS['warning_light']};
+            border-left: 4px solid {THEME_COLORS['warning']};
+            color: #7C4A03;
+        }}
+        
+        .alert-error {{
+            background: {THEME_COLORS['error_light']};
+            border-left: 4px solid {THEME_COLORS['error']};
+            color: #7F1D1D;
+        }}
+        
+        /* Buttons */
+        .stButton>button {{
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.2s ease;
+            background: {THEME_COLORS['primary']};
+            color: white;
+        }}
+        
+        .stButton>button:hover {{
+            background: #4A5FC1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.3);
+        }}
+        
+        /* DataFrames */
+        .dataframe {{
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid {THEME_COLORS['border_light']} !important;
+        }}
+        
+        /* File Uploader */
+        .uploadedFile {{
+            border: 2px dashed {THEME_COLORS['primary']} !important;
+            border-radius: 12px !important;
+            background: {THEME_COLORS['primary_light']} !important;
+        }}
+        
+        /* Equal width tabs */
+        .stTabs [data-baseweb="tab-list"] {{
+            gap: 8px;
+            background: {THEME_COLORS['bg_light']};
+            padding: 0.5rem;
+            border-radius: 12px;
+            display: flex;
+        }}
+        
+        .stTabs [data-baseweb="tab"] {{
+            height: 50px;
+            padding: 0 24px;
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            border: 2px solid transparent;
+            color: {THEME_COLORS['text_regular']};
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        
+        .stTabs [aria-selected="true"] {{
+            background: {THEME_COLORS['primary']};
+            color: white;
+        }}
+        
+        /* Progress Bar */
+        .stProgress > div > div > div > div {{
+            background: {THEME_COLORS['primary']};
+        }}
+        
+        /* Section Divider */
+        .section-divider {{
+            height: 1px;
+            background: {THEME_COLORS['border_light']};
+            margin: 2rem 0;
+        }}
+    </style>
+    """, unsafe_allow_html=True)
 
 
-# ========== STAGE 1: PREVIEW & CONFIGURE ==========
-def render_preview_stage():
-    """Stage 2: Preview data and configure parameters"""
-    
-    render_header(f"{APP_ICON} {APP_TITLE}", "Review data and configure optimization")
-    render_stage_progress(1)
-    
-    excel_data = st.session_state[SS_EXCEL_DATA]
-    
-    # Sheet preview tabs
-    st.markdown("### 📊 Data Preview")
-    
-    # Get all sheet names
-    required_sheets = ['Plant', 'Inventory', 'Demand']
-    transition_sheets = [k for k in excel_data.keys() if k.startswith('Transition_')]
-    
-    # Create tabs for all sheets
-    all_sheets = required_sheets + (['Transition Matrices'] if transition_sheets else [])
-    tabs = st.tabs(all_sheets)
-    
-    # Render each required sheet
-    for idx, sheet_name in enumerate(required_sheets):
-        with tabs[idx]:
-            if sheet_name in excel_data:
-                df_display = excel_data[sheet_name].copy()
-                
-                # Format dates
-                if sheet_name == 'Plant':
-                    for col_idx in [4, 5]:
-                        if col_idx < len(df_display.columns):
-                            col = df_display.columns[col_idx]
-                            if pd.api.types.is_datetime64_any_dtype(df_display[col]):
-                                df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
-                elif sheet_name == 'Inventory':
-                    if len(df_display.columns) > 7:
-                        col = df_display.columns[7]
-                        if pd.api.types.is_datetime64_any_dtype(df_display[col]):
-                            df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
-                elif sheet_name == 'Demand':
-                    col = df_display.columns[0]
-                    if pd.api.types.is_datetime64_any_dtype(df_display[col]):
-                        df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
-                
-                st.dataframe(df_display, width="stretch", height=400)
-    
-    # Render transition matrices in last tab
-    if transition_sheets:
-        with tabs[-1]:
-            for sheet_name in transition_sheets:
-                st.markdown(f"**{sheet_name}**")
-                df_display = excel_data[sheet_name].copy()
-                
-                # Style the transition matrix - highlight Yes in green, No in red
-                def highlight_transitions(val):
-                    if pd.notna(val):
-                        val_str = str(val).strip().lower()
-                        if val_str == 'yes':
-                            return 'background-color: #C6EFCE; color: #006100; font-weight: bold;'
-                        elif val_str == 'no':
-                            return 'background-color: #FFC7CE; color: #9C0006; font-weight: bold;'
-                    return ''
-                
-                styled_df = df_display.style.map(highlight_transitions)
-                st.dataframe(styled_df, width="stretch", height=300)
-                st.markdown("---")
-    
-    render_section_divider()
-    
-    # Configuration parameters
-    st.markdown("### ⚙️ Optimization Parameters")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### ⏱️ Solver Configuration")
-        time_limit = st.number_input(
-            "Time limit (minutes)",
-            min_value=1,
-            max_value=120,
-            value=st.session_state[SS_OPTIMIZATION_PARAMS]['time_limit_min'],
-            help="Maximum time to run the optimization"
-        )
-        
-        buffer_days = st.number_input(
-            "Buffer days",
-            min_value=0,
-            max_value=7,
-            value=st.session_state[SS_OPTIMIZATION_PARAMS]['buffer_days'],
-            help="Additional planning buffer days"
-        )
-    
-    with col2:
-        st.markdown("#### 🎯 Objective Weights")
-        stockout_penalty = st.number_input(
-            "Stockout penalty",
-            min_value=1,
-            value=st.session_state[SS_OPTIMIZATION_PARAMS]['stockout_penalty'],
-            help="Penalty weight for stockouts"
-        )
-        
-        transition_penalty = st.number_input(
-            "Transition penalty",
-            min_value=1,
-            value=st.session_state[SS_OPTIMIZATION_PARAMS]['transition_penalty'],
-            help="Penalty for production transitions"
-        )
-        
-        continuity_bonus = st.number_input(
-            "Continuity bonus",
-            min_value=0,
-            value=st.session_state[SS_OPTIMIZATION_PARAMS]['continuity_bonus'],
-            help="Bonus for production continuity"
-        )
-    
-    # Update parameters
-    st.session_state[SS_OPTIMIZATION_PARAMS] = {
-        'time_limit_min': time_limit,
-        'buffer_days': buffer_days,
-        'stockout_penalty': stockout_penalty,
-        'transition_penalty': transition_penalty,
-        'continuity_bonus': continuity_bonus,
-    }
-    
-    render_section_divider()
-    
-    # Navigation and optimization button
-    col1, col2, col3 = st.columns([1, 1, 1])
-    
-    with col1:
-        if st.button("← Back to Upload", width="stretch"):
-            st.session_state[SS_STAGE] = 0
-            st.rerun()
-    
-    with col3:
-        if st.button("🎯 Run Optimization", type="primary", width="stretch"):
-            # Show optimization in progress
-            st.session_state[SS_STAGE] = 1.5  # Intermediate stage for optimization
-            st.rerun()
-
-
-# ========== STAGE 1.5: OPTIMIZATION IN PROGRESS ==========
-def render_optimization_stage():
-    """Stage 1.5: Show optimization in progress with animation"""
-    
-    render_header(f"{APP_ICON} {APP_TITLE}", "Optimization in Progress")
-    render_stage_progress(1)  # Still on preview stage visually
-    
-    # Create animated optimization screen
-    st.markdown("""
-        <div class="optimization-container">
-            <div class="spinner"></div>
-            <div class="optimization-text">⚡ Optimizing Production Schedule...</div>
-            <div class="optimization-subtext">This may take a few moments. Please wait.</div>
+def render_header(title: str, subtitle: str = ""):
+    """Render application header"""
+    subtitle_html = f"<p>{subtitle}</p>" if subtitle else ""
+    st.markdown(f"""
+        <div class="app-header">
+            <h1>{title}</h1>
+            {subtitle_html}
         </div>
     """, unsafe_allow_html=True)
+
+
+def render_stage_progress(current_stage: int):
+    """Render wizard stage progress indicator"""
+    stages = [
+        ("1", "Upload"),
+        ("2", "Preview & Configure"),
+        ("3", "Results")
+    ]
     
-    # Run the actual optimization
-    run_optimization()
-    """Execute the optimization"""
-    
-    excel_data = st.session_state[SS_EXCEL_DATA]
-    params = st.session_state[SS_OPTIMIZATION_PARAMS]
-    
-    progress_bar = st.progress(0)
-    status_text = st.empty()
-    
-    try:
-        # Process plant data
-        status_text.markdown("🔄 Processing plant data...")
-        plant_data = process_plant_data(excel_data['Plant'])
-        progress_bar.progress(0.1)
-        
-        # Process inventory data
-        status_text.markdown("🔄 Processing inventory data...")
-        inventory_data = process_inventory_data(excel_data['Inventory'], plant_data['lines'])
-        progress_bar.progress(0.2)
-        
-        # Process demand data
-        status_text.markdown("🔄 Processing demand data...")
-        demand_data, dates, num_days = process_demand_data(
-            excel_data['Demand'],
-            params['buffer_days']
-        )
-        formatted_dates = [date.strftime('%d-%b-%y') for date in dates]
-        progress_bar.progress(0.3)
-        
-        # Process shutdown periods
-        status_text.markdown("🔄 Processing shutdown periods...")
-        shutdown_periods = process_shutdown_dates(plant_data['shutdown_periods'], dates)
-        progress_bar.progress(0.35)
-        
-        # Process transition rules
-        status_text.markdown("🔄 Processing transition rules...")
-        transition_dfs = {k: v for k, v in excel_data.items() if k.startswith('Transition_')}
-        transition_rules = process_transition_rules(transition_dfs)
-        progress_bar.progress(0.4)
-        
-        # Build and solve model
-        status_text.markdown("⚡ Running optimization...")
-        
-        def progress_callback(pct, msg):
-            progress_bar.progress(0.4 + pct * 0.6)
-            status_text.markdown(f"⚡ {msg}")
-        
-        status, solution_callback, solver = build_and_solve_model(
-            grades=inventory_data['grades'],
-            lines=plant_data['lines'],
-            dates=dates,
-            formatted_dates=formatted_dates,
-            num_days=num_days,
-            capacities=plant_data['capacities'],
-            initial_inventory=inventory_data['initial_inventory'],
-            min_inventory=inventory_data['min_inventory'],
-            max_inventory=inventory_data['max_inventory'],
-            min_closing_inventory=inventory_data['min_closing_inventory'],
-            demand_data=demand_data,
-            allowed_lines=inventory_data['allowed_lines'],
-            min_run_days=inventory_data['min_run_days'],
-            max_run_days=inventory_data['max_run_days'],
-            force_start_date=inventory_data['force_start_date'],
-            rerun_allowed=inventory_data['rerun_allowed'],
-            material_running_info=plant_data['material_running'],
-            shutdown_periods=shutdown_periods,
-            transition_rules=transition_rules,
-            buffer_days=params['buffer_days'],
-            stockout_penalty=params['stockout_penalty'],
-            transition_penalty=params['transition_penalty'],
-            continuity_bonus=params['continuity_bonus'],
-            time_limit_min=params['time_limit_min'],
-            progress_callback=progress_callback
-        )
-        
-        progress_bar.progress(1.0)
-        
-        if solution_callback.num_solutions() > 0:
-            status_text.markdown("✅ Optimization completed successfully!")
-            
-            # Store solution with production_vars reference
-            st.session_state[SS_SOLUTION] = {
-                'status': status,
-                'solution': solution_callback.solutions[-1],
-                'solver': solver,
-                'solve_time': solution_callback.solutions[-1]['time'],
-                'production_vars': solution_callback.production,  # Store for summary calculation
-                'data': {
-                    'grades': inventory_data['grades'],
-                    'lines': plant_data['lines'],
-                    'dates': dates,
-                    'num_days': num_days,
-                    'buffer_days': params['buffer_days'],
-                    'shutdown_periods': shutdown_periods,
-                    'allowed_lines': inventory_data['allowed_lines'],
-                    'min_inventory': inventory_data['min_inventory'],
-                    'max_inventory': inventory_data['max_inventory'],
-                    'initial_inventory': inventory_data['initial_inventory'],
-                }
-            }
-            
-            st.session_state[SS_STAGE] = 2
-            st.success("✅ Optimization complete! View results below.")
-            st.rerun()
+    circles_html = ""
+    for idx, (num, label) in enumerate(stages):
+        if idx < current_stage:
+            status = "completed"
+            icon = "✓"
+        elif idx == current_stage:
+            status = "active"
+            icon = num
         else:
-            status_text.markdown("❌ No solution found")
-            render_alert("No feasible solution found. Please check your constraints.", "error")
+            status = "inactive"
+            icon = num
+        
+        label_class = "active" if idx == current_stage else ""
+        
+        circles_html += f"""
+            <div class="stage-step">
+                <div class="stage-circle {status}">{icon}</div>
+                <div class="stage-label {label_class}">{label}</div>
+            </div>
+        """
     
-    except Exception as e:
-        status_text.markdown("❌ Optimization failed")
-        render_alert(f"Error during optimization: {str(e)}", "error")
-        st.exception(e)
+    st.markdown(f"""
+        <div class="stage-container">
+            <div class="stage-progress">
+                {circles_html}
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
 
-# ========== STAGE 2: RESULTS ==========
-def render_results_stage():
-    """Stage 3: Display results"""
-    
-    render_header(f"{APP_ICON} {APP_TITLE}", "Optimization Results")
-    render_stage_progress(2)
-    
-    solution_data = st.session_state[SS_SOLUTION]
-    solution = solution_data['solution']
-    data = solution_data['data']
-    solve_time = solution_data.get('solve_time', 0)
-    
-    # Get or create consistent grade colors
-    grade_colors = get_or_create_grade_colors(data['grades'])
-    
-    # Key metrics
-    st.markdown("### 📊 Key Performance Metrics")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    render_metric_card("Objective Value", f"{solution['objective']:,.0f}", col1)
-    render_metric_card("Total Transitions", str(solution['transitions']['total']), col2)
-    
-    total_stockouts = sum(sum(solution['stockout'][g].values()) for g in data['grades'])
-    render_metric_card("Total Stockouts", f"{total_stockouts:,.0f} MT", col3)
-    render_metric_card("Time Elapsed", f"{solve_time:.1f}s", col4)
-    
-    render_section_divider()
-    
-    # Results tabs
-    tab1, tab2, tab3 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables"])
-    
-    with tab1:
-        st.markdown("### 📅 Production Schedule")
-        
-        for line in data['lines']:
-            st.markdown(f"#### 🏭 {line}")
-            
-            # Gantt chart
-            fig = create_gantt_chart(solution, line, data['dates'], data['shutdown_periods'], grade_colors)
-            st.plotly_chart(fig, use_container_width=True)
-            
-            # Schedule table
-            schedule_df = create_schedule_table(solution, line, data['dates'], grade_colors)
-            if not schedule_df.empty:
-                # Style the dataframe with grade colors
-                def style_grade_column(val):
-                    if val in grade_colors:
-                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
-                    return ''
-                
-                styled_df = schedule_df.style.map(style_grade_column, subset=['Grade'])
-                st.dataframe(styled_df, width="stretch")
-            
-            render_section_divider()
-    
-    with tab2:
-        st.markdown("### 📦 Inventory Analysis")
-        
-        for grade in sorted(data['grades']):
-            st.markdown(f"#### {grade}")
-            
-            fig = create_inventory_chart(
-                solution, grade, data['dates'],
-                data['min_inventory'][grade],
-                data['max_inventory'][grade],
-                data['allowed_lines'][grade],
-                data['shutdown_periods'],
-                grade_colors,
-                data['initial_inventory'][grade],
-                data.get('buffer_days', 0)
-            )
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with tab3:
-        st.markdown("### 📊 Production Summary")
-        
-        summary_df = create_production_summary(
-            solution, 
-            solution_data.get('production_vars', {}),
-            solution_data['solver'],
-            data['grades'], 
-            data['lines'],
-            data['num_days']
-        )
-        
-        # Style the summary table with grade colors
-        def style_summary_grade(val):
-            if val in grade_colors and val != 'Total':
-                return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
-            elif val == 'Total':
-                return 'background-color: #909399; color: white; font-weight: bold; text-align: center;'
-            return ''
-        
-        styled_summary = summary_df.style.map(style_summary_grade, subset=['Grade'])
-        st.dataframe(styled_summary, width="stretch")
-        
-        st.markdown("### 🔄 Transitions by Line")
-        transitions_data = []
-        for line, count in solution['transitions']['per_line'].items():
-            transitions_data.append({'Line': line, 'Transitions': count})
-        transitions_df = pd.DataFrame(transitions_data)
-        st.dataframe(transitions_df, width="stretch")
-    
-    render_section_divider()
-    
-    # Navigation
-    col1, col2, col3 = st.columns([1, 1, 1])
-    
-    with col1:
-        if st.button("← Back to Configuration", width="stretch"):
-            st.session_state[SS_STAGE] = 1
-            st.rerun()
-    
-    with col2:
-        if st.button("🔄 New Optimization", width="stretch"):
-            st.session_state[SS_STAGE] = 0
-            st.session_state[SS_UPLOADED_FILE] = None
-            st.session_state[SS_EXCEL_DATA] = None
-            st.session_state[SS_SOLUTION] = None
-            st.rerun()
+def render_card(title: str, icon: str = ""):
+    """Context manager for card layout"""
+    icon_html = f"{icon} " if icon else ""
+    st.markdown(f"""
+        <div class="card">
+            <div class="card-header">{icon_html}{title}</div>
+    """, unsafe_allow_html=True)
 
 
-# ========== MAIN APP ==========
-def main():
-    """Main application controller"""
-    
-    current_stage = st.session_state[SS_STAGE]
-    
-    if current_stage == 0:
-        render_upload_stage()
-    elif current_stage == 1:
-        render_preview_stage()
-    elif current_stage == 1.5:
-        render_optimization_stage()
-    elif current_stage == 2:
-        render_results_stage()
+def close_card():
+    """Close card div"""
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
-if __name__ == "__main__":
-    main()
+def render_metric_card(label: str, value: str, col):
+    """Render a metric card in a column"""
+    with col:
+        st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">{label}</div>
+                <div class="metric-value">{value}</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+
+def render_alert(message: str, alert_type: str = "info"):
+    """Render an alert box"""
+    icons = {
+        'success': '✓',
+        'info': 'ℹ',
+        'warning': '⚠',
+        'error': '✕'
+    }
+    icon = icons.get(alert_type, 'ℹ')
+    
+    st.markdown(f"""
+        <div class="alert alert-{alert_type}">
+            <span style="font-size: 1.25rem; font-weight: bold;">{icon}</span>
+            <span>{message}</span>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_section_divider():
+    """Render a section divider"""
+    st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
