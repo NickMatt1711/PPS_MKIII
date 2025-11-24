@@ -90,7 +90,7 @@ def render_upload_stage():
                     st.session_state[SS_EXCEL_DATA] = data
                     st.session_state[SS_STAGE] = 1
                     st.success("File validated. Proceeding to preview.")
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     for err in errors:
                         render_alert(err, "error")
@@ -128,7 +128,7 @@ def render_upload_stage():
                 st.session_state[SS_STAGE] = 1
             else:
                 render_alert("Please upload and validate a file first.", "warning")
-            st.experimental_rerun()
+            st.rerun()
 
 
 # ========== STAGE 1: PREVIEW & CONFIGURE ==========
@@ -142,7 +142,7 @@ def render_preview_stage():
         render_alert("No data found. Please upload a file first.", "error")
         if st.button("← Back to Upload"):
             st.session_state[SS_STAGE] = 0
-            st.experimental_rerun()
+            st.rerun()
         return
 
     st.markdown("### 📊 Data Preview")
@@ -271,12 +271,12 @@ def render_preview_stage():
     with c1:
         if st.button("← Back to Upload"):
             st.session_state[SS_STAGE] = 0
-            st.experimental_rerun()
+            st.rerun()
 
     with c3:
         if st.button("🎯 Run Optimization"):
             st.session_state[SS_STAGE] = 1.5
-            st.experimental_rerun()
+            st.rerun()
 
 
 # ========== STAGE 1.5: OPTIMIZATION IN PROGRESS ==========
@@ -298,7 +298,7 @@ def render_optimization_stage():
         render_alert("No uploaded data found. Please upload file.", "error")
         if st.button("← Back to Upload"):
             st.session_state[SS_STAGE] = 0
-            st.experimental_rerun()
+            st.rerun()
         return
 
     params = st.session_state[SS_OPTIMIZATION_PARAMS]
@@ -415,7 +415,7 @@ def render_optimization_stage():
 
             st.session_state[SS_STAGE] = 2
             st.success("Optimization complete! Redirecting to results...")
-            st.experimental_rerun()
+            st.rerun()
         else:
             status_text.error("❌ No feasible solution found.")
             render_alert("No feasible solution found. Please check your constraints.", "error")
@@ -438,7 +438,7 @@ def render_results_stage():
         render_alert("No solution available. Please run an optimization first.", "error")
         if st.button("← Back to Configuration"):
             st.session_state[SS_STAGE] = 1
-            st.experimental_rerun()
+            st.rerun()
         return
 
     solution = solution_data.get('solution', {}) or {}
@@ -595,7 +595,7 @@ def render_results_stage():
     with c1:
         if st.button("← Back to Configuration"):
             st.session_state[SS_STAGE] = 1
-            st.experimental_rerun()
+            st.rerun()
 
     with c2:
         if st.button("🔄 New Optimization"):
@@ -603,7 +603,7 @@ def render_results_stage():
             theme_val = st.session_state.get(SS_THEME, "light")
             st.session_state.clear()
             st.session_state[SS_THEME] = theme_val
-            st.experimental_rerun()
+            st.rerun()
 
 
 # ========== MAIN APP ==========
@@ -622,7 +622,7 @@ def main():
     else:
         render_alert("Unknown application stage. Resetting to start.", "warning")
         st.session_state[SS_STAGE] = 0
-        st.experimental_rerun()
+        st.rerun()
 
 
 if __name__ == "__main__":
