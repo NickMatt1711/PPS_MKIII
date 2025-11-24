@@ -1,517 +1,271 @@
-from typing import Dict, List, Any, Optional
-from datetime import datetime, timedelta, date
+"""
+Postprocessing utilities for solution visualization (FINAL VERSION)
+Fully aligned with Option A visuals + compatibility wrapper.
+"""
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from datetime import datetime, date, timedelta
+from typing import Dict, List, Any
 import streamlit as st
 
-# Try to import matplotlib colormap as fallback for many grades
-try:
-    from matplotlib import cm
-except Exception:
-    cm = None
 
-# Default qualitative palette
-BASE_PALETTE = px.colors.qualitative.Vivid
+# ===============================================================
+#  UTILITY HELPERS
+# ===============================================================
 
-
-def _dtize(d):
-    """Convert input to a pandas Timestamp (safe for plotly)."""
-    if isinstance(d, (pd.Timestamp, datetime)):
-        return pd.to_datetime(d)
+def _ensure_date(d: Any) -> date:
+    """Ensure value is a date object."""
+    if isinstance(d, datetime):
+        return d.date()
     if isinstance(d, date):
-        return pd.to_datetime(datetime(d.year, d.month, d.day))
-    # Try parsing string
-    try:
-        return pd.to_datetime(str(d))
-    except Exception:
-        raise ValueError(f"Unable to parse date: {d}")
+        return d
+    return datetime.strptime(str(d), "%d-%b-%y").date()
 
+
+# ===============================================================
+#  COLOR MAPPING (NEW SYSTEM)
+# ===============================================================
 
 def build_grade_color_map(grades: List[str]) -> Dict[str, str]:
     """
-    Build a deterministic color map for grades.
-    Uses px.colors.qualitative.Vivid, falls back to matplotlib 'tab20' if more colors required.
+    Consistent grade color mapping using px qualitative palette.
     """
-    if not grades:
-        return {}
-
-    sorted_grades = list(sorted(grades))
-    color_map: Dict[str, str] = {}
-
-    # Primary palette
-    n_base = len(BASE_PALETTE)
-    if len(sorted_grades) <= n_base:
-        for i, g in enumerate(sorted_grades):
-            color_map[g] = BASE_PALETTE[i % n_base]
-        return color_map
-
-    # Fallback: try matplotlib tab20 (gives up to 20 distinct)
-    if cm is not None:
-        cmap = cm.get_cmap("tab20")
-        for i, g in enumerate(sorted_grades):
-            rgba = cmap(i % 20)
-            # Convert rgba to hex
-            color_map[g] = "#{:02x}{:02x}{:02x}".format(
-                int(rgba[0] * 255), int(rgba[1] * 255), int(rgba[2] * 255)
-            )
-        return color_map
-
-    # Ultimate fallback: cycle the base palette
-    for i, g in enumerate(sorted_grades):
-        color_map[g] = BASE_PALETTE[i % n_base]
-    return color_map
+    base_colors = px.colors.qualitative.Vivid
+    return {grade: base_colors[i % len(base_colors)] for i, grade in enumerate(sorted(grades))}
 
 
-def build_production_totals(
-    grades: List[str],
-    lines: List[str],
-    num_days: int,
-    production_vars: Dict[Any, Any],
-    is_producing_vars: Dict[Any, Any],
-    stockout_vars: Dict[Any, Any],
-    solver=None,
-) -> pd.DataFrame:
+# ===============================================================
+#  COMPATIBILITY WRAPPER (FOR app.py)
+# ===============================================================
+
+def get_or_create_grade_colors(grades):
     """
-    Build a DataFrame with production totals per grade and per line, plus stockout totals.
-    - production_vars is expected keyed by (grade, line, day) with either solver var or numeric
-    - is_producing_vars keyed by (grade, line, day)
-    - stockout_vars keyed by (grade, day)
-    - solver may be OR-Tools solver with Value(var) method. If None, raw values are used.
+    Compatibility wrapper so existing app.py continues to work.
+    Maps old function name to new color-map builder.
     """
-    def _value(v):
-        if solver is not None:
-            try:
-                return solver.Value(v)
-            except Exception:
-                pass
-        # fallback: assume numeric
-        try:
-            return float(v)
-        except Exception:
-            return 0.0
-
-    # compute
-    production_totals: Dict[str, Dict[str, float]] = {}
-    grade_totals: Dict[str, float] = {}
-    plant_totals: Dict[str, float] = {line: 0.0 for line in lines}
-    stockout_totals: Dict[str, float] = {}
-
-    for grade in grades:
-        production_totals[grade] = {}
-        grade_totals[grade] = 0.0
-        stockout_totals[grade] = 0.0
-
-        for line in lines:
-            total_prod = 0.0
-            for d in range(num_days):
-                key = (grade, line, d)
-                if key in production_vars:
-                    total_prod += float(_value(production_vars[key]))
-            production_totals[grade][line] = total_prod
-            grade_totals[grade] += total_prod
-            plant_totals[line] += total_prod
-
-        # stockout per grade (over days)
-        for d in range(num_days):
-            key = (grade, d)
-            if key in stockout_vars:
-                stockout_totals[grade] += float(_value(stockout_vars[key]))
-
-    rows = []
-    for grade in grades:
-        row = {"Grade": grade}
-        for line in lines:
-            row[line] = production_totals[grade].get(line, 0.0)
-        row["Total Produced"] = grade_totals[grade]
-        row["Total Stockout"] = stockout_totals.get(grade, 0.0)
-        rows.append(row)
-
-    totals_row = {"Grade": "Total"}
-    for line in lines:
-        totals_row[line] = plant_totals[line]
-    totals_row["Total Produced"] = sum(plant_totals.values())
-    totals_row["Total Stockout"] = sum(stockout_totals.values())
-    rows.append(totals_row)
-
-    return pd.DataFrame(rows)
+    return build_grade_color_map(grades)
 
 
-def build_gantt_fig_for_line(
+# ===============================================================
+#  GANTT CHART (OPTION A — GRADE ON Y-AXIS)
+# ===============================================================
+
+def create_gantt_chart(
+    solution: Dict,
     line: str,
-    dates: List[Any],
-    grades: List[str],
-    is_producing_vars: Dict[Any, Any],
-    solver=None,
-    shutdown_periods: Optional[Dict[str, List[int]]] = None,
-    grade_color_map: Optional[Dict[str, str]] = None,
-    title: Optional[str] = None,
-) -> go.Figure:
+    dates: List[date],
+    shutdown_periods: Dict,
+    grade_colors: Dict
+):
     """
-    Build a grade-on-Y-axis timeline (one chart per line).
-    - dates: list of date-like (strings / datetime / pd.Timestamp). Must be in order.
-    - is_producing_vars keyed by (grade, line, day) and solver.Value(var)==1 when producing.
-    - shutdown_periods: { line: [day_idx,...] }
-    - grade_color_map: mapping grade->hex color
-    Returns a plotly.graph_objects Figure.
+    Creates a Plotly Express timeline chart matching Option A visuals:
+    - Y-axis: Grade
+    - Color by Grade
+    - Shutdown shading using vrect
     """
+    dates = [_ensure_date(d) for d in dates]
 
-    # Normalize dates to pandas datetime for plotly express
-    dates_pd = [pd.to_datetime(d) for d in dates]
-    num_days = len(dates_pd)
-    sorted_grades = sorted(grades)
-    grade_color_map = grade_color_map or build_grade_color_map(sorted_grades)
-    shutdown_periods = shutdown_periods or {}
+    schedule = solution.get("is_producing", {}).get(line, {})
 
-    # Build gantt_data list in the px.timeline format: each entry has Start, Finish, Grade
-    gantt_data = []
-    for d_idx in range(num_days):
-        day_dt = dates_pd[d_idx]
-        for grade in sorted_grades:
-            key = (grade, line, d_idx)
-            producing = False
-            if key in is_producing_vars:
-                try:
-                    producing = bool(solver.Value(is_producing_vars[key])) if solver is not None else bool(is_producing_vars[key])
-                except Exception:
-                    try:
-                        producing = bool(is_producing_vars[key])
-                    except Exception:
-                        producing = False
-            if producing:
-                # We'll represent one-day tasks as [Start = date, Finish = date + 1 day]
-                gantt_data.append({
+    gantt_rows = []
+
+    for d in range(len(dates)):
+        ds = dates[d].strftime("%d-%b-%y")
+
+        for grade in grade_colors.keys():
+            if (grade in schedule and schedule[grade] == ds) or \
+               (schedule.get(ds) == grade):
+                gantt_rows.append({
                     "Grade": grade,
-                    "Start": day_dt,
-                    "Finish": day_dt + pd.Timedelta(days=1),
+                    "Start": dates[d],
+                    "Finish": dates[d] + timedelta(days=1),
                     "Line": line
                 })
 
-    # If no data, return a small empty figure with message text
-    if not gantt_data:
-        fig = go.Figure()
-        fig.update_layout(
-            title=title or f"Production Schedule - {line}",
-            plot_bgcolor="white",
-            paper_bgcolor="white",
-            height=240
-        )
-        # Add annotation to show no data
-        fig.add_annotation(text=f"No production data available for {line}.", showarrow=False, xref="paper", yref="paper", x=0.5, y=0.5)
-        return fig
+    # If nothing to plot
+    if not gantt_rows:
+        return None
 
-    gantt_df = pd.DataFrame(gantt_data)
+    df = pd.DataFrame(gantt_rows)
 
-    # Use px.timeline
     fig = px.timeline(
-        gantt_df,
+        df,
         x_start="Start",
         x_end="Finish",
         y="Grade",
         color="Grade",
-        color_discrete_map=grade_color_map,
-        category_orders={"Grade": sorted_grades},
-        title=title or f"Production Schedule - {line}"
+        color_discrete_map=grade_colors,
+        category_orders={"Grade": sorted(grade_colors.keys())},
+        title=f"Production Schedule - {line}"
     )
 
-    # Add shutdown vrects if present
+    # Shutdown shading
     if line in shutdown_periods and shutdown_periods[line]:
-        sd_indices = sorted(shutdown_periods[line])
-        # make sure indices are inside range
-        sd_indices = [i for i in sd_indices if 0 <= i < num_days]
-        if sd_indices:
-            start_shutdown = dates_pd[sd_indices[0]]
-            end_shutdown = dates_pd[sd_indices[-1]] + pd.Timedelta(days=1)
-            fig.add_vrect(
-                x0=start_shutdown,
-                x1=end_shutdown,
-                fillcolor="red",
-                opacity=0.20,
-                layer="below",
-                line_width=0,
-                annotation_text="Shutdown",
-                annotation_position="top left",
-                annotation_font_size=14,
-                annotation_font_color="red"
-            )
+        d_list = shutdown_periods[line]
+        start_sd = dates[d_list[0]]
+        end_sd = dates[d_list[-1]] + timedelta(days=1)
 
-    # Axis and layout styling similar to your snippet
+        fig.add_vrect(
+            x0=start_sd,
+            x1=end_sd,
+            fillcolor="red",
+            opacity=0.15,
+            layer="below",
+            line_width=0,
+            annotation_text="Shutdown",
+            annotation_position="top left",
+            annotation_font_color="red"
+        )
+
     fig.update_yaxes(
         autorange="reversed",
         title=None,
         showgrid=True,
-        gridcolor="lightgray",
-        gridwidth=1
+        gridcolor="lightgray"
     )
+
     fig.update_xaxes(
         title="Date",
+        tickformat="%d-%b",
         showgrid=True,
         gridcolor="lightgray",
-        gridwidth=1,
-        tickvals=dates_pd,
-        tickformat="%d-%b",
         dtick="D1"
     )
 
     fig.update_layout(
         height=350,
         bargap=0.2,
-        showlegend=True,
-        legend_title_text="Grade",
-        legend=dict(
-            traceorder="normal",
-            orientation="v",
-            yanchor="middle",
-            y=0.5,
-            xanchor="left",
-            x=1.02,
-            bgcolor="rgba(255,255,255,0)",
-            bordercolor="lightgray",
-            borderwidth=0
-        ),
-        xaxis=dict(showline=True, showticklabels=True),
-        yaxis=dict(showline=True),
-        margin=dict(l=60, r=160, t=60, b=60),
         plot_bgcolor="white",
         paper_bgcolor="white",
+        margin=dict(l=80, r=150, t=50, b=60),
         font=dict(size=12),
+        legend_title_text="Grade"
     )
 
     return fig
 
 
-def build_schedule_table_for_line(
-    line: str,
-    dates: List[Any],
-    grades: List[str],
-    is_producing_vars: Dict[Any, Any],
-    solver=None
-) -> pd.DataFrame:
-    """
-    Build the schedule summary table for a line: runs with start/end/days (Grade on each run).
-    Matches the behavior in your snippet (group consecutive days with same grade).
-    """
+# ===============================================================
+#  INVENTORY CHART
+# ===============================================================
 
-    dates_pd = [pd.to_datetime(d) for d in dates]
-    num_days = len(dates_pd)
-    sorted_grades = sorted(grades)
-
-    rows = []
-    current_grade = None
-    start_day = None
-
-    def _is_producing(grade, line, day_idx):
-        key = (grade, line, day_idx)
-        if key in is_producing_vars:
-            try:
-                if solver is not None:
-                    return bool(solver.Value(is_producing_vars[key]))
-                return bool(is_producing_vars[key])
-            except Exception:
-                try:
-                    return bool(is_producing_vars[key])
-                except Exception:
-                    return False
-        return False
-
-    for d_idx in range(num_days):
-        day_dt = dates_pd[d_idx]
-        grade_today = None
-        for grade in sorted_grades:
-            if _is_producing(grade, line, d_idx):
-                grade_today = grade
-                break
-
-        if grade_today != current_grade:
-            if current_grade is not None:
-                end_date = dates_pd[d_idx - 1]
-                duration = (end_date - start_day).days + 1
-                rows.append({
-                    "Grade": current_grade,
-                    "Start Date": start_day.strftime("%d-%b-%y"),
-                    "End Date": end_date.strftime("%d-%b-%y"),
-                    "Days": duration
-                })
-            current_grade = grade_today
-            start_day = day_dt
-        # else: continue the run
-
-    if current_grade is not None and start_day is not None:
-        end_date = dates_pd[-1]
-        duration = (end_date - start_day).days + 1
-        rows.append({
-            "Grade": current_grade,
-            "Start Date": start_day.strftime("%d-%b-%y"),
-            "End Date": end_date.strftime("%d-%b-%y"),
-            "Days": duration
-        })
-
-    if not rows:
-        return pd.DataFrame(columns=["Grade", "Start Date", "End Date", "Days"])
-    return pd.DataFrame(rows)
-
-
-def build_inventory_fig_for_grade(
+def create_inventory_chart(
+    solution: Dict,
     grade: str,
-    dates: List[Any],
-    inventory_vars: Dict[Any, Any],
-    solver=None,
-    grade_color_map: Optional[Dict[str, str]] = None,
-    allowed_lines: Optional[Dict[str, List[str]]] = None,
-    shutdown_periods: Optional[Dict[str, List[int]]] = None,
-    min_inventory: Optional[Dict[str, float]] = None,
-    max_inventory: Optional[Dict[str, float]] = None,
-    buffer_days: int = 0
-) -> go.Figure:
+    dates: List[date],
+    min_inv: float,
+    max_inv: float,
+    allowed_lines: Dict[str, List[str]],
+    shutdown_periods: Dict,
+    grade_colors: Dict,
+    initial_inv: float,
+    buffer_days: int
+):
     """
-    Build an inventory time-series plot for a given grade, with annotations and shutdown shading.
-    - inventory_vars expected keyed by (grade, day)
-    - allowed_lines: { grade: [line1,line2,...] } used for showing shutdowns relevant to this grade
-    - min_inventory/max_inventory: dicts keyed by grade
+    Inventory chart matching your UI style:
+    - timeline on X
+    - annotations: start, end, high, low
+    - shutdown vrect
+    - min/max lines
     """
+    dates = [_ensure_date(d) for d in dates]
 
-    dates_pd = [pd.to_datetime(d) for d in dates]
-    num_days = len(dates_pd)
+    inventory_dict = solution.get("inventory", {}).get(grade, {})
 
-    def _val(key):
-        if solver is not None:
-            try:
-                return float(solver.Value(key))
-            except Exception:
-                pass
-        try:
-            return float(key)
-        except Exception:
-            return 0.0
+    inv_vals = [inventory_dict.get(d.strftime("%d-%b-%y"), 0) for d in dates]
 
-    # Build inventory series (one value per day). If a (grade, 0) exists we include it as day 0.
-    inv_values = []
-    for d_idx in range(num_days):
-        key = (grade, d_idx)
-        if key in inventory_vars:
-            inv_values.append(_val(inventory_vars[key]))
-        else:
-            # default zero if missing
-            inv_values.append(0.0)
-
-    # Last actual day index used in your snippet
-    last_actual_day = max(0, num_days - 1 - buffer_days)
-
-    # Determine start/end/high/low and their x positions
-    start_val = inv_values[0] if inv_values else 0.0
-    end_val = inv_values[last_actual_day] if inv_values else 0.0
-    highest_val = max(inv_values[: last_actual_day + 1]) if inv_values else 0.0
-    lowest_val = min(inv_values[: last_actual_day + 1]) if inv_values else 0.0
-
-    # Get the x positions (dates) for those stats
-    highest_idx = inv_values.index(highest_val) if inv_values else 0
-    lowest_idx = inv_values.index(lowest_val) if inv_values else 0
-    highest_x = dates_pd[highest_idx]
-    lowest_x = dates_pd[lowest_idx]
-    start_x = dates_pd[0] if dates_pd else None
-    end_x = dates_pd[last_actual_day] if dates_pd else None
-
-    # Build plotly figure
     fig = go.Figure()
-    grade_color_map = grade_color_map or {}
-    line_color = grade_color_map.get(grade, BASE_PALETTE[0])
 
     fig.add_trace(go.Scatter(
-        x=dates_pd,
-        y=inv_values,
+        x=dates,
+        y=inv_vals,
         mode="lines+markers",
         name=grade,
-        line=dict(color=line_color, width=3),
+        line=dict(color=grade_colors.get(grade, "#5E7CE2"), width=3),
         marker=dict(size=6),
         hovertemplate="Date: %{x|%d-%b-%y}<br>Inventory: %{y:.0f} MT<extra></extra>"
     ))
 
-    # Add shutdown shaded regions from allowed_lines (if given)
-    shutdown_added = False
-    allowed_lines = allowed_lines or {}
-    for line in allowed_lines.get(grade, []):
-        if shutdown_periods and line in shutdown_periods and shutdown_periods[line]:
-            sd_idxs = [i for i in shutdown_periods[line] if 0 <= i < num_days]
-            if sd_idxs:
-                start_shutdown = dates_pd[sd_idxs[0]]
-                end_shutdown = dates_pd[sd_idxs[-1]] + pd.Timedelta(days=1)
-                fig.add_vrect(
-                    x0=start_shutdown,
-                    x1=end_shutdown,
-                    fillcolor="red",
-                    opacity=0.10,
-                    layer="below",
-                    line_width=0,
-                    annotation_text=f"Shutdown: {line}" if not shutdown_added else "",
-                    annotation_position="top left",
-                    annotation_font_size=12,
-                    annotation_font_color="red"
-                )
-                shutdown_added = True
+    # Shutdown shading
+    lines_for_grade = allowed_lines.get(grade, [])
 
-    # Min/Max lines
-    if min_inventory and grade in min_inventory:
+    shaded_once = False
+    for line in lines_for_grade:
+        if line in shutdown_periods and shutdown_periods[line]:
+            sd = shutdown_periods[line]
+            x0 = dates[sd[0]]
+            x1 = dates[sd[-1]] + timedelta(days=1)
+
+            fig.add_vrect(
+                x0=x0,
+                x1=x1,
+                fillcolor="red",
+                opacity=0.1,
+                layer="below",
+                line_width=0,
+                annotation_text=f"Shutdown: {line}" if not shaded_once else "",
+                annotation_font_color="red",
+                annotation_position="top left"
+            )
+            shaded_once = True
+
+    # Min/Max Lines
+    if min_inv is not None:
         fig.add_hline(
-            y=min_inventory[grade],
-            line=dict(color="red", width=2, dash="dash"),
-            annotation_text=f"Min: {min_inventory[grade]:,.0f}",
-            annotation_position="top left",
-            annotation_font_color="red"
+            y=min_inv,
+            line=dict(color="red", dash="dash"),
+            annotation_text=f"Min {min_inv:.0f}",
+            annotation_position="top left"
         )
-    if max_inventory and grade in max_inventory:
+    if max_inv is not None:
         fig.add_hline(
-            y=max_inventory[grade],
-            line=dict(color="green", width=2, dash="dash"),
-            annotation_text=f"Max: {max_inventory[grade]:,.0f}",
-            annotation_position="bottom left",
-            annotation_font_color="green"
+            y=max_inv,
+            line=dict(color="green", dash="dash"),
+            annotation_text=f"Max {max_inv:.0f}",
+            annotation_position="bottom left"
         )
 
-    # Annotations: start, end, high, low (if we have valid dates)
-    annotations = []
-    if start_x is not None:
-        annotations.append(dict(
-            x=start_x, y=start_val,
-            text=f"Start: {start_val:.0f}",
-            showarrow=True, arrowhead=2, ax=-40, ay=30,
-            font=dict(color="black", size=11),
-            bgcolor="white", bordercolor="gray"
-        ))
-    if end_x is not None:
-        annotations.append(dict(
-            x=end_x, y=end_val,
-            text=f"End: {end_val:.0f}",
-            showarrow=True, arrowhead=2, ax=40, ay=30,
-            font=dict(color="black", size=11),
-            bgcolor="white", bordercolor="gray"
-        ))
-    annotations.append(dict(
-        x=highest_x, y=highest_val,
-        text=f"High: {highest_val:.0f}",
-        showarrow=True, arrowhead=2, ax=0, ay=-40,
-        font=dict(color="darkgreen", size=11),
-        bgcolor="white", bordercolor="gray"
-    ))
-    annotations.append(dict(
-        x=lowest_x, y=lowest_val,
-        text=f"Low: {lowest_val:.0f}",
-        showarrow=True, arrowhead=2, ax=0, ay=40,
-        font=dict(color="firebrick", size=11),
-        bgcolor="white", bordercolor="gray"
-    ))
+    # Calculate annotations
+    values = inv_vals
+    start_val = values[0]
+    end_val = values[-1]
+    high_val = max(values)
+    low_val = min(values)
+
+    start_x = dates[0]
+    end_x = dates[-1]
+    high_x = dates[values.index(high_val)]
+    low_x = dates[values.index(low_val)]
+
+    # Add annotations
+    for x, y, text, ax, ay in [
+        (start_x, start_val, f"Start: {start_val:.0f}", -40, 30),
+        (end_x, end_val, f"End: {end_val:.0f}", 40, 30),
+        (high_x, high_val, f"High: {high_val:.0f}", 0, -40),
+        (low_x, low_val, f"Low: {low_val:.0f}", 0, 40),
+    ]:
+        fig.add_annotation(
+            x=x, y=y,
+            text=text,
+            showarrow=True, arrowhead=2,
+            ax=ax, ay=ay,
+            bgcolor="white", bordercolor="gray",
+            opacity=0.9
+        )
 
     fig.update_layout(
         title=f"Inventory Level - {grade}",
         xaxis=dict(
             title="Date",
             showgrid=True,
-            gridcolor="lightgray",
-            tickvals=dates_pd,
             tickformat="%d-%b",
-            dtick="D1"
+            dtick="D1",
+            gridcolor="lightgray"
         ),
         yaxis=dict(
-            title="Inventory Volume (MT)",
+            title="Inventory (MT)",
             showgrid=True,
             gridcolor="lightgray"
         ),
@@ -519,30 +273,98 @@ def build_inventory_fig_for_grade(
         paper_bgcolor="white",
         margin=dict(l=60, r=80, t=80, b=60),
         font=dict(size=12),
-        height=420,
-        showlegend=False
+        showlegend=False,
+        height=420
     )
 
-    # add the annotations one by one so Streamlit stays happy with types
-    for ann in annotations:
-        try:
-            fig.add_annotation(
-                x=ann["x"],
-                y=ann["y"],
-                text=ann["text"],
-                showarrow=ann["showarrow"],
-                arrowhead=ann["arrowhead"],
-                ax=ann["ax"],
-                ay=ann["ay"],
-                font=ann["font"],
-                bgcolor=ann["bgcolor"],
-                bordercolor=ann["bordercolor"],
-                borderwidth=1,
-                borderpad=4,
-                opacity=0.9
-            )
-        except Exception:
-            # If annotation params cause issues, skip silently to avoid crashing UI
-            pass
-
     return fig
+
+
+# ===============================================================
+#  SCHEDULE TABLE
+# ===============================================================
+
+def create_schedule_table(
+    solution: Dict,
+    line: str,
+    dates: List[date],
+    grade_colors: Dict
+):
+    """
+    Generates a dataframe showing:
+    Grade | Start Date | End Date | Days
+    Exactly matching your tabular UI logic.
+    """
+    dates = [_ensure_date(d) for d in dates]
+    schedule = solution.get("is_producing", {}).get(line, {})
+
+    rows = []
+    current_grade = None
+    start_idx = None
+
+    for i, d in enumerate(dates):
+        ds = d.strftime("%d-%b-%y")
+        grade_today = schedule.get(ds)
+
+        if grade_today != current_grade:
+            if current_grade is not None:
+                end_date = dates[i - 1]
+                rows.append({
+                    "Grade": current_grade,
+                    "Start Date": dates[start_idx].strftime("%d-%b-%y"),
+                    "End Date": end_date.strftime("%d-%b-%y"),
+                    "Days": (end_date - dates[start_idx]).days + 1
+                })
+            current_grade = grade_today
+            start_idx = i
+
+    if current_grade is not None:
+        end_date = dates[-1]
+        rows.append({
+            "Grade": current_grade,
+            "Start Date": dates[start_idx].strftime("%d-%b-%y"),
+            "End Date": end_date.strftime("%d-%b-%y"),
+            "Days": (end_date - dates[start_idx]).days + 1
+        })
+
+    return pd.DataFrame(rows)
+
+
+# ===============================================================
+#  PRODUCTION SUMMARY
+# ===============================================================
+
+def create_production_summary(solution, production_vars, solver, grades, lines, num_days):
+    """
+    Generates production summary table:
+    Grade | Line1 | Line2 | ... | Total Produced
+    """
+    rows = []
+
+    for grade in sorted(grades):
+        row = {"Grade": grade}
+        total = 0
+
+        for line in lines:
+            val = 0
+            for d in range(num_days):
+                key = (grade, line, d)
+                if key in production_vars:
+                    try:
+                        val += solver.Value(production_vars[key])
+                    except Exception:
+                        pass
+            row[line] = int(val)
+            total += val
+
+        row["Total Produced"] = int(total)
+        rows.append(row)
+
+    # Total Row
+    total_row = {"Grade": "Total"}
+    for line in lines:
+        total_row[line] = sum(r[line] for r in rows)
+    total_row["Total Produced"] = sum(r["Total Produced"] for r in rows)
+
+    rows.append(total_row)
+    return pd.DataFrame(rows)
