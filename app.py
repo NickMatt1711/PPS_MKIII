@@ -24,8 +24,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Initialize theme and apply custom CSS - THIS MUST HAPPEN FIRST
-init_theme()
+# Apply custom CSS
 apply_custom_css()
 
 # Initialize session state
@@ -113,7 +112,7 @@ def render_upload_stage():
     st.markdown("<br>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 1, 1])
     with col3:
-        if st.button("Next: Preview Data →", type="primary", disabled=uploaded_file is None, width='stretch'):
+        if st.button("Next: Preview Data →", type="primary", disabled=uploaded_file is None, use_container_width=True):
             st.rerun()
 
 
@@ -275,9 +274,6 @@ def render_optimization_stage():
     
     # Run the actual optimization
     run_optimization()
-
-
-def run_optimization():
     """Execute the optimization"""
     
     excel_data = st.session_state[SS_EXCEL_DATA]
@@ -393,7 +389,7 @@ def run_optimization():
 
 # ========== STAGE 2: RESULTS ==========
 def render_results_stage():
-    """Stage 3: Display results with enhanced visuals"""
+    """Stage 3: Display results"""
     
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization Results")
     render_stage_progress(2)
@@ -420,13 +416,8 @@ def render_results_stage():
     
     render_section_divider()
     
-    # Results tabs with more options
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "📅 Production Schedule", 
-        "📦 Inventory Analysis", 
-        "📊 Performance Metrics",
-        "🔧 Detailed Summary"
-    ])
+    # Results tabs
+    tab1, tab2, tab3 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables"])
     
     with tab1:
         st.markdown("### 📅 Production Schedule")
@@ -434,7 +425,7 @@ def render_results_stage():
         for line in data['lines']:
             st.markdown(f"#### 🏭 {line}")
             
-            # Enhanced Gantt chart with shutdown periods
+            # Gantt chart
             fig = create_gantt_chart(solution, line, data['dates'], data['shutdown_periods'], grade_colors)
             st.plotly_chart(fig, use_container_width=True)
             
@@ -448,9 +439,7 @@ def render_results_stage():
                     return ''
                 
                 styled_df = schedule_df.style.map(style_grade_column, subset=['Grade'])
-                st.dataframe(styled_df, use_container_width=True)
-            else:
-                st.info(f"No production scheduled for {line}")
+                st.dataframe(styled_df, width="stretch")
             
             render_section_divider()
     
@@ -473,40 +462,15 @@ def render_results_stage():
             st.plotly_chart(fig, use_container_width=True)
     
     with tab3:
-        st.markdown("### 📊 Performance Metrics")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Line utilization chart
-            util_fig, util_df = create_line_utilization_chart(
-                solution, data['lines'], 
-                data.get('capacities', {}), 
-                data['num_days'],
-                data.get('buffer_days', 0)
-            )
-            st.plotly_chart(util_fig, use_container_width=True)
-            st.dataframe(util_df, use_container_width=True)
-        
-        with col2:
-            # Transition analysis
-            trans_fig, trans_df = create_transition_analysis(solution, data['lines'])
-            st.plotly_chart(trans_fig, use_container_width=True)
-            st.dataframe(trans_df, use_container_width=True)
-        
-        # Stockout analysis
-        stockout_fig, stockout_df = create_stockout_analysis(solution, data['grades'])
-        st.plotly_chart(stockout_fig, use_container_width=True)
-        st.dataframe(stockout_df, use_container_width=True)
-    
-    with tab4:
-        st.markdown("### 🔧 Detailed Production Summary")
+        st.markdown("### 📊 Production Summary")
         
         summary_df = create_production_summary(
             solution, 
+            solution_data.get('production_vars', {}),
+            solution_data['solver'],
             data['grades'], 
-            data['lines'], 
-            solution_data['solver']
+            data['lines'],
+            data['num_days']
         )
         
         # Style the summary table with grade colors
@@ -518,24 +482,14 @@ def render_results_stage():
             return ''
         
         styled_summary = summary_df.style.map(style_summary_grade, subset=['Grade'])
-        st.dataframe(styled_summary, use_container_width=True)
+        st.dataframe(styled_summary, width="stretch")
         
-        # Additional metrics
-        st.markdown("### 📈 Additional Metrics")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            total_production = summary_df[summary_df['Grade'] == 'Total']['Total Production (MT)'].iloc[0]
-            st.metric("Total Production", f"{total_production:,.0f} MT")
-        
-        with col2:
-            total_days = summary_df[summary_df['Grade'] == 'Total']['Production Days'].iloc[0]
-            st.metric("Total Production Days", f"{total_days}")
-        
-        with col3:
-            avg_utilization = util_df['Utilization (%)'].mean()
-            st.metric("Average Line Utilization", f"{avg_utilization:.1f}%")
+        st.markdown("### 🔄 Transitions by Line")
+        transitions_data = []
+        for line, count in solution['transitions']['per_line'].items():
+            transitions_data.append({'Line': line, 'Transitions': count})
+        transitions_df = pd.DataFrame(transitions_data)
+        st.dataframe(transitions_df, width="stretch")
     
     render_section_divider()
     
@@ -543,12 +497,12 @@ def render_results_stage():
     col1, col2, col3 = st.columns([1, 1, 1])
     
     with col1:
-        if st.button("← Back to Configuration", use_container_width=True):
+        if st.button("← Back to Configuration", width="stretch"):
             st.session_state[SS_STAGE] = 1
             st.rerun()
     
     with col2:
-        if st.button("🔄 New Optimization", use_container_width=True):
+        if st.button("🔄 New Optimization", width="stretch"):
             st.session_state[SS_STAGE] = 0
             st.session_state[SS_UPLOADED_FILE] = None
             st.session_state[SS_EXCEL_DATA] = None
