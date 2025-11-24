@@ -307,7 +307,6 @@ def apply_custom_css():
             color: {THEME_COLORS['text_secondary']};
         }}
     </style>
-    """, unsafe_allow_html=True)
         
         /* Header Styles */
         .app-header {{
