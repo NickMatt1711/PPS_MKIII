@@ -208,47 +208,52 @@ def render_preview_stage():
 
     render_section_divider()
 
-    # Configuration parameters area
+    # Configuration parameters
     st.markdown("### ⚙️ Optimization Parameters")
+    
     col1, col2 = st.columns(2)
-
+    
     with col1:
         st.markdown("#### ⏱️ Solver Configuration")
         time_limit = st.number_input(
             "Time limit (minutes)",
             min_value=1,
             max_value=120,
-            value=st.session_state[SS_OPTIMIZATION_PARAMS]['time_limit_min'],
-            help="Maximum time to run the optimization"
+            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['time_limit_min']),
+            step=1
         )
+        
         buffer_days = st.number_input(
             "Buffer days",
             min_value=0,
-            max_value=30,
-            value=st.session_state[SS_OPTIMIZATION_PARAMS]['buffer_days'],
-            help="Additional planning buffer days"
+            max_value=7,
+            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['buffer_days']),
+            step=1
         )
-
+    
     with col2:
         st.markdown("#### 🎯 Objective Weights")
         stockout_penalty = st.number_input(
             "Stockout penalty",
             min_value=1,
-            value=st.session_state[SS_OPTIMIZATION_PARAMS]['stockout_penalty'],
-            help="Penalty weight for stockouts"
+            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['stockout_penalty']),
+            step=1
         )
+        
         transition_penalty = st.number_input(
             "Transition penalty",
-            min_value=0,
-            value=st.session_state[SS_OPTIMIZATION_PARAMS]['transition_penalty'],
-            help="Penalty for production transitions"
+            min_value=1,
+            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['transition_penalty']),
+            step=1
         )
+        
         continuity_bonus = st.number_input(
             "Continuity bonus",
             min_value=0,
-            value=st.session_state[SS_OPTIMIZATION_PARAMS]['continuity_bonus'],
-            help="Bonus for production continuity"
+            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['continuity_bonus']),
+            step=1
         )
+
 
     # persist parameters
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
