@@ -241,8 +241,8 @@ def build_and_solve_model(
     objective = 0
     
     for grade in grades:
-        model.Add(inventory_vars[(grade, 0)] == initial_inventory[grade])
-    
+    model.Add(inventory_vars[(grade, 0)] == initial_inventory[grade])
+
     for grade in grades:
         for d in range(num_days):
             produced_today = sum(
@@ -251,12 +251,15 @@ def build_and_solve_model(
             )
             demand_today = demand_data[grade].get(dates[d], 0)
             
-            supplied = model.NewIntVar(0, 100000, f'supplied_{grade}_{d}')
-            model.Add(supplied <= inventory_vars[(grade, d)] + produced_today)
-            model.Add(supplied <= demand_today)
+            # Available inventory before meeting demand
+            available = inventory_vars[(grade, d)] + produced_today
             
-            model.Add(stockout_vars[(grade, d)] == demand_today - supplied)
-            model.Add(inventory_vars[(grade, d + 1)] == inventory_vars[(grade, d)] + produced_today - supplied)
+            # Determine stockout: max(0, demand - available)
+            model.Add(stockout_vars[(grade, d)] >= demand_today - available)
+            model.Add(stockout_vars[(grade, d)] >= 0)
+            
+            # Closing inventory: max(0, available - demand)
+            model.Add(inventory_vars[(grade, d + 1)] == available - demand_today + stockout_vars[(grade, d)])
             model.Add(inventory_vars[(grade, d + 1)] >= 0)
     
     if progress_callback:
