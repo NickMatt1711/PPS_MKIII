@@ -239,11 +239,6 @@ def render_header(title: str, subtitle: str = ""):
 # JS-CLICKABLE STAGE PROGRESS BAR
 # ------------------------------------------------------------
 def render_stage_progress(current_stage: int):
-    """
-    Fully clickable stage progress using JS + Streamlit.
-    Does not use Streamlit buttons → cleaner layout.
-    """
-
     if "stage" not in st.session_state:
         st.session_state["stage"] = current_stage
 
@@ -253,16 +248,23 @@ def render_stage_progress(current_stage: int):
         ("3", "Results")
     ]
 
-    # Create HTML blocks
     html_blocks = []
+    total_stages = len(stages)
+
     for idx, (num, label) in enumerate(stages):
 
+        # --- FIXED LOGIC ---
         if idx < current_stage:
             status = "completed"
             icon = "✓"
         elif idx == current_stage:
-            status = "active"
-            icon = num
+            # if it's the last stage → mark completed
+            if idx == total_stages - 1:
+                status = "completed"
+                icon = "✓"
+            else:
+                status = "active"
+                icon = num
         else:
             status = "inactive"
             icon = num
@@ -278,7 +280,6 @@ def render_stage_progress(current_stage: int):
             """
         )
 
-    # Combine HTML
     html = f"""
     <div class="stage-container">
         <div class="stage-flex">
@@ -291,19 +292,14 @@ def render_stage_progress(current_stage: int):
             const json = {{ "stage": stageIndex }};
             fetch("/_stcore/update", {{
                 method: "POST",
-                headers: {{
-                    "Content-Type": "application/json"
-                }},
+                headers: {{ "Content-Type": "application/json" }},
                 body: JSON.stringify(json)
-            }}).then(() => {{
-                window.location.reload();
-            }});
+            }}).then(() => window.location.reload());
         }}
     </script>
     """
 
     st.markdown(html, unsafe_allow_html=True)
-
 
 # ------------------------------------------------------------
 # CARDS
