@@ -30,16 +30,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Initialize theme state
-if SS_THEME not in st.session_state:
-    st.session_state[SS_THEME] = "light"
-
-# Apply custom CSS with theme
-is_dark = st.session_state[SS_THEME] == "dark"
-apply_custom_css(is_dark_mode=is_dark)
-
-# Render theme toggle
-render_theme_toggle()
+apply_custom_css()
 
 # Initialize required session state keys (safe defaults)
 st.session_state.setdefault(SS_STAGE, 0)
