@@ -254,8 +254,10 @@ def create_inventory_chart(
             font=dict(size=18, color="#1B1F24", family="Arial")
         ),
         xaxis=dict(
-            title="Date",
-            titlefont=dict(size=14, color="#1B1F24", family="Arial"),
+            title=dict(
+                text="Date",
+                font=dict(size=14, color="#1B1F24", family="Arial")
+            ),
             tickfont=dict(size=12, color="#1B1F24"),
             tickformat="%d-%b",
             dtick="D1",
@@ -263,8 +265,10 @@ def create_inventory_chart(
             gridcolor="lightgray"
         ),
         yaxis=dict(
-            title="Inventory (MT)",
-            titlefont=dict(size=14, color="#1B1F24", family="Arial"),
+            title=dict(
+                text="Inventory (MT)",
+                font=dict(size=14, color="#1B1F24", family="Arial")
+            ),
             tickfont=dict(size=12, color="#1B1F24"),
             showgrid=True,
             gridcolor="lightgray"
