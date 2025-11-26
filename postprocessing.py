@@ -111,14 +111,14 @@ def create_gantt_chart(
     fig.update_yaxes(
         autorange="reversed",
         showgrid=True,
-        gridcolor="gray",
+        gridcolor="lightgray",
         tickfont=dict(color="gray", size=12)
     )
     fig.update_xaxes(
         tickformat="%d-%b",
         dtick="D1",
         showgrid=True,
-        gridcolor="gray",
+        gridcolor="lightgray",
         tickfont=dict(color="gray", size=12)
     )
 
