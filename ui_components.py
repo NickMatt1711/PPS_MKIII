@@ -172,12 +172,14 @@ def apply_custom_css(is_dark_mode=False):
             border: 1px solid var(--border);
             padding: 0.6rem 1.5rem;
             font-weight: 600;
+            display: flex;
             transition: 0.25s ease;
         }}
 
         .stTabs [aria-selected="true"] {{
             background: var(--primary) !important;
             color: white !important;
+            flex:1;
             border-color: var(--primary);
         }}
 
