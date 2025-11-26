@@ -471,7 +471,7 @@ def render_results_stage():
     render_section_divider()
 
     # Results tabs
-    tab1, tab2, tab3 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables"],width="stretch")
+    tab1, tab2, tab3 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables"])[1,1,1]
 
     # --- Production Schedule tab ---
     with tab1:
