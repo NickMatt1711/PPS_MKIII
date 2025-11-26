@@ -137,7 +137,7 @@ def create_gantt_chart(
         font=dict(size=12, color="#222222")
     )
     
-    legend=dict(
+    fig.legend=dict(
         title=dict(font=dict(color="#222222")),
         font=dict(color="#222222"),
         bgcolor="white",
