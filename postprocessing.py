@@ -114,8 +114,21 @@ def create_gantt_chart(
             annotation_font_color="red"
         )
 
-    fig.update_yaxes(autorange="reversed", showgrid=True, gridcolor="lightgray")
-    fig.update_xaxes(tickformat="%d-%b", dtick="D1", showgrid=True, gridcolor="lightgray")
+    fig.update_yaxes(
+        autorange="reversed",
+        showgrid=True,
+        gridcolor="#B0B0B0",
+        tickfont=dict(color="#333333", size=12),
+        titlefont=dict(color="#222222")
+    )
+    fig.update_xaxes(
+        tickformat="%d-%b",
+        dtick="D1",
+        showgrid=True,
+        gridcolor="#B0B0B0",
+        tickfont=dict(color="#333333", size=12),
+        titlefont=dict(color="#222222")
+    )
 
     fig.update_layout(
         height=350,
@@ -123,8 +136,7 @@ def create_gantt_chart(
         plot_bgcolor="white",
         paper_bgcolor="white",
         margin=dict(l=80, r=160, t=60, b=60),
-        font=dict(size=12, color="#222222"),
-        legend_title_text="Grade",
+        font=dict(size=12, color="#222222")
     )
 
     return fig
