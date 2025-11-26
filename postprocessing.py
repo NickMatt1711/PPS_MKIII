@@ -139,8 +139,7 @@ def create_gantt_chart(
             xanchor="left",
             x=1.02,
             bgcolor="rgba(255,255,255,0)",
-            bordercolor="lightgray",
-            borderwidth=0
+            font_colour="lightgray"
         )
     )
     
