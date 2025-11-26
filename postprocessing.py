@@ -112,14 +112,14 @@ def create_gantt_chart(
         autorange="reversed",
         showgrid=True,
         gridcolor="gray",
-        tickfont=dict(color="#222222", size=12)
+        tickfont=dict(color="gray", size=12)
     )
     fig.update_xaxes(
         tickformat="%d-%b",
         dtick="D1",
         showgrid=True,
         gridcolor="gray",
-        tickfont=dict(color="#222222", size=12)
+        tickfont=dict(color="gray", size=12)
     )
 
     fig.update_layout(
@@ -128,7 +128,7 @@ def create_gantt_chart(
         plot_bgcolor="white",
         paper_bgcolor="white",
         margin=dict(l=80, r=160, t=60, b=60),
-        font=dict(size=12, color="#222222"),
+        font=dict(size=12, color="gray"),
         showlegend=True,
         legend_title_text="Grade",
         legend=dict(
@@ -294,7 +294,7 @@ def create_inventory_chart(
         plot_bgcolor="white",
         paper_bgcolor="white",
         margin=dict(l=60, r=80, t=80, b=60),
-        font=dict(size=12, color="#222222"),
+        font=dict(size=12, color="gray"),
         height=420,
         showlegend=False
     )
