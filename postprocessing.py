@@ -118,16 +118,14 @@ def create_gantt_chart(
         autorange="reversed",
         showgrid=True,
         gridcolor="#B0B0B0",
-        tickfont=dict(color="#333333", size=12),
-        titlefont=dict(color="#222222")
+        tickfont=dict(color="#222222", size=12)
     )
     fig.update_xaxes(
         tickformat="%d-%b",
         dtick="D1",
         showgrid=True,
         gridcolor="#B0B0B0",
-        tickfont=dict(color="#333333", size=12),
-        titlefont=dict(color="#222222")
+        tickfont=dict(color="#222222", size=12)
     )
 
     fig.update_layout(
