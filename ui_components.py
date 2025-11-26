@@ -1,118 +1,70 @@
 """
-Reusable UI components with Material Design 3 color system
-Full light/dark theme support with proper contrast ratios
+Reusable UI components with Material Design 3 Light Blue theme
+Clean, modern interface with blue primary colors
 """
 
 import streamlit as st
-from constants import THEME_COLORS, SS_THEME
+from constants import THEME_COLORS
 
 
 # ------------------------------------------------------------
 # THEME + GLOBAL CSS
 # ------------------------------------------------------------
-def apply_custom_css(is_dark_mode=False):
-    """Apply Material 3 design system with proper color tokens."""
+def apply_custom_css():
+    """Apply Material 3 Light theme with Blue primary colors."""
 
     radius = "12px"
     radius_lg = "16px"
     card_shadow = "0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)"
     hover_shadow = "0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23)"
 
-    # Material 3 Color Tokens
-    if is_dark_mode:
-        theme = {
-            # Surface colors
-            "--md-sys-color-background": "#1C1B1F",
-            "--md-sys-color-surface": "#1C1B1F",
-            "--md-sys-color-surface-variant": "#49454F",
-            "--md-sys-color-surface-container": "#211F26",
-            "--md-sys-color-surface-container-high": "#2B2930",
-            "--md-sys-color-surface-container-highest": "#36343B",
-            
-            # Text colors
-            "--md-sys-color-on-surface": "#E6E1E5",
-            "--md-sys-color-on-surface-variant": "#CAC4D0",
-            "--md-sys-color-outline": "#938F99",
-            "--md-sys-color-outline-variant": "#49454F",
-            
-            # Primary colors
-            "--md-sys-color-primary": "#D0BCFF",
-            "--md-sys-color-on-primary": "#381E72",
-            "--md-sys-color-primary-container": "#4F378B",
-            "--md-sys-color-on-primary-container": "#EADDFF",
-            
-            # Secondary colors
-            "--md-sys-color-secondary": "#CCC2DC",
-            "--md-sys-color-secondary-container": "#4A4458",
-            "--md-sys-color-on-secondary-container": "#E8DEF8",
-            
-            # Tertiary colors
-            "--md-sys-color-tertiary": "#EFB8C8",
-            "--md-sys-color-tertiary-container": "#633B48",
-            "--md-sys-color-on-tertiary-container": "#FFD8E4",
-            
-            # Error colors
-            "--md-sys-color-error": "#F2B8B5",
-            "--md-sys-color-error-container": "#8C1D18",
-            "--md-sys-color-on-error-container": "#F9DEDC",
-            
-            # Success colors (custom extension)
-            "--md-sys-color-success": "#A6D189",
-            "--md-sys-color-success-container": "#1E4620",
-            "--md-sys-color-on-success-container": "#C4EAB5",
-            
-            # Warning colors (custom extension)
-            "--md-sys-color-warning": "#F6D186",
-            "--md-sys-color-warning-container": "#4E3A11",
-            "--md-sys-color-on-warning-container": "#FFEFC6",
-        }
-    else:
-        theme = {
-            # Surface colors
-            "--md-sys-color-background": "#FFFBFE",
-            "--md-sys-color-surface": "#FFFBFE",
-            "--md-sys-color-surface-variant": "#E7E0EC",
-            "--md-sys-color-surface-container": "#F3EDF7",
-            "--md-sys-color-surface-container-high": "#ECE6F0",
-            "--md-sys-color-surface-container-highest": "#E6E0E9",
-            
-            # Text colors
-            "--md-sys-color-on-surface": "#1C1B1F",
-            "--md-sys-color-on-surface-variant": "#49454F",
-            "--md-sys-color-outline": "#79747E",
-            "--md-sys-color-outline-variant": "#CAC4D0",
-            
-            # Primary colors
-            "--md-sys-color-primary": "#6750A4",
-            "--md-sys-color-on-primary": "#FFFFFF",
-            "--md-sys-color-primary-container": "#EADDFF",
-            "--md-sys-color-on-primary-container": "#21005D",
-            
-            # Secondary colors
-            "--md-sys-color-secondary": "#625B71",
-            "--md-sys-color-secondary-container": "#E8DEF8",
-            "--md-sys-color-on-secondary-container": "#1D192B",
-            
-            # Tertiary colors
-            "--md-sys-color-tertiary": "#7D5260",
-            "--md-sys-color-tertiary-container": "#FFD8E4",
-            "--md-sys-color-on-tertiary-container": "#31111D",
-            
-            # Error colors
-            "--md-sys-color-error": "#B3261E",
-            "--md-sys-color-error-container": "#F9DEDC",
-            "--md-sys-color-on-error-container": "#410E0B",
-            
-            # Success colors (custom extension)
-            "--md-sys-color-success": "#2E7D32",
-            "--md-sys-color-success-container": "#C8E6C9",
-            "--md-sys-color-on-success-container": "#0D3A0F",
-            
-            # Warning colors (custom extension)
-            "--md-sys-color-warning": "#E65100",
-            "--md-sys-color-warning-container": "#FFE0B2",
-            "--md-sys-color-on-warning-container": "#4E2A00",
-        }
+    # Material 3 Light Blue Theme
+    theme = {
+        # Surface colors
+        "--md-sys-color-background": "#FDFCFF",
+        "--md-sys-color-surface": "#FDFCFF",
+        "--md-sys-color-surface-variant": "#E1E2EC",
+        "--md-sys-color-surface-container": "#F0F0F7",
+        "--md-sys-color-surface-container-high": "#EAEAF1",
+        "--md-sys-color-surface-container-highest": "#E5E5EB",
+        
+        # Text colors
+        "--md-sys-color-on-surface": "#1A1C1E",
+        "--md-sys-color-on-surface-variant": "#44474E",
+        "--md-sys-color-outline": "#74777F",
+        "--md-sys-color-outline-variant": "#C4C6D0",
+        
+        # Primary colors (Blue)
+        "--md-sys-color-primary": "#0B57D0",
+        "--md-sys-color-on-primary": "#FFFFFF",
+        "--md-sys-color-primary-container": "#D3E3FD",
+        "--md-sys-color-on-primary-container": "#001B3F",
+        
+        # Secondary colors (Blue-Gray)
+        "--md-sys-color-secondary": "#5A6470",
+        "--md-sys-color-secondary-container": "#DEE3EB",
+        "--md-sys-color-on-secondary-container": "#171C22",
+        
+        # Tertiary colors (Teal)
+        "--md-sys-color-tertiary": "#006A6A",
+        "--md-sys-color-tertiary-container": "#9CF2F2",
+        "--md-sys-color-on-tertiary-container": "#00201F",
+        
+        # Error colors
+        "--md-sys-color-error": "#BA1A1A",
+        "--md-sys-color-error-container": "#FFDAD6",
+        "--md-sys-color-on-error-container": "#410002",
+        
+        # Success colors
+        "--md-sys-color-success": "#146C2E",
+        "--md-sys-color-success-container": "#B7F3C6",
+        "--md-sys-color-on-success-container": "#002106",
+        
+        # Warning colors
+        "--md-sys-color-warning": "#7D5700",
+        "--md-sys-color-warning-container": "#FFE08B",
+        "--md-sys-color-on-warning-container": "#271900",
+    }
 
     # Inject CSS
     st.markdown(
