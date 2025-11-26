@@ -251,15 +251,17 @@ def build_and_solve_model(
             )
             demand_today = demand_data[grade].get(dates[d], 0)
             
-            # Available inventory before meeting demand
+            # Calculate what we can supply (min of available and demand)
             available = inventory_vars[(grade, d)] + produced_today
+            supplied = model.NewIntVar(0, 100000, f'supplied_{grade}_{d}')
+            model.Add(supplied <= available)
+            model.Add(supplied <= demand_today)
             
-            # Determine stockout: max(0, demand - available)
-            model.Add(stockout_vars[(grade, d)] >= demand_today - available)
-            model.Add(stockout_vars[(grade, d)] >= 0)
+            # Stockout is unmet demand
+            model.Add(stockout_vars[(grade, d)] == demand_today - supplied)
             
-            # Closing inventory: max(0, available - demand)
-            model.Add(inventory_vars[(grade, d + 1)] == available - demand_today + stockout_vars[(grade, d)])
+            # Next inventory is what's left after supplying
+            model.Add(inventory_vars[(grade, d + 1)] == available - supplied)
             model.Add(inventory_vars[(grade, d + 1)] >= 0)
     
     if progress_callback:
