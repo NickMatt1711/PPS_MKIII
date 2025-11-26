@@ -1,6 +1,6 @@
 """
-Reusable UI components with modern elevated material design (M3-Inspired)
-Fully refactored for aesthetics, consistency & maintainability.
+Reusable UI components with Material Design 3 color system
+Full light/dark theme support with proper contrast ratios
 """
 
 import streamlit as st
@@ -11,38 +11,107 @@ from constants import THEME_COLORS, SS_THEME
 # THEME + GLOBAL CSS
 # ------------------------------------------------------------
 def apply_custom_css(is_dark_mode=False):
-    """Apply Material-3 style UI theme with clean spacing & updated colors."""
+    """Apply Material 3 design system with proper color tokens."""
 
-    radius = "14px"
-    card_shadow = "0 3px 8px rgba(0, 0, 0, 0.07)"
-    hover_shadow = "0 6px 20px rgba(0, 0, 0, 0.15)"
+    radius = "12px"
+    radius_lg = "16px"
+    card_shadow = "0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)"
+    hover_shadow = "0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23)"
 
-    # Theme palettes
+    # Material 3 Color Tokens
     if is_dark_mode:
         theme = {
-            "--bg-main": "#0D1117",
-            "--bg-surface": "#161B22",
-            "--bg-card": "#1C2128",
-            "--text-primary": "#F0F6FC",
-            "--text-secondary": "#8B949E",
-            "--border": "#2D333B",
-            "--tab-bg": "#21262D",
-            "--primary": "#58A6FF",
-            "--primary-hover": "#1F6FEB",
-            "--gradient": "linear-gradient(135deg, #58A6FF 0%, #1F6FEB 100%)",
+            # Surface colors
+            "--md-sys-color-background": "#1C1B1F",
+            "--md-sys-color-surface": "#1C1B1F",
+            "--md-sys-color-surface-variant": "#49454F",
+            "--md-sys-color-surface-container": "#211F26",
+            "--md-sys-color-surface-container-high": "#2B2930",
+            "--md-sys-color-surface-container-highest": "#36343B",
+            
+            # Text colors
+            "--md-sys-color-on-surface": "#E6E1E5",
+            "--md-sys-color-on-surface-variant": "#CAC4D0",
+            "--md-sys-color-outline": "#938F99",
+            "--md-sys-color-outline-variant": "#49454F",
+            
+            # Primary colors
+            "--md-sys-color-primary": "#D0BCFF",
+            "--md-sys-color-on-primary": "#381E72",
+            "--md-sys-color-primary-container": "#4F378B",
+            "--md-sys-color-on-primary-container": "#EADDFF",
+            
+            # Secondary colors
+            "--md-sys-color-secondary": "#CCC2DC",
+            "--md-sys-color-secondary-container": "#4A4458",
+            "--md-sys-color-on-secondary-container": "#E8DEF8",
+            
+            # Tertiary colors
+            "--md-sys-color-tertiary": "#EFB8C8",
+            "--md-sys-color-tertiary-container": "#633B48",
+            "--md-sys-color-on-tertiary-container": "#FFD8E4",
+            
+            # Error colors
+            "--md-sys-color-error": "#F2B8B5",
+            "--md-sys-color-error-container": "#8C1D18",
+            "--md-sys-color-on-error-container": "#F9DEDC",
+            
+            # Success colors (custom extension)
+            "--md-sys-color-success": "#A6D189",
+            "--md-sys-color-success-container": "#1E4620",
+            "--md-sys-color-on-success-container": "#C4EAB5",
+            
+            # Warning colors (custom extension)
+            "--md-sys-color-warning": "#F6D186",
+            "--md-sys-color-warning-container": "#4E3A11",
+            "--md-sys-color-on-warning-container": "#FFEFC6",
         }
     else:
         theme = {
-            "--bg-main": "#FFFFFF",
-            "--bg-surface": "#F6F8FA",
-            "--bg-card": "#FFFFFF",
-            "--text-primary": "#1B1F24",
-            "--text-secondary": "#57606A",
-            "--border": "#D0D7DE",
-            "--tab-bg": "#F6F8FA",
-            "--primary": "#0969DA",
-            "--primary-hover": "#033D8B",
-            "--gradient": "linear-gradient(135deg, #0969DA 0%, #033D8B 100%)",
+            # Surface colors
+            "--md-sys-color-background": "#FFFBFE",
+            "--md-sys-color-surface": "#FFFBFE",
+            "--md-sys-color-surface-variant": "#E7E0EC",
+            "--md-sys-color-surface-container": "#F3EDF7",
+            "--md-sys-color-surface-container-high": "#ECE6F0",
+            "--md-sys-color-surface-container-highest": "#E6E0E9",
+            
+            # Text colors
+            "--md-sys-color-on-surface": "#1C1B1F",
+            "--md-sys-color-on-surface-variant": "#49454F",
+            "--md-sys-color-outline": "#79747E",
+            "--md-sys-color-outline-variant": "#CAC4D0",
+            
+            # Primary colors
+            "--md-sys-color-primary": "#6750A4",
+            "--md-sys-color-on-primary": "#FFFFFF",
+            "--md-sys-color-primary-container": "#EADDFF",
+            "--md-sys-color-on-primary-container": "#21005D",
+            
+            # Secondary colors
+            "--md-sys-color-secondary": "#625B71",
+            "--md-sys-color-secondary-container": "#E8DEF8",
+            "--md-sys-color-on-secondary-container": "#1D192B",
+            
+            # Tertiary colors
+            "--md-sys-color-tertiary": "#7D5260",
+            "--md-sys-color-tertiary-container": "#FFD8E4",
+            "--md-sys-color-on-tertiary-container": "#31111D",
+            
+            # Error colors
+            "--md-sys-color-error": "#B3261E",
+            "--md-sys-color-error-container": "#F9DEDC",
+            "--md-sys-color-on-error-container": "#410E0B",
+            
+            # Success colors (custom extension)
+            "--md-sys-color-success": "#2E7D32",
+            "--md-sys-color-success-container": "#C8E6C9",
+            "--md-sys-color-on-success-container": "#0D3A0F",
+            
+            # Warning colors (custom extension)
+            "--md-sys-color-warning": "#E65100",
+            "--md-sys-color-warning-container": "#FFE0B2",
+            "--md-sys-color-on-warning-container": "#4E2A00",
         }
 
     # Inject CSS
@@ -54,25 +123,29 @@ def apply_custom_css(is_dark_mode=False):
         }}
 
         /* ------------------------------------
-        GLOBAL
+        GLOBAL RESETS
         ------------------------------------*/
-        body, .main, .stApp {{
-            background: var(--bg-main) !important;
-            color: var(--text-primary) !important;
+        .stApp {{
+            background: var(--md-sys-color-background);
+        }}
+        
+        .main {{
+            background: var(--md-sys-color-background);
         }}
 
-        p, span, div {{
-            color: var(--text-primary) !important;
+        /* Only target specific text elements, not all divs */
+        h1, h2, h3, h4, h5, h6 {{
+            color: var(--md-sys-color-on-surface);
         }}
 
         /* ------------------------------------
         HEADER
         ------------------------------------*/
         .app-header {{
-            background: var(--gradient);
+            background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-primary-container) 100%);
             padding: 2rem;
-            color: white;
-            border-radius: {radius};
+            color: var(--md-sys-color-on-primary);
+            border-radius: {radius_lg};
             margin-bottom: 2rem;
             text-align: center;
             box-shadow: {card_shadow};
@@ -81,16 +154,22 @@ def apply_custom_css(is_dark_mode=False):
             margin: 0;
             font-size: 2.4rem;
             font-weight: 600;
+            color: var(--md-sys-color-on-primary);
+        }}
+        .app-header p {{
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+            color: var(--md-sys-color-on-primary);
         }}
 
         /* ------------------------------------
         CARDS
         ------------------------------------*/
         .card {{
-            background: var(--bg-card);
-            padding: 1.7rem;
+            background: var(--md-sys-color-surface-container-high);
+            padding: 1.5rem;
             border-radius: {radius};
-            border: 1px solid var(--border);
+            border: 1px solid var(--md-sys-color-outline-variant);
             box-shadow: {card_shadow};
             margin-bottom: 1.5rem;
         }}
@@ -98,181 +177,226 @@ def apply_custom_css(is_dark_mode=False):
             font-size: 1.2rem;
             font-weight: 600;
             margin-bottom: 1rem;
+            color: var(--md-sys-color-on-surface);
         }}
 
         /* ------------------------------------
         METRIC CARDS
         ------------------------------------*/
         .metric-card {{
-            background: var(--gradient);
-            color: white;
-            padding: 1.4rem;
+            background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-primary-container) 100%);
+            color: var(--md-sys-color-on-primary);
+            padding: 1.5rem;
             border-radius: {radius};
             text-align: center;
             box-shadow: {card_shadow};
-            transition: 0.25s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }}
         .metric-card:hover {{
-            transform: translateY(-4px);
+            transform: translateY(-2px);
             box-shadow: {hover_shadow};
         }}
 
         .metric-value {{
             font-size: 2rem;
             font-weight: 700;
+            color: var(--md-sys-color-on-primary);
         }}
 
         .metric-label {{
-            font-size: 0.85rem;
-            opacity: 0.95;
-            letter-spacing: 0.7px;
+            font-size: 0.875rem;
+            opacity: 0.9;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--md-sys-color-on-primary);
         }}
 
         /* ------------------------------------
         ALERT BOXES
         ------------------------------------*/
         .alert {{
-            padding: 1rem;
-            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            border-radius: {radius};
             margin-bottom: 1rem;
             display: flex;
-            gap: 0.8rem;
+            gap: 0.75rem;
             align-items: flex-start;
-            border-left-width: 5px;
+            border-left-width: 4px;
             border-left-style: solid;
         }}
 
+        .alert strong {{
+            font-size: 1.2rem;
+            line-height: 1;
+        }}
+
+        .alert span {{
+            line-height: 1.5;
+        }}
+
         .alert-success {{
-            background: {THEME_COLORS['success_light']};
-            border-left-color: #1A7F37;
+            background: var(--md-sys-color-success-container);
+            border-left-color: var(--md-sys-color-success);
+            color: var(--md-sys-color-on-success-container);
         }}
+        .alert-success strong,
+        .alert-success span {{
+            color: var(--md-sys-color-on-success-container);
+        }}
+
         .alert-info {{
-            background: {THEME_COLORS['primary_light']};
-            border-left-color: var(--primary);
+            background: var(--md-sys-color-primary-container);
+            border-left-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary-container);
         }}
+        .alert-info strong,
+        .alert-info span {{
+            color: var(--md-sys-color-on-primary-container);
+        }}
+
         .alert-warning {{
-            background: {THEME_COLORS['warning_light']};
-            border-left-color: {THEME_COLORS['warning']};
+            background: var(--md-sys-color-warning-container);
+            border-left-color: var(--md-sys-color-warning);
+            color: var(--md-sys-color-on-warning-container);
         }}
+        .alert-warning strong,
+        .alert-warning span {{
+            color: var(--md-sys-color-on-warning-container);
+        }}
+
         .alert-error {{
-            background: {THEME_COLORS['error_light']};
-            border-left-color: {THEME_COLORS['error']};
+            background: var(--md-sys-color-error-container);
+            border-left-color: var(--md-sys-color-error);
+            color: var(--md-sys-color-on-error-container);
+        }}
+        .alert-error strong,
+        .alert-error span {{
+            color: var(--md-sys-color-on-error-container);
         }}
 
         /* ------------------------------------
         TABS
         ------------------------------------*/
         .stTabs [data-baseweb="tab-list"] {{
-            background: var(--tab-bg);
+            background: var(--md-sys-color-surface-container);
             padding: 0.5rem;
-            display: flex;
-            width: 100%;
             border-radius: {radius};
-            gap: 8px;
+            gap: 0.5rem;
         }}
 
         .stTabs [data-baseweb="tab"] {{
-            border-radius: 10px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            padding: 0.6rem 1.5rem;
+            border-radius: {radius};
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 0.75rem 1.5rem;
             font-weight: 600;
-            flex: 1;
-            text-align: center;
-            justify-content: center;
-            transition: 0.25s ease;
+            color: var(--md-sys-color-on-surface-variant);
+            transition: all 0.2s ease;
+        }}
+
+        .stTabs [data-baseweb="tab"]:hover {{
+            background: var(--md-sys-color-surface-container-high);
+            color: var(--md-sys-color-on-surface);
         }}
 
         .stTabs [aria-selected="true"] {{
-            background: var(--primary) !important;
-            color: white !important;
-            border-color: var(--primary);
+            background: var(--md-sys-color-primary) !important;
+            color: var(--md-sys-color-on-primary) !important;
+            border-color: var(--md-sys-color-primary);
         }}
 
         /* ------------------------------------
         BUTTONS
         ------------------------------------*/
         .stButton > button {{
-            background: var(--primary);
-            color: white;
-            padding: 0.7rem 2rem;
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            padding: 0.75rem 2rem;
             font-weight: 600;
-            border-radius: 10px;
+            border-radius: {radius};
             border: none;
-            transition: 0.25s ease;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
         }}
         .stButton > button:hover {{
-            background: var(--primary-hover);
+            background: var(--md-sys-color-primary-container);
             box-shadow: {hover_shadow};
-            transform: translateY(-2px);
+            transform: translateY(-1px);
+        }}
+        .stButton > button:active {{
+            transform: translateY(0);
         }}
 
         /* ------------------------------------
-        STAGE PROGRESS (Improved)
+        STAGE PROGRESS
         ------------------------------------*/
         .stage-container {{
-            padding: 1.2rem;
-            background: var(--bg-card);
+            padding: 1.5rem;
+            background: var(--md-sys-color-surface-container-high);
             border-radius: {radius};
-            border: 1px solid var(--border);
+            border: 1px solid var(--md-sys-color-outline-variant);
             box-shadow: {card_shadow};
+            margin-bottom: 2rem;
         }}
 
         .stage-row {{
             display: flex;
             align-items: center;
             justify-content: space-between;
-            width: 100%;
-            gap: 14px;
+            gap: 1rem;
         }}
 
         .stage-step {{
             flex: 1;
             text-align: center;
-            position: relative;
         }}
 
         .stage-connector {{
-            flex: 1;
+            flex: 0.5;
             height: 2px;
-            background: var(--border);
-            margin: 0 4px;
-            border-radius: 2px;
+            background: var(--md-sys-color-outline-variant);
+            margin: 0 0.5rem;
+            border-radius: 1px;
         }}
 
         .stage-circle {{
-            width: 45px;
-            height: 45px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            margin: 0 auto 0.25rem auto;
+            font-size: 1rem;
+            margin: 0 auto 0.5rem auto;
+            transition: all 0.3s ease;
         }}
 
         .stage-circle.active {{
-            background: var(--primary);
-            color: white;
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            box-shadow: 0 2px 8px rgba(103, 80, 164, 0.4);
         }}
 
         .stage-circle.completed {{
-            background: #1A7F37;
-            color: white;
+            background: var(--md-sys-color-success);
+            color: var(--md-sys-color-on-primary);
         }}
 
         .stage-circle.inactive {{
-            background: var(--border);
-            color: var(--text-secondary);
+            background: var(--md-sys-color-surface-container-highest);
+            color: var(--md-sys-color-on-surface-variant);
+            border: 2px solid var(--md-sys-color-outline-variant);
         }}
 
         .stage-label {{
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+            font-size: 0.875rem;
+            color: var(--md-sys-color-on-surface-variant);
+            font-weight: 500;
         }}
 
         .stage-label.active {{
-            color: var(--primary);
+            color: var(--md-sys-color-primary);
             font-weight: 600;
         }}
 
@@ -281,8 +405,43 @@ def apply_custom_css(is_dark_mode=False):
         ------------------------------------*/
         .section-divider {{
             height: 1px;
-            background: var(--border);
+            background: var(--md-sys-color-outline-variant);
             margin: 2rem 0;
+            border: none;
+        }}
+
+        /* ------------------------------------
+        OPTIMIZATION SPINNER
+        ------------------------------------*/
+        .optimization-container {{
+            text-align: center;
+            padding: 3rem 1rem;
+        }}
+
+        .spinner {{
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1.5rem;
+            border: 4px solid var(--md-sys-color-outline-variant);
+            border-top-color: var(--md-sys-color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }}
+
+        @keyframes spin {{
+            to {{ transform: rotate(360deg); }}
+        }}
+
+        .optimization-text {{
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 0.5rem;
+        }}
+
+        .optimization-subtext {{
+            font-size: 1rem;
+            color: var(--md-sys-color-on-surface-variant);
         }}
 
         </style>
@@ -295,6 +454,7 @@ def apply_custom_css(is_dark_mode=False):
 # THEME TOGGLE
 # ------------------------------------------------------------
 def render_theme_toggle():
+    """Render theme toggle button in top-right corner."""
     if SS_THEME not in st.session_state:
         st.session_state[SS_THEME] = "light"
 
@@ -303,7 +463,7 @@ def render_theme_toggle():
 
     _, col = st.columns([8, 1])
     with col:
-        if st.button(label):
+        if st.button(label, key="theme_toggle"):
             st.session_state[SS_THEME] = "dark" if current == "light" else "light"
             st.rerun()
 
@@ -312,6 +472,7 @@ def render_theme_toggle():
 # HEADER
 # ------------------------------------------------------------
 def render_header(title: str, subtitle: str = ""):
+    """Render app header with title and optional subtitle."""
     subtitle_html = f"<p>{subtitle}</p>" if subtitle else ""
     st.markdown(
         f"""
@@ -325,9 +486,10 @@ def render_header(title: str, subtitle: str = ""):
 
 
 # ------------------------------------------------------------
-# IMPROVED STAGE PROGRESS
+# STAGE PROGRESS
 # ------------------------------------------------------------
 def render_stage_progress(current_stage: int) -> None:
+    """Render wizard-style stage progress indicator."""
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"),
@@ -360,12 +522,12 @@ def render_stage_progress(current_stage: int) -> None:
             """
         )
 
-    # Insert connectors
+    # Insert connectors between stages
     html = ""
     for i, block in enumerate(blocks):
         html += block
         if i < total - 1:
-            html += """<div class="stage-connector"></div>"""
+            html += '<div class="stage-connector"></div>'
 
     st.markdown(
         f"""
@@ -381,6 +543,7 @@ def render_stage_progress(current_stage: int) -> None:
 # CARDS
 # ------------------------------------------------------------
 def render_card(title: str, icon: str = ""):
+    """Open a card container with optional icon."""
     icon_html = f"{icon} " if icon else ""
     st.markdown(
         f"""
@@ -392,13 +555,15 @@ def render_card(title: str, icon: str = ""):
 
 
 def close_card():
+    """Close the card container."""
     st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ------------------------------------------------------------
-# METRICS, ALERTS, DIVIDER
+# METRICS
 # ------------------------------------------------------------
 def render_metric_card(label: str, value: str, col):
+    """Render a metric card in the specified column."""
     with col:
         st.markdown(
             f"""
@@ -411,12 +576,21 @@ def render_metric_card(label: str, value: str, col):
         )
 
 
+# ------------------------------------------------------------
+# ALERTS
+# ------------------------------------------------------------
 def render_alert(message: str, alert_type: str = "info"):
-    icons = {"success": "✔", "info": "ℹ", "warning": "⚠", "error": "✕"}
+    """Render an alert box with icon and message."""
+    icons = {
+        "success": "✓",
+        "info": "ℹ",
+        "warning": "⚠",
+        "error": "✕"
+    }
     st.markdown(
         f"""
         <div class="alert alert-{alert_type}">
-            <strong style="font-size:1.2rem">{icons.get(alert_type,"ℹ")}</strong>
+            <strong>{icons.get(alert_type, "ℹ")}</strong>
             <span>{message}</span>
         </div>
         """,
@@ -424,5 +598,9 @@ def render_alert(message: str, alert_type: str = "info"):
     )
 
 
+# ------------------------------------------------------------
+# DIVIDER
+# ------------------------------------------------------------
 def render_section_divider():
+    """Render a horizontal divider line."""
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
