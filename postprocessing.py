@@ -94,7 +94,6 @@ def create_gantt_chart(
         color="Grade",
         color_discrete_map=grade_colors,
         category_orders={"Grade": sorted(grade_colors.keys())},
-        title=f"Production Schedule – {line}"
     )
 
     # Shutdown shading
@@ -124,7 +123,7 @@ def create_gantt_chart(
         plot_bgcolor="white",
         paper_bgcolor="white",
         margin=dict(l=80, r=160, t=60, b=60),
-        font=dict(size=12),
+        font=dict(size=12, color="#222222"),
         legend_title_text="Grade",
     )
 
@@ -261,24 +260,25 @@ def create_inventory_chart(
     ]
 
     fig.update_layout(
-        title=f"Inventory Level - {grade}",
         xaxis=dict(
             title="Date",
             showgrid=True,
             gridcolor="lightgray",
             tickvals=dates,
             tickformat="%d-%b",
+            tickfont=dict(color="#333333", size=12),
             dtick="D1"
         ),
         yaxis=dict(
             title="Inventory Volume (MT)",
             showgrid=True,
+            tickfont=dict(color="#333333", size=12),
             gridcolor="lightgray"
         ),
         plot_bgcolor="white",
         paper_bgcolor="white",
         margin=dict(l=60, r=80, t=80, b=60),
-        font=dict(size=12),
+        font=dict(size=12, color="#222222"),
         height=420,
         showlegend=False
     )
