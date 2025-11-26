@@ -1,18 +1,16 @@
 """
-Reusable UI components with modern elevated material design (M3-Inspired)
-Fully refactored for aesthetics, consistency & maintainability.
-Now includes fully JS-clickable stage progress.
+UI Components with Material-3 inspired design + Clickable Animated Stepper
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 from constants import THEME_COLORS, SS_THEME
 
 
-# ------------------------------------------------------------
-# THEME + GLOBAL CSS
-# ------------------------------------------------------------
+# =====================================================================
+# APPLY GLOBAL THEME + CSS
+# =====================================================================
 def apply_custom_css(is_dark_mode=False):
-    """Apply Material-3 style UI theme with clean spacing & updated colors."""
 
     radius = "14px"
     card_shadow = "0 3px 8px rgba(0, 0, 0, 0.07)"
@@ -45,7 +43,6 @@ def apply_custom_css(is_dark_mode=False):
             "--gradient": "linear-gradient(135deg, #0969DA 0%, #033D8B 100%)",
         }
 
-    # Inject CSS
     st.markdown(
         f"""
         <style>
@@ -72,11 +69,6 @@ def apply_custom_css(is_dark_mode=False):
             text-align: center;
             box-shadow: {card_shadow};
         }}
-        .app-header h1 {{
-            margin: 0;
-            font-size: 2.4rem;
-            font-weight: 600;
-        }}
 
         /* CARDS */
         .card {{
@@ -87,25 +79,26 @@ def apply_custom_css(is_dark_mode=False):
             box-shadow: {card_shadow};
             margin-bottom: 1.5rem;
         }}
-        .card-header {{
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }}
 
-        /* METRIC */
+        /* METRIC CARDS */
         .metric-card {{
             background: var(--gradient);
-            color: white !important;
+            color: white;
             padding: 1.4rem;
             border-radius: {radius};
             text-align: center;
             box-shadow: {card_shadow};
             transition: 0.25s ease;
         }}
+
         .metric-card:hover {{
             transform: translateY(-4px);
             box-shadow: {hover_shadow};
+        }}
+
+        .metric-value {{
+            font-size: 2rem;
+            font-weight: 700;
         }}
 
         /* ALERTS */
@@ -120,91 +113,25 @@ def apply_custom_css(is_dark_mode=False):
             border-left-style: solid;
         }}
 
-        /* ---------------------------------------
-          JS-CLICKABLE STAGE PROGRESS BAR
-        -----------------------------------------*/
-
-        .stage-container {{
-            padding: 1.2rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: {radius};
-            box-shadow: {card_shadow};
+        .alert-success {{
+            background: {THEME_COLORS['success_light']};
+            border-left-color: #1A7F37;
+        }}
+        .alert-info {{
+            background: {THEME_COLORS['primary_light']};
+            border-left-color: var(--primary);
         }}
 
-        .stage-flex {{
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem;
-        }}
-
-        .stage-step {{
-            text-align: center;
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 10px;
-            transition: 0.2s ease;
-        }}
-
-        .stage-step:hover .stage-label {{
-            color: var(--primary);
-        }}
-
-        .stage-circle {{
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            font-weight: 600;
-            margin: 0 auto 0.3rem auto;
-            transition: 0.2s ease;
-        }}
-
-        .stage-circle.active {{
-            background: var(--primary) !important;
-            color: white !important;
-        }}
-
-        .stage-circle.completed {{
-            background: #1A7F37 !important;
-            color: white !important;
-        }}
-
-        .stage-circle.inactive {{
-            background: var(--border);
-            color: var(--text-secondary) !important;
-        }}
-
-        .stage-label {{
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }}
-
-        .stage-label.active {{
-            color: var(--primary) !important;
-        }}
-
-        .stage-step:hover .stage-circle.inactive {{
-            background: var(--primary);
-            color: white !important;
-        }}
-
-        .section-divider {{
-            height: 1px;
-            background: var(--border);
-            margin: 2rem 0;
-        }}
+        /* STAGE PROGRESS BASE CSS (Connectors added in component) */
         </style>
         """,
         unsafe_allow_html=True,
     )
 
 
-# ------------------------------------------------------------
+# =====================================================================
 # THEME TOGGLE
-# ------------------------------------------------------------
+# =====================================================================
 def render_theme_toggle():
     if SS_THEME not in st.session_state:
         st.session_state[SS_THEME] = "light"
@@ -219,9 +146,9 @@ def render_theme_toggle():
             st.rerun()
 
 
-# ------------------------------------------------------------
+# =====================================================================
 # HEADER
-# ------------------------------------------------------------
+# =====================================================================
 def render_header(title: str, subtitle: str = ""):
     subtitle_html = f"<p>{subtitle}</p>" if subtitle else ""
     st.markdown(
@@ -235,51 +162,38 @@ def render_header(title: str, subtitle: str = ""):
     )
 
 
-# ------------------------------------------------------------
-# JS-CLICKABLE STAGE PROGRESS BAR
-# ------------------------------------------------------------
+# =====================================================================
+# *** CLICKABLE + ANIMATED STAGE PROGRESS ***
+# =====================================================================
 def render_stage_progress(current_stage: int):
+
     if "stage" not in st.session_state:
         st.session_state["stage"] = current_stage
-
-    if "finalized" not in st.session_state:
-        st.session_state["finalized"] = False
 
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"),
-        ("3", "Results")
+        ("3", "Results"),
     ]
 
-    stage_blocks = []
-
+    items = []
     for idx, (num, label) in enumerate(stages):
 
-        # ---- CORRECTED LOGIC ----
         if idx < current_stage:
             status = "completed"
             icon = "✓"
-
         elif idx == current_stage:
-
-            # Only completed if this is final step *and* finished
-            if idx == len(stages) - 1 and st.session_state["finalized"]:
-                status = "completed"
-                icon = "✓"
-            else:
-                status = "active"
-                icon = num
-
+            status = "active"
+            icon = num
         else:
             status = "inactive"
             icon = num
-        # --------------------------
 
-        stage_blocks.append(
+        items.append(
             f"""
-            <div class="stage-step" onclick="window.setStage({idx})">
-                <div class="stage-circle {status}">{icon}</div>
-                <div class="stage-label {'active' if idx == current_stage else ''}">
+            <div class="step-block" onclick="setStage({idx})">
+                <div class="step-circle {status}">{icon}</div>
+                <div class="step-label {'active' if idx == current_stage else ''}">
                     {label}
                 </div>
             </div>
@@ -287,29 +201,120 @@ def render_stage_progress(current_stage: int):
         )
 
     html = f"""
-    <div class="stage-container">
-        <div class="stage-flex">
-            {''.join(stage_blocks)}
-        </div>
-    </div>
+    <html>
+    <head>
+    <style>
 
-    <script>
-        window.setStage = function(stageIndex) {{
-            const payload = {{ "stage": stageIndex }};
-            fetch("/_stcore/update", {{
-                method: "POST",
-                headers: {{ "Content-Type": "application/json" }},
-                body: JSON.stringify(payload)
-            }}).then(() => window.location.reload());
+        .stepper-container {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: 0.6rem;
+            position: relative;
         }}
-    </script>
+
+        /* CONNECTOR BAR (behind steps) */
+        .stepper-line {{
+            position: absolute;
+            top: 22px;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--border);
+            z-index: 1;
+            border-radius: 5px;
+        }}
+
+        /* ANIMATED filled progress */
+        .stepper-progress {{
+            position: absolute;
+            top: 22px;
+            left: 0;
+            height: 5px;
+            background: var(--primary);
+            border-radius: 5px;
+            z-index: 2;
+            width: calc({current_stage} / {len(stages)-1} * 100%);
+            transition: width 0.35s ease-in-out;
+        }}
+
+        .step-block {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 3;
+            cursor: pointer;
+        }}
+
+        .step-circle {{
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            background: var(--border);
+            color: var(--text-secondary);
+            transition: transform 0.25s ease, background 0.25s ease;
+        }}
+
+        .step-circle.completed {{
+            background: #1A7F37;
+            color: white;
+        }}
+
+        .step-circle.active {{
+            background: var(--primary);
+            color: white;
+            transform: scale(1.07);
+        }}
+
+        .step-label {{
+            margin-top: 4px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }}
+
+        .step-label.active {{
+            color: var(--primary);
+            font-weight: 600;
+        }}
+
+    </style>
+    </head>
+
+    <body>
+
+        <div class="stepper-container">
+
+            <div class="stepper-line"></div>
+            <div class="stepper-progress"></div>
+
+            {''.join(items)}
+
+        </div>
+
+        <script>
+        function setStage(s) {{
+            fetch("/_stcore/forward_msg", {{
+                method: "POST",
+                body: JSON.stringify({{ stage: s }})
+            }}).then(() => window.parent.location.reload());
+        }}
+        </script>
+
+    </body>
+    </html>
     """
 
-    st.markdown(html, unsafe_allow_html=True)
+    components.html(html, height=150)
 
-# ------------------------------------------------------------
+
+# =====================================================================
 # CARDS
-# ------------------------------------------------------------
+# =====================================================================
 def render_card(title: str, icon: str = ""):
     icon_html = f"{icon} " if icon else ""
     st.markdown(
@@ -325,9 +330,9 @@ def close_card():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-# ------------------------------------------------------------
-# METRICS, ALERTS, DIVIDER
-# ------------------------------------------------------------
+# =====================================================================
+# METRICS
+# =====================================================================
 def render_metric_card(label: str, value: str, col):
     with col:
         st.markdown(
@@ -341,6 +346,9 @@ def render_metric_card(label: str, value: str, col):
         )
 
 
+# =====================================================================
+# ALERT BOXES
+# =====================================================================
 def render_alert(message: str, alert_type: str = "info"):
     icons = {"success": "✔", "info": "ℹ", "warning": "⚠", "error": "✕"}
     st.markdown(
@@ -354,5 +362,8 @@ def render_alert(message: str, alert_type: str = "info"):
     )
 
 
+# =====================================================================
+# DIVIDER
+# =====================================================================
 def render_section_divider():
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
