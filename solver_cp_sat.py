@@ -241,8 +241,8 @@ def build_and_solve_model(
     objective = 0
     
     for grade in grades:
-    model.Add(inventory_vars[(grade, 0)] == initial_inventory[grade])
-
+        model.Add(inventory_vars[(grade, 0)] == initial_inventory[grade])
+    
     for grade in grades:
         for d in range(num_days):
             produced_today = sum(
