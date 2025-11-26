@@ -294,30 +294,44 @@ def render_header(title: str, subtitle: str = ""):
 # ------------------------------------------------------------
 # STAGE PROGRESS
 # ------------------------------------------------------------
-def render_stage_progress(current_stage: int) -> None:
+def render_stage_progress(current_stage: int):
+    """
+    Material-3 inspired horizontal stage progress UI.
+    Works with any number of steps and aligns perfectly in Streamlit.
+    """
+
+    # Define the steps (numbers auto-generated if needed)
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"),
         ("3", "Results")
     ]
 
-    # Build all stage blocks
-    stage_blocks = []
-    for idx, (step_num, label) in enumerate(stages):
+    total = len(stages)
+
+    # Clamp stage index (safety)
+    if current_stage < 0:
+        current_stage = 0
+    if current_stage >= total:
+        current_stage = total - 1
+
+    blocks = []
+    for idx, (num, label) in enumerate(stages):
+
         # Determine status
         if idx < current_stage:
             status = "completed"
             icon = "✓"
         elif idx == current_stage:
             status = "active"
-            icon = step_num
+            icon = num
         else:
             status = "inactive"
-            icon = step_num
+            icon = num
 
-        stage_blocks.append(
+        blocks.append(
             f"""
-            <div class="stage-step">
+            <div class="stage-step" aria-current="{ 'step' if idx == current_stage else 'false' }">
                 <div class="stage-circle {status}">{icon}</div>
                 <div class="stage-label {'active' if idx == current_stage else ''}">
                     {label}
@@ -326,19 +340,25 @@ def render_stage_progress(current_stage: int) -> None:
             """
         )
 
-    html = "".join(stage_blocks)
+    # Add connectors between steps
+    # (done as separate elements so circles remain centered & responsive)
+    html = ""
+    for i, block in enumerate(blocks):
+        html += block
+        if i < total - 1:
+            html += """<div class="stage-connector"></div>"""
 
+    # Render
     st.markdown(
         f"""
         <div class="stage-container">
-            <div style="display:flex;justify-content:space-between;width:100%;">
+            <div class="stage-row">
                 {html}
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-
 
 # ------------------------------------------------------------
 # CARDS
