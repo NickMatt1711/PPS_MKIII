@@ -42,7 +42,6 @@ def build_grade_color_map(grades: List[str]) -> Dict[str, str]:
 # ===============================================================
 
 def get_or_create_grade_colors(grades):
-    """Compatibility wrapper so existing app.py continues to work."""
     return build_grade_color_map(grades)
 
 
@@ -57,12 +56,7 @@ def create_gantt_chart(
     shutdown_periods: Dict,
     grade_colors: Dict
 ):
-    """
-    Creates a Plotly Express timeline chart matching Option A visuals:
-    - Y-axis: Grade
-    - Color by Grade
-    - Shutdown shading using vrect
-    """
+
     dates = [_ensure_date(d) for d in dates]
 
     schedule = solution.get("is_producing", {}).get(line, {})
@@ -117,14 +111,14 @@ def create_gantt_chart(
     fig.update_yaxes(
         autorange="reversed",
         showgrid=True,
-        gridcolor="#B0B0B0",
+        gridcolor="lightgray",
         tickfont=dict(color="#222222", size=12)
     )
     fig.update_xaxes(
         tickformat="%d-%b",
         dtick="D1",
         showgrid=True,
-        gridcolor="#B0B0B0",
+        gridcolor="lightgray",
         tickfont=dict(color="#222222", size=12)
     )
 
@@ -134,15 +128,21 @@ def create_gantt_chart(
         plot_bgcolor="white",
         paper_bgcolor="white",
         margin=dict(l=80, r=160, t=60, b=60),
-        font=dict(size=12, color="#222222")
+        font=dict(size=12, color="#222222"),
+        legend_title_text="Grade",
+            legend=dict(
+                traceorder="normal",
+                orientation="v",
+                yanchor="middle",
+                y=0.5,
+                xanchor="left",
+                x=1.02,
+                bgcolor="rgba(255,255,255,0)",
+                bordercolor="lightgray",
+                borderwidth=0
+            )
     )
     
-    fig.legend=dict(
-        title=dict(font=dict(color="#222222")),
-        font=dict(color="#222222"),
-        bgcolor="white",
-    )
-
     return fig
 
 
