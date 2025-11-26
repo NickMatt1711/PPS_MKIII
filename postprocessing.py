@@ -141,23 +141,29 @@ def create_inventory_chart(
     dates: List[date],
     min_inv: float,
     max_inv: float,
-    allowed_lines: Any,  # dict OR list
+    allowed_lines: Any,
     shutdown_periods: Dict,
     grade_colors: Dict,
     initial_inv: float,
     buffer_days: int
 ):
-    """
-    Full UI-style inventory chart:
-    - Lines + markers
-    - Shutdown shading
-    - Min/Max bands
-    - Start, End, High, Low annotations
-    """
     dates = [_ensure_date(d) for d in dates]
 
     inv_dict = solution.get("inventory", {}).get(grade, {})
     inv_vals = [inv_dict.get(d.strftime("%d-%b-%y"), 0) for d in dates]
+
+    # Determine last actual planning day (before buffer)
+    last_actual_day = len(dates) - buffer_days - 1
+
+    start_val = inv_vals[0]
+    end_val = inv_vals[last_actual_day]
+    highest_val = max(inv_vals[:last_actual_day + 1])
+    lowest_val = min(inv_vals[:last_actual_day + 1])
+
+    start_x = dates[0]
+    end_x = dates[last_actual_day]
+    highest_x = dates[inv_vals.index(highest_val)]
+    lowest_x = dates[inv_vals.index(lowest_val)]
 
     fig = go.Figure()
 
@@ -171,115 +177,129 @@ def create_inventory_chart(
         hovertemplate="Date: %{x|%d-%b-%y}<br>Inventory: %{y:.0f} MT<extra></extra>"
     ))
 
-    # ------------------------------
-    #  allowed_lines may be dict OR list
-    # ------------------------------
+    # Handle allowed_lines (dict or list)
     if isinstance(allowed_lines, dict):
         lines_for_grade = allowed_lines.get(grade, [])
     else:
-        lines_for_grade = allowed_lines  # fallback
+        lines_for_grade = allowed_lines
 
     # Shutdown shading
-    shaded_once = False
+    shutdown_added = False
     for line in lines_for_grade:
         if line in shutdown_periods and shutdown_periods[line]:
-            sd = shutdown_periods[line]
-            x0 = dates[sd[0]]
-            x1 = dates[sd[-1]] + timedelta(days=1)
-
+            shutdown_days = shutdown_periods[line]
+            start_shutdown = dates[shutdown_days[0]]
+            end_shutdown = dates[shutdown_days[-1]]
+            
             fig.add_vrect(
-                x0=x0, x1=x1,
-                fillcolor="red", opacity=0.1,
-                layer="below", line_width=0,
-                annotation_text=f"Shutdown: {line}" if not shaded_once else "",
+                x0=start_shutdown,
+                x1=end_shutdown + timedelta(days=1),
+                fillcolor="red",
+                opacity=0.1,
+                layer="below",
+                line_width=0,
+                annotation_text=f"Shutdown: {line}" if not shutdown_added else "",
                 annotation_position="top left",
+                annotation_font_size=14,
                 annotation_font_color="red"
             )
-            shaded_once = True
+            shutdown_added = True
 
-    # ------------------
-    # Min/Max Limits
-    # ------------------
+    # Min/Max lines
     if min_inv is not None:
         fig.add_hline(
             y=min_inv,
-            line=dict(color="red", dash="dash"),
-            annotation_text=f"Min {min_inv:.0f}",
-            annotation_position="top left"
+            line=dict(color="red", width=2, dash="dash"),
+            annotation_text=f"Min: {min_inv:,.0f}",
+            annotation_position="top left",
+            annotation_font_color="red"
         )
 
     if max_inv is not None:
         fig.add_hline(
             y=max_inv,
-            line=dict(color="green", dash="dash"),
-            annotation_text=f"Max {max_inv:.0f}",
-            annotation_position="bottom left"
+            line=dict(color="green", width=2, dash="dash"),
+            annotation_text=f"Max: {max_inv:,.0f}",
+            annotation_position="bottom left",
+            annotation_font_color="green"
         )
 
-    # ------------------
     # Annotations
-    # ------------------
-    start_val = inv_vals[0]
-    end_val = inv_vals[-1]
-    high_val = max(inv_vals)
-    low_val = min(inv_vals)
-
-    ann_points = [
-        (dates[0], start_val, f"Start: {start_val:.0f}", -50, 40, "#1f77b4"),
-        (dates[-1], end_val, f"End: {end_val:.0f}", 50, 40, "#1f77b4"),
-        (dates[inv_vals.index(high_val)], high_val, f"High: {high_val:.0f}", 0, -50, "#2ca02c"),
-        (dates[inv_vals.index(low_val)], low_val, f"Low: {low_val:.0f}", 0, 50, "#d62728"),
+    annotations = [
+        dict(
+            x=start_x, y=start_val,
+            text=f"Start: {start_val:.0f}",
+            showarrow=True, arrowhead=2,
+            ax=-40, ay=30,
+            font=dict(color="black", size=11),
+            bgcolor="white", bordercolor="gray"
+        ),
+        dict(
+            x=end_x, y=end_val,
+            text=f"End: {end_val:.0f}",
+            showarrow=True, arrowhead=2,
+            ax=40, ay=30,
+            font=dict(color="black", size=11),
+            bgcolor="white", bordercolor="gray"
+        ),
+        dict(
+            x=highest_x, y=highest_val,
+            text=f"High: {highest_val:.0f}",
+            showarrow=True, arrowhead=2,
+            ax=0, ay=-40,
+            font=dict(color="darkgreen", size=11),
+            bgcolor="white", bordercolor="gray"
+        ),
+        dict(
+            x=lowest_x, y=lowest_val,
+            text=f"Low: {lowest_val:.0f}",
+            showarrow=True, arrowhead=2,
+            ax=0, ay=40,
+            font=dict(color="firebrick", size=11),
+            bgcolor="white", bordercolor="gray"
+        )
     ]
 
-    for x, y, text, ax, ay, color in ann_points:
-        fig.add_annotation(
-            x=x, y=y,
-            text=text,
-            showarrow=True,
-            arrowhead=2,
-            arrowcolor=color,
-            arrowwidth=2,
-            ax=ax, ay=ay,
-            font=dict(size=14, color=color, family="Arial Black"),
-            bgcolor="rgba(255, 255, 255, 0.95)",
-            bordercolor=color,
-            borderwidth=2,
-            borderpad=6,
-            opacity=1.0
-        )
-
     fig.update_layout(
-        title=dict(
-            text=f"Inventory Level — {grade}",
-            font=dict(size=18, color="#1B1F24", family="Arial")
-        ),
+        title=f"Inventory Level - {grade}",
         xaxis=dict(
-            title=dict(
-                text="Date",
-                font=dict(size=14, color="#1B1F24", family="Arial")
-            ),
-            tickfont=dict(size=12, color="#1B1F24"),
-            tickformat="%d-%b",
-            dtick="D1",
+            title="Date",
             showgrid=True,
-            gridcolor="lightgray"
+            gridcolor="lightgray",
+            tickvals=dates,
+            tickformat="%d-%b",
+            dtick="D1"
         ),
         yaxis=dict(
-            title=dict(
-                text="Inventory (MT)",
-                font=dict(size=14, color="#1B1F24", family="Arial")
-            ),
-            tickfont=dict(size=12, color="#1B1F24"),
+            title="Inventory Volume (MT)",
             showgrid=True,
             gridcolor="lightgray"
         ),
         plot_bgcolor="white",
         paper_bgcolor="white",
-        margin=dict(l=80, r=80, t=100, b=80),
-        font=dict(size=12, color="#1B1F24"),
-        height=450,
+        margin=dict(l=60, r=80, t=80, b=60),
+        font=dict(size=12),
+        height=420,
         showlegend=False
     )
+    
+    # Add annotations one by one
+    for ann in annotations:
+        fig.add_annotation(
+            x=ann['x'],
+            y=ann['y'],
+            text=ann['text'],
+            showarrow=ann['showarrow'],
+            arrowhead=ann['arrowhead'],
+            ax=ann['ax'],
+            ay=ann['ay'],
+            font=ann['font'],
+            bgcolor=ann['bgcolor'],
+            bordercolor=ann['bordercolor'],
+            borderwidth=1,
+            borderpad=4,
+            opacity=0.9
+        )
 
     return fig
 
