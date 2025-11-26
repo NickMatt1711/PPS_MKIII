@@ -99,11 +99,12 @@ def render_upload_stage():
 
     with col2:
         st.markdown("#### 📋 Required Sheets")
-        for sheet in REQUIRED_SHEETS:
-            st.markdown(f"✓ **{sheet}**")
-        st.markdown("#### 🔄 Optional Sheets")
-        st.markdown("• Transition matrices")
+        st.markdown(f"✓ Plant")
+        st.markdown(f"✓ Inventory")
+        st.markdown(f"✓ Demand")
+        st.markdown(f"✓ Transition")
 
+'''
     render_section_divider()
 
     with st.expander("ℹ️ What data do I need?", expanded=False):
@@ -118,6 +119,7 @@ def render_upload_stage():
 
         **Transition Sheets (Optional)**: Grade transition rules for each plant
         """)
+'''
 
     # Navigation buttons
     c1, c2, c3 = st.columns([1, 1, 1])
