@@ -242,34 +242,40 @@ def render_stage_progress(current_stage: int):
     if "stage" not in st.session_state:
         st.session_state["stage"] = current_stage
 
+    if "finalized" not in st.session_state:
+        st.session_state["finalized"] = False
+
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"),
         ("3", "Results")
     ]
 
-    html_blocks = []
-    total_stages = len(stages)
+    stage_blocks = []
 
     for idx, (num, label) in enumerate(stages):
 
-        # --- FIXED LOGIC ---
+        # ---- CORRECTED LOGIC ----
         if idx < current_stage:
             status = "completed"
             icon = "✓"
+
         elif idx == current_stage:
-            # if it's the last stage → mark completed
-            if idx == total_stages - 1:
+
+            # Only completed if this is final step *and* finished
+            if idx == len(stages) - 1 and st.session_state["finalized"]:
                 status = "completed"
                 icon = "✓"
             else:
                 status = "active"
                 icon = num
+
         else:
             status = "inactive"
             icon = num
+        # --------------------------
 
-        html_blocks.append(
+        stage_blocks.append(
             f"""
             <div class="stage-step" onclick="window.setStage({idx})">
                 <div class="stage-circle {status}">{icon}</div>
@@ -283,17 +289,17 @@ def render_stage_progress(current_stage: int):
     html = f"""
     <div class="stage-container">
         <div class="stage-flex">
-            {''.join(html_blocks)}
+            {''.join(stage_blocks)}
         </div>
     </div>
 
     <script>
         window.setStage = function(stageIndex) {{
-            const json = {{ "stage": stageIndex }};
+            const payload = {{ "stage": stageIndex }};
             fetch("/_stcore/update", {{
                 method: "POST",
                 headers: {{ "Content-Type": "application/json" }},
-                body: JSON.stringify(json)
+                body: JSON.stringify(payload)
             }}).then(() => window.location.reload());
         }}
     </script>
