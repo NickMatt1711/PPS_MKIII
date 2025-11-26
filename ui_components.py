@@ -1,6 +1,7 @@
 """
 Reusable UI components with modern elevated material design (M3-Inspired)
 Fully refactored for aesthetics, consistency & maintainability.
+Now includes fully JS-clickable stage progress.
 """
 
 import streamlit as st
@@ -17,7 +18,6 @@ def apply_custom_css(is_dark_mode=False):
     card_shadow = "0 3px 8px rgba(0, 0, 0, 0.07)"
     hover_shadow = "0 6px 20px rgba(0, 0, 0, 0.15)"
 
-    # Theme palettes
     if is_dark_mode:
         theme = {
             "--bg-main": "#0D1117",
@@ -53,9 +53,6 @@ def apply_custom_css(is_dark_mode=False):
             {"".join([f"{k}: {v};" for k, v in theme.items()])}
         }}
 
-        /* ------------------------------------
-        GLOBAL
-        ------------------------------------*/
         body, .main, .stApp {{
             background: var(--bg-main) !important;
             color: var(--text-primary) !important;
@@ -65,9 +62,7 @@ def apply_custom_css(is_dark_mode=False):
             color: var(--text-primary) !important;
         }}
 
-        /* ------------------------------------
-        HEADER
-        ------------------------------------*/
+        /* HEADER */
         .app-header {{
             background: var(--gradient);
             padding: 2rem;
@@ -83,9 +78,7 @@ def apply_custom_css(is_dark_mode=False):
             font-weight: 600;
         }}
 
-        /* ------------------------------------
-        CARDS
-        ------------------------------------*/
+        /* CARDS */
         .card {{
             background: var(--bg-card);
             padding: 1.7rem;
@@ -100,12 +93,10 @@ def apply_custom_css(is_dark_mode=False):
             margin-bottom: 1rem;
         }}
 
-        /* ------------------------------------
-        METRIC CARDS
-        ------------------------------------*/
+        /* METRIC */
         .metric-card {{
             background: var(--gradient);
-            color: white;
+            color: white !important;
             padding: 1.4rem;
             border-radius: {radius};
             text-align: center;
@@ -117,20 +108,7 @@ def apply_custom_css(is_dark_mode=False):
             box-shadow: {hover_shadow};
         }}
 
-        .metric-value {{
-            font-size: 2rem;
-            font-weight: 700;
-        }}
-
-        .metric-label {{
-            font-size: 0.85rem;
-            opacity: 0.95;
-            letter-spacing: 0.7px;
-        }}
-
-        /* ------------------------------------
-        ALERT BOXES
-        ------------------------------------*/
+        /* ALERTS */
         .alert {{
             padding: 1rem;
             border-radius: 10px;
@@ -142,128 +120,61 @@ def apply_custom_css(is_dark_mode=False):
             border-left-style: solid;
         }}
 
-        .alert-success {{
-            background: {THEME_COLORS['success_light']};
-            border-left-color: #1A7F37;
-        }}
-        .alert-info {{
-            background: {THEME_COLORS['primary_light']};
-            border-left-color: var(--primary);
-        }}
-        .alert-warning {{
-            background: {THEME_COLORS['warning_light']};
-            border-left-color: {THEME_COLORS['warning']};
-        }}
-        .alert-error {{
-            background: {THEME_COLORS['error_light']};
-            border-left-color: {THEME_COLORS['error']};
-        }}
+        /* ---------------------------------------
+          JS-CLICKABLE STAGE PROGRESS BAR
+        -----------------------------------------*/
 
-        /* ------------------------------------
-        TABS
-        ------------------------------------*/
-        .stTabs [data-baseweb="tab-list"] {{
-            background: var(--tab-bg);
-            padding: 0.5rem;
-            display: flex;
-            width: 100%;
-            border-radius: {radius};
-            gap: 8px;
-        }}
-
-        .stTabs [data-baseweb="tab"] {{
-            border-radius: 10px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            padding: 0.6rem 1.5rem;
-            font-weight: 600;
-            flex: 1;
-            text-align: center;
-            justify-content: center;
-            transition: 0.25s ease;
-        }}
-
-        .stTabs [aria-selected="true"] {{
-            background: var(--primary) !important;
-            color: white !important;
-            border-color: var(--primary);
-        }}
-
-        /* ------------------------------------
-        BUTTONS
-        ------------------------------------*/
-        .stButton > button {{
-            background: var(--primary);
-            color: white;
-            padding: 0.7rem 2rem;
-            font-weight: 600;
-            border-radius: 10px;
-            border: none;
-            transition: 0.25s ease;
-        }}
-        .stButton > button:hover {{
-            background: var(--primary-hover);
-            box-shadow: {hover_shadow};
-            transform: translateY(-2px);
-        }}
-
-        /* ------------------------------------
-        STAGE PROGRESS (Improved)
-        ------------------------------------*/
         .stage-container {{
             padding: 1.2rem;
             background: var(--bg-card);
-            border-radius: {radius};
             border: 1px solid var(--border);
+            border-radius: {radius};
             box-shadow: {card_shadow};
         }}
 
-        .stage-row {{
+        .stage-flex {{
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            width: 100%;
-            gap: 14px;
+            gap: 1rem;
         }}
 
         .stage-step {{
-            flex: 1;
             text-align: center;
-            position: relative;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 10px;
+            transition: 0.2s ease;
         }}
 
-        .stage-connector {{
-            flex: 1;
-            height: 2px;
-            background: var(--border);
-            margin: 0 4px;
-            border-radius: 2px;
+        .stage-step:hover .stage-label {{
+            color: var(--primary);
         }}
 
         .stage-circle {{
             width: 45px;
             height: 45px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 50%;
             font-weight: 600;
-            margin: 0 auto 0.25rem auto;
+            margin: 0 auto 0.3rem auto;
+            transition: 0.2s ease;
         }}
 
         .stage-circle.active {{
-            background: var(--primary);
-            color: white;
+            background: var(--primary) !important;
+            color: white !important;
         }}
 
         .stage-circle.completed {{
-            background: #1A7F37;
-            color: white;
+            background: #1A7F37 !important;
+            color: white !important;
         }}
 
         .stage-circle.inactive {{
             background: var(--border);
-            color: var(--text-secondary);
+            color: var(--text-secondary) !important;
         }}
 
         .stage-label {{
@@ -272,19 +183,19 @@ def apply_custom_css(is_dark_mode=False):
         }}
 
         .stage-label.active {{
-            color: var(--primary);
-            font-weight: 600;
+            color: var(--primary) !important;
         }}
 
-        /* ------------------------------------
-        SECTION DIVIDER
-        ------------------------------------*/
+        .stage-step:hover .stage-circle.inactive {{
+            background: var(--primary);
+            color: white !important;
+        }}
+
         .section-divider {{
             height: 1px;
             background: var(--border);
             margin: 2rem 0;
         }}
-
         </style>
         """,
         unsafe_allow_html=True,
@@ -301,8 +212,8 @@ def render_theme_toggle():
     current = st.session_state[SS_THEME]
     label = "🌙 Dark" if current == "light" else "☀️ Light"
 
-    _, col = st.columns([8, 1])
-    with col:
+    col1, col2 = st.columns([8, 1])
+    with col2:
         if st.button(label):
             st.session_state[SS_THEME] = "dark" if current == "light" else "light"
             st.rerun()
@@ -325,20 +236,27 @@ def render_header(title: str, subtitle: str = ""):
 
 
 # ------------------------------------------------------------
-# IMPROVED STAGE PROGRESS
+# JS-CLICKABLE STAGE PROGRESS BAR
 # ------------------------------------------------------------
-def render_stage_progress(current_stage: int) -> None:
+def render_stage_progress(current_stage: int):
+    """
+    Fully clickable stage progress using JS + Streamlit.
+    Does not use Streamlit buttons → cleaner layout.
+    """
+
+    if "stage" not in st.session_state:
+        st.session_state["stage"] = current_stage
+
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"),
         ("3", "Results")
     ]
 
-    total = len(stages)
-    current_stage = max(0, min(current_stage, total - 1))
-
-    blocks = []
+    # Create HTML blocks
+    html_blocks = []
     for idx, (num, label) in enumerate(stages):
+
         if idx < current_stage:
             status = "completed"
             icon = "✓"
@@ -349,9 +267,9 @@ def render_stage_progress(current_stage: int) -> None:
             status = "inactive"
             icon = num
 
-        blocks.append(
+        html_blocks.append(
             f"""
-            <div class="stage-step">
+            <div class="stage-step" onclick="window.setStage({idx})">
                 <div class="stage-circle {status}">{icon}</div>
                 <div class="stage-label {'active' if idx == current_stage else ''}">
                     {label}
@@ -360,21 +278,31 @@ def render_stage_progress(current_stage: int) -> None:
             """
         )
 
-    # Insert connectors
-    html = ""
-    for i, block in enumerate(blocks):
-        html += block
-        if i < total - 1:
-            html += """<div class="stage-connector"></div>"""
-
-    st.markdown(
-        f"""
-        <div class="stage-container">
-            <div class="stage-row">{html}</div>
+    # Combine HTML
+    html = f"""
+    <div class="stage-container">
+        <div class="stage-flex">
+            {''.join(html_blocks)}
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    </div>
+
+    <script>
+        window.setStage = function(stageIndex) {{
+            const json = {{ "stage": stageIndex }};
+            fetch("/_stcore/update", {{
+                method: "POST",
+                headers: {{
+                    "Content-Type": "application/json"
+                }},
+                body: JSON.stringify(json)
+            }}).then(() => {{
+                window.location.reload();
+            }});
+        }}
+    </script>
+    """
+
+    st.markdown(html, unsafe_allow_html=True)
 
 
 # ------------------------------------------------------------
