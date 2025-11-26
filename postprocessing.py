@@ -225,27 +225,38 @@ def create_inventory_chart(
     low_val = min(inv_vals)
 
     ann_points = [
-        (dates[0], start_val, f"Start: {start_val:.0f}", -40, 30),
-        (dates[-1], end_val, f"End: {end_val:.0f}", 40, 30),
-        (dates[inv_vals.index(high_val)], high_val, f"High: {high_val:.0f}", 0, -40),
-        (dates[inv_vals.index(low_val)], low_val, f"Low: {low_val:.0f}", 0, 40),
+        (dates[0], start_val, f"Start: {start_val:.0f}", -50, 40, "#1f77b4"),
+        (dates[-1], end_val, f"End: {end_val:.0f}", 50, 40, "#1f77b4"),
+        (dates[inv_vals.index(high_val)], high_val, f"High: {high_val:.0f}", 0, -50, "#2ca02c"),
+        (dates[inv_vals.index(low_val)], low_val, f"Low: {low_val:.0f}", 0, 50, "#d62728"),
     ]
 
-    for x, y, text, ax, ay in ann_points:
+    for x, y, text, ax, ay, color in ann_points:
         fig.add_annotation(
             x=x, y=y,
             text=text,
             showarrow=True,
             arrowhead=2,
+            arrowcolor=color,
+            arrowwidth=2,
             ax=ax, ay=ay,
-            bgcolor="white",
-            bordercolor="gray",
-            opacity=0.9
+            font=dict(size=14, color=color, family="Arial Black"),
+            bgcolor="rgba(255, 255, 255, 0.95)",
+            bordercolor=color,
+            borderwidth=2,
+            borderpad=6,
+            opacity=1.0
         )
 
     fig.update_layout(
-        title=f"Inventory Level – {grade}",
+        title=dict(
+            text=f"Inventory Level — {grade}",
+            font=dict(size=18, color="#1B1F24", family="Arial")
+        ),
         xaxis=dict(
+            title="Date",
+            titlefont=dict(size=14, color="#1B1F24", family="Arial"),
+            tickfont=dict(size=12, color="#1B1F24"),
             tickformat="%d-%b",
             dtick="D1",
             showgrid=True,
@@ -253,14 +264,16 @@ def create_inventory_chart(
         ),
         yaxis=dict(
             title="Inventory (MT)",
+            titlefont=dict(size=14, color="#1B1F24", family="Arial"),
+            tickfont=dict(size=12, color="#1B1F24"),
             showgrid=True,
             gridcolor="lightgray"
         ),
         plot_bgcolor="white",
         paper_bgcolor="white",
-        margin=dict(l=60, r=80, t=80, b=60),
-        font=dict(size=12),
-        height=420,
+        margin=dict(l=80, r=80, t=100, b=80),
+        font=dict(size=12, color="#1B1F24"),
+        height=450,
         showlegend=False
     )
 
