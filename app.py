@@ -104,23 +104,6 @@ def render_upload_stage():
         st.markdown(f"✓ Demand")
         st.markdown(f"✓ Transition")
 
-'''
-    render_section_divider()
-
-    with st.expander("ℹ️ What data do I need?", expanded=False):
-        st.markdown("""
-        Your Excel file should contain:
-
-        **Plant Sheet**: Plant names, capacities, material running, shutdown periods
-
-        **Inventory Sheet**: Grade names, inventory levels, run constraints, allowed lines
-
-        **Demand Sheet**: Daily demand forecasts for each grade
-
-        **Transition Sheets (Optional)**: Grade transition rules for each plant
-        """)
-'''
-
     # Navigation buttons
     c1, c2, c3 = st.columns([1, 1, 1])
     with c3:
