@@ -16,7 +16,7 @@ from constants import *
 from ui_components import *
 from data_loader import *
 from preview_tables import *
-from solver_cp_sat import build_solve_model
+from solver_cp_sat import build_and_solve_model
 from postprocessing import *  # uses compatibility wrapper get_or_create_grade_colors
 
 import pandas as pd
