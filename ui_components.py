@@ -307,6 +307,7 @@ def render_stage_progress(current_stage: int):
         icon = "✓" if status == "completed" else num
         label_class = "active" if idx == current_stage else ""
 
+'''
         html += f"""
         <div class="stage-step">
             <div class="stage-circle {status}">{icon}</div>
@@ -324,7 +325,7 @@ def render_stage_progress(current_stage: int):
         """,
         unsafe_allow_html=True,
     )
-
+'''
 
 # ------------------------------------------------------------
 # CARDS
