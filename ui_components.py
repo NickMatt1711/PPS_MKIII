@@ -294,38 +294,51 @@ def render_header(title: str, subtitle: str = ""):
 # ------------------------------------------------------------
 # STAGE PROGRESS
 # ------------------------------------------------------------
-def render_stage_progress(current_stage: int):
-    stages = [("1", "Upload"), ("2", "Preview & Configure"), ("3", "Results")]
+def render_stage_progress(current_stage: int) -> None:
+    stages = [
+        ("1", "Upload"),
+        ("2", "Preview & Configure"),
+        ("3", "Results")
+    ]
 
-    html = ""
-    for idx, (num, label) in enumerate(stages):
-        status = (
-            "completed" if idx < current_stage else
-            "active" if idx == current_stage else
-            "inactive"
+    # Build all stage blocks
+    stage_blocks = []
+    for idx, (step_num, label) in enumerate(stages):
+        # Determine status
+        if idx < current_stage:
+            status = "completed"
+            icon = "✓"
+        elif idx == current_stage:
+            status = "active"
+            icon = step_num
+        else:
+            status = "inactive"
+            icon = step_num
+
+        stage_blocks.append(
+            f"""
+            <div class="stage-step">
+                <div class="stage-circle {status}">{icon}</div>
+                <div class="stage-label {'active' if idx == current_stage else ''}">
+                    {label}
+                </div>
+            </div>
+            """
         )
-        icon = "✓" if status == "completed" else num
-        label_class = "active" if idx == current_stage else ""
 
-'''
-        html += f"""
-        <div class="stage-step">
-            <div class="stage-circle {status}">{icon}</div>
-            <div class="stage-label {label_class}">{label}</div>
-        </div>
-        """
+    html = "".join(stage_blocks)
 
     st.markdown(
         f"""
         <div class="stage-container">
-            <div style="display: flex; justify-content: space-between;">
+            <div style="display:flex;justify-content:space-between;width:100%;">
                 {html}
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-'''
+
 
 # ------------------------------------------------------------
 # CARDS
