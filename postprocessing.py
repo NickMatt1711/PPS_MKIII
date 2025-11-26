@@ -279,7 +279,7 @@ def create_inventory_chart(
         xaxis=dict(
             title="Date",
             showgrid=True,
-            gridcolor="gray",
+            gridcolor="lightgray",
             tickvals=dates,
             tickformat="%d-%b",
             tickfont=dict(color="#333333", size=12),
@@ -289,7 +289,7 @@ def create_inventory_chart(
             title="Inventory Volume (MT)",
             showgrid=True,
             tickfont=dict(color="#333333", size=12),
-            gridcolor="gray"
+            gridcolor="lightgray"
         ),
         plot_bgcolor="white",
         paper_bgcolor="white",
