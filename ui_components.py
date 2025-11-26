@@ -13,7 +13,6 @@ from constants import THEME_COLORS, SS_THEME
 def apply_custom_css(is_dark_mode=False):
     """Apply Material-3 style UI theme with clean spacing & updated colors."""
 
-    # Material-style elevation and spacing
     radius = "14px"
     card_shadow = "0 3px 8px rgba(0, 0, 0, 0.07)"
     hover_shadow = "0 6px 20px rgba(0, 0, 0, 0.15)"
@@ -54,7 +53,9 @@ def apply_custom_css(is_dark_mode=False):
             {"".join([f"{k}: {v};" for k, v in theme.items()])}
         }}
 
-        /* Global Layout */
+        /* ------------------------------------
+        GLOBAL
+        ------------------------------------*/
         body, .main, .stApp {{
             background: var(--bg-main) !important;
             color: var(--text-primary) !important;
@@ -115,10 +116,12 @@ def apply_custom_css(is_dark_mode=False):
             transform: translateY(-4px);
             box-shadow: {hover_shadow};
         }}
+
         .metric-value {{
             font-size: 2rem;
             font-weight: 700;
         }}
+
         .metric-label {{
             font-size: 0.85rem;
             opacity: 0.95;
@@ -157,7 +160,7 @@ def apply_custom_css(is_dark_mode=False):
         }}
 
         /* ------------------------------------
-        TABS – Material Clean Look
+        TABS
         ------------------------------------*/
         .stTabs [data-baseweb="tab-list"] {{
             background: var(--tab-bg);
@@ -186,7 +189,9 @@ def apply_custom_css(is_dark_mode=False):
             border-color: var(--primary);
         }}
 
-        /* Buttons */
+        /* ------------------------------------
+        BUTTONS
+        ------------------------------------*/
         .stButton > button {{
             background: var(--primary);
             color: white;
@@ -202,7 +207,9 @@ def apply_custom_css(is_dark_mode=False):
             transform: translateY(-2px);
         }}
 
-        /* Stage Progress UI */
+        /* ------------------------------------
+        STAGE PROGRESS (Improved)
+        ------------------------------------*/
         .stage-container {{
             padding: 1.2rem;
             background: var(--bg-card);
@@ -210,27 +217,50 @@ def apply_custom_css(is_dark_mode=False):
             border: 1px solid var(--border);
             box-shadow: {card_shadow};
         }}
-        .stage-step {{
-            text-align: center;
+
+        .stage-row {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 14px;
         }}
+
+        .stage-step {{
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }}
+
+        .stage-connector {{
+            flex: 1;
+            height: 2px;
+            background: var(--border);
+            margin: 0 4px;
+            border-radius: 2px;
+        }}
+
         .stage-circle {{
             width: 45px;
             height: 45px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
             font-weight: 600;
-            margin-bottom: 0.3rem;
+            margin: 0 auto 0.25rem auto;
         }}
+
         .stage-circle.active {{
             background: var(--primary);
             color: white;
         }}
+
         .stage-circle.completed {{
             background: #1A7F37;
             color: white;
         }}
+
         .stage-circle.inactive {{
             background: var(--border);
             color: var(--text-secondary);
@@ -240,11 +270,15 @@ def apply_custom_css(is_dark_mode=False):
             font-size: 0.85rem;
             color: var(--text-secondary);
         }}
+
         .stage-label.active {{
             color: var(--primary);
+            font-weight: 600;
         }}
 
-        /* Section Divider */
+        /* ------------------------------------
+        SECTION DIVIDER
+        ------------------------------------*/
         .section-divider {{
             height: 1px;
             background: var(--border);
@@ -261,15 +295,14 @@ def apply_custom_css(is_dark_mode=False):
 # THEME TOGGLE
 # ------------------------------------------------------------
 def render_theme_toggle():
-    """Theme toggle (Light ↔ Dark) without breaking layout."""
     if SS_THEME not in st.session_state:
         st.session_state[SS_THEME] = "light"
 
     current = st.session_state[SS_THEME]
     label = "🌙 Dark" if current == "light" else "☀️ Light"
 
-    col1, col2 = st.columns([8, 1])
-    with col2:
+    _, col = st.columns([8, 1])
+    with col:
         if st.button(label):
             st.session_state[SS_THEME] = "dark" if current == "light" else "light"
             st.rerun()
@@ -292,15 +325,9 @@ def render_header(title: str, subtitle: str = ""):
 
 
 # ------------------------------------------------------------
-# STAGE PROGRESS
+# IMPROVED STAGE PROGRESS
 # ------------------------------------------------------------
-def render_stage_progress(current_stage: int):
-    """
-    Material-3 inspired horizontal stage progress UI.
-    Works with any number of steps and aligns perfectly in Streamlit.
-    """
-
-    # Define the steps (numbers auto-generated if needed)
+def render_stage_progress(current_stage: int) -> None:
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"),
@@ -308,17 +335,10 @@ def render_stage_progress(current_stage: int):
     ]
 
     total = len(stages)
-
-    # Clamp stage index (safety)
-    if current_stage < 0:
-        current_stage = 0
-    if current_stage >= total:
-        current_stage = total - 1
+    current_stage = max(0, min(current_stage, total - 1))
 
     blocks = []
     for idx, (num, label) in enumerate(stages):
-
-        # Determine status
         if idx < current_stage:
             status = "completed"
             icon = "✓"
@@ -331,7 +351,7 @@ def render_stage_progress(current_stage: int):
 
         blocks.append(
             f"""
-            <div class="stage-step" aria-current="{ 'step' if idx == current_stage else 'false' }">
+            <div class="stage-step">
                 <div class="stage-circle {status}">{icon}</div>
                 <div class="stage-label {'active' if idx == current_stage else ''}">
                     {label}
@@ -340,25 +360,22 @@ def render_stage_progress(current_stage: int):
             """
         )
 
-    # Add connectors between steps
-    # (done as separate elements so circles remain centered & responsive)
+    # Insert connectors
     html = ""
     for i, block in enumerate(blocks):
         html += block
         if i < total - 1:
             html += """<div class="stage-connector"></div>"""
 
-    # Render
     st.markdown(
         f"""
         <div class="stage-container">
-            <div class="stage-row">
-                {html}
-            </div>
+            <div class="stage-row">{html}</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+
 
 # ------------------------------------------------------------
 # CARDS
