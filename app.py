@@ -105,7 +105,7 @@ def render_upload_stage():
         st.markdown(f"✓ Transition")
 
     # Navigation buttons
-    if st.button("Next: Preview Data →", disabled=(st.session_state[SS_UPLOADED_FILE] is None)):
+    if st.button("Next: Preview Data →", disabled=(st.session_state[SS_UPLOADED_FILE] is None),use_container_width="True"):
         # move forward only if a file is uploaded and validated already
         if st.session_state[SS_EXCEL_DATA] is not None:
             st.session_state[SS_STAGE] = 1
