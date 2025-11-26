@@ -111,14 +111,14 @@ def create_gantt_chart(
     fig.update_yaxes(
         autorange="reversed",
         showgrid=True,
-        gridcolor="lightgray",
+        gridcolor="gray",
         tickfont=dict(color="#222222", size=12)
     )
     fig.update_xaxes(
         tickformat="%d-%b",
         dtick="D1",
         showgrid=True,
-        gridcolor="lightgray",
+        gridcolor="gray",
         tickfont=dict(color="#222222", size=12)
     )
 
@@ -139,7 +139,7 @@ def create_gantt_chart(
             xanchor="left",
             x=1.02,
             bgcolor="rgba(255,255,255,0)",
-            font_color="lightgray"
+            font_color="gray"
         )
     )
     
@@ -279,7 +279,7 @@ def create_inventory_chart(
         xaxis=dict(
             title="Date",
             showgrid=True,
-            gridcolor="lightgray",
+            gridcolor="gray",
             tickvals=dates,
             tickformat="%d-%b",
             tickfont=dict(color="#333333", size=12),
@@ -289,7 +289,7 @@ def create_inventory_chart(
             title="Inventory Volume (MT)",
             showgrid=True,
             tickfont=dict(color="#333333", size=12),
-            gridcolor="lightgray"
+            gridcolor="gray"
         ),
         plot_bgcolor="white",
         paper_bgcolor="white",
