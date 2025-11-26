@@ -54,16 +54,14 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
                                 solution['production'][grade][date_key] = 0
                             solution['production'][grade][date_key] += value
         
-        # Store inventory data
+        # Store inventory data - OPENING inventory for each day
         for grade in self.grades:
             solution['inventory'][grade] = {}
             for d in range(self.num_days + 1):
                 key = (grade, d)
                 if key in self.inventory:
-                    if d < self.num_days:
-                        solution['inventory'][grade][self.formatted_dates[d] if d > 0 else 'initial'] = self.Value(self.inventory[key])
-                    else:
-                        solution['inventory'][grade]['final'] = self.Value(self.inventory[key])
+                    # Store opening inventory (inventory at START of day d)
+                    solution['inventory'][grade][self.formatted_dates[d]] = self.Value(self.inventory[key])
         
         # Store stockout data
         for grade in self.grades:
