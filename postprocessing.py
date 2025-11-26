@@ -129,18 +129,19 @@ def create_gantt_chart(
         paper_bgcolor="white",
         margin=dict(l=80, r=160, t=60, b=60),
         font=dict(size=12, color="#222222"),
+        showlegend=True,
         legend_title_text="Grade",
-            legend=dict(
-                traceorder="normal",
-                orientation="v",
-                yanchor="middle",
-                y=0.5,
-                xanchor="left",
-                x=1.02,
-                bgcolor="rgba(255,255,255,0)",
-                bordercolor="lightgray",
-                borderwidth=0
-            )
+        legend=dict(
+            traceorder="normal",
+            orientation="v",
+            yanchor="middle",
+            y=0.5,
+            xanchor="left",
+            x=1.02,
+            bgcolor="rgba(255,255,255,0)",
+            bordercolor="lightgray",
+            borderwidth=0
+        )
     )
     
     return fig
