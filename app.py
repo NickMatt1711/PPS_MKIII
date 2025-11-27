@@ -57,7 +57,7 @@ def render_upload_stage():
     st.markdown("### 📤 Upload Production Data")
     st.markdown("Upload an Excel file containing your production planning data.")
 
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns([6, 1])
 
     with col1:
         uploaded_file = st.file_uploader(
@@ -89,11 +89,7 @@ def render_upload_stage():
                 render_alert(f"Failed to read uploaded file: {e}", "error")
 
     with col2:
-        st.markdown("#### 📋 Required Sheets")
-        st.markdown(f"✓ Plant")
-        st.markdown(f"✓ Inventory")
-        st.markdown(f"✓ Demand")
-        st.markdown(f"✓ Transition")
+
 
     # Navigation buttons
     if st.button("Next: Preview Data →", disabled=(st.session_state[SS_UPLOADED_FILE] is None),use_container_width="True"):
