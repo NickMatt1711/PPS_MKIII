@@ -662,3 +662,33 @@ def render_alert(message: str, alert_type: str = "info"):
 def render_section_divider():
     """Render a gradient divider line."""
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+
+
+# ------------------------------------------------------------
+# DOWNLOAD BUTTON
+# ------------------------------------------------------------
+def render_download_template_button():
+    """Render download template button with file loading."""
+    import io
+    from pathlib import Path
+    
+    try:
+        # Get template file from same directory as app.py
+        template_path = Path(__file__).parent / "polymer_production_template.xlsx"
+        
+        if template_path.exists():
+            with open(template_path, "rb") as f:
+                template_data = f.read()
+            
+            st.download_button(
+                label="📥 Download Template",
+                data=template_data,
+                file_name="polymer_production_template.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                help="Download the Excel template file",
+                use_container_width=True
+            )
+        else:
+            st.error("Template file not found in repository")
+    except Exception as e:
+        st.error(f"Error loading template: {e}")
