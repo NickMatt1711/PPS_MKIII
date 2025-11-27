@@ -482,6 +482,76 @@ def apply_custom_css():
             background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%) !important;
         }}
 
+        /* File uploader text */
+        .stFileUploader label {{
+            color: #1a202c !important;
+            font-weight: 700 !important;
+        }}
+
+        .stFileUploader > div > div {{
+            background: white !important;
+            border: 3px solid #e2e8f0 !important;
+            border-radius: {radius} !important;
+        }}
+
+        .stFileUploader section {{
+            color: #1a202c !important;
+        }}
+
+        .stFileUploader section > div {{
+            color: #1a202c !important;
+        }}
+
+        .stFileUploader small {{
+            color: #64748b !important;
+        }}
+
+        /* Browse files button inside uploader */
+        .stFileUploader button {{
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+            color: white !important;
+            border: 2px solid white !important;
+            font-weight: 700 !important;
+        }}
+
+        .stFileUploader button:hover {{
+            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
+        }}
+
+        /* ------------------------------------
+        DOWNLOAD BUTTON (matching other buttons)
+        ------------------------------------*/
+        .stDownloadButton > button {{
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+            color: white !important;
+            padding: 1rem 3rem;
+            font-weight: 900 !important;
+            font-size: 1.1rem;
+            border-radius: {radius};
+            border: 4px solid white;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }}
+        .stDownloadButton > button p,
+        .stDownloadButton > button span,
+        .stDownloadButton > button div {{
+            color: white !important;
+            font-weight: 900 !important;
+        }}
+        .stDownloadButton > button:hover {{
+            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
+            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.6);
+            transform: translateY(-3px) scale(1.02);
+            color: white !important;
+        }}
+        .stDownloadButton > button:hover p,
+        .stDownloadButton > button:hover span,
+        .stDownloadButton > button:hover div {{
+            color: white !important;
+        }}
+
         /* ------------------------------------
         INPUT FIELDS
         ------------------------------------*/
