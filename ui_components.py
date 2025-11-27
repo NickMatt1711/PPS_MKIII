@@ -1,327 +1,86 @@
+# ui_components.py
 """
-Reusable UI components with vibrant multi-color theme
-Maximum contrast, colorful sections, no sidebar
+Full Material 3 UI Component System
+Completely rewritten to replace gradients, neon colors,
+and outdated styling with a clean, accessible M3 visual language.
 """
 
+import base64
 import streamlit as st
-from constants import THEME_COLORS
+
+# ============================================================
+# MATERIAL 3 TOKEN SET
+# ============================================================
+
+M3 = dict(
+    primary="#6750A4",
+    on_primary="#FFFFFF",
+    primary_container="#EADDFF",
+    on_primary_container="#21005D",
+
+    secondary="#625B71",
+    on_secondary="#FFFFFF",
+    secondary_container="#E8DEF8",
+    on_secondary_container="#1D192B",
+
+    surface="#FFFBFE",
+    on_surface="#1C1B1F",
+    surface_variant="#E7E0EC",
+    on_surface_variant="#49454F",
+
+    outline="#79747E",
+)
 
 
-# ------------------------------------------------------------
-# THEME + GLOBAL CSS
-# ------------------------------------------------------------
+# ============================================================
+# GLOBAL CSS INJECTION
+# Material 3 throughout the app
+# ============================================================
+
 def apply_custom_css():
-    """Apply vibrant multi-color theme with maximum contrast."""
-
+    p = M3
     radius = "12px"
-    radius_lg = "16px"
-    card_shadow = "0 4px 12px rgba(0, 0, 0, 0.15)"
-    hover_shadow = "0 6px 20px rgba(0, 0, 0, 0.25)"
+    radius_lg = "18px"
 
     st.markdown(
         f"""
         <style>
-        /* ------------------------------------
-        GLOBAL BASE - Light clean background
-        ------------------------------------*/
+
+        /* Root surface */
         .stApp {{
-            background: #f0f2f6 !important;
-        }}
-        
-        .main {{
-            background: #f0f2f6 !important;
+            background: {p['surface']} !important;
+            color: {p['on_surface']} !important;
+            font-family: "Inter", sans-serif !important;
         }}
 
-        /* Force readable text */
-        p, span, div, label {{
-            color: #2d3748 !important;
+        /* Typography */
+        h1, h2, h3 {{
+            color: {p['on_surface']} !important;
+            font-weight: 600 !important;
         }}
 
-        h1, h2, h3, h4, h5, h6 {{
-            color: #1a202c !important;
-            font-weight: 700 !important;
-        }}
+        /* ---------------------------------------------------- */
+        /* HEADER                                               */
+        /* ---------------------------------------------------- */
 
-        /* ------------------------------------
-        HEADER - Bold Purple Gradient
-        ------------------------------------*/
         .app-header {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
-            padding: 3rem 2rem;
-            color: white !important;
-            border-radius: {radius_lg};
-            margin-bottom: 2.5rem;
-            text-align: center;
-            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
-            border: 4px solid white;
-        }}
-        .app-header h1 {{
-            margin: 0;
-            font-size: 2.8rem;
-            font-weight: 900;
-            color: white !important;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-            letter-spacing: -0.5px;
-        }}
-        .app-header p {{
-            margin: 1rem 0 0 0;
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.95) !important;
-            font-weight: 600;
-        }}
-
-        /* ------------------------------------
-        CARDS - White with colored borders
-        ------------------------------------*/
-        .card {{
-            background: white;
-            padding: 2rem;
-            border-radius: {radius};
-            border: 3px solid #e2e8f0;
-            box-shadow: {card_shadow};
-            margin-bottom: 2rem;
-        }}
-        .card-header {{
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            color: #1a202c !important;
-            border-bottom: 3px solid #6366f1;
-            padding-bottom: 0.75rem;
-        }}
-
-        /* ------------------------------------
-        METRIC CARDS - Different vibrant colors
-        ------------------------------------*/
-        .metric-card {{
-            padding: 2rem 1.5rem;
-            border-radius: {radius};
-            text-align: center;
-            box-shadow: {card_shadow};
-            transition: all 0.3s ease;
-            border: 4px solid white;
-            position: relative;
-            overflow: hidden;
-        }}
-        .metric-card:hover {{
-            transform: translateY(-6px) scale(1.02);
-            box-shadow: {hover_shadow};
-        }}
-
-        /* Purple */
-        .metric-card:nth-child(1) {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        }}
-        /* Pink */
-        .metric-card:nth-child(2) {{
-            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
-        }}
-        /* Cyan */
-        .metric-card:nth-child(3) {{
-            background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
-        }}
-        /* Green */
-        .metric-card:nth-child(4) {{
-            background: linear-gradient(135deg, #10b981 0%, #22c55e 100%);
-        }}
-        /* Orange */
-        .metric-card:nth-child(5) {{
-            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
-        }}
-
-        .metric-value {{
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: white !important;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-            margin: 0.5rem 0;
-        }}
-
-        .metric-label {{
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: white !important;
-            opacity: 0.95;
-        }}
-
-        /* ------------------------------------
-        ALERT BOXES - High contrast
-        ------------------------------------*/
-        .alert {{
-            padding: 1.5rem 2rem;
-            border-radius: {radius};
-            margin-bottom: 1.5rem;
-            display: flex;
-            gap: 1.25rem;
-            align-items: center;
-            border: 3px solid;
-            font-weight: 600;
-            box-shadow: {card_shadow};
-        }}
-
-        .alert strong {{
-            font-size: 1.6rem;
-            line-height: 1;
-        }}
-
-        .alert span {{
-            line-height: 1.6;
-            font-size: 1.05rem;
-        }}
-
-        .alert-success {{
-            background: #d1fae5;
-            border-color: #10b981;
-            color: #065f46 !important;
-        }}
-        .alert-success strong,
-        .alert-success span {{
-            color: #065f46 !important;
-        }}
-
-        .alert-info {{
-            background: #dbeafe;
-            border-color: #3b82f6;
-            color: #1e3a8a !important;
-        }}
-        .alert-info strong,
-        .alert-info span {{
-            color: #1e3a8a !important;
-        }}
-
-        .alert-warning {{
-            background: #fef3c7;
-            border-color: #f59e0b;
-            color: #78350f !important;
-        }}
-        .alert-warning strong,
-        .alert-warning span {{
-            color: #78350f !important;
-        }}
-
-        .alert-error {{
-            background: #fee2e2;
-            border-color: #ef4444;
-            color: #7f1d1d !important;
-        }}
-        .alert-error strong,
-        .alert-error span {{
-            color: #7f1d1d !important;
-        }}
-
-        /* ------------------------------------
-        TABS - Colorful with high contrast
-        ------------------------------------*/
-        .stTabs [data-baseweb="tab-list"] {{
-            background: white;
-            padding: 1rem;
-            border-radius: {radius};
-            gap: 1rem;
-            box-shadow: {card_shadow};
-            border: 3px solid #e2e8f0;
-        }}
-
-        .stTabs [data-baseweb="tab"] {{
-            border-radius: {radius};
-            background: #f8fafc;
-            border: 3px solid #e2e8f0;
-            padding: 1rem 2rem;
-            font-weight: 800;
-            color: #1a202c !important;
-            transition: all 0.3s ease;
-            font-size: 1.05rem;
-        }}
-
-        .stTabs [data-baseweb="tab"]:hover {{
-            background: #e2e8f0;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }}
-
-        /* Different color for each tab when active */
-        .stTabs [data-baseweb="tab"]:nth-child(1)[aria-selected="true"] {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-            color: white !important;
-            border-color: #6366f1;
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
-        }}
-        .stTabs [data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {{
-            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%) !important;
-            color: white !important;
-            border-color: #ec4899;
-            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5) !important;
-        }}
-        .stTabs [data-baseweb="tab"]:nth-child(3)[aria-selected="true"] {{
-            background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%) !important;
-            color: white !important;
-            border-color: #06b6d4;
-            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5) !important;
-        }}
-
-        /* ------------------------------------
-        BUTTONS - Bold gradient
-        ------------------------------------*/
-        .stButton > button {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-            color: white !important;
-            padding: 1rem 3rem;
-            font-weight: 900 !important;
-            font-size: 1.1rem;
-            border-radius: {radius};
-            border: 4px solid white;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }}
-        .stButton > button p,
-        .stButton > button span,
-        .stButton > button div {{
-            color: white !important;
-            font-weight: 900 !important;
-        }}
-        .stButton > button:hover {{
-            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
-            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.6);
-            transform: translateY(-3px) scale(1.02);
-            color: white !important;
-        }}
-        .stButton > button:hover p,
-        .stButton > button:hover span,
-        .stButton > button:hover div {{
-            color: white !important;
-        }}
-        .stButton > button:active {{
-            transform: translateY(-1px) scale(1);
-            color: white !important;
-        }}
-        .stButton > button:active p,
-        .stButton > button:active span,
-        .stButton > button:active div {{
-            color: white !important;
-        }}
-        .stButton > button:focus {{
-            color: white !important;
-            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.6);
-        }}
-        .stButton > button:focus p,
-        .stButton > button:focus span,
-        .stButton > button:focus div {{
-            color: white !important;
-        }}
-
-        /* ------------------------------------
-        STAGE PROGRESS - Colorful steps
-        ------------------------------------*/
-        .stage-container {{
+            background: {p['primary']};
+            color: {p['on_primary']};
             padding: 2.5rem 2rem;
-            background: white;
             border-radius: {radius_lg};
-            border: 4px solid #e2e8f0;
-            box-shadow: {card_shadow};
-            margin-bottom: 2.5rem;
+            margin-bottom: 1.5rem;
+        }}
+
+        /* ---------------------------------------------------- */
+        /* PROGRESS BAR                                         */
+        /* ---------------------------------------------------- */
+
+        .stage-container {{
+            background: {p['surface']};
+            border: 1px solid {p['outline']};
+            padding: 2rem;
+            border-radius: {radius_lg};
+            margin-bottom: 2rem;
         }}
 
         .stage-row {{
@@ -332,360 +91,200 @@ def apply_custom_css():
         }}
 
         .stage-step {{
-            flex: 0 0 auto;
             text-align: center;
-            min-width: 120px;
-        }}
-
-        .stage-connector {{
-            flex: 0 0 80px;
-            height: 6px;
-            background: #e2e8f0;
-            border-radius: 3px;
-            position: relative;
-        }}
-
-        .stage-connector.completed {{
-            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
         }}
 
         .stage-circle {{
-            width: 70px;
-            height: 70px;
+            width: 58px;
+            height: 58px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 900;
-            font-size: 1.6rem;
-            margin: 0 auto 1rem auto;
-            transition: all 0.3s ease;
-            border: 5px solid;
+            font-weight: 700;
+            font-size: 1.25rem;
         }}
 
         .stage-circle.active {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            color: white !important;
-            border-color: white;
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
-            animation: pulse 2s infinite;
-        }}
-
-        @keyframes pulse {{
-            0%, 100% {{ transform: scale(1); }}
-            50% {{ transform: scale(1.05); }}
+            background: {p['primary']};
+            color: {p['on_primary']};
         }}
 
         .stage-circle.completed {{
-            background: linear-gradient(135deg, #10b981 0%, #22c55e 100%);
-            color: white !important;
-            border-color: white;
-            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+            background: {p['primary_container']};
+            color: {p['on_primary_container']};
+            border: 1px solid {p['primary']};
         }}
 
         .stage-circle.inactive {{
-            background: #f8fafc;
-            color: #94a3b8 !important;
-            border-color: #e2e8f0;
+            background: {p['surface_variant']};
+            color: {p['on_surface_variant']};
+            border: 1px solid {p['outline']};
         }}
 
         .stage-label {{
-            font-size: 1rem;
-            color: #1a202c !important;
-            font-weight: 700;
+            margin-top: .35rem;
+            font-size: .9rem;
+            color: {p['on_surface']};
         }}
 
         .stage-label.active {{
-            color: #6366f1 !important;
-            font-weight: 900;
-            font-size: 1.1rem;
-        }}
-
-        /* ------------------------------------
-        SECTION DIVIDER
-        ------------------------------------*/
-        .section-divider {{
-            height: 4px;
-            background: linear-gradient(90deg, transparent 0%, #6366f1 20%, #8b5cf6 50%, #d946ef 80%, transparent 100%);
-            margin: 3rem 0;
-            border: none;
-            border-radius: 2px;
-        }}
-
-        /* ------------------------------------
-        OPTIMIZATION SPINNER
-        ------------------------------------*/
-        .optimization-container {{
-            text-align: center;
-            padding: 5rem 2rem;
-            background: white;
-            border-radius: {radius_lg};
-            box-shadow: {card_shadow};
-            border: 4px solid #e2e8f0;
-        }}
-
-        .spinner {{
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 2.5rem;
-            border: 8px solid #e2e8f0;
-            border-top-color: #6366f1;
-            border-right-color: #8b5cf6;
-            border-bottom-color: #d946ef;
-            border-radius: 50%;
-            animation: spin 1.2s linear infinite;
-        }}
-
-        @keyframes spin {{
-            to {{ transform: rotate(360deg); }}
-        }}
-
-        .optimization-text {{
-            font-size: 2.2rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 1rem;
-        }}
-
-        .optimization-subtext {{
-            font-size: 1.2rem;
-            color: #64748b !important;
+            color: {p['primary']};
             font-weight: 600;
         }}
 
-        /* ------------------------------------
-        DATAFRAME STYLING
-        ------------------------------------*/
-        .stDataFrame {{
-            border: 3px solid #e2e8f0;
+        .stage-connector {{
+            width: 70px;
+            height: 4px;
+            border-radius: 2px;
+            background: {p['surface_variant']};
+        }}
+
+        .stage-connector.completed {{
+            background: {p['primary']};
+        }}
+
+        /* ---------------------------------------------------- */
+        /* CARD                                                  */
+        /* ---------------------------------------------------- */
+
+        .card {{
+            background: {p['surface']};
+            border: 1px solid {p['outline']};
+            border-radius: {radius_lg};
+            padding: 1.5rem 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0px 1px 3px rgba(0,0,0,0.08);
+        }}
+
+        .card-title {{
+            color: {p['on_surface_variant']};
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }}
+
+        .card-value {{
+            color: {p['on_surface']};
+            font-size: 1.4rem;
+            font-weight: 700;
+        }}
+
+        /* ---------------------------------------------------- */
+        /* ALERTS                                               */
+        /* ---------------------------------------------------- */
+
+        .alert {{
+            border-radius: {radius_lg};
+            padding: 1rem 1rem;
+            margin: 1rem 0;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }}
+
+        .alert-success {{
+            background: {p['primary_container']};
+            color: {p['on_primary_container']};
+            border-color: {p['primary']};
+        }}
+
+        .alert-warning {{
+            background: {p['secondary_container']};
+            color: {p['on_secondary_container']};
+            border-color: {p['secondary']};
+        }}
+
+        .alert-error {{
+            background: {p['surface_variant']};
+            color: #B3261E;
+            border-color: #B3261E;
+        }}
+
+        /* ---------------------------------------------------- */
+        /* DIVIDER                                              */
+        /* ---------------------------------------------------- */
+
+        .divider {{
+            height: 2px;
+            background: {p['primary']};
+            margin: 2rem 0 1rem 0;
+            border-radius: 2px;
+        }}
+
+        /* ---------------------------------------------------- */
+        /* DOWNLOAD BUTTON                                      */
+        /* ---------------------------------------------------- */
+
+        .download-btn {{
+            display: inline-block;
+            background: {p['primary']};
+            color: {p['on_primary']} !important;
+            padding: 0.75rem 1.25rem;
             border-radius: {radius};
-            overflow: hidden;
-            background: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.15s ease-in-out;
         }}
 
-        .stDataFrame thead tr th {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-            color: white !important;
-            font-weight: 800 !important;
-            border: none !important;
+        .download-btn:hover {{
+            background: {p['primary_container']};
+            color: {p['on_primary_container']} !important;
         }}
 
-        /* ------------------------------------
-        FILE UPLOADER
-        ------------------------------------*/
-        .uploadedFile {{
-            border: 4px dashed #6366f1 !important;
-            border-radius: {radius} !important;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%) !important;
-        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-        /* File uploader container */
-        .stFileUploader label {{
-            color: #1a202c !important;
-            font-weight: 700 !important;
-        }}
 
-        .stFileUploader > div > div {{
-            background: white !important;
-            border: 3px dashed #6366f1 !important;
-            border-radius: {radius} !important;
-            padding: 2rem !important;
-        }}
-
-        .stFileUploader section {{
-            color: #4a5568 !important;
-            font-weight: 600 !important;
-        }}
-
-        .stFileUploader section > div {{
-            color: #4a5568 !important;
-        }}
-
-        .stFileUploader small {{
-            color: #64748b !important;
-            font-weight: 500 !important;
-        }}
-
-        /* Browse files button inside uploader */
-        .stFileUploader button {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-            color: white !important;
-            border: 3px solid white !important;
-            font-weight: 800 !important;
-            padding: 0.75rem 2rem !important;
-            border-radius: {radius} !important;
-        }}
-
-        .stFileUploader button:hover {{
-            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
-            transform: translateY(-2px);
-        }}
-
-        /* ------------------------------------
-        DOWNLOAD BUTTON (matching other buttons)
-        ------------------------------------*/
-        .stDownloadButton > button {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-            color: white !important;
-            padding: 1rem 2rem !important;
-            font-weight: 900 !important;
-            font-size: 1rem !important;
-            border-radius: {radius} !important;
-            border: 4px solid white !important;
-            transition: all 0.3s ease !important;
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
-            text-transform: uppercase !important;
-            letter-spacing: 1px !important;
-            width: 100% !important;
-        }}
-        .stDownloadButton > button p,
-        .stDownloadButton > button span,
-        .stDownloadButton > button div {{
-            color: white !important;
-            font-weight: 900 !important;
-        }}
-        .stDownloadButton > button:hover {{
-            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
-            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.6) !important;
-            transform: translateY(-3px) scale(1.02) !important;
-            color: white !important;
-        }}
-        .stDownloadButton > button:hover p,
-        .stDownloadButton > button:hover span,
-        .stDownloadButton > button:hover div {{
-            color: white !important;
-        }}
-
-        /* ------------------------------------
-        DATAFRAME STYLING - Material 3
-        ------------------------------------*/
-        .stDataFrame {{
-            border: 3px solid #e2e8f0 !important;
-            border-radius: {radius} !important;
-            overflow: hidden !important;
-            background: white !important;
-        }}
-
-        .stDataFrame table {{
-            background: white !important;
-        }}
-
-        .stDataFrame thead tr th {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-            color: white !important;
-            font-weight: 800 !important;
-            border: none !important;
-            padding: 1rem !important;
-            font-size: 0.95rem !important;
-        }}
-
-        .stDataFrame tbody tr {{
-            background: white !important;
-        }}
-
-        .stDataFrame tbody tr:nth-child(even) {{
-            background: #f8fafc !important;
-        }}
-
-        .stDataFrame tbody tr:hover {{
-            background: #f1f5f9 !important;
-        }}
-
-        .stDataFrame tbody td {{
-            color: #1a202c !important;
-            font-weight: 600 !important;
-            border-color: #e2e8f0 !important;
-            padding: 0.75rem !important;
-        }}
-
-        /* ------------------------------------
-        INPUT FIELDS - Material 3
-        ------------------------------------*/
-        .stNumberInput > div > div > input {{
-            border: 3px solid #e2e8f0 !important;
-            border-radius: {radius} !important;
-            font-weight: 700 !important;
-            color: #1a202c !important;
-            background: white !important;
-            padding: 0.75rem 1rem !important;
-            font-size: 1rem !important;
-        }}
-
-        .stNumberInput > div > div > input:focus {{
-            border-color: #6366f1 !important;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
-            background: white !important;
-        }}
-
-        .stNumberInput label {{
-            color: #1a202c !important;
-            font-weight: 700 !important;
-            font-size: 0.95rem !important;
-        }}
-
-        /* Number input buttons */
-        .stNumberInput button {{
-            background: #f8fafc !important;
-            border: 2px solid #e2e8f0 !important;
-            color: #6366f1 !important;
-            font-weight: 800 !important;
-        }}
-
-        .stNumberInput button:hover {{
-            background: #6366f1 !important;
-            color: white !important;
-            border-color: #6366f1 !important;
-        }}
-    </style>
-    """, unsafe_allow_html=True)
-
-# ------------------------------------------------------------
+# ============================================================
 # HEADER
-# ------------------------------------------------------------
+# ============================================================
+
 def render_header(title: str, subtitle: str = ""):
-    """Render app header with title and optional subtitle."""
-    subtitle_html = f"<p>{subtitle}</p>" if subtitle else ""
     st.markdown(
         f"""
         <div class="app-header">
             <h1>{title}</h1>
-            {subtitle_html}
+            <p style="color: {M3['on_primary']}; margin-top: .5rem;">{subtitle}</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
-# ------------------------------------------------------------
-# STAGE PROGRESS
-# ------------------------------------------------------------
+# ============================================================
+# PROGRESS BAR
+# ============================================================
+
 def render_stage_progress(current_stage: int) -> None:
-    """Render wizard-style stage progress indicator with colors."""
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"),
         ("3", "Results")
     ]
+    last = len(stages) - 1
 
-    total = len(stages)
-    current_stage = max(0, min(current_stage, total - 1))
+    current_stage = max(0, min(current_stage, last))
 
     blocks = []
     connectors = []
-    
+
     for idx, (num, label) in enumerate(stages):
-        if idx < current_stage:
+
+        if idx == last:
             status = "completed"
             icon = "✓"
-        elif idx == current_stage:
-            status = "active"
-            icon = num
         else:
-            status = "inactive"
-            icon = num
+            if idx < current_stage:
+                status = "completed"
+                icon = "✓"
+            elif idx == current_stage:
+                status = "active"
+                icon = num
+            else:
+                status = "inactive"
+                icon = num
 
         blocks.append(
             f"""
@@ -697,161 +296,107 @@ def render_stage_progress(current_stage: int) -> None:
             </div>
             """
         )
-        
-        # Add connector with completion state
-        if idx < total - 1:
+
+        if idx < last:
             connector_class = "completed" if idx < current_stage else ""
             connectors.append(f'<div class="stage-connector {connector_class}"></div>')
 
-    # Interleave blocks and connectors
-    html = ""
-    for i, block in enumerate(blocks):
-        html += block
+    final_html = ""
+    for i, b in enumerate(blocks):
+        final_html += b
         if i < len(connectors):
-            html += connectors[i]
+            final_html += connectors[i]
 
     st.markdown(
         f"""
         <div class="stage-container">
-            <div class="stage-row">{html}</div>
+            <div class="stage-row">{final_html}</div>
         </div>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
 
 
-# ------------------------------------------------------------
-# CARDS
-# ------------------------------------------------------------
-def render_card(title: str, icon: str = ""):
-    """Open a card container with optional icon."""
-    icon_html = f"{icon} " if icon else ""
+# ============================================================
+# CARDS / METRICS
+# ============================================================
+
+def render_card(title: str, value: str):
     st.markdown(
         f"""
         <div class="card">
-            <div class="card-header">{icon_html}{title}</div>
+            <div class="card-title">{title}</div>
+            <div class="card-value">{value}</div>
+        </div>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
 
 
-def close_card():
-    """Close the card container."""
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-# ------------------------------------------------------------
-# METRICS
-# ------------------------------------------------------------
-def render_metric_card(label: str, value: str, col):
-    """Render a colorful metric card in the specified column."""
-    with col:
-        st.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-label">{label}</div>
-                <div class="metric-value">{value}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-
-# ------------------------------------------------------------
+# ============================================================
 # ALERTS
-# ------------------------------------------------------------
-def render_alert(message: str, alert_type: str = "info"):
-    """Render a bold alert box with icon and message."""
-    icons = {
-        "success": "✓",
-        "info": "ℹ",
-        "warning": "⚠",
-        "error": "✕"
+# ============================================================
+
+def render_alert(message: str, alert_type: str = "success"):
+    mapping = {
+        "success": "alert-success",
+        "warning": "alert-warning",
+        "error": "alert-error",
     }
+    style_class = mapping.get(alert_type, "alert-success")
+
     st.markdown(
         f"""
-        <div class="alert alert-{alert_type}">
-            <strong>{icons.get(alert_type, "ℹ")}</strong>
-            <span>{message}</span>
+        <div class="alert {style_class}">
+            {message}
         </div>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # DIVIDER
-# ------------------------------------------------------------
-def render_section_divider():
-    """Render a gradient divider line."""
-    st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+# ============================================================
+
+def render_divider():
+    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
 
-# ------------------------------------------------------------
-# QUICK START GUIDE
-# ------------------------------------------------------------
-def render_quick_start_guide():
-    """Render quick start guide with checklist."""
+# ============================================================
+# QUICK START SECTION
+# ============================================================
+
+def render_quickstart():
     st.markdown(
         """
-        <div style="background: white; padding: 2rem; border-radius: 12px; border: 3px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); margin-bottom: 2rem;">
-            <h3 style="color: #1a202c; margin-top: 0; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 800;">
-                📋 Quick Start Guide
-            </h3>
-            <p style="color: #4a5568; font-weight: 600; margin-bottom: 1.5rem;">Follow these simple steps to get started</p>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
-                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Download the Excel template from the card on the right</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
-                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Fill in your production data (plants, inventory, demand)</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
-                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Upload your completed Excel file below</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
-                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Review and configure optimization parameters</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
-                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Run the optimization and analyze results</span>
-                </div>
+        <div class="card">
+            <div class="card-title">Quick start</div>
+            <div class="card-value" style="font-size: 1rem; font-weight: 500;">
+                1. Upload your PPS export file<br>
+                2. Preview and configure your output<br>
+                3. Download clean results instantly
             </div>
         </div>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # DOWNLOAD BUTTON
-# ------------------------------------------------------------
-def render_download_template_button():
-    """Render download template button with file loading."""
-    import io
-    from pathlib import Path
-    
-    try:
-        # Get template file from same directory as app.py
-        template_path = Path(__file__).parent / "polymer_production_template.xlsx"
-        
-        if template_path.exists():
-            with open(template_path, "rb") as f:
-                template_data = f.read()
-            
-            st.download_button(
-                label="📥 Download Template",
-                data=template_data,
-                file_name="polymer_production_template.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                help="Download the Excel template file",
-                use_container_width=True
-            )
-        else:
-            st.error("Template file not found in repository")
-    except Exception as e:
-        st.error(f"Error loading template: {e}")
+# ============================================================
+
+def render_download_button(label: str, file_bytes: bytes, file_name: str):
+    b64 = base64.b64encode(file_bytes).decode()
+    href = f'data:application/octet-stream;base64,{b64}'
+
+    st.markdown(
+        f"""
+        <a download="{file_name}" href="{href}" class="download-btn">
+            {label}
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
+
