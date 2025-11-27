@@ -88,6 +88,10 @@ def render_upload_stage():
             except Exception as e:
                 render_alert(f"Failed to read uploaded file: {e}", "error")
 
+    with col2:
+        st.markdown("#### 📥 Template")
+        render_download_template_button()
+
 
     # Navigation buttons
     if st.button("Next: Preview Data →", disabled=(st.session_state[SS_UPLOADED_FILE] is None),use_container_width="True"):
