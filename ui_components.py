@@ -221,6 +221,8 @@ def apply_custom_css():
             gap: 1rem;
             box-shadow: {card_shadow};
             border: 3px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
         }}
 
         .stTabs [data-baseweb="tab"] {{
@@ -232,6 +234,11 @@ def apply_custom_css():
             color: #1a202c !important;
             transition: all 0.3s ease;
             font-size: 1.05rem;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
         }}
 
         .stTabs [data-baseweb="tab"]:hover {{
