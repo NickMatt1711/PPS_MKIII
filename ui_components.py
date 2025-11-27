@@ -639,7 +639,8 @@ def apply_custom_css():
             color: white !important;
             border-color: #6366f1 !important;
         }}
-
+    </style>
+    """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------
 # HEADER
