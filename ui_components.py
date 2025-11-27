@@ -264,10 +264,10 @@ def apply_custom_css():
         BUTTONS - Bold gradient
         ------------------------------------*/
         .stButton > button {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
             color: white !important;
             padding: 1rem 3rem;
-            font-weight: 800;
+            font-weight: 900 !important;
             font-size: 1.1rem;
             border-radius: {radius};
             border: 4px solid white;
@@ -276,13 +276,40 @@ def apply_custom_css():
             text-transform: uppercase;
             letter-spacing: 1px;
         }}
+        .stButton > button p,
+        .stButton > button span,
+        .stButton > button div {{
+            color: white !important;
+            font-weight: 900 !important;
+        }}
         .stButton > button:hover {{
-            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
             box-shadow: 0 8px 28px rgba(99, 102, 241, 0.6);
             transform: translateY(-3px) scale(1.02);
+            color: white !important;
+        }}
+        .stButton > button:hover p,
+        .stButton > button:hover span,
+        .stButton > button:hover div {{
+            color: white !important;
         }}
         .stButton > button:active {{
             transform: translateY(-1px) scale(1);
+            color: white !important;
+        }}
+        .stButton > button:active p,
+        .stButton > button:active span,
+        .stButton > button:active div {{
+            color: white !important;
+        }}
+        .stButton > button:focus {{
+            color: white !important;
+            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.6);
+        }}
+        .stButton > button:focus p,
+        .stButton > button:focus span,
+        .stButton > button:focus div {{
+            color: white !important;
         }}
 
         /* ------------------------------------
