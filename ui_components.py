@@ -482,7 +482,7 @@ def apply_custom_css():
             background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%) !important;
         }}
 
-        /* File uploader text */
+        /* File uploader container */
         .stFileUploader label {{
             color: #1a202c !important;
             font-weight: 700 !important;
@@ -490,32 +490,38 @@ def apply_custom_css():
 
         .stFileUploader > div > div {{
             background: white !important;
-            border: 3px solid #e2e8f0 !important;
+            border: 3px dashed #6366f1 !important;
             border-radius: {radius} !important;
+            padding: 2rem !important;
         }}
 
         .stFileUploader section {{
-            color: #1a202c !important;
+            color: #4a5568 !important;
+            font-weight: 600 !important;
         }}
 
         .stFileUploader section > div {{
-            color: #1a202c !important;
+            color: #4a5568 !important;
         }}
 
         .stFileUploader small {{
             color: #64748b !important;
+            font-weight: 500 !important;
         }}
 
         /* Browse files button inside uploader */
         .stFileUploader button {{
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
             color: white !important;
-            border: 2px solid white !important;
-            font-weight: 700 !important;
+            border: 3px solid white !important;
+            font-weight: 800 !important;
+            padding: 0.75rem 2rem !important;
+            border-radius: {radius} !important;
         }}
 
         .stFileUploader button:hover {{
             background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
+            transform: translateY(-2px);
         }}
 
         /* ------------------------------------
@@ -524,15 +530,16 @@ def apply_custom_css():
         .stDownloadButton > button {{
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
             color: white !important;
-            padding: 1rem 3rem;
+            padding: 1rem 2rem !important;
             font-weight: 900 !important;
-            font-size: 1.1rem;
-            border-radius: {radius};
-            border: 4px solid white;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-size: 1rem !important;
+            border-radius: {radius} !important;
+            border: 4px solid white !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+            width: 100% !important;
         }}
         .stDownloadButton > button p,
         .stDownloadButton > button span,
@@ -542,8 +549,8 @@ def apply_custom_css():
         }}
         .stDownloadButton > button:hover {{
             background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
-            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.6);
-            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.6) !important;
+            transform: translateY(-3px) scale(1.02) !important;
             color: white !important;
         }}
         .stDownloadButton > button:hover p,
@@ -553,40 +560,85 @@ def apply_custom_css():
         }}
 
         /* ------------------------------------
-        INPUT FIELDS
+        DATAFRAME STYLING - Material 3
+        ------------------------------------*/
+        .stDataFrame {{
+            border: 3px solid #e2e8f0 !important;
+            border-radius: {radius} !important;
+            overflow: hidden !important;
+            background: white !important;
+        }}
+
+        .stDataFrame table {{
+            background: white !important;
+        }}
+
+        .stDataFrame thead tr th {{
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+            color: white !important;
+            font-weight: 800 !important;
+            border: none !important;
+            padding: 1rem !important;
+            font-size: 0.95rem !important;
+        }}
+
+        .stDataFrame tbody tr {{
+            background: white !important;
+        }}
+
+        .stDataFrame tbody tr:nth-child(even) {{
+            background: #f8fafc !important;
+        }}
+
+        .stDataFrame tbody tr:hover {{
+            background: #f1f5f9 !important;
+        }}
+
+        .stDataFrame tbody td {{
+            color: #1a202c !important;
+            font-weight: 600 !important;
+            border-color: #e2e8f0 !important;
+            padding: 0.75rem !important;
+        }}
+
+        /* ------------------------------------
+        INPUT FIELDS - Material 3
         ------------------------------------*/
         .stNumberInput > div > div > input {{
-            border: 2px solid #e2e8f0 !important;
+            border: 3px solid #e2e8f0 !important;
             border-radius: {radius} !important;
-            font-weight: 600 !important;
+            font-weight: 700 !important;
             color: #1a202c !important;
+            background: white !important;
+            padding: 0.75rem 1rem !important;
+            font-size: 1rem !important;
         }}
 
         .stNumberInput > div > div > input:focus {{
             border-color: #6366f1 !important;
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
-        }}
-
-        /* ------------------------------------
-        EXPANDER
-        ------------------------------------*/
-        .streamlit-expanderHeader {{
             background: white !important;
-            border: 2px solid #e2e8f0 !important;
-            border-radius: {radius} !important;
-            font-weight: 700 !important;
-            color: #1a202c !important;
         }}
 
-        .streamlit-expanderHeader:hover {{
+        .stNumberInput label {{
+            color: #1a202c !important;
+            font-weight: 700 !important;
+            font-size: 0.95rem !important;
+        }}
+
+        /* Number input buttons */
+        .stNumberInput button {{
             background: #f8fafc !important;
+            border: 2px solid #e2e8f0 !important;
+            color: #6366f1 !important;
+            font-weight: 800 !important;
+        }}
+
+        .stNumberInput button:hover {{
+            background: #6366f1 !important;
+            color: white !important;
             border-color: #6366f1 !important;
         }}
-
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 # ------------------------------------------------------------
@@ -732,6 +784,46 @@ def render_alert(message: str, alert_type: str = "info"):
 def render_section_divider():
     """Render a gradient divider line."""
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+
+
+# ------------------------------------------------------------
+# QUICK START GUIDE
+# ------------------------------------------------------------
+def render_quick_start_guide():
+    """Render quick start guide with checklist."""
+    st.markdown(
+        """
+        <div style="background: white; padding: 2rem; border-radius: 12px; border: 3px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); margin-bottom: 2rem;">
+            <h3 style="color: #1a202c; margin-top: 0; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 800;">
+                📋 Quick Start Guide
+            </h3>
+            <p style="color: #4a5568; font-weight: 600; margin-bottom: 1.5rem;">Follow these simple steps to get started</p>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
+                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Download the Excel template from the card on the right</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
+                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Fill in your production data (plants, inventory, demand)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
+                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Upload your completed Excel file below</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
+                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Review and configure optimization parameters</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
+                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Run the optimization and analyze results</span>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # ------------------------------------------------------------
