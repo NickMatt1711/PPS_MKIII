@@ -224,14 +224,14 @@ def apply_custom_css():
             display: flex;
             justify-content: space-between;
         }}
-
+        
         .stTabs [data-baseweb="tab"] {{
             border-radius: {radius};
             background: #f8fafc;
             border: 3px solid #e2e8f0;
             padding: 1rem 2rem;
-            font-weight: 800;
-            color: #1a202c !important;
+            font-weight: 800;               /* BOLD TEXT */
+            color: #1a202c !important;      /* Dark Grey */
             transition: all 0.3s ease;
             font-size: 1.05rem;
             flex: 1;
@@ -240,31 +240,48 @@ def apply_custom_css():
             justify-content: center;
             white-space: nowrap;
         }}
-
+        
         .stTabs [data-baseweb="tab"]:hover {{
             background: #e2e8f0;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }}
-
-        /* Different color for each tab when active */
+        
+        /* ----------------------------
+           ACTIVE TAB COLORS (4 TABS)
+           Text becomes white when active
+        -----------------------------*/
+        
+        /* TAB 1 — Indigo → Purple */
         .stTabs [data-baseweb="tab"]:nth-child(1)[aria-selected="true"] {{
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
             color: white !important;
             border-color: #6366f1;
             box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
         }}
+        
+        /* TAB 2 — Pink → Red */
         .stTabs [data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {{
             background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%) !important;
             color: white !important;
             border-color: #ec4899;
             box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5) !important;
         }}
+        
+        /* TAB 3 — Cyan → Teal */
         .stTabs [data-baseweb="tab"]:nth-child(3)[aria-selected="true"] {{
             background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%) !important;
             color: white !important;
             border-color: #06b6d4;
             box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5) !important;
+        }}
+        
+        /* TAB 4 — Amber → Orange */
+        .stTabs [data-baseweb="tab"]:nth-child(4)[aria-selected="true"] {{
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%) !important;
+            color: white !important;
+            border-color: #f59e0b;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5) !important;
         }}
 
         /* ------------------------------------
