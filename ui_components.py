@@ -1,6 +1,6 @@
 """
-Reusable UI components with Material Design 3 Light Blue theme
-Clean, modern interface with blue primary colors
+Reusable UI components with vibrant multi-color theme
+Maximum contrast, colorful sections, no sidebar
 """
 
 import streamlit as st
@@ -11,355 +11,378 @@ from constants import THEME_COLORS
 # THEME + GLOBAL CSS
 # ------------------------------------------------------------
 def apply_custom_css():
-    """Apply Material 3 Light theme with Blue primary colors."""
+    """Apply vibrant multi-color theme with maximum contrast."""
 
     radius = "12px"
     radius_lg = "16px"
-    card_shadow = "0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)"
-    hover_shadow = "0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23)"
+    card_shadow = "0 4px 12px rgba(0, 0, 0, 0.15)"
+    hover_shadow = "0 6px 20px rgba(0, 0, 0, 0.25)"
 
-    # Material 3 Light Blue Theme
-    theme = {
-        # Surface colors
-        "--md-sys-color-background": "#FDFCFF",
-        "--md-sys-color-surface": "#FDFCFF",
-        "--md-sys-color-surface-variant": "#E1E2EC",
-        "--md-sys-color-surface-container": "#F0F0F7",
-        "--md-sys-color-surface-container-high": "#EAEAF1",
-        "--md-sys-color-surface-container-highest": "#E5E5EB",
-        
-        # Text colors
-        "--md-sys-color-on-surface": "#1A1C1E",
-        "--md-sys-color-on-surface-variant": "#44474E",
-        "--md-sys-color-outline": "#74777F",
-        "--md-sys-color-outline-variant": "#C4C6D0",
-        
-        # Primary colors (Blue)
-        "--md-sys-color-primary": "#0B57D0",
-        "--md-sys-color-on-primary": "#FFFFFF",
-        "--md-sys-color-primary-container": "#D3E3FD",
-        "--md-sys-color-on-primary-container": "#001B3F",
-        
-        # Secondary colors (Blue-Gray)
-        "--md-sys-color-secondary": "#5A6470",
-        "--md-sys-color-secondary-container": "#DEE3EB",
-        "--md-sys-color-on-secondary-container": "#171C22",
-        
-        # Tertiary colors (Teal)
-        "--md-sys-color-tertiary": "#006A6A",
-        "--md-sys-color-tertiary-container": "#9CF2F2",
-        "--md-sys-color-on-tertiary-container": "#00201F",
-        
-        # Error colors
-        "--md-sys-color-error": "#BA1A1A",
-        "--md-sys-color-error-container": "#FFDAD6",
-        "--md-sys-color-on-error-container": "#410002",
-        
-        # Success colors
-        "--md-sys-color-success": "#146C2E",
-        "--md-sys-color-success-container": "#B7F3C6",
-        "--md-sys-color-on-success-container": "#002106",
-        
-        # Warning colors
-        "--md-sys-color-warning": "#7D5700",
-        "--md-sys-color-warning-container": "#FFE08B",
-        "--md-sys-color-on-warning-container": "#271900",
-    }
-
-    # Inject CSS
     st.markdown(
         f"""
         <style>
-        :root {{
-            {"".join([f"{k}: {v};" for k, v in theme.items()])}
-        }}
-
         /* ------------------------------------
-        GLOBAL RESETS
+        GLOBAL BASE - Light clean background
         ------------------------------------*/
         .stApp {{
-            background: var(--md-sys-color-background);
+            background: #f0f2f6 !important;
         }}
         
         .main {{
-            background: var(--md-sys-color-background);
+            background: #f0f2f6 !important;
         }}
 
-        /* Only target specific text elements, not all divs */
+        /* Force readable text */
+        p, span, div, label {{
+            color: #2d3748 !important;
+        }}
+
         h1, h2, h3, h4, h5, h6 {{
-            color: var(--md-sys-color-on-surface);
+            color: #1a202c !important;
+            font-weight: 700 !important;
         }}
 
         /* ------------------------------------
-        HEADER
+        HEADER - Bold Purple Gradient
         ------------------------------------*/
         .app-header {{
-            background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-primary-container) 100%);
-            padding: 2rem;
-            color: var(--md-sys-color-on-primary);
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+            padding: 3rem 2rem;
+            color: white !important;
             border-radius: {radius_lg};
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
             text-align: center;
-            box-shadow: {card_shadow};
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+            border: 4px solid white;
         }}
         .app-header h1 {{
             margin: 0;
-            font-size: 2.4rem;
-            font-weight: 600;
-            color: var(--md-sys-color-on-primary);
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: white !important;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+            letter-spacing: -0.5px;
         }}
         .app-header p {{
-            margin: 0.5rem 0 0 0;
-            opacity: 0.9;
-            color: var(--md-sys-color-on-primary);
+            margin: 1rem 0 0 0;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.95) !important;
+            font-weight: 600;
         }}
 
         /* ------------------------------------
-        CARDS
+        CARDS - White with colored borders
         ------------------------------------*/
         .card {{
-            background: var(--md-sys-color-surface-container-high);
-            padding: 1.5rem;
+            background: white;
+            padding: 2rem;
             border-radius: {radius};
-            border: 1px solid var(--md-sys-color-outline-variant);
+            border: 3px solid #e2e8f0;
             box-shadow: {card_shadow};
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }}
         .card-header {{
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--md-sys-color-on-surface);
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            color: #1a202c !important;
+            border-bottom: 3px solid #6366f1;
+            padding-bottom: 0.75rem;
         }}
 
         /* ------------------------------------
-        METRIC CARDS
+        METRIC CARDS - Different vibrant colors
         ------------------------------------*/
         .metric-card {{
-            background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-primary-container) 100%);
-            color: var(--md-sys-color-on-primary);
-            padding: 1.5rem;
+            padding: 2rem 1.5rem;
             border-radius: {radius};
             text-align: center;
             box-shadow: {card_shadow};
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.3s ease;
+            border: 4px solid white;
+            position: relative;
+            overflow: hidden;
         }}
         .metric-card:hover {{
-            transform: translateY(-2px);
+            transform: translateY(-6px) scale(1.02);
             box-shadow: {hover_shadow};
         }}
 
+        /* Purple */
+        .metric-card:nth-child(1) {{
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }}
+        /* Pink */
+        .metric-card:nth-child(2) {{
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+        }}
+        /* Cyan */
+        .metric-card:nth-child(3) {{
+            background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
+        }}
+        /* Green */
+        .metric-card:nth-child(4) {{
+            background: linear-gradient(135deg, #10b981 0%, #22c55e 100%);
+        }}
+        /* Orange */
+        .metric-card:nth-child(5) {{
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+        }}
+
         .metric-value {{
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--md-sys-color-on-primary);
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: white !important;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+            margin: 0.5rem 0;
         }}
 
         .metric-label {{
-            font-size: 0.875rem;
-            opacity: 0.9;
-            letter-spacing: 0.5px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
-            color: var(--md-sys-color-on-primary);
+            color: white !important;
+            opacity: 0.95;
         }}
 
         /* ------------------------------------
-        ALERT BOXES
+        ALERT BOXES - High contrast
         ------------------------------------*/
         .alert {{
-            padding: 1rem 1.25rem;
+            padding: 1.5rem 2rem;
             border-radius: {radius};
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             display: flex;
-            gap: 0.75rem;
-            align-items: flex-start;
-            border-left-width: 4px;
-            border-left-style: solid;
+            gap: 1.25rem;
+            align-items: center;
+            border: 3px solid;
+            font-weight: 600;
+            box-shadow: {card_shadow};
         }}
 
         .alert strong {{
-            font-size: 1.2rem;
+            font-size: 1.6rem;
             line-height: 1;
         }}
 
         .alert span {{
-            line-height: 1.5;
+            line-height: 1.6;
+            font-size: 1.05rem;
         }}
 
         .alert-success {{
-            background: var(--md-sys-color-success-container);
-            border-left-color: var(--md-sys-color-success);
-            color: var(--md-sys-color-on-success-container);
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46 !important;
         }}
         .alert-success strong,
         .alert-success span {{
-            color: var(--md-sys-color-on-success-container);
+            color: #065f46 !important;
         }}
 
         .alert-info {{
-            background: var(--md-sys-color-primary-container);
-            border-left-color: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary-container);
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e3a8a !important;
         }}
         .alert-info strong,
         .alert-info span {{
-            color: var(--md-sys-color-on-primary-container);
+            color: #1e3a8a !important;
         }}
 
         .alert-warning {{
-            background: var(--md-sys-color-warning-container);
-            border-left-color: var(--md-sys-color-warning);
-            color: var(--md-sys-color-on-warning-container);
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #78350f !important;
         }}
         .alert-warning strong,
         .alert-warning span {{
-            color: var(--md-sys-color-on-warning-container);
+            color: #78350f !important;
         }}
 
         .alert-error {{
-            background: var(--md-sys-color-error-container);
-            border-left-color: var(--md-sys-color-error);
-            color: var(--md-sys-color-on-error-container);
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #7f1d1d !important;
         }}
         .alert-error strong,
         .alert-error span {{
-            color: var(--md-sys-color-on-error-container);
+            color: #7f1d1d !important;
         }}
 
         /* ------------------------------------
-        TABS
+        TABS - Colorful with high contrast
         ------------------------------------*/
         .stTabs [data-baseweb="tab-list"] {{
-            background: var(--md-sys-color-surface-container);
-            padding: 0.5rem;
+            background: white;
+            padding: 1rem;
             border-radius: {radius};
-            gap: 0.5rem;
+            gap: 1rem;
+            box-shadow: {card_shadow};
+            border: 3px solid #e2e8f0;
         }}
 
         .stTabs [data-baseweb="tab"] {{
             border-radius: {radius};
-            background: transparent;
-            border: 1px solid transparent;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            color: var(--md-sys-color-on-surface-variant);
-            transition: all 0.2s ease;
+            background: #f8fafc;
+            border: 3px solid #e2e8f0;
+            padding: 1rem 2rem;
+            font-weight: 800;
+            color: #1a202c !important;
+            transition: all 0.3s ease;
+            font-size: 1.05rem;
         }}
 
         .stTabs [data-baseweb="tab"]:hover {{
-            background: var(--md-sys-color-surface-container-high);
-            color: var(--md-sys-color-on-surface);
+            background: #e2e8f0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }}
 
-        .stTabs [aria-selected="true"] {{
-            background: var(--md-sys-color-primary) !important;
-            color: var(--md-sys-color-on-primary) !important;
-            border-color: var(--md-sys-color-primary);
+        /* Different color for each tab when active */
+        .stTabs [data-baseweb="tab"]:nth-child(1)[aria-selected="true"] {{
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+            color: white !important;
+            border-color: #6366f1;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
+        }}
+        .stTabs [data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {{
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%) !important;
+            color: white !important;
+            border-color: #ec4899;
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5) !important;
+        }}
+        .stTabs [data-baseweb="tab"]:nth-child(3)[aria-selected="true"] {{
+            background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%) !important;
+            color: white !important;
+            border-color: #06b6d4;
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5) !important;
         }}
 
         /* ------------------------------------
-        BUTTONS
+        BUTTONS - Bold gradient
         ------------------------------------*/
         .stButton > button {{
-            background: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary);
-            padding: 0.75rem 2rem;
-            font-weight: 600;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white !important;
+            padding: 1rem 3rem;
+            font-weight: 800;
+            font-size: 1.1rem;
             border-radius: {radius};
-            border: none;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+            border: 4px solid white;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }}
         .stButton > button:hover {{
-            background: var(--md-sys-color-primary-container);
-            box-shadow: {hover_shadow};
-            transform: translateY(-1px);
+            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.6);
+            transform: translateY(-3px) scale(1.02);
         }}
         .stButton > button:active {{
-            transform: translateY(0);
+            transform: translateY(-1px) scale(1);
         }}
 
         /* ------------------------------------
-        STAGE PROGRESS
+        STAGE PROGRESS - Colorful steps
         ------------------------------------*/
         .stage-container {{
-            padding: 1.5rem;
-            background: var(--md-sys-color-surface-container-high);
-            border-radius: {radius};
-            border: 1px solid var(--md-sys-color-outline-variant);
+            padding: 2.5rem 2rem;
+            background: white;
+            border-radius: {radius_lg};
+            border: 4px solid #e2e8f0;
             box-shadow: {card_shadow};
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
         }}
 
         .stage-row {{
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
+            justify-content: center;
+            gap: 2rem;
         }}
 
         .stage-step {{
-            flex: 1;
+            flex: 0 0 auto;
             text-align: center;
+            min-width: 120px;
         }}
 
         .stage-connector {{
-            flex: 0.5;
-            height: 2px;
-            background: var(--md-sys-color-outline-variant);
-            margin: 0 0.5rem;
-            border-radius: 1px;
+            flex: 0 0 80px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            position: relative;
+        }}
+
+        .stage-connector.completed {{
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
         }}
 
         .stage-circle {{
-            width: 48px;
-            height: 48px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
-            font-size: 1rem;
-            margin: 0 auto 0.5rem auto;
+            font-weight: 900;
+            font-size: 1.6rem;
+            margin: 0 auto 1rem auto;
             transition: all 0.3s ease;
+            border: 5px solid;
         }}
 
         .stage-circle.active {{
-            background: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary);
-            box-shadow: 0 2px 8px rgba(103, 80, 164, 0.4);
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white !important;
+            border-color: white;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+            animation: pulse 2s infinite;
+        }}
+
+        @keyframes pulse {{
+            0%, 100% {{ transform: scale(1); }}
+            50% {{ transform: scale(1.05); }}
         }}
 
         .stage-circle.completed {{
-            background: var(--md-sys-color-success);
-            color: var(--md-sys-color-on-primary);
+            background: linear-gradient(135deg, #10b981 0%, #22c55e 100%);
+            color: white !important;
+            border-color: white;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
         }}
 
         .stage-circle.inactive {{
-            background: var(--md-sys-color-surface-container-highest);
-            color: var(--md-sys-color-on-surface-variant);
-            border: 2px solid var(--md-sys-color-outline-variant);
+            background: #f8fafc;
+            color: #94a3b8 !important;
+            border-color: #e2e8f0;
         }}
 
         .stage-label {{
-            font-size: 0.875rem;
-            color: var(--md-sys-color-on-surface-variant);
-            font-weight: 500;
+            font-size: 1rem;
+            color: #1a202c !important;
+            font-weight: 700;
         }}
 
         .stage-label.active {{
-            color: var(--md-sys-color-primary);
-            font-weight: 600;
+            color: #6366f1 !important;
+            font-weight: 900;
+            font-size: 1.1rem;
         }}
 
         /* ------------------------------------
         SECTION DIVIDER
         ------------------------------------*/
         .section-divider {{
-            height: 1px;
-            background: var(--md-sys-color-outline-variant);
-            margin: 2rem 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent 0%, #6366f1 20%, #8b5cf6 50%, #d946ef 80%, transparent 100%);
+            margin: 3rem 0;
             border: none;
+            border-radius: 2px;
         }}
 
         /* ------------------------------------
@@ -367,17 +390,23 @@ def apply_custom_css():
         ------------------------------------*/
         .optimization-container {{
             text-align: center;
-            padding: 3rem 1rem;
+            padding: 5rem 2rem;
+            background: white;
+            border-radius: {radius_lg};
+            box-shadow: {card_shadow};
+            border: 4px solid #e2e8f0;
         }}
 
         .spinner {{
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 1.5rem;
-            border: 4px solid var(--md-sys-color-outline-variant);
-            border-top-color: var(--md-sys-color-primary);
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 2.5rem;
+            border: 8px solid #e2e8f0;
+            border-top-color: #6366f1;
+            border-right-color: #8b5cf6;
+            border-bottom-color: #d946ef;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 1.2s linear infinite;
         }}
 
         @keyframes spin {{
@@ -385,39 +414,82 @@ def apply_custom_css():
         }}
 
         .optimization-text {{
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--md-sys-color-on-surface);
-            margin-bottom: 0.5rem;
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
         }}
 
         .optimization-subtext {{
-            font-size: 1rem;
-            color: var(--md-sys-color-on-surface-variant);
+            font-size: 1.2rem;
+            color: #64748b !important;
+            font-weight: 600;
+        }}
+
+        /* ------------------------------------
+        DATAFRAME STYLING
+        ------------------------------------*/
+        .stDataFrame {{
+            border: 3px solid #e2e8f0;
+            border-radius: {radius};
+            overflow: hidden;
+            background: white;
+        }}
+
+        .stDataFrame thead tr th {{
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+            color: white !important;
+            font-weight: 800 !important;
+            border: none !important;
+        }}
+
+        /* ------------------------------------
+        FILE UPLOADER
+        ------------------------------------*/
+        .uploadedFile {{
+            border: 4px dashed #6366f1 !important;
+            border-radius: {radius} !important;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%) !important;
+        }}
+
+        /* ------------------------------------
+        INPUT FIELDS
+        ------------------------------------*/
+        .stNumberInput > div > div > input {{
+            border: 2px solid #e2e8f0 !important;
+            border-radius: {radius} !important;
+            font-weight: 600 !important;
+            color: #1a202c !important;
+        }}
+
+        .stNumberInput > div > div > input:focus {{
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+        }}
+
+        /* ------------------------------------
+        EXPANDER
+        ------------------------------------*/
+        .streamlit-expanderHeader {{
+            background: white !important;
+            border: 2px solid #e2e8f0 !important;
+            border-radius: {radius} !important;
+            font-weight: 700 !important;
+            color: #1a202c !important;
+        }}
+
+        .streamlit-expanderHeader:hover {{
+            background: #f8fafc !important;
+            border-color: #6366f1 !important;
         }}
 
         </style>
         """,
         unsafe_allow_html=True,
     )
-
-
-# ------------------------------------------------------------
-# THEME TOGGLE
-# ------------------------------------------------------------
-def render_theme_toggle():
-    """Render theme toggle button in top-right corner."""
-    if SS_THEME not in st.session_state:
-        st.session_state[SS_THEME] = "light"
-
-    current = st.session_state[SS_THEME]
-    label = "🌙 Dark" if current == "light" else "☀️ Light"
-
-    _, col = st.columns([8, 1])
-    with col:
-        if st.button(label, key="theme_toggle"):
-            st.session_state[SS_THEME] = "dark" if current == "light" else "light"
-            st.rerun()
 
 
 # ------------------------------------------------------------
@@ -441,7 +513,7 @@ def render_header(title: str, subtitle: str = ""):
 # STAGE PROGRESS
 # ------------------------------------------------------------
 def render_stage_progress(current_stage: int) -> None:
-    """Render wizard-style stage progress indicator."""
+    """Render wizard-style stage progress indicator with colors."""
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"),
@@ -452,6 +524,8 @@ def render_stage_progress(current_stage: int) -> None:
     current_stage = max(0, min(current_stage, total - 1))
 
     blocks = []
+    connectors = []
+    
     for idx, (num, label) in enumerate(stages):
         if idx < current_stage:
             status = "completed"
@@ -473,13 +547,18 @@ def render_stage_progress(current_stage: int) -> None:
             </div>
             """
         )
+        
+        # Add connector with completion state
+        if idx < total - 1:
+            connector_class = "completed" if idx < current_stage else ""
+            connectors.append(f'<div class="stage-connector {connector_class}"></div>')
 
-    # Insert connectors between stages
+    # Interleave blocks and connectors
     html = ""
     for i, block in enumerate(blocks):
         html += block
-        if i < total - 1:
-            html += '<div class="stage-connector"></div>'
+        if i < len(connectors):
+            html += connectors[i]
 
     st.markdown(
         f"""
@@ -515,7 +594,7 @@ def close_card():
 # METRICS
 # ------------------------------------------------------------
 def render_metric_card(label: str, value: str, col):
-    """Render a metric card in the specified column."""
+    """Render a colorful metric card in the specified column."""
     with col:
         st.markdown(
             f"""
@@ -532,7 +611,7 @@ def render_metric_card(label: str, value: str, col):
 # ALERTS
 # ------------------------------------------------------------
 def render_alert(message: str, alert_type: str = "info"):
-    """Render an alert box with icon and message."""
+    """Render a bold alert box with icon and message."""
     icons = {
         "success": "✓",
         "info": "ℹ",
@@ -554,5 +633,5 @@ def render_alert(message: str, alert_type: str = "info"):
 # DIVIDER
 # ------------------------------------------------------------
 def render_section_divider():
-    """Render a horizontal divider line."""
+    """Render a gradient divider line."""
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
