@@ -24,16 +24,10 @@ def apply_custom_css():
             background: #f8fafc !important;
         }
 
-        /* Material 3 Typography */
-        p, span, div, label {
+        /* Material 3 Typography - Force light text */
+        p, span, div, label, h1, h2, h3, h4, h5, h6 {
             color: #1e293b !important;
             font-family: 'Segoe UI', system-ui, sans-serif;
-        }
-
-        h1, h2, h3, h4, h5, h6 {
-            color: #0f172a !important;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            font-weight: 600 !important;
         }
 
         /* ------------------------------------
@@ -155,7 +149,7 @@ def apply_custom_css():
         }
 
         /* ------------------------------------
-        TABS - Equally Distributed with Colors
+        TABS - Fixed Text Colors
         ------------------------------------*/
         .stTabs [data-baseweb="tab-list"] {
             background: white;
@@ -184,34 +178,33 @@ def apply_custom_css():
 
         .stTabs [data-baseweb="tab"]:hover {
             background: #f1f5f9;
+            color: #1e293b !important;
+        }
+
+        /* Active tabs with colored backgrounds and white text */
+        .stTabs [data-baseweb="tab"][aria-selected="true"] {
+            color: white !important;
+            font-weight: 600;
         }
 
         /* Tab 1 - Blue */
         .stTabs [data-baseweb="tab"]:nth-child(1)[aria-selected="true"] {
             background: #1e40af !important;
-            color: white !important;
-            font-weight: 600;
         }
 
         /* Tab 2 - Green */
         .stTabs [data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {
             background: #059669 !important;
-            color: white !important;
-            font-weight: 600;
         }
 
         /* Tab 3 - Purple */
         .stTabs [data-baseweb="tab"]:nth-child(3)[aria-selected="true"] {
             background: #7c3aed !important;
-            color: white !important;
-            font-weight: 600;
         }
 
         /* Tab 4 - Orange */
         .stTabs [data-baseweb="tab"]:nth-child(4)[aria-selected="true"] {
             background: #ea580c !important;
-            color: white !important;
-            font-weight: 600;
         }
 
         /* ------------------------------------
@@ -331,26 +324,28 @@ def apply_custom_css():
         }
 
         /* ------------------------------------
-        DATAFRAME STYLING - Light Theme
+        DATAFRAME STYLING - Light Theme (FIXED)
         ------------------------------------*/
+        /* Target all dataframes */
+        div[data-testid="stDataFrame"], 
+        div[data-testid="stDataFrameContainer"],
         .stDataFrame {
+            background: white !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 8px !important;
             overflow: hidden !important;
-            background: white !important;
         }
 
-        .stDataFrame table {
-            background: white !important;
-        }
-
+        /* Table headers */
         .stDataFrame thead tr th {
             background: #f8fafc !important;
             color: #1e293b !important;
             font-weight: 600 !important;
             border-bottom: 1px solid #e2e8f0 !important;
+            padding: 12px !important;
         }
 
+        /* Table cells */
         .stDataFrame tbody tr {
             background: white !important;
         }
@@ -367,6 +362,13 @@ def apply_custom_css():
             color: #1e293b !important;
             font-weight: 500 !important;
             border-color: #e2e8f0 !important;
+            padding: 10px !important;
+        }
+
+        /* Specific fix for index column */
+        .stDataFrame tbody td:first-child {
+            background: #f8fafc !important;
+            font-weight: 600 !important;
         }
 
         /* ------------------------------------
@@ -392,13 +394,15 @@ def apply_custom_css():
         }
 
         /* ------------------------------------
-        FILE UPLOADER - Light Theme
+        FILE UPLOADER - Light Theme (FIXED)
         ------------------------------------*/
+        /* Uploader container */
+        section[data-testid="stFileUploader"] > div,
         .stFileUploader > div > div {
             background: white !important;
             border: 2px dashed #cbd5e1 !important;
             border-radius: 8px !important;
-            padding: 1.5rem !important;
+            padding: 2rem !important;
         }
 
         .stFileUploader > div > div:hover {
@@ -406,38 +410,35 @@ def apply_custom_css():
             background: #f8fafc !important;
         }
 
-        .stFileUploader label {
+        /* Uploader text */
+        .stFileUploader label,
+        .stFileUploader section,
+        .stFileUploader small,
+        .stFileUploader div {
             color: #1e293b !important;
-            font-weight: 600 !important;
-        }
-
-        .stFileUploader section {
-            color: #64748b !important;
             font-weight: 500 !important;
         }
 
-        .stFileUploader small {
-            color: #64748b !important;
-            font-weight: 500 !important;
-        }
-
-        /* Uploader button - match other buttons */
+        /* Uploader button */
         .stFileUploader button {
             background: #1e40af !important;
             color: white !important;
             border: none !important;
             border-radius: 8px !important;
-            padding: 0.5rem 1rem !important;
+            padding: 0.5rem 1.5rem !important;
             font-weight: 600 !important;
+            margin-top: 1rem !important;
         }
 
         .stFileUploader button:hover {
             background: #3730a3 !important;
+            color: white !important;
         }
 
         /* ------------------------------------
-        DOWNLOAD BUTTON - Match Other Buttons
+        DOWNLOAD BUTTON - Fixed to match other buttons
         ------------------------------------*/
+        /* Download button styling */
         .stDownloadButton > button {
             background: #1e40af !important;
             color: white !important;
@@ -454,12 +455,33 @@ def apply_custom_css():
             background: #3730a3 !important;
             box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4) !important;
             transform: translateY(-1px) !important;
+            color: white !important;
         }
 
         .stDownloadButton > button p,
         .stDownloadButton > button span,
         .stDownloadButton > button div {
             color: white !important;
+            font-weight: 600 !important;
+        }
+
+        /* ------------------------------------
+        TEXT ELEMENTS - Force light colors
+        ------------------------------------*/
+        /* Force all text to be visible */
+        .stMarkdown, .stText, .stLabel, .stSubheader {
+            color: #1e293b !important;
+        }
+
+        /* Input labels */
+        .stNumberInput label, .stTextInput label {
+            color: #1e293b !important;
+            font-weight: 600 !important;
+        }
+
+        /* Section headers */
+        h1, h2, h3 {
+            color: #0f172a !important;
             font-weight: 600 !important;
         }
         </style>
