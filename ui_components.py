@@ -1,652 +1,354 @@
 """
-Reusable UI components with vibrant multi-color theme
-Maximum contrast, colorful sections, no sidebar
+Material 3 Light Theme - Corporate UI Components
+Clean, professional design without sidebar
 """
 
 import streamlit as st
 from constants import THEME_COLORS
 
 
-# ------------------------------------------------------------
-# THEME + GLOBAL CSS
-# ------------------------------------------------------------
 def apply_custom_css():
-    """Apply vibrant multi-color theme with maximum contrast."""
-
-    radius = "12px"
-    radius_lg = "16px"
-    card_shadow = "0 4px 12px rgba(0, 0, 0, 0.15)"
-    hover_shadow = "0 6px 20px rgba(0, 0, 0, 0.25)"
-
+    """Apply Material 3 Light theme for corporate application."""
+    
     st.markdown(
-        f"""
+        """
         <style>
         /* ------------------------------------
-        GLOBAL BASE - Light clean background
+        GLOBAL BASE - Material 3 Light
         ------------------------------------*/
-        .stApp {{
-            background: #f0f2f6 !important;
-        }}
+        .stApp {
+            background: #f8fafc !important;
+        }
         
-        .main {{
-            background: #f0f2f6 !important;
-        }}
+        .main {
+            background: #f8fafc !important;
+        }
 
-        /* Force readable text */
-        p, span, div, label {{
-            color: #2d3748 !important;
-        }}
+        /* Material 3 Typography */
+        p, span, div, label {
+            color: #1e293b !important;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
 
-        h1, h2, h3, h4, h5, h6 {{
-            color: #1a202c !important;
-            font-weight: 700 !important;
-        }}
-
-        /* ------------------------------------
-        HEADER - Bold Purple Gradient
-        ------------------------------------*/
-        .app-header {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
-            padding: 3rem 2rem;
-            color: white !important;
-            border-radius: {radius_lg};
-            margin-bottom: 2.5rem;
-            text-align: center;
-            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
-            border: 4px solid white;
-        }}
-        .app-header h1 {{
-            margin: 0;
-            font-size: 2.8rem;
-            font-weight: 900;
-            color: white !important;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-            letter-spacing: -0.5px;
-        }}
-        .app-header p {{
-            margin: 1rem 0 0 0;
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.95) !important;
-            font-weight: 600;
-        }}
+        h1, h2, h3, h4, h5, h6 {
+            color: #0f172a !important;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-weight: 600 !important;
+        }
 
         /* ------------------------------------
-        CARDS - White with colored borders
+        HEADER - Corporate Gradient
         ------------------------------------*/
-        .card {{
-            background: white;
-            padding: 2rem;
-            border-radius: {radius};
-            border: 3px solid #e2e8f0;
-            box-shadow: {card_shadow};
-            margin-bottom: 2rem;
-        }}
-        .card-header {{
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            color: #1a202c !important;
-            border-bottom: 3px solid #6366f1;
-            padding-bottom: 0.75rem;
-        }}
-
-        /* ------------------------------------
-        METRIC CARDS - Different vibrant colors
-        ------------------------------------*/
-        .metric-card {{
-            padding: 2rem 1.5rem;
-            border-radius: {radius};
-            text-align: center;
-            box-shadow: {card_shadow};
-            transition: all 0.3s ease;
-            border: 4px solid white;
-            position: relative;
-            overflow: hidden;
-        }}
-        .metric-card:hover {{
-            transform: translateY(-6px) scale(1.02);
-            box-shadow: {hover_shadow};
-        }}
-
-        /* Purple */
-        .metric-card:nth-child(1) {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        }}
-        /* Pink */
-        .metric-card:nth-child(2) {{
-            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
-        }}
-        /* Cyan */
-        .metric-card:nth-child(3) {{
-            background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
-        }}
-        /* Green */
-        .metric-card:nth-child(4) {{
-            background: linear-gradient(135deg, #10b981 0%, #22c55e 100%);
-        }}
-        /* Orange */
-        .metric-card:nth-child(5) {{
-            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
-        }}
-
-        .metric-value {{
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: white !important;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-            margin: 0.5rem 0;
-        }}
-
-        .metric-label {{
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: white !important;
-            opacity: 0.95;
-        }}
-
-        /* ------------------------------------
-        ALERT BOXES - High contrast
-        ------------------------------------*/
-        .alert {{
-            padding: 1.5rem 2rem;
-            border-radius: {radius};
-            margin-bottom: 1.5rem;
-            display: flex;
-            gap: 1.25rem;
-            align-items: center;
-            border: 3px solid;
-            font-weight: 600;
-            box-shadow: {card_shadow};
-        }}
-
-        .alert strong {{
-            font-size: 1.6rem;
-            line-height: 1;
-        }}
-
-        .alert span {{
-            line-height: 1.6;
-            font-size: 1.05rem;
-        }}
-
-        .alert-success {{
-            background: #d1fae5;
-            border-color: #10b981;
-            color: #065f46 !important;
-        }}
-        .alert-success strong,
-        .alert-success span {{
-            color: #065f46 !important;
-        }}
-
-        .alert-info {{
-            background: #dbeafe;
-            border-color: #3b82f6;
-            color: #1e3a8a !important;
-        }}
-        .alert-info strong,
-        .alert-info span {{
-            color: #1e3a8a !important;
-        }}
-
-        .alert-warning {{
-            background: #fef3c7;
-            border-color: #f59e0b;
-            color: #78350f !important;
-        }}
-        .alert-warning strong,
-        .alert-warning span {{
-            color: #78350f !important;
-        }}
-
-        .alert-error {{
-            background: #fee2e2;
-            border-color: #ef4444;
-            color: #7f1d1d !important;
-        }}
-        .alert-error strong,
-        .alert-error span {{
-            color: #7f1d1d !important;
-        }}
-
-        /* ------------------------------------
-        TABS - Colorful with high contrast
-        ------------------------------------*/
-        .stTabs [data-baseweb="tab-list"] {{
-            background: white;
-            padding: 1rem;
-            border-radius: {radius};
-            gap: 1rem;
-            box-shadow: {card_shadow};
-            border: 3px solid #e2e8f0;
-        }}
-
-        .stTabs [data-baseweb="tab"] {{
-            border-radius: {radius};
-            background: #f8fafc;
-            border: 3px solid #e2e8f0;
-            padding: 1rem 2rem;
-            font-weight: 800;
-            color: #1a202c !important;
-            transition: all 0.3s ease;
-            font-size: 1.05rem;
-        }}
-
-        .stTabs [data-baseweb="tab"]:hover {{
-            background: #e2e8f0;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }}
-
-        /* Different color for each tab when active */
-        .stTabs [data-baseweb="tab"]:nth-child(1)[aria-selected="true"] {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-            color: white !important;
-            border-color: #6366f1;
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
-        }}
-        .stTabs [data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {{
-            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%) !important;
-            color: white !important;
-            border-color: #ec4899;
-            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5) !important;
-        }}
-        .stTabs [data-baseweb="tab"]:nth-child(3)[aria-selected="true"] {{
-            background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%) !important;
-            color: white !important;
-            border-color: #06b6d4;
-            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5) !important;
-        }}
-
-        /* ------------------------------------
-        BUTTONS - Bold gradient
-        ------------------------------------*/
-        .stButton > button {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-            color: white !important;
-            padding: 1rem 3rem;
-            font-weight: 900 !important;
-            font-size: 1.1rem;
-            border-radius: {radius};
-            border: 4px solid white;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }}
-        .stButton > button p,
-        .stButton > button span,
-        .stButton > button div {{
-            color: white !important;
-            font-weight: 900 !important;
-        }}
-        .stButton > button:hover {{
-            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
-            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.6);
-            transform: translateY(-3px) scale(1.02);
-            color: white !important;
-        }}
-        .stButton > button:hover p,
-        .stButton > button:hover span,
-        .stButton > button:hover div {{
-            color: white !important;
-        }}
-        .stButton > button:active {{
-            transform: translateY(-1px) scale(1);
-            color: white !important;
-        }}
-        .stButton > button:active p,
-        .stButton > button:active span,
-        .stButton > button:active div {{
-            color: white !important;
-        }}
-        .stButton > button:focus {{
-            color: white !important;
-            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.6);
-        }}
-        .stButton > button:focus p,
-        .stButton > button:focus span,
-        .stButton > button:focus div {{
-            color: white !important;
-        }}
-
-        /* ------------------------------------
-        STAGE PROGRESS - Colorful steps
-        ------------------------------------*/
-        .stage-container {{
+        .app-header {
+            background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
             padding: 2.5rem 2rem;
-            background: white;
-            border-radius: {radius_lg};
-            border: 4px solid #e2e8f0;
-            box-shadow: {card_shadow};
-            margin-bottom: 2.5rem;
-        }}
+            color: white !important;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
+        }
+        
+        .app-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white !important;
+            letter-spacing: -0.025em;
+        }
+        
+        .app-header p {
+            margin: 0.75rem 0 0 0;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+        }
 
-        .stage-row {{
+        /* ------------------------------------
+        CARDS - Material 3 Elevation
+        ------------------------------------*/
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .card-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1e293b !important;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        /* ------------------------------------
+        METRIC CARDS - Subtle Colors
+        ------------------------------------*/
+        .metric-card {
+            padding: 1.5rem 1rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .metric-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b !important;
+            margin: 0.5rem 0;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #64748b !important;
+            letter-spacing: 0.05em;
+        }
+
+        /* ------------------------------------
+        ALERT BOXES - Material 3
+        ------------------------------------*/
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            border-left: 4px solid;
+            font-weight: 500;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .alert-success {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .alert-info {
+            border-left-color: #3b82f6;
+            background: #f0f9ff;
+        }
+
+        .alert-warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .alert-error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        /* ------------------------------------
+        TABS - Material 3 Style
+        ------------------------------------*/
+        .stTabs [data-baseweb="tab-list"] {
+            background: white;
+            padding: 0.5rem;
+            border-radius: 12px;
+            gap: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            border-radius: 8px;
+            background: transparent;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            color: #64748b !important;
+            transition: all 0.2s ease;
+        }
+
+        .stTabs [data-baseweb="tab"]:hover {
+            background: #f1f5f9;
+        }
+
+        .stTabs [data-baseweb="tab"][aria-selected="true"] {
+            background: #1e40af !important;
+            color: white !important;
+            font-weight: 600;
+        }
+
+        /* ------------------------------------
+        BUTTONS - Material 3 Filled
+        ------------------------------------*/
+        .stButton > button {
+            background: #1e40af !important;
+            color: white !important;
+            padding: 0.75rem 2rem;
+            font-weight: 600 !important;
+            border-radius: 8px;
+            border: none !important;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3);
+        }
+        
+        .stButton > button:hover {
+            background: #3730a3 !important;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* ------------------------------------
+        STAGE PROGRESS - Clean Steps
+        ------------------------------------*/
+        .stage-container {
+            padding: 2rem 1.5rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stage-row {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 2rem;
-        }}
+            gap: 1rem;
+        }
 
-        .stage-step {{
+        .stage-step {
             flex: 0 0 auto;
             text-align: center;
-            min-width: 120px;
-        }}
+            min-width: 100px;
+        }
 
-        .stage-connector {{
-            flex: 0 0 80px;
-            height: 6px;
+        .stage-connector {
+            flex: 0 0 60px;
+            height: 2px;
             background: #e2e8f0;
-            border-radius: 3px;
-            position: relative;
-        }}
+            border-radius: 1px;
+        }
 
-        .stage-connector.completed {{
-            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
-        }}
+        .stage-connector.completed {
+            background: #1e40af;
+        }
 
-        .stage-circle {{
-            width: 70px;
-            height: 70px;
+        .stage-circle {
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 900;
-            font-size: 1.6rem;
-            margin: 0 auto 1rem auto;
-            transition: all 0.3s ease;
-            border: 5px solid;
-        }}
+            font-weight: 600;
+            font-size: 1rem;
+            margin: 0 auto 0.5rem auto;
+            transition: all 0.2s ease;
+            border: 2px solid;
+        }
 
-        .stage-circle.active {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        .stage-circle.active {
+            background: #1e40af;
             color: white !important;
-            border-color: white;
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
-            animation: pulse 2s infinite;
-        }}
+            border-color: #1e40af;
+        }
 
-        @keyframes pulse {{
-            0%, 100% {{ transform: scale(1); }}
-            50% {{ transform: scale(1.05); }}
-        }}
-
-        .stage-circle.completed {{
-            background: linear-gradient(135deg, #10b981 0%, #22c55e 100%);
+        .stage-circle.completed {
+            background: #10b981;
             color: white !important;
-            border-color: white;
-            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
-        }}
+            border-color: #10b981;
+        }
 
-        .stage-circle.inactive {{
+        .stage-circle.inactive {
             background: #f8fafc;
             color: #94a3b8 !important;
             border-color: #e2e8f0;
-        }}
+        }
 
-        .stage-label {{
-            font-size: 1rem;
-            color: #1a202c !important;
-            font-weight: 700;
-        }}
+        .stage-label {
+            font-size: 0.875rem;
+            color: #64748b !important;
+            font-weight: 500;
+        }
 
-        .stage-label.active {{
-            color: #6366f1 !important;
-            font-weight: 900;
-            font-size: 1.1rem;
-        }}
+        .stage-label.active {
+            color: #1e40af !important;
+            font-weight: 600;
+        }
 
         /* ------------------------------------
         SECTION DIVIDER
         ------------------------------------*/
-        .section-divider {{
-            height: 4px;
-            background: linear-gradient(90deg, transparent 0%, #6366f1 20%, #8b5cf6 50%, #d946ef 80%, transparent 100%);
-            margin: 3rem 0;
+        .section-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 2rem 0;
             border: none;
-            border-radius: 2px;
-        }}
-
-        /* ------------------------------------
-        OPTIMIZATION SPINNER
-        ------------------------------------*/
-        .optimization-container {{
-            text-align: center;
-            padding: 5rem 2rem;
-            background: white;
-            border-radius: {radius_lg};
-            box-shadow: {card_shadow};
-            border: 4px solid #e2e8f0;
-        }}
-
-        .spinner {{
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 2.5rem;
-            border: 8px solid #e2e8f0;
-            border-top-color: #6366f1;
-            border-right-color: #8b5cf6;
-            border-bottom-color: #d946ef;
-            border-radius: 50%;
-            animation: spin 1.2s linear infinite;
-        }}
-
-        @keyframes spin {{
-            to {{ transform: rotate(360deg); }}
-        }}
-
-        .optimization-text {{
-            font-size: 2.2rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 1rem;
-        }}
-
-        .optimization-subtext {{
-            font-size: 1.2rem;
-            color: #64748b !important;
-            font-weight: 600;
-        }}
+        }
 
         /* ------------------------------------
         DATAFRAME STYLING
         ------------------------------------*/
-        .stDataFrame {{
-            border: 3px solid #e2e8f0;
-            border-radius: {radius};
-            overflow: hidden;
-            background: white;
-        }}
-
-        .stDataFrame thead tr th {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-            color: white !important;
-            font-weight: 800 !important;
-            border: none !important;
-        }}
-
-        /* ------------------------------------
-        FILE UPLOADER
-        ------------------------------------*/
-        .uploadedFile {{
-            border: 4px dashed #6366f1 !important;
-            border-radius: {radius} !important;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%) !important;
-        }}
-
-        /* File uploader container */
-        .stFileUploader label {{
-            color: #1a202c !important;
-            font-weight: 700 !important;
-        }}
-
-        .stFileUploader > div > div {{
-            background: white !important;
-            border: 3px dashed #6366f1 !important;
-            border-radius: {radius} !important;
-            padding: 2rem !important;
-        }}
-
-        .stFileUploader section {{
-            color: #4a5568 !important;
-            font-weight: 600 !important;
-        }}
-
-        .stFileUploader section > div {{
-            color: #4a5568 !important;
-        }}
-
-        .stFileUploader small {{
-            color: #64748b !important;
-            font-weight: 500 !important;
-        }}
-
-        /* Browse files button inside uploader */
-        .stFileUploader button {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-            color: white !important;
-            border: 3px solid white !important;
-            font-weight: 800 !important;
-            padding: 0.75rem 2rem !important;
-            border-radius: {radius} !important;
-        }}
-
-        .stFileUploader button:hover {{
-            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
-            transform: translateY(-2px);
-        }}
-
-        /* ------------------------------------
-        DOWNLOAD BUTTON (matching other buttons)
-        ------------------------------------*/
-        .stDownloadButton > button {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-            color: white !important;
-            padding: 1rem 2rem !important;
-            font-weight: 900 !important;
-            font-size: 1rem !important;
-            border-radius: {radius} !important;
-            border: 4px solid white !important;
-            transition: all 0.3s ease !important;
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
-            text-transform: uppercase !important;
-            letter-spacing: 1px !important;
-            width: 100% !important;
-        }}
-        .stDownloadButton > button p,
-        .stDownloadButton > button span,
-        .stDownloadButton > button div {{
-            color: white !important;
-            font-weight: 900 !important;
-        }}
-        .stDownloadButton > button:hover {{
-            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
-            box-shadow: 0 8px 28px rgba(99, 102, 241, 0.6) !important;
-            transform: translateY(-3px) scale(1.02) !important;
-            color: white !important;
-        }}
-        .stDownloadButton > button:hover p,
-        .stDownloadButton > button:hover span,
-        .stDownloadButton > button:hover div {{
-            color: white !important;
-        }}
-
-        /* ------------------------------------
-        DATAFRAME STYLING - Material 3
-        ------------------------------------*/
-        .stDataFrame {{
-            border: 3px solid #e2e8f0 !important;
-            border-radius: {radius} !important;
+        .stDataFrame {
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
             overflow: hidden !important;
             background: white !important;
-        }}
+        }
 
-        .stDataFrame table {{
-            background: white !important;
-        }}
-
-        .stDataFrame thead tr th {{
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-            color: white !important;
-            font-weight: 800 !important;
-            border: none !important;
-            padding: 1rem !important;
-            font-size: 0.95rem !important;
-        }}
-
-        .stDataFrame tbody tr {{
-            background: white !important;
-        }}
-
-        .stDataFrame tbody tr:nth-child(even) {{
+        .stDataFrame thead tr th {
             background: #f8fafc !important;
-        }}
-
-        .stDataFrame tbody tr:hover {{
-            background: #f1f5f9 !important;
-        }}
-
-        .stDataFrame tbody td {{
-            color: #1a202c !important;
+            color: #1e293b !important;
             font-weight: 600 !important;
-            border-color: #e2e8f0 !important;
-            padding: 0.75rem !important;
-        }}
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
 
         /* ------------------------------------
         INPUT FIELDS - Material 3
         ------------------------------------*/
-        .stNumberInput > div > div > input {{
-            border: 3px solid #e2e8f0 !important;
-            border-radius: {radius} !important;
-            font-weight: 700 !important;
-            color: #1a202c !important;
+        .stNumberInput > div > div > input {
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            font-weight: 500 !important;
+            color: #1e293b !important;
             background: white !important;
-            padding: 0.75rem 1rem !important;
-            font-size: 1rem !important;
-        }}
+            padding: 0.5rem 0.75rem !important;
+        }
 
-        .stNumberInput > div > div > input:focus {{
-            border-color: #6366f1 !important;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+        .stNumberInput > div > div > input:focus {
+            border-color: #1e40af !important;
+            box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1) !important;
+        }
+
+        /* ------------------------------------
+        FILE UPLOADER
+        ------------------------------------*/
+        .stFileUploader > div > div {
             background: white !important;
-        }}
+            border: 2px dashed #cbd5e1 !important;
+            border-radius: 8px !important;
+            padding: 1.5rem !important;
+        }
 
-        .stNumberInput label {{
-            color: #1a202c !important;
-            font-weight: 700 !important;
-            font-size: 0.95rem !important;
-        }}
+        .stFileUploader > div > div:hover {
+            border-color: #1e40af !important;
+        }
+        </style>
+        """, 
+        unsafe_allow_html=True
+    )
 
-        /* Number input buttons */
-        .stNumberInput button {{
-            background: #f8fafc !important;
-            border: 2px solid #e2e8f0 !important;
-            color: #6366f1 !important;
-            font-weight: 800 !important;
-        }}
 
-        .stNumberInput button:hover {{
-            background: #6366f1 !important;
-            color: white !important;
-            border-color: #6366f1 !important;
-        }}
-    </style>
-    """, unsafe_allow_html=True)
-
-# ------------------------------------------------------------
-# HEADER
-# ------------------------------------------------------------
 def render_header(title: str, subtitle: str = ""):
-    """Render app header with title and optional subtitle."""
+    """Render corporate app header."""
     subtitle_html = f"<p>{subtitle}</p>" if subtitle else ""
     st.markdown(
         f"""
@@ -659,14 +361,11 @@ def render_header(title: str, subtitle: str = ""):
     )
 
 
-# ------------------------------------------------------------
-# STAGE PROGRESS
-# ------------------------------------------------------------
 def render_stage_progress(current_stage: int) -> None:
-    """Render wizard-style stage progress indicator with colors."""
+    """Render clean stage progress indicator."""
     stages = [
         ("1", "Upload"),
-        ("2", "Preview & Configure"),
+        ("2", "Preview & Configure"), 
         ("3", "Results")
     ]
 
@@ -681,7 +380,7 @@ def render_stage_progress(current_stage: int) -> None:
             status = "completed"
             icon = "✓"
         elif idx == current_stage:
-            status = "active"
+            status = "active" 
             icon = num
         else:
             status = "inactive"
@@ -698,12 +397,10 @@ def render_stage_progress(current_stage: int) -> None:
             """
         )
         
-        # Add connector with completion state
         if idx < total - 1:
             connector_class = "completed" if idx < current_stage else ""
             connectors.append(f'<div class="stage-connector {connector_class}"></div>')
 
-    # Interleave blocks and connectors
     html = ""
     for i, block in enumerate(blocks):
         html += block
@@ -720,11 +417,8 @@ def render_stage_progress(current_stage: int) -> None:
     )
 
 
-# ------------------------------------------------------------
-# CARDS
-# ------------------------------------------------------------
 def render_card(title: str, icon: str = ""):
-    """Open a card container with optional icon."""
+    """Open a Material 3 card container."""
     icon_html = f"{icon} " if icon else ""
     st.markdown(
         f"""
@@ -740,11 +434,8 @@ def close_card():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-# ------------------------------------------------------------
-# METRICS
-# ------------------------------------------------------------
 def render_metric_card(label: str, value: str, col):
-    """Render a colorful metric card in the specified column."""
+    """Render a Material 3 metric card."""
     with col:
         st.markdown(
             f"""
@@ -757,14 +448,11 @@ def render_metric_card(label: str, value: str, col):
         )
 
 
-# ------------------------------------------------------------
-# ALERTS
-# ------------------------------------------------------------
 def render_alert(message: str, alert_type: str = "info"):
-    """Render a bold alert box with icon and message."""
+    """Render a Material 3 alert box."""
     icons = {
         "success": "✓",
-        "info": "ℹ",
+        "info": "ℹ", 
         "warning": "⚠",
         "error": "✕"
     }
@@ -779,64 +467,17 @@ def render_alert(message: str, alert_type: str = "info"):
     )
 
 
-# ------------------------------------------------------------
-# DIVIDER
-# ------------------------------------------------------------
 def render_section_divider():
-    """Render a gradient divider line."""
+    """Render a subtle divider."""
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
 
-# ------------------------------------------------------------
-# QUICK START GUIDE
-# ------------------------------------------------------------
-def render_quick_start_guide():
-    """Render quick start guide with checklist."""
-    st.markdown(
-        """
-        <div style="background: white; padding: 2rem; border-radius: 12px; border: 3px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); margin-bottom: 2rem;">
-            <h3 style="color: #1a202c; margin-top: 0; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 800;">
-                📋 Quick Start Guide
-            </h3>
-            <p style="color: #4a5568; font-weight: 600; margin-bottom: 1.5rem;">Follow these simple steps to get started</p>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
-                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Download the Excel template from the card on the right</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
-                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Fill in your production data (plants, inventory, demand)</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
-                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Upload your completed Excel file below</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
-                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Review and configure optimization parameters</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="color: #10b981; font-size: 1.5rem; font-weight: 900;">✓</span>
-                    <span style="color: #1a202c; font-weight: 600; font-size: 1rem;">Run the optimization and analyze results</span>
-                </div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-# ------------------------------------------------------------
-# DOWNLOAD BUTTON
-# ------------------------------------------------------------
 def render_download_template_button():
-    """Render download template button with file loading."""
+    """Render download template button."""
     import io
     from pathlib import Path
     
     try:
-        # Get template file from same directory as app.py
         template_path = Path(__file__).parent / "polymer_production_template.xlsx"
         
         if template_path.exists():
@@ -852,6 +493,6 @@ def render_download_template_button():
                 use_container_width=True
             )
         else:
-            st.error("Template file not found in repository")
+            st.error("Template file not found")
     except Exception as e:
         st.error(f"Error loading template: {e}")
