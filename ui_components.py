@@ -155,7 +155,7 @@ def apply_custom_css():
         }
 
         /* ------------------------------------
-        TABS - Material 3 Style
+        TABS - Equally Distributed with Colors
         ------------------------------------*/
         .stTabs [data-baseweb="tab-list"] {
             background: white;
@@ -164,23 +164,52 @@ def apply_custom_css():
             gap: 0.5rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             border: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
         }
 
         .stTabs [data-baseweb="tab"] {
             border-radius: 8px;
             background: transparent;
-            padding: 0.75rem 1.5rem;
+            padding: 0.75rem 1rem;
             font-weight: 500;
             color: #64748b !important;
             transition: all 0.2s ease;
+            flex: 1;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .stTabs [data-baseweb="tab"]:hover {
             background: #f1f5f9;
         }
 
-        .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        /* Tab 1 - Blue */
+        .stTabs [data-baseweb="tab"]:nth-child(1)[aria-selected="true"] {
             background: #1e40af !important;
+            color: white !important;
+            font-weight: 600;
+        }
+
+        /* Tab 2 - Green */
+        .stTabs [data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {
+            background: #059669 !important;
+            color: white !important;
+            font-weight: 600;
+        }
+
+        /* Tab 3 - Purple */
+        .stTabs [data-baseweb="tab"]:nth-child(3)[aria-selected="true"] {
+            background: #7c3aed !important;
+            color: white !important;
+            font-weight: 600;
+        }
+
+        /* Tab 4 - Orange */
+        .stTabs [data-baseweb="tab"]:nth-child(4)[aria-selected="true"] {
+            background: #ea580c !important;
             color: white !important;
             font-weight: 600;
         }
@@ -203,6 +232,13 @@ def apply_custom_css():
             background: #3730a3 !important;
             box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
             transform: translateY(-1px);
+        }
+
+        .stButton > button p,
+        .stButton > button span,
+        .stButton > button div {
+            color: white !important;
+            font-weight: 600 !important;
         }
 
         /* ------------------------------------
@@ -295,7 +331,7 @@ def apply_custom_css():
         }
 
         /* ------------------------------------
-        DATAFRAME STYLING
+        DATAFRAME STYLING - Light Theme
         ------------------------------------*/
         .stDataFrame {
             border: 1px solid #e2e8f0 !important;
@@ -304,11 +340,33 @@ def apply_custom_css():
             background: white !important;
         }
 
+        .stDataFrame table {
+            background: white !important;
+        }
+
         .stDataFrame thead tr th {
             background: #f8fafc !important;
             color: #1e293b !important;
             font-weight: 600 !important;
             border-bottom: 1px solid #e2e8f0 !important;
+        }
+
+        .stDataFrame tbody tr {
+            background: white !important;
+        }
+
+        .stDataFrame tbody tr:nth-child(even) {
+            background: #f8fafc !important;
+        }
+
+        .stDataFrame tbody tr:hover {
+            background: #f1f5f9 !important;
+        }
+
+        .stDataFrame tbody td {
+            color: #1e293b !important;
+            font-weight: 500 !important;
+            border-color: #e2e8f0 !important;
         }
 
         /* ------------------------------------
@@ -328,6 +386,11 @@ def apply_custom_css():
             box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1) !important;
         }
 
+        .stNumberInput label {
+            color: #1e293b !important;
+            font-weight: 600 !important;
+        }
+
         /* ------------------------------------
         FILE UPLOADER
         ------------------------------------*/
@@ -340,6 +403,38 @@ def apply_custom_css():
 
         .stFileUploader > div > div:hover {
             border-color: #1e40af !important;
+        }
+
+        .stFileUploader label {
+            color: #1e293b !important;
+            font-weight: 600 !important;
+        }
+
+        /* ------------------------------------
+        DOWNLOAD BUTTON
+        ------------------------------------*/
+        .stDownloadButton > button {
+            background: #1e40af !important;
+            color: white !important;
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            border: none !important;
+            transition: all 0.2s ease !important;
+            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3) !important;
+        }
+
+        .stDownloadButton > button:hover {
+            background: #3730a3 !important;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4) !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .stDownloadButton > button p,
+        .stDownloadButton > button span,
+        .stDownloadButton > button div {
+            color: white !important;
+            font-weight: 600 !important;
         }
         </style>
         """, 
