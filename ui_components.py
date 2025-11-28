@@ -392,7 +392,7 @@ def apply_custom_css():
         }
 
         /* ------------------------------------
-        FILE UPLOADER
+        FILE UPLOADER - Light Theme
         ------------------------------------*/
         .stFileUploader > div > div {
             background: white !important;
@@ -403,6 +403,7 @@ def apply_custom_css():
 
         .stFileUploader > div > div:hover {
             border-color: #1e40af !important;
+            background: #f8fafc !important;
         }
 
         .stFileUploader label {
@@ -410,8 +411,32 @@ def apply_custom_css():
             font-weight: 600 !important;
         }
 
+        .stFileUploader section {
+            color: #64748b !important;
+            font-weight: 500 !important;
+        }
+
+        .stFileUploader small {
+            color: #64748b !important;
+            font-weight: 500 !important;
+        }
+
+        /* Uploader button - match other buttons */
+        .stFileUploader button {
+            background: #1e40af !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 0.5rem 1rem !important;
+            font-weight: 600 !important;
+        }
+
+        .stFileUploader button:hover {
+            background: #3730a3 !important;
+        }
+
         /* ------------------------------------
-        DOWNLOAD BUTTON
+        DOWNLOAD BUTTON - Match Other Buttons
         ------------------------------------*/
         .stDownloadButton > button {
             background: #1e40af !important;
@@ -422,6 +447,7 @@ def apply_custom_css():
             border: none !important;
             transition: all 0.2s ease !important;
             box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3) !important;
+            width: 100% !important;
         }
 
         .stDownloadButton > button:hover {
