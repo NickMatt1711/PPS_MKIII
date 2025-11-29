@@ -9,401 +9,138 @@ from constants import THEME_COLORS
 
 def apply_custom_css():
     """Apply Material 3 Light theme for corporate application."""
-    
     st.markdown(
         """
         <style>
-        /* ------------------------------------
-        GLOBAL BASE - Material 3 Light
-        ------------------------------------*/
-        .stApp {
-            background: #f8fafc !important;
-        }
-        
-        .main {
-            background: #f8fafc !important;
-        }
 
-        /* Material 3 Typography - Force light text */
+        /* ---------------------------
+        GLOBAL
+        ---------------------------*/
+        .stApp, .main {
+            background: #f8fafc !important;
+        }
         p, span, div, label, h1, h2, h3, h4, h5, h6 {
             color: #1e293b !important;
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
 
-        /* ------------------------------------
-        HEADER - Corporate Gradient
-        ------------------------------------*/
+        /* ---------------------------
+        HEADER
+        ---------------------------*/
         .app-header {
-            background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
+            background: linear-gradient(135deg, #1e40af, #3730a3);
             padding: 2.5rem 2rem;
-            color: white !important;
             border-radius: 16px;
             margin-bottom: 2rem;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
-        }
-        
-        .app-header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            font-weight: 700;
             color: white !important;
-            letter-spacing: -0.025em;
+            box-shadow: 0 4px 12px rgba(30,64,175,.15);
         }
-        
-        .app-header p {
-            margin: 0.75rem 0 0 0;
-            font-size: 1.1rem;
-            color: rgba(255, 255, 255, 0.9) !important;
-            font-weight: 500;
-        }
-
-        /* ------------------------------------
-        CARDS - Material 3 Elevation
-        ------------------------------------*/
-        .card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1.5rem;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .card-header {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #1e293b !important;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        /* ------------------------------------
-        METRIC CARDS - Subtle Colors
-        ------------------------------------*/
-        .metric-card {
-            padding: 1.5rem 1rem;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
-            background: white;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .metric-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1e293b !important;
-            margin: 0.5rem 0;
-        }
-
-        .metric-label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #64748b !important;
-            letter-spacing: 0.05em;
-        }
-
-        /* ------------------------------------
-        ALERT BOXES - Material 3
-        ------------------------------------*/
-        .alert {
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            border-left: 4px solid;
-            font-weight: 500;
-            background: white;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .alert-success {
-            border-left-color: #10b981;
-            background: #f0fdf4;
-        }
-
-        .alert-info {
-            border-left-color: #3b82f6;
-            background: #f0f9ff;
-        }
-
-        .alert-warning {
-            border-left-color: #f59e0b;
-            background: #fffbeb;
-        }
-
-        .alert-error {
-            border-left-color: #ef4444;
-            background: #fef2f2;
-        }
-
-        /* ------------------------------------
-        TABS - Fixed Text Colors
-        ------------------------------------*/
-        .stTabs [data-baseweb="tab-list"] {
-            background: white;
-            padding: 0.5rem;
-            border-radius: 12px;
-            gap: 0.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .stTabs [data-baseweb="tab"] {
-            border-radius: 8px;
-            background: transparent;
-            padding: 0.75rem 1rem;
-            font-weight: 600;
-            color: #64748b !important;
-            transition: all 0.2s ease;
-            flex: 1;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .stTabs [data-baseweb="tab"]:hover {
-            background: #f1f5f9;
-            color: #1e293b !important;
-        }
-
-        /* Active tabs - white text with colored backgrounds */
-        .stTabs [data-baseweb="tab"][aria-selected="true"] {
-            font-weight: 700;
-        }
-
-        .stTabs [data-baseweb="tab"][aria-selected="true"] * {
+        .app-header h1 { 
             color: white !important;
         }
-
-        /* Tab colors */
-        .stTabs [data-baseweb="tab"]:nth-child(1)[aria-selected="true"] {
-            background: #1e40af !important;
+        .app-header p { 
+            color: rgba(255,255,255,.9) !important; 
         }
 
-        .stTabs [data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {
-            background: #059669 !important;
-        }
-
-        .stTabs [data-baseweb="tab"]:nth-child(3)[aria-selected="true"] {
-            background: #7c3aed !important;
-        }
-
-        .stTabs [data-baseweb="tab"]:nth-child(4)[aria-selected="true"] {
-            background: #ea580c !important;
-        }
-
-        /* ------------------------------------
-        BUTTONS - Material 3 Filled
-        ------------------------------------*/
-        .stButton > button {
+        /* ---------------------------
+        STREAMLIT BUTTONS (Fix black buttons)
+        ---------------------------*/
+        button[kind="primary"], .stButton > button {
             background: #1e40af !important;
             color: white !important;
-            padding: 0.75rem 2rem;
-            font-weight: 600 !important;
-            border-radius: 8px;
+            border-radius: 8px !important;
             border: none !important;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3);
+            padding: .75rem 2rem !important;
+            font-weight: 600 !important;
+            box-shadow: 0 1px 3px rgba(30,64,175,.3);
         }
-        
-        .stButton > button:hover {
+        button[kind="primary"]:hover, .stButton > button:hover {
             background: #3730a3 !important;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
-            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30,64,175,.4);
         }
 
-        .stButton > button p,
-        .stButton > button span,
-        .stButton > button div {
-            color: white !important;
-            font-weight: 600 !important;
-        }
-
-        /* ------------------------------------
-        STAGE PROGRESS - Clean Steps
-        ------------------------------------*/
-        .stage-container {
-            padding: 2rem 1.5rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-            border: 1px solid #e2e8f0;
-        }
-
-        .stage-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-        }
-
-        .stage-step {
-            flex: 0 0 auto;
-            text-align: center;
-            min-width: 100px;
-        }
-
-        .stage-connector {
-            flex: 0 0 60px;
-            height: 2px;
-            background: #e2e8f0;
-            border-radius: 1px;
-        }
-
-        .stage-connector.completed {
-            background: #1e40af;
-        }
-
-        .stage-circle {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 1rem;
-            margin: 0 auto 0.5rem auto;
-            transition: all 0.2s ease;
-            border: 2px solid;
-        }
-
-        .stage-circle.active {
-            background: #1e40af;
-            color: white !important;
-            border-color: #1e40af;
-        }
-
-        .stage-circle.completed {
-            background: #10b981;
-            color: white !important;
-            border-color: #10b981;
-        }
-
-        .stage-circle.inactive {
-            background: #f8fafc;
-            color: #94a3b8 !important;
-            border-color: #e2e8f0;
-        }
-
-        .stage-label {
-            font-size: 0.875rem;
-            color: #64748b !important;
-            font-weight: 500;
-        }
-
-        .stage-label.active {
-            color: #1e40af !important;
-            font-weight: 600;
-        }
-
-        /* ------------------------------------
-        SECTION DIVIDER
-        ------------------------------------*/
-        .section-divider {
-            height: 1px;
-            background: #e2e8f0;
-            margin: 2rem 0;
-            border: none;
-        }
-
-        /* ------------------------------------
-        DATAFRAME STYLING - Enhanced style matching pasted code
-        ------------------------------------*/
-        /* Target all dataframes */
-        div[data-testid="stDataFrame"], 
-        div[data-testid="stDataFrameContainer"],
-        .stDataFrame,
-        .dataframe {
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        /* ------------------------------------
-        INPUT FIELDS - Enhanced style matching pasted code
-        ------------------------------------*/
-        .stNumberInput > div > div > input,
-        .stNumberInput input {
-            border: 1px solid #ced4da !important;
-            border-radius: 8px !important;
-            font-weight: 500 !important;
-            color: #2c3e50 !important;
-            background: white !important;
-            padding: 0.75rem !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
-        }
-
-        .stNumberInput > div > div > input:focus,
-        .stNumberInput input:focus {
-            border-color: #667eea !important;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15) !important;
-            background: white !important;
-        }
-
-        .stNumberInput label {
-            color: #2c3e50 !important;
-            font-weight: 600 !important;
-        }
-
-        /* Number input buttons */
-        .stNumberInput button {
-            background: white !important;
-            color: #2c3e50 !important;
-            border: 1px solid #ced4da !important;
-        }
-
-        .stNumberInput button:hover {
-            background: #f8f9fa !important;
-            border-color: #667eea !important;
-        }
-
-        /* ------------------------------------
-        FILE UPLOADER - Default style matching pasted code
-        ------------------------------------*/
-        section[data-testid="stFileUploader"] {
+        /* ---------------------------
+        FILE UPLOADER (Fix black)
+        ---------------------------*/
+        div[data-testid="stFileUploader-dropzone"] {
             border: 2px dashed #28a745 !important;
+            background: #f8fff9 !important;
+            border-radius: 10px !important;
+            color: #1e293b !important;
+        }
+        div[data-testid="stFileUploader-dropzone"] * {
+            color: #1e293b !important;
+        }
+
+        /* ---------------------------
+        DOWNLOAD TEMPLATE BUTTON FIX
+        ---------------------------*/
+        a[data-testid="stDownloadButton"] > button {
+            background: #1e40af !important;
+            color: white !important;
             border-radius: 8px !important;
-            padding: 1rem !important;
-            background-color: #f8fff9 !important;
+            padding: .65rem 1.5rem !important;
+            font-weight: 600 !important;
+        }
+        a[data-testid="stDownloadButton"] > button:hover {
+            background: #3730a3 !important;
         }
 
-        /* ------------------------------------
-        TEXT ELEMENTS - Force light colors
-        ------------------------------------*/
-        /* Force all text to be visible */
-        .stMarkdown, .stText, .stLabel, .stSubheader {
+        /* ---------------------------
+        DATAFRAME FIX (Remove dark mode)
+        ---------------------------*/
+        div[data-testid="stDataFrame"] table {
+            background: white !important;
+            color: #1e293b !important;
+            border-radius: 8px !important;
+        }
+        div[data-testid="stDataFrame"] th {
+            background: #f1f5f9 !important;
+            color: #1e293b !important;
+        }
+        div[data-testid="stDataFrame"] td {
+            background: white !important;
             color: #1e293b !important;
         }
 
-        /* Input labels */
-        .stNumberInput label, .stTextInput label {
+        /* ---------------------------
+        INPUT FIELDS (Fix grey/black)
+        ---------------------------*/
+        input[type="number"], input[type="text"], textarea {
+            background: white !important;
+            color: #1e293b !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            padding: .65rem !important;
+            font-weight: 500 !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,.05);
+        }
+        input[type="number"]:focus, input[type="text"]:focus, textarea:focus {
+            border-color: #657eea !important;
+            box-shadow: 0 0 0 3px rgba(102,126,234,.2) !important;
+        }
+
+        label {
             color: #1e293b !important;
             font-weight: 600 !important;
         }
 
-        /* Section headers */
-        h1, h2, h3 {
-            color: #0f172a !important;
-            font-weight: 600 !important;
+        /* ---------------------------
+        STAGE CIRCLES
+        ---------------------------*/
+        .stage-circle.active {
+            background: #1e40af !important;
+            color: white !important;
+            border-color: #1e40af !important;
         }
+        .stage-circle.completed {
+            background: #10b981 !important;
+            color: white !important;
+        }
+
         </style>
-        """, 
+        """,
         unsafe_allow_html=True
     )
 
