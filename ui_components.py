@@ -229,6 +229,7 @@ def render_stage_progress(current_stage: int):
     blocks = []
     connectors = []
 
+    # Create each stage's block and connector
     for idx, (num, label) in enumerate(stages):
         if idx < current_stage:
             status = "completed"
@@ -251,8 +252,18 @@ def render_stage_progress(current_stage: int):
             """
         )
 
-    html = "".join(blocks)
+        if idx < total - 1:
+            connector_class = "completed" if idx < current_stage else ""
+            connectors.append(f'<div class="stage-connector {connector_class}"></div>')
 
+    # Combine blocks and connectors into HTML
+    html = ""
+    for i, block in enumerate(blocks):
+        html += block
+        if i < len(connectors):
+            html += connectors[i]
+
+    # Ensure the entire container is closed properly
     st.markdown(
         f"""
         <div class="stage-container">
