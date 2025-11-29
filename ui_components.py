@@ -392,36 +392,6 @@ def apply_custom_css():
             color: #1e293b !important;
             font-weight: 600 !important;
         }
-        
-        /* ------------------------------------
-        DOWNLOAD BUTTON - Fixed to match other buttons
-        ------------------------------------*/
-        /* Download button styling */
-        .stDownloadButton > button {
-            background: #1e40af !important;
-            color: white !important;
-            padding: 0.75rem 1.5rem !important;
-            font-weight: 600 !important;
-            border-radius: 8px !important;
-            border: none !important;
-            transition: all 0.2s ease !important;
-            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3) !important;
-            width: 100% !important;
-        }
-
-        .stDownloadButton > button:hover {
-            background: #3730a3 !important;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4) !important;
-            transform: translateY(-1px) !important;
-            color: white !important;
-        }
-
-        .stDownloadButton > button p,
-        .stDownloadButton > button span,
-        .stDownloadButton > button div {
-            color: white !important;
-            font-weight: 600 !important;
-        }
 
         /* ------------------------------------
         TEXT ELEMENTS - Force light colors
