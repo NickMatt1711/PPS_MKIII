@@ -11,7 +11,7 @@ def apply_custom_css():
     
     st.markdown(
         """
-        <style>
+       <style>
         /* ------------------------------------
         COLOR VARIABLES - Single Source of Truth
         ------------------------------------*/
@@ -224,11 +224,13 @@ def apply_custom_css():
         .alert-error p, .alert-error strong { color: var(--error-500) !important; }
         
         /* ------------------------------------
-        BUTTONS - Consolidated
+        BUTTONS - FIXED: Ensure ALL buttons use primary theme
         ------------------------------------*/
         .stButton > button, 
         .stDownloadButton > button,
-        section[data-testid="stFileUploader"] button {
+        .stDownloadButton > a, /* FIX: Download template links */
+        section[data-testid="stFileUploader"] button,
+        div[data-testid="stBaseButton-secondary"] > button /* FIX: Secondary buttons */ {
             background: var(--primary-500) !important;
             color: white !important;
             font-weight: 600 !important;
@@ -241,18 +243,35 @@ def apply_custom_css():
         
         .stButton > button:hover,
         .stDownloadButton > button:hover,
-        section[data-testid="stFileUploader"] button:hover {
+        .stDownloadButton > a:hover,
+        section[data-testid="stFileUploader"] button:hover,
+        div[data-testid="stBaseButton-secondary"] > button:hover {
             background: var(--primary-600) !important;
             box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4) !important;
             transform: translateY(-1px) !important;
         }
         
+        /* FIX: Ensure download links have white text */
+        .stDownloadButton > a {
+            text-decoration: none !important;
+            display: inline-block !important;
+        }
+        
+        .stDownloadButton > a * {
+            color: white !important;
+        }
+        
         /* ------------------------------------
-        DATAFRAME & INPUTS - Consolidated
+        DATAFRAME & INPUTS - FIXED: Proper light mode
         ------------------------------------*/
+        /* FIX: Ensure dataframes are properly light themed */
         div[data-testid="stDataFrame"], 
-        div[data-testid="stDataFrameContainer"] {
+        div[data-testid="stDataFrameContainer"],
+        div[data-testid="stDataFrame"] table,
+        div[data-testid="stDataFrame"] thead,
+        div[data-testid="stDataFrame"] tbody {
             background-color: var(--surface) !important; 
+            color: var(--text-primary) !important;
             border: 1px solid var(--border-light);
             border-radius: 4px;
             overflow: hidden; 
@@ -270,6 +289,15 @@ def apply_custom_css():
             color: var(--text-primary) !important;
             background-color: var(--surface) !important;
             border-color: var(--inactive-bg) !important;
+        }
+        
+        /* FIX: Ensure all table text is light mode compatible */
+        div[data-testid="stDataFrame"] tr {
+            color: var(--text-primary) !important;
+        }
+        
+        div[data-testid="stDataFrame"] * {
+            color: var(--text-primary) !important;
         }
         
         /* Input Fields - Consolidated */
@@ -296,15 +324,28 @@ def apply_custom_css():
         }
         
         /* ------------------------------------
-        FILE UPLOADER & TABS
+        FILE UPLOADER - FIXED: Light theme
         ------------------------------------*/
         section[data-testid="stFileUploader"] {
-            border: 2px dashed var(--border-muted) !important; 
+            border: 2px dashed var(--border-medium) !important; /* Lighter border */
             border-radius: 8px !important;
             padding: 1.5rem !important;
             background-color: var(--surface) !important; 
+            color: var(--text-primary) !important; /* Ensure text is visible */
         }
         
+        /* FIX: File uploader text colors */
+        section[data-testid="stFileUploader"] * {
+            color: var(--text-primary) !important;
+        }
+        
+        section[data-testid="stFileUploader"] span {
+            color: var(--text-secondary) !important;
+        }
+        
+        /* ------------------------------------
+        TABS STYLING
+        ------------------------------------*/
         button[data-baseweb="tab"] {
             color: var(--text-muted) !important; 
             background-color: transparent !important;
@@ -339,8 +380,22 @@ def apply_custom_css():
         }
         
         /* Ensure all nested button text uses white */
-        .stButton > button * {
+        .stButton > button *,
+        .stDownloadButton > button * {
             color: white !important;
+        }
+        
+        /* ------------------------------------
+        SPECIFIC FIXES FOR STREAMLIT COMPONENTS
+        ------------------------------------*/
+        /* Fix for any remaining dark elements */
+        [data-testid]:not(div[data-testid="stDataFrame"]):not(div[data-testid="stDataFrameContainer"]) {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Ensure all text in the app uses light theme colors */
+        .stApp *:not(.app-header *):not(.stage-circle *):not(button *):not(.stButton *):not(.stDownloadButton *) {
+            color: var(--text-primary) !important;
         }
         </style>
         """, 
