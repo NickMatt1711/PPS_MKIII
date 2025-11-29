@@ -15,6 +15,15 @@ def apply_custom_css():
          MATERIAL 3 CSS TOKENS (Generated from THEME_COLORS)
         ********************************************************/
         :root {
+    
+            --background-color: var(--md-sys-color-background) !important;
+            --secondary-background-color: var(--md-sys-color-surface) !important;
+            --text-color: var(--md-sys-color-on-surface) !important;
+            --primary-color: var(--md-sys-color-primary) !important;
+            --border-color: var(--md-sys-color-outline-variant) !important;
+            --heading-color: var(--md-sys-color-on-surface) !important;
+            --font: "Inter", sans-serif !important;
+
             /* PRIMARY */
             --md-sys-color-primary: #5E7CE2;
             --md-sys-color-on-primary: #FFFFFF;
