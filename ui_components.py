@@ -227,30 +227,32 @@ def render_stage_progress(current_stage: float):
     # Ensure valid current_stage index (0, 1, 1.5, or 2)
     current_stage = max(0, min(current_stage, total - 1))
 
-    # Don't render anything at stage 1.5
-    if current_stage == 1.5:
-        return
-
     blocks = []
     connectors = []
 
     # Create each stage's block and connector
     for idx, (num, label) in enumerate(stages):
-        if idx < current_stage or (idx == 2 and current_stage == 2): # Completed stage
+        if idx < current_stage or (idx == total - 1 and current_stage == total - 1):
             status = "completed"
-            icon = "✓"  # Mark as tick when completed
-        elif idx == current_stage:  # Current stage
+            icon = "✓"
+        # 3. Current active stage (if not the final one)
+        elif idx == int(current_stage): 
             status = "active"
-            icon = num  # Show the stage number for the current stage
-        else:  # Future stage
+            icon = num
+        # 4. Future stages
+        else:
             status = "inactive"
-            icon = num  # Show the stage number for the inactive stages
+            icon = num
+
+        # Determine if label should be bold/blue (Active)
+        # It is active if it matches the current integer stage, OR if it is the final completed stage
+        is_active_label = (idx == int(current_stage)) or (idx == total - 1 and idx == current_stage)
 
         blocks.append(
             f"""
             <div class="stage-step">
                 <div class="stage-circle {status}">{icon}</div>
-                <div class="stage-label {'active' if idx == current_stage else ''}">
+                <div class="stage-label {'active' if is_active_label else ''}">
                     {label}
                 </div>
             </div>
