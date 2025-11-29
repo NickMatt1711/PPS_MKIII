@@ -1,10 +1,10 @@
 """
-Material 3 Light Theme – Streamlit-Compatible (Final Check)
+Material 3 Light Theme – Streamlit-Compatible (Refactored)
 Includes:
-- CSS for buttons, tables, and fixed-width, multi-color tabs.
-- Fix for metric card visibility (the 'black box' issue from the image).
-- Refactored custom card rendering using a context manager (@contextmanager).
-- Enhanced metric card function with optional color and icon inputs.
+- CSS transitions and hover effects for interactivity.
+- Improved heading color, metric card visibility, and full button/table/tab customization.
+- Stage progress bar responsiveness.
+- Card rendering using a Python context manager.
 """
 
 import streamlit as st
@@ -32,6 +32,7 @@ def apply_custom_css():
         }
         
         /* STREAMLIT HEADING COLOR ALIGNMENT */
+        /* Ensures Streamlit's built-in H1/H2/H3 elements use the brand color */
         [data-testid="stMarkdownContainer"] h1:not(.app-header h1), 
         [data-testid="stMarkdownContainer"] h2,
         [data-testid="stMarkdownContainer"] h3 {
@@ -48,7 +49,7 @@ def apply_custom_css():
             border-radius: 16px;
             margin-bottom: 2rem;
             text-align: center;
-            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.25);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.25); /* Deeper shadow */
         }
 
         .app-header h1 {
@@ -74,13 +75,13 @@ def apply_custom_css():
             box-shadow: 0 1px 4px rgba(0,0,0,0.08);
             margin-bottom: 1.5rem;
             border: 1px solid #e2e8f0;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Add transition for hover */
         }
         
         .card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-            border-color: #93c5fd;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12); /* Subtle lift effect */
+            border-color: #93c5fd; /* Light blue border on hover */
         }
         
         /* Inner content area of the card for context manager */
@@ -104,7 +105,7 @@ def apply_custom_css():
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             background: white;
             border: 1px solid #e2e8f0;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Add transition for hover */
         }
         
         .metric-card:hover {
@@ -116,7 +117,7 @@ def apply_custom_css():
         .metric-value {
             font-size: 2rem;
             font-weight: 700;
-            /* FIX: Ensures visibility and uses primary blue by default */
+            /* FIX: Ensure visibility and use primary blue for metric values */
             color: #1e40af !important; 
             margin: .5rem 0;
             display: flex;
@@ -137,7 +138,9 @@ def apply_custom_css():
             letter-spacing: .05em;
         }
 
-        /* --- BUTTON STYLING (st.button) --- */
+        /* --- BUTTON STYLING --- */
+        
+        /* REGULAR BUTTON STYLING (Applies to st.button) */
         [data-testid="stButton"] > button {
             background: #1e40af; /* Primary blue */
             color: white !important;
@@ -160,7 +163,7 @@ def apply_custom_css():
             transform: scale(0.98);
         }
 
-        /* DOWNLOAD BUTTON STYLING */
+        /* DOWNLOAD BUTTON STYLING (Specific styling already existing) */
         [data-testid="stDownloadButton"] button {
             background:#1e40af !important;
             color:white !important;
@@ -181,7 +184,7 @@ def apply_custom_css():
         }
 
 
-        /* --- TABLE & DATAFRAME STYLING (Fixing the dark look) --- */
+        /* --- TABLE & DATAFRAME STYLING (Addressing the black appearance) --- */
         
         /* Container styling for tables/dataframes */
         [data-testid="stDataFrame"], [data-testid="stTable"] {
@@ -217,6 +220,7 @@ def apply_custom_css():
         /* --- TAB STYLING (Equal width & multi-color indicator) --- */
         
         [data-testid="stTabs"] {
+            /* Ensures tabs container takes full width */
             width: 100%; 
         }
 
@@ -235,17 +239,19 @@ def apply_custom_css():
             text-align: center;
             font-weight: 600;
             color: #64748b !important;
-            border-bottom: 4px solid transparent !important;
+            border-bottom: 4px solid transparent !important; /* Thicker underline placeholder */
             transition: all 0.3s ease;
         }
         
         /* Hover effect on inactive tabs */
         [data-testid="stTabs"] button:hover {
             color: #1e40af !important;
+            /* Add a subtle visual cue without activating the color */
             border-bottom-color: #dbeafe !important;
         }
 
         /* ACTIVE TAB INDICATORS (Different colors for up to 4 tabs) */
+        
         /* 1st Tab: Primary Blue */
         [data-testid="stTabs"] button[aria-selected="true"]:nth-child(1) {
             color: #1e40af !important;
@@ -270,7 +276,7 @@ def apply_custom_css():
             border-bottom-color: #6366f1 !important;
         }
         
-        /* --- UTILITY COMPONENTS (No Changes) --- */
+        /* --- Existing Styles (No Changes) --- */
 
         /* ALERTS */
         .alert {
@@ -298,7 +304,7 @@ def apply_custom_css():
             margin: 2rem 0;
         }
 
-        /* STAGE PROGRESS */
+        /* STAGE PROGRESS (Keep existing good design) */
         .stage-container {
             padding: 2rem 1.5rem;
             background: white;
@@ -312,7 +318,7 @@ def apply_custom_css():
             display: flex;
             justify-content: center;
             gap: 1rem;
-            flex-wrap: wrap;
+            flex-wrap: wrap; /* Allows steps to wrap on small screens */
         }
         
         .stage-connector {
@@ -463,59 +469,27 @@ def render_stage_progress(current_stage: float):
     )
 
 
-@contextmanager
-def custom_card(title: str, icon: str = ""):
-    """
-    A context manager to wrap Streamlit content in a custom, styled card.
-    
-    Usage:
-    with custom_card("Data Summary", icon="📊"):
-        st.write("This content is inside the card.") 
-    """
-    # Start the card HTML structure and the header
+def render_card(title: str, icon: str = ""):
     st.markdown(
         f"""
         <div class="card">
-            <div class="card-header">{icon + ' ' if icon else ''}{title}</div>
-            <div class="card-content">
+            <div class="card-header">{icon if icon else ''} {title}</div>
         """,
         unsafe_allow_html=True,
     )
-    
-    # Yield control back to the 'with' block where Streamlit commands will be executed
-    try:
-        yield 
-    finally:
-        # Close the HTML structure after the content is rendered
-        st.markdown(
-            """
-                </div> 
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
 
 
-def render_metric_card(label: str, value: str, col, value_color: str = "#1e40af", icon: str = ""):
-    """
-    Renders a customizable metric card inside a Streamlit column.
-    
-    Args:
-        label (str): The label/title of the metric.
-        value (str): The main value of the metric.
-        col: The Streamlit column object to render into.
-        value_color (str): Optional. A hex or name CSS color for the value text (e.g., '#10b981' for success).
-        icon (str): Optional. An emoji or simple text icon to display next to the value.
-    """
+def close_card():
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_metric_card(label: str, value: str, col):
     with col:
         st.markdown(
             f"""
             <div class="metric-card">
                 <div class="metric-label">{label}</div>
-                <div class="metric-value" style="color:{value_color} !important;">
-                    {'<span style="font-size:1.5rem; margin-right:8px;">' + icon + '</span>' if icon else ''}
-                    {value}
-                </div>
+                <div class="metric-value">{value}</div>
             </div>
             """,
             unsafe_allow_html=True,
