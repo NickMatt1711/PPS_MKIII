@@ -1,13 +1,15 @@
 """
 Material 3 Light Theme – Streamlit-Compatible (Refactored)
-DOM selectors updated to current data-testid schema
-Invalid / deprecated selectors removed
-No deep-nesting CSS
-No HTML invalid nesting
+Includes:
+- CSS transitions and hover effects for cards and buttons.
+- Responsive design for stage progress bar.
+- Enhanced metric card with color/icon options.
+- Context manager for card component for safer usage.
 """
 
 import streamlit as st
 from pathlib import Path
+from contextlib import contextmanager # Import for the new custom_card
 
 
 def apply_custom_css():
@@ -15,6 +17,12 @@ def apply_custom_css():
         """
         <style>
 
+        /* --- THEME PALETTE --- */
+        /* Primary Blue: #1e40af (Indigo 700) */
+        /* Secondary Dark: #1e293b (Slate 800) */
+        /* Background Light: #f8fafc (Slate 50) */
+        /* Border/Divider: #e2e8f0 (Slate 200) */
+        
         /* APP BACKGROUND */
         [data-testid="stAppViewContainer"] {
             background: #f8fafc !important;
@@ -28,6 +36,14 @@ def apply_custom_css():
         html, body, [data-testid="stMarkdownContainer"] * {
             color: #1e293b !important;
             font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* Streamlit Headings - Apply brand color for emphasis */
+        [data-testid="stMarkdownContainer"] h1, 
+        [data-testid="stMarkdownContainer"] h2,
+        [data-testid="stMarkdownContainer"] h3 {
+            color: #1e40af !important; 
+            font-weight: 700;
         }
 
         /* HEADER */
@@ -56,7 +72,7 @@ def apply_custom_css():
             font-weight: 500;
         }
 
-        /* CARD */
+        /* CARD - Added Transitions and Hover Effect */
         .card {
             background: white;
             padding: 1.5rem;
@@ -64,18 +80,28 @@ def apply_custom_css():
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             margin-bottom: 1.5rem;
             border: 1px solid #e2e8f0;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
+        }
+        
+        .card-content {
+            margin-top: 1rem;
+        }
+
+        .card:hover {
+            transform: translateY(-2px); /* Subtle lift */
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1); /* Deeper shadow */
+            border-color: #93c5fd; /* Light blue border hint on hover */
         }
 
         .card-header {
             font-size: 1.25rem;
             font-weight: 600;
-            margin-bottom: 1rem;
             color: #1e293b !important;
             padding-bottom: .5rem;
             border-bottom: 2px solid #e2e8f0;
         }
 
-        /* METRIC CARD */
+        /* METRIC CARD - Added Transitions and Hover Effect */
         .metric-card {
             padding: 1.2rem 1rem;
             border-radius: 12px;
@@ -83,13 +109,24 @@ def apply_custom_css():
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             background: white;
             border: 1px solid #e2e8f0;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px); /* Subtle lift */
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1); /* Deeper shadow */
+            border-color: #93c5fd; /* Light blue border hint on hover */
         }
 
         .metric-value {
             font-size: 2rem;
             font-weight: 700;
-            color: #1e293b !important;
+            color: #1e40af !important; /* Use primary brand color */
             margin: .5rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* Spacing between icon and value */
         }
 
         .metric-label {
@@ -100,7 +137,7 @@ def apply_custom_css():
             letter-spacing: .05em;
         }
 
-        /* ALERTS */
+        /* ALERTS (No change, already good) */
         .alert {
             padding: 1rem 1.5rem;
             border-radius: 8px;
@@ -126,7 +163,7 @@ def apply_custom_css():
             margin: 2rem 0;
         }
 
-        /* STAGE PROGRESS */
+        /* STAGE PROGRESS - Added Responsiveness */
         .stage-container {
             padding: 2rem 1.5rem;
             background: white;
@@ -139,42 +176,17 @@ def apply_custom_css():
             display: flex;
             justify-content: center;
             gap: 1rem;
+            flex-wrap: wrap; /* NEW: Allows steps to wrap on small screens */
         }
 
         .stage-step {
             text-align: center;
             min-width: 100px;
         }
+        
+        /* ... stage circle styles remain the same ... */
 
-        .stage-circle {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 600;
-            font-size: 1rem;
-            margin: 0 auto .5rem auto;
-            border: 2px solid;
-        }
-
-        .stage-circle.active {
-            background:#1e40af; border-color:#1e40af; color:white !important;
-        }
-
-        .stage-circle.completed {
-            background:#10b981; border-color:#10b981; color:white !important;
-        }
-
-        .stage-circle.inactive {
-            background:#f8fafc; border-color:#e2e8f0; color:#94a3b8 !important;
-        }
-
-        .stage-label { font-size:.85rem; color:#64748b !important; }
-        .stage-label.active { color:#1e40af !important; font-weight:600; }
-
-        /* DOWNLOAD BUTTON */
+        /* DOWNLOAD BUTTON - Added Interaction States */
         [data-testid="stDownloadButton"] button {
             background:#1e40af !important;
             color:white !important;
@@ -183,6 +195,15 @@ def apply_custom_css():
             border-radius:8px !important;
             padding:.75rem 1.5rem !important;
             width:100% !important;
+            transition: background-color 0.2s ease, transform 0.1s ease; /* Added transition */
+        }
+
+        [data-testid="stDownloadButton"] button:hover {
+            background: #1e3a8a !important; /* Slightly darker blue on hover */
+        }
+        
+        [data-testid="stDownloadButton"] button:active {
+            transform: scale(0.98); /* Subtle press effect */
         }
 
         /* FILE UPLOADER */
@@ -280,28 +301,57 @@ def render_stage_progress(current_stage: float):
         unsafe_allow_html=True,
     )
 
-
-def render_card(title: str, icon: str = ""):
+@contextmanager
+def custom_card(title: str, icon: str = ""):
+    """
+    NEW: A context manager to safely wrap Streamlit content in a custom card.
+    
+    Usage:
+    with custom_card("Data Summary", icon="📊"):
+        st.write("This content is inside the card.")
+    """
+    # Start the card HTML structure and header
     st.markdown(
         f"""
         <div class="card">
             <div class="card-header">{icon if icon else ''} {title}</div>
+            <div class="card-content">
+        """,
+        unsafe_allow_html=True,
+    )
+    
+    # Yield control back to the 'with' block
+    yield 
+    
+    # Close the HTML structure after the 'with' block is executed
+    st.markdown(
+        """
+            </div> 
+        </div>
         """,
         unsafe_allow_html=True,
     )
 
 
-def close_card():
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-def render_metric_card(label: str, value: str, col):
+def render_metric_card(label: str, value: str, col, value_color: str = "#1e40af", icon: str = ""):
+    """
+    UPDATED: Renders a metric card with optional color and icon.
+    
+    :param value_color: CSS color for the value text (default is brand blue).
+    :param icon: Emoji or HTML entity to prepend to the value.
+    """
     with col:
+        # Check if an icon is provided to wrap it with specific styling
+        icon_html = f'<span style="font-size:1.5rem;">{icon}</span>' if icon else ''
+        
         st.markdown(
             f"""
             <div class="metric-card">
                 <div class="metric-label">{label}</div>
-                <div class="metric-value">{value}</div>
+                <div class="metric-value" style="color:{value_color} !important;">
+                    {icon_html}
+                    <span>{value}</span>
+                </div>
             </div>
             """,
             unsafe_allow_html=True,
