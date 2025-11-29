@@ -1,11 +1,3 @@
-"""
-Material 3 Light Theme – Streamlit-Compatible (Refactored)
-DOM selectors updated to current data-testid schema
-Invalid / deprecated selectors removed
-No deep-nesting CSS
-No HTML invalid nesting
-"""
-
 import streamlit as st
 from pathlib import Path
 
