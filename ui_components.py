@@ -392,49 +392,7 @@ def apply_custom_css():
             color: #1e293b !important;
             font-weight: 600 !important;
         }
-
-        /* ------------------------------------
-        FILE UPLOADER - Light Theme (FIXED)
-        ------------------------------------*/
-        /* Uploader container */
-        section[data-testid="stFileUploader"] > div,
-        .stFileUploader > div > div {
-            background: white !important;
-            border: 2px dashed #cbd5e1 !important;
-            border-radius: 8px !important;
-            padding: 2rem !important;
-        }
-
-        .stFileUploader > div > div:hover {
-            border-color: #1e40af !important;
-            background: #f8fafc !important;
-        }
-
-        /* Uploader text */
-        .stFileUploader label,
-        .stFileUploader section,
-        .stFileUploader small,
-        .stFileUploader div {
-            color: #1e293b !important;
-            font-weight: 500 !important;
-        }
-
-        /* Uploader button */
-        .stFileUploader button {
-            background: #1e40af !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 8px !important;
-            padding: 0.5rem 1.5rem !important;
-            font-weight: 600 !important;
-            margin-top: 1rem !important;
-        }
-
-        .stFileUploader button:hover {
-            background: #3730a3 !important;
-            color: white !important;
-        }
-
+        
         /* ------------------------------------
         DOWNLOAD BUTTON - Fixed to match other buttons
         ------------------------------------*/
