@@ -1,212 +1,187 @@
 """
 Material 3 Light Theme - Corporate UI Components
-Clean, professional design with a clear Wizard UX.
+Clean, professional design without sidebar
 """
 
 import streamlit as st
-# The 'constants' import is kept, assuming it exists for other parts of the app.
-# from constants import THEME_COLORS 
-
+from constants import THEME_COLORS # Re-introducing the original import
 
 def apply_custom_css():
-    """Apply Material 3 Light theme for corporate application, with corrected color overrides."""
+    """Apply Material 3 Light theme for corporate application."""
     
     st.markdown(
         """
         <style>
-        /* ----------------------------------------------------
-        WIZARD UX STABILITY FIX & CLEAN CORPORATE LIGHT THEME 
-        ----------------------------------------------------*/
-
-        /* Colors Definitions (Standard corporate light palette) */
-        :root {
-            --primary-blue: #1e40af;       /* Corporate Blue */
-            --primary-dark-text: #1e293b;  /* Dark Text */
-            --background-light: #f5f5f5;   /* App Background (Soft White/Gray) */
-            --surface-white: #ffffff;      /* Card/Input Background */
-            --border-light: #e2e8f0;       /* Subtle Border/Divider */
-            --success-green: #10b981;      /* Success/Completed status */
-            --header-gradient: linear-gradient(135deg, var(--primary-blue) 0%, #3730a3 100%);
-        }
-
         /* ------------------------------------
-        GLOBAL BASE (MANDATORY LIGHT MODE)
+        GLOBAL BASE - Material 3 Light
         ------------------------------------*/
-        .stApp, .main, .block-container {
-            background-color: var(--background-light) !important;
-            color: var(--primary-dark-text) !important;
-            padding-top: 2rem;
+        .stApp {
+            background: #f8fafc !important;
         }
         
-        /* Force Dark Text for ALL Streamlit elements */
-        p, span, div, label, h1, h2, h3, h4, h5, h6, a, li, strong, .stMarkdown, .stText, .stLabel, .stSubheader {
-            color: var(--primary-dark-text) !important; 
+        .main {
+            background: #f8fafc !important;
+        }
+
+        /* Material 3 Typography - Force light text */
+        p, span, div, label, h1, h2, h3, h4, h5, h6 {
+            color: #1e293b !important;
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
 
-        h1, h2, h3 {
-            color: #0f172a !important; 
-            font-weight: 600 !important;
-            margin-bottom: 0.75rem;
-        }
-
         /* ------------------------------------
-        HEADER (Kept largely as intended)
+        HEADER - Corporate Gradient
         ------------------------------------*/
         .app-header {
-            background: var(--header-gradient);
+            background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
             padding: 2.5rem 2rem;
-            border-radius: 12px;
+            color: white !important;
+            border-radius: 16px;
             margin-bottom: 2rem;
             text-align: center;
             box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
         }
         
         .app-header h1 {
-            color: var(--surface-white) !important;
+            margin: 0;
+            font-size: 2.5rem;
+            color: white !important;
         }
         
         .app-header p {
             color: rgba(255, 255, 255, 0.9) !important;
+            margin-top: 0.5rem;
         }
-        
+
         /* ------------------------------------
-        WIZARD / STAGE PROGRESS STYLING (Cleaned up alignment and sizing)
+        WIZARD / STAGE PROGRESS STYLING
         ------------------------------------*/
         .stage-container {
             padding: 1rem 0;
             margin-bottom: 2rem;
-            background-color: var(--surface-white);
+            background-color: white;
             border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border-light);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .stage-row {
             display: flex;
-            justify-content: space-between; /* Use space-between for better distribution */
+            justify-content: space-around;
             align-items: flex-start;
             width: 100%;
-            padding: 0 2rem;
         }
         .stage-step {
             display: flex;
             flex-direction: column;
             align-items: center;
             flex-grow: 1; 
-            min-width: 0;
         }
         .stage-circle {
-            width: 36px; /* Slightly larger than previous revision */
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: 700;
             margin-bottom: 0.5rem;
-            font-size: 1rem;
-            border: 2px solid;
-            transition: all 0.3s ease;
-            z-index: 1; /* Ensure circle is above connector */
+            font-size: 1.1rem;
+            border: 3px solid;
+            z-index: 10; /* Ensure it overlaps connector */
         }
         .stage-label {
             font-size: 0.9rem;
             text-align: center;
             font-weight: 500;
-            color: #64748b !important; /* Inactive text */
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            color: #4b5563 !important;
         }
 
         /* Status Classes */
         .stage-circle.inactive {
-            background-color: var(--background-light); 
-            color: #94a3b8; 
-            border-color: #cbd5e1;
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            border-color: #d1d5db;
         }
         .stage-circle.active {
-            background-color: var(--primary-blue);
-            color: var(--surface-white);
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 5px rgba(30, 64, 175, 0.2); 
+            background-color: #1e40af;
+            color: white;
+            border-color: #1e40af;
+            box-shadow: 0 0 0 5px rgba(30, 64, 175, 0.2);
         }
         .stage-circle.completed {
-            background-color: var(--success-green); 
-            color: var(--surface-white);
-            border-color: var(--success-green);
+            background-color: #10b981;
+            color: white;
+            border-color: #10b981;
         }
         .stage-label.active {
-            color: var(--primary-dark-text) !important;
             font-weight: 700;
+            color: #1e293b !important;
         }
 
         /* Connectors */
         .stage-connector {
-            height: 3px; 
-            background-color: #cbd5e1; 
+            height: 4px; 
+            background-color: #d1d5db; 
             flex-grow: 1;
-            margin: 0 -15px; /* Pull connector over to meet circles */
+            margin: 0 -20px; 
             position: relative;
-            top: 17.5px; /* Aligns connector to the middle of the circle (36/2 - 3/2) */
+            top: 21.5px; /* (40/2 + 3/2) - (4/2) = 21.5 */
             z-index: 0;
-            transition: background-color 0.3s ease;
         }
         .stage-connector.completed {
-            background-color: var(--success-green); 
+            background-color: #10b981; 
         }
-        /* Remove extra flex-grow on the last item's wrapper */
-        .stage-row > .stage-step:last-child {
-            flex-grow: 0;
+        .stage-step > div { /* Re-layered z-index */
+            position: relative;
+            z-index: 1; 
         }
-
 
         /* ------------------------------------
-        CARDS & ALERTS (Restored previous aesthetics, fixed alert colors)
+        CARDS & ALERTS
         ------------------------------------*/
         .card {
-            background: var(--surface-white);
+            background: white;
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border-light);
+            border: 1px solid #e5e7eb;
             padding: 1.5rem; 
             margin-bottom: 1.5rem;
         }
         
         .card-header {
-            color: var(--primary-dark-text) !important;
-            border-bottom: 1px solid var(--border-light);
+            color: #1e293b !important;
+            border-bottom: 1px solid #e5e7eb;
             padding-bottom: 0.75rem;
             margin-bottom: 1rem;
             font-size: 1.1rem;
             font-weight: 600;
         }
-
-        /* ALERTS - Clean Material look */
+        
         div[data-testid="stAlert"] {
-            background-color: var(--surface-white) !important; 
-            border-left: 5px solid var(--primary-blue) !important; 
+            background-color: #eff6ff !important;
+            border-left: 5px solid #1e40af !important;
             border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            padding: 1rem;
+            box-shadow: none;
         }
+        .stAlert p, .stAlert strong { color: #1e40af !important; }
         
-        /* Specific Alert border colors */
-        .alert-success { border-left-color: var(--success-green) !important; }
-        .alert-info { border-left-color: var(--primary-blue) !important; }
-        .alert-warning { border-left-color: #f59e0b !important; }
-        .alert-error { border-left-color: #dc2626 !important; }
-        
-        .stAlert p, .stAlert strong { color: var(--primary-dark-text) !important; }
+        /* Specific Alert styles */
+        .alert-success { background-color: #d1fae5 !important; border-left-color: #059669 !important; }
+        .alert-info { background-color: #eff6ff !important; border-left-color: #3b82f6 !important; }
+        .alert-warning { background-color: #fffde7 !important; border-left-color: #f59e0b !important; }
+        .alert-error { background-color: #fee2e2 !important; border-left-color: #ef4444 !important; }
+        .alert-success p, .alert-success strong { color: #059669 !important; }
+        .alert-info p, .alert-info strong { color: #3b82f6 !important; }
+        .alert-warning p, .alert-warning strong { color: #f59e0b !important; }
+        .alert-error p, .alert-error strong { color: #ef4444 !important; }
 
         /* ------------------------------------
-        BUTTONS (Aggressive Fix)
+        BUTTONS - Primary Look
         ------------------------------------*/
         .stButton > button, 
         .stDownloadButton > button,
         section[data-testid="stFileUploader"] button {
-            background: var(--primary-blue) !important;
-            color: var(--surface-white) !important;
+            background: #1e40af !important;
+            color: white !important;
             font-weight: 600 !important;
             border-radius: 8px !important;
             border: none !important;
@@ -215,12 +190,6 @@ def apply_custom_css():
             padding: 0.5rem 1rem !important;
         }
         
-        /* EXTREME OVERRIDE: Target ALL nested elements, including icons and spans */
-        .stButton > button * {
-            color: var(--surface-white) !important;
-        }
-
-        /* Hover state */
         .stButton > button:hover,
         .stDownloadButton > button:hover,
         section[data-testid="stFileUploader"] button:hover {
@@ -230,72 +199,63 @@ def apply_custom_css():
         }
 
         /* ------------------------------------
-        DATAFRAME STYLING (Light Mode Fix)
+        DATAFRAME STYLING (Light Mode)
         ------------------------------------*/
         div[data-testid="stDataFrame"], 
         div[data-testid="stDataFrameContainer"] {
-            background-color: var(--surface-white) !important; 
-            border: 1px solid var(--border-light);
+            background-color: white !important; 
+            border: 1px solid #e5e7eb;
             border-radius: 4px;
             overflow: hidden; 
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
-        /* Force light background and dark text for all table cells/elements */
-        div[data-testid="stDataFrame"] table,
-        div[data-testid="stDataFrame"] th,
-        div[data-testid="stDataFrame"] td,
-        div[data-testid="stDataFrame"] span {
-            background-color: var(--surface-white) !important;
-            color: var(--primary-dark-text) !important;
-            border-color: #f1f5f9 !important;
+        div[data-testid="stDataFrame"] th {
+            background-color: #f9fafb !important; 
+            color: #1e293b !important;
+            font-weight: 600;
+            border-color: #e5e7eb !important;
         }
         
-        /* Style for the header row background */
-        div[data-testid="stDataFrame"] th {
-            background-color: #f1f5f9 !important; 
-            font-weight: 600;
+        div[data-testid="stDataFrame"] td {
+            color: #1e293b !important;
+            background-color: white !important;
+            border-color: #f3f4f6 !important;
         }
 
         /* ------------------------------------
-        INPUT FIELDS (Light Mode Fix)
+        INPUT FIELDS (Light Mode)
         ------------------------------------*/
-        
-        /* Target all common Streamlit inputs for white background and dark text */
         .stTextInput input,
         .stTextInput textarea,
         .stNumberInput input,
-        div[data-testid="stForm"] input, 
-        div[data-testid="stForm"] textarea,
-        div[data-testid="stSelectbox"] input,
         .stDateInput input,
         .stTimeInput input {
-            border: 1px solid #b0bec5 !important;
+            border: 1px solid #d1d5db !important;
             border-radius: 4px !important;
-            color: var(--primary-dark-text) !important; 
-            background: var(--surface-white) !important;
+            color: #1e293b !important; 
+            background: white !important;
             padding: 0.5rem 0.75rem !important;
             box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
         }
 
-        /* Focused state */
         .stTextInput input:focus, .stTextInput textarea:focus,
         .stNumberInput input:focus, .stDateInput input:focus,
         .stTimeInput input:focus {
-            border-color: var(--primary-blue) !important;
+            border-color: #1e40af !important;
             box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.3) !important;
         }
 
         /* ------------------------------------
-        FILE UPLOADER - General Style
+        FILE UPLOADER
         ------------------------------------*/
         section[data-testid="stFileUploader"] {
-            border: 2px dashed #94a3b8 !important; 
+            border: 2px dashed #9ca3af !important; 
             border-radius: 8px !important;
             padding: 1.5rem !important;
             background-color: #fcfcfc !important; 
         }
-
+        
         /* ------------------------------------
         TABS STYLING
         ------------------------------------*/
@@ -306,25 +266,53 @@ def apply_custom_css():
         }
 
         button[data-baseweb="tab"][aria-selected="true"] {
-            color: var(--primary-blue) !important; 
-            border-bottom: 3px solid var(--primary-blue) !important; 
+            color: #1e40af !important; 
+            border-bottom: 3px solid #1e40af !important; 
             font-weight: 600;
         }
         
         .stTabs {
-            background-color: var(--surface-white) !important;
+            background-color: white !important;
             border-radius: 8px;
             padding: 1rem;
-            border: 1px solid var(--border-light);
+            border: 1px solid #e5e7eb;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
-        
+
         /* ------------------------------------
         SECTION DIVIDER
         ------------------------------------*/
         .section-divider {
             margin: 2rem 0;
-            border-top: 1px solid var(--border-light);
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        /* ------------------------------------
+        METRIC CARDS (Placeholder style)
+        ------------------------------------*/
+        .metric-card {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            color: #64748b !important;
+            font-weight: 500;
+        }
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e40af !important;
+            margin-top: 0.25rem;
+        }
+        
+        /* Ensure all nested text uses dark color */
+        .stButton > button * {
+            color: white !important;
         }
 
         </style>
@@ -356,47 +344,44 @@ def render_stage_progress(current_stage: int) -> None:
     ]
 
     total = len(stages)
+    # The current stage should be 0, 1, or 2 for the three stages
     current_stage = max(0, min(current_stage, total - 1))
 
-    blocks = []
-    connectors = []
+    html = '<div class="stage-row">'
     
     for idx, (num, label) in enumerate(stages):
-        if idx < current_stage or (idx == total - 1 and current_stage >= total - 1):
+        status = "inactive"
+        icon = num
+        
+        if idx == current_stage:
+            status = "active"
+        elif idx < current_stage:
             status = "completed"
             icon = "✓"
-        elif idx == current_stage:
-            status = "active" 
-            icon = num
-        else:
-            status = "inactive"
-            icon = num
-
-        blocks.append(
-            f"""
-            <div class="stage-step">
-                <div class="stage-circle {status}">{icon}</div>
-                <div class="stage-label {'active' if idx == current_stage else ''}">
-                    {label}
-                </div>
-            </div>
-            """
-        )
         
+        # Start Step Block
+        html += '<div class="stage-step">'
+        
+        # Circle
+        html += f"""
+            <div class="stage-circle {status}">{icon}</div>
+            <div class="stage-label {'active' if idx == current_stage else ''}">
+                {label}
+            </div>
+        """
+        html += '</div>' # End stage-step
+        
+        # Connector (Don't add after the last step)
         if idx < total - 1:
             connector_class = "completed" if idx < current_stage else ""
-            connectors.append(f'<div class="stage-connector {connector_class}"></div>')
+            html += f'<div class="stage-connector {connector_class}"></div>'
 
-    html = ""
-    for i, block in enumerate(blocks):
-        html += block
-        if i < len(connectors):
-            html += connectors[i]
+    html += '</div>' # End stage-row
 
     st.markdown(
         f"""
         <div class="stage-container">
-            <div class="stage-row">{html}</div>
+            {html}
         </div>
         """,
         unsafe_allow_html=True,
@@ -464,7 +449,6 @@ def render_download_template_button():
     from pathlib import Path
     
     # Placeholder implementation, as the file isn't available in this environment.
-    # The error handling below is kept to avoid breaking the original script structure.
     try:
         # NOTE: In a real environment, you would ensure 'polymer_production_template.xlsx' 
         # is available in the appropriate directory relative to this script.
@@ -483,23 +467,6 @@ def render_download_template_button():
                 use_container_width=True
             )
         else:
-            # Create dummy data for the example to work if the file is missing
-            st.download_button(
-                label="📥 Download Template",
-                data=b'This is a dummy Excel content.',
-                file_name="polymer_production_template_DUMMY.txt",
-                mime="text/plain",
-                help="Template file not found (using dummy data)",
-                use_container_width=True
-            )
-            # st.error("Template file not found")
+            st.error("Template file not found")
     except Exception as e:
-        # Simplified error handling for the code sandbox environment
-        st.download_button(
-            label="📥 Download Template",
-            data=b'This is a dummy Excel content.',
-            file_name="polymer_production_template_DUMMY.txt",
-            mime="text/plain",
-            help=f"Error loading template: {e}",
-            use_container_width=True
-        )
+        st.error(f"Template file not found: {e}")
