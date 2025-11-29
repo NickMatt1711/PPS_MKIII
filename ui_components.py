@@ -235,141 +235,152 @@ def apply_custom_css():
         }
 
         /* ------------------------------------
-        FILE UPLOADER - Theme Colors
+        STAGE PROGRESS - Clean Steps
         ------------------------------------*/
-        section[data-testid="stFileUploader"] {
-            border: 2px dashed #1e40af !important;
-            border-radius: 8px !important;
-            padding: 2rem !important;
-            background-color: #f8fafc !important;
+        .stage-container {
+            padding: 2rem 1.5rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
         }
 
-        section[data-testid="stFileUploader"] * {
-            color: #1e293b !important;
+        .stage-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
         }
 
-        section[data-testid="stFileUploader"] button {
-            background: #1e40af !important;
+        .stage-step {
+            flex: 0 0 auto;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .stage-connector {
+            flex: 0 0 60px;
+            height: 2px;
+            background: #e2e8f0;
+            border-radius: 1px;
+        }
+
+        .stage-connector.completed {
+            background: #1e40af;
+        }
+
+        .stage-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+            margin: 0 auto 0.5rem auto;
+            transition: all 0.2s ease;
+            border: 2px solid;
+        }
+
+        .stage-circle.active {
+            background: #1e40af;
             color: white !important;
-            border: none !important;
-            border-radius: 8px !important;
-            padding: 0.75rem 1.5rem !important;
-            font-weight: 600 !important;
+            border-color: #1e40af;
         }
 
-        section[data-testid="stFileUploader"] button:hover {
-            background: #3730a3 !important;
+        .stage-circle.completed {
+            background: #10b981;
             color: white !important;
+            border-color: #10b981;
         }
 
-        section[data-testid="stFileUploader"] button p,
-        section[data-testid="stFileUploader"] button span {
-            color: white !important;
-            font-weight: 600 !important;
+        .stage-circle.inactive {
+            background: #f8fafc;
+            color: #94a3b8 !important;
+            border-color: #e2e8f0;
+        }
+
+        .stage-label {
+            font-size: 0.875rem;
+            color: #64748b !important;
+            font-weight: 500;
+        }
+
+        .stage-label.active {
+            color: #1e40af !important;
+            font-weight: 600;
         }
 
         /* ------------------------------------
-        DATAFRAMES & TABLES - Light Theme
+        SECTION DIVIDER
         ------------------------------------*/
-        .stDataFrame, 
+        .section-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 2rem 0;
+            border: none;
+        }
+
+        /* ------------------------------------
+        DATAFRAME STYLING - Enhanced style matching pasted code
+        ------------------------------------*/
+        /* Target all dataframes */
         div[data-testid="stDataFrame"], 
         div[data-testid="stDataFrameContainer"],
+        .stDataFrame,
         .dataframe {
-            background: white !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            color: #1e293b !important;
-        }
-
-        .stDataFrame *,
-        div[data-testid="stDataFrame"] *,
-        div[data-testid="stDataFrameContainer"] * {
-            color: #1e293b !important;
-            background: white !important;
-        }
-
-        /* Table headers */
-        .stDataFrame thead th,
-        div[data-testid="stDataFrame"] thead th {
-            background: #f1f5f9 !important;
-            color: #1e293b !important;
-            font-weight: 600 !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-        }
-
-        /* Table cells */
-        .stDataFrame tbody td,
-        div[data-testid="stDataFrame"] tbody td {
-            background: white !important;
-            color: #1e293b !important;
-            border-bottom: 1px solid #f1f5f9 !important;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         /* ------------------------------------
-        INPUT FIELDS - Light Theme
+        INPUT FIELDS - Enhanced style matching pasted code
         ------------------------------------*/
         .stNumberInput > div > div > input,
-        .stNumberInput input,
-        .stTextInput > div > div > input,
-        .stTextInput input,
-        .stSelectbox > div > div,
-        .stTextArea > div > div > textarea {
-            border: 1px solid #e2e8f0 !important;
+        .stNumberInput input {
+            border: 1px solid #ced4da !important;
             border-radius: 8px !important;
             font-weight: 500 !important;
-            color: #1e293b !important;
+            color: #2c3e50 !important;
             background: white !important;
             padding: 0.75rem !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
         }
 
         .stNumberInput > div > div > input:focus,
-        .stNumberInput input:focus,
-        .stTextInput > div > div > input:focus,
-        .stTextInput input:focus,
-        .stSelectbox > div > div:focus,
-        .stTextArea > div > div > textarea:focus {
-            border-color: #1e40af !important;
-            box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.2) !important;
+        .stNumberInput input:focus {
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15) !important;
             background: white !important;
         }
 
-        /* Input labels */
-        .stNumberInput label,
-        .stTextInput label,
-        .stSelectbox label,
-        .stTextArea label {
-            color: #1e293b !important;
+        .stNumberInput label {
+            color: #2c3e50 !important;
             font-weight: 600 !important;
         }
 
         /* Number input buttons */
         .stNumberInput button {
             background: white !important;
-            color: #1e293b !important;
-            border: 1px solid #e2e8f0 !important;
+            color: #2c3e50 !important;
+            border: 1px solid #ced4da !important;
         }
 
         .stNumberInput button:hover {
-            background: #f1f5f9 !important;
-            border-color: #1e40af !important;
+            background: #f8f9fa !important;
+            border-color: #667eea !important;
         }
 
         /* ------------------------------------
-        RADIO BUTTONS & CHECKBOXES
+        FILE UPLOADER - Default style matching pasted code
         ------------------------------------*/
-        .stRadio > div,
-        .stCheckbox > div {
-            background: white !important;
-            color: #1e293b !important;
+        section[data-testid="stFileUploader"] {
+            border: 2px dashed #28a745 !important;
             border-radius: 8px !important;
-            padding: 0.5rem !important;
-        }
-
-        .stRadio label,
-        .stCheckbox label {
-            color: #1e293b !important;
-            font-weight: 500 !important;
+            padding: 1rem !important;
+            background-color: #f8fff9 !important;
         }
 
         /* ------------------------------------
@@ -380,37 +391,15 @@ def apply_custom_css():
             color: #1e293b !important;
         }
 
+        /* Input labels */
+        .stNumberInput label, .stTextInput label {
+            color: #1e293b !important;
+            font-weight: 600 !important;
+        }
+
         /* Section headers */
         h1, h2, h3 {
             color: #0f172a !important;
-            font-weight: 600 !important;
-        }
-
-        /* ------------------------------------
-        DOWNLOAD BUTTON - Theme Colors
-        ------------------------------------*/
-        .stDownloadButton > button {
-            background: #1e40af !important;
-            color: white !important;
-            padding: 0.75rem 2rem !important;
-            font-weight: 600 !important;
-            border-radius: 8px !important;
-            border: none !important;
-            transition: all 0.2s ease !important;
-            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3) !important;
-        }
-        
-        .stDownloadButton > button:hover {
-            background: #3730a3 !important;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4) !important;
-            transform: translateY(-1px) !important;
-            color: white !important;
-        }
-
-        .stDownloadButton > button p,
-        .stDownloadButton > button span,
-        .stDownloadButton > button div {
-            color: white !important;
             font-weight: 600 !important;
         }
         </style>
