@@ -34,13 +34,13 @@ def apply_custom_css():
         HEADER - Corporate Gradient
         ------------------------------------*/
         .app-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
             padding: 2.5rem 2rem;
             color: white !important;
             border-radius: 16px;
             margin-bottom: 2rem;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
         }
         
         .app-header h1 {
@@ -65,42 +65,42 @@ def apply_custom_css():
             background: white;
             padding: 1.5rem;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             margin-bottom: 1.5rem;
-            border: 1px solid #e9ecef;
+            border: 1px solid #e2e8f0;
         }
         
         .card-header {
             font-size: 1.25rem;
             font-weight: 600;
             margin-bottom: 1rem;
-            color: #2c3e50 !important;
+            color: #1e293b !important;
             padding-bottom: 0.5rem;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 2px solid #e2e8f0;
         }
 
         /* ------------------------------------
-        METRIC CARDS - Enhanced gradient style
+        METRIC CARDS - Subtle Colors
         ------------------------------------*/
         .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
             padding: 1.5rem 1rem;
             border-radius: 12px;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            background: white;
+            border: 1px solid #e2e8f0;
         }
         
         .metric-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
         }
 
         .metric-value {
             font-size: 2rem;
             font-weight: 700;
-            color: white !important;
+            color: #1e293b !important;
             margin: 0.5rem 0;
         }
 
@@ -108,13 +108,12 @@ def apply_custom_css():
             font-size: 0.875rem;
             font-weight: 600;
             text-transform: uppercase;
-            color: white !important;
+            color: #64748b !important;
             letter-spacing: 0.05em;
-            opacity: 0.9;
         }
 
         /* ------------------------------------
-        ALERT BOXES - Enhanced gradient style
+        ALERT BOXES - Material 3
         ------------------------------------*/
         .alert {
             padding: 1rem 1.5rem;
@@ -125,100 +124,107 @@ def apply_custom_css():
             align-items: center;
             border-left: 4px solid;
             font-weight: 500;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .alert-success {
-            border-left-color: #28a745;
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            color: #155724;
+            border-left-color: #10b981;
+            background: #f0fdf4;
         }
 
         .alert-info {
-            border-left-color: #17a2b8;
-            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
-            color: #0c5460;
+            border-left-color: #3b82f6;
+            background: #f0f9ff;
         }
 
         .alert-warning {
-            border-left-color: #ffc107;
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-            color: #856404;
+            border-left-color: #f59e0b;
+            background: #fffbeb;
         }
 
         .alert-error {
-            border-left-color: #dc3545;
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            color: #721c24;
+            border-left-color: #ef4444;
+            background: #fef2f2;
         }
 
         /* ------------------------------------
-        TABS - Enhanced style matching your code
+        TABS - Fixed Text Colors
         ------------------------------------*/
         .stTabs [data-baseweb="tab-list"] {
-            gap: 8px;
-            background-color: #f8f9fa;
+            background: white;
             padding: 0.5rem;
-            border-radius: 10px;
+            border-radius: 12px;
+            gap: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
             display: flex;
             justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .stTabs [data-baseweb="tab"] {
-            height: 50px;
-            padding: 0 24px;
-            background-color: white;
             border-radius: 8px;
+            background: transparent;
+            padding: 0.75rem 1rem;
             font-weight: 600;
-            border: 2px solid transparent;
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            white-space: nowrap;
             color: #64748b !important;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            flex: 1;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .stTabs [data-baseweb="tab"]:hover {
-            background-color: #f0f0f0;
+            background: #f1f5f9;
             color: #1e293b !important;
         }
 
-        /* Active tabs - white text with gradient background */
+        /* Active tabs - white text with colored backgrounds */
         .stTabs [data-baseweb="tab"][aria-selected="true"] {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-            border-color: #667eea;
             font-weight: 700;
-        }
-
-        .stTabs [data-baseweb="tab"][aria-selected="true"]:hover {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         }
 
         .stTabs [data-baseweb="tab"][aria-selected="true"] * {
             color: white !important;
         }
 
+        /* Tab colors */
+        .stTabs [data-baseweb="tab"]:nth-child(1)[aria-selected="true"] {
+            background: #1e40af !important;
+        }
+
+        .stTabs [data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {
+            background: #059669 !important;
+        }
+
+        .stTabs [data-baseweb="tab"]:nth-child(3)[aria-selected="true"] {
+            background: #7c3aed !important;
+        }
+
+        .stTabs [data-baseweb="tab"]:nth-child(4)[aria-selected="true"] {
+            background: #ea580c !important;
+        }
+
         /* ------------------------------------
-        BUTTONS - Gradient style
+        BUTTONS - Material 3 Filled
         ------------------------------------*/
         .stButton > button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            background: #1e40af !important;
             color: white !important;
             padding: 0.75rem 2rem;
             font-weight: 600 !important;
             border-radius: 8px;
             border: none !important;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3);
         }
         
         .stButton > button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            background: #3730a3 !important;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+            transform: translateY(-1px);
         }
 
         .stButton > button p,
@@ -235,9 +241,9 @@ def apply_custom_css():
             padding: 2rem 1.5rem;
             background: white;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             margin-bottom: 2rem;
-            border: 1px solid #e9ecef;
+            border: 1px solid #e2e8f0;
         }
 
         .stage-row {
@@ -261,7 +267,7 @@ def apply_custom_css():
         }
 
         .stage-connector.completed {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1e40af;
         }
 
         .stage-circle {
@@ -279,15 +285,15 @@ def apply_custom_css():
         }
 
         .stage-circle.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1e40af;
             color: white !important;
-            border-color: #667eea;
+            border-color: #1e40af;
         }
 
         .stage-circle.completed {
-            background: #28a745;
+            background: #10b981;
             color: white !important;
-            border-color: #28a745;
+            border-color: #10b981;
         }
 
         .stage-circle.inactive {
@@ -303,7 +309,7 @@ def apply_custom_css():
         }
 
         .stage-label.active {
-            color: #667eea !important;
+            color: #1e40af !important;
             font-weight: 600;
         }
 
@@ -318,14 +324,7 @@ def apply_custom_css():
         }
 
         /* ------------------------------------
-        PROGRESS BAR - Gradient style
-        ------------------------------------*/
-        .stProgress > div > div > div > div {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        }
-
-        /* ------------------------------------
-        DATAFRAME STYLING - Enhanced style
+        DATAFRAME STYLING - Enhanced style matching pasted code
         ------------------------------------*/
         /* Target all dataframes */
         div[data-testid="stDataFrame"], 
@@ -333,7 +332,7 @@ def apply_custom_css():
         .stDataFrame,
         .dataframe {
             background: white !important;
-            border: 1px solid #e2e8f0 !important;
+            border: 1px solid #e9ecef !important;
             border-radius: 8px !important;
             overflow: hidden !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
@@ -345,7 +344,7 @@ def apply_custom_css():
             background: #f8f9fa !important;
             color: #2c3e50 !important;
             font-weight: 600 !important;
-            border-bottom: 2px solid #667eea !important;
+            border-bottom: 3px solid #667eea !important;
             padding: 12px !important;
         }
 
@@ -367,9 +366,9 @@ def apply_custom_css():
 
         .stDataFrame tbody td,
         .dataframe tbody td {
-            color: #1e293b !important;
+            color: #2c3e50 !important;
             font-weight: 500 !important;
-            border-color: #e2e8f0 !important;
+            border-color: #e9ecef !important;
             padding: 10px !important;
         }
 
@@ -381,14 +380,14 @@ def apply_custom_css():
         }
 
         /* ------------------------------------
-        INPUT FIELDS - Enhanced style
+        INPUT FIELDS - Enhanced style matching pasted code
         ------------------------------------*/
         .stNumberInput > div > div > input,
         .stNumberInput input {
             border: 1px solid #ced4da !important;
             border-radius: 8px !important;
             font-weight: 500 !important;
-            color: #1e293b !important;
+            color: #2c3e50 !important;
             background: white !important;
             padding: 0.75rem !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
@@ -402,14 +401,14 @@ def apply_custom_css():
         }
 
         .stNumberInput label {
-            color: #1e293b !important;
+            color: #2c3e50 !important;
             font-weight: 600 !important;
         }
 
         /* Number input buttons */
         .stNumberInput button {
             background: white !important;
-            color: #1e293b !important;
+            color: #2c3e50 !important;
             border: 1px solid #ced4da !important;
         }
 
@@ -419,7 +418,7 @@ def apply_custom_css():
         }
 
         /* ------------------------------------
-        FILE UPLOADER - Enhanced style
+        FILE UPLOADER - Default style matching pasted code
         ------------------------------------*/
         section[data-testid="stFileUploader"] {
             background: transparent !important;
@@ -437,7 +436,7 @@ def apply_custom_css():
             padding: 0 !important;
         }
 
-        /* Uploaded file styling */
+        /* Uploaded file styling matching pasted code */
         .uploadedFile {
             border: 2px dashed #28a745 !important;
             border-radius: 8px !important;
@@ -452,7 +451,7 @@ def apply_custom_css():
         }
 
         /* ------------------------------------
-        DOWNLOAD BUTTON - Matching uploader height
+        DOWNLOAD BUTTON - Gradient style matching pasted code + height match
         ------------------------------------*/
         .stDownloadButton > button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
@@ -462,7 +461,7 @@ def apply_custom_css():
             border-radius: 8px !important;
             border: none !important;
             transition: all 0.3s ease !important;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
             width: 100% !important;
             min-height: 110px !important;
         }
@@ -495,7 +494,7 @@ def apply_custom_css():
 
         /* Section headers */
         h1, h2, h3 {
-            color: #2c3e50 !important;
+            color: #0f172a !important;
             font-weight: 600 !important;
         }
         </style>
