@@ -1,24 +1,21 @@
-"""
-Material 3 Light Theme – Streamlit-Compatible (Refactored)
-Includes:
-- CSS transitions and hover effects for interactivity.
-- Improved heading color, metric card visibility, and full button/table/tab customization.
-- Stage progress bar responsiveness.
-- Card rendering using a Python context manager.
-"""
-
 import streamlit as st
 from pathlib import Path
 from contextlib import contextmanager
+import io
 
 def apply_custom_css():
+    """
+    Applies the custom Material 3 Light theme CSS.
+    Note: Still relies heavily on data-testid selectors, which are Streamlit's internal
+    CSS hooks. This remains a high-risk factor for future Streamlit version changes.
+    """
     st.markdown(
         """
         <style>
 
-        /* APP BACKGROUND */
+        /* APP BACKGROUND - Using standard Streamlit background overrides */
         [data-testid="stAppViewContainer"] {
-            background: #f8fafc !important;
+            background: #f8fafc !important; /* Lighter background than default white */
         }
 
         [data-testid="stHeader"] {
@@ -26,17 +23,21 @@ def apply_custom_css():
         }
 
         /* GLOBAL TYPOGRAPHY */
-        html, body, [data-testid="stMarkdownContainer"] * {
-            color: #1e293b !important;
+        html, body {
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
         
+        /* Set default text color for most elements */
+        [data-testid="stMarkdownContainer"] * {
+            color: #1e293b; /* Slate-900 for dark text */
+        }
+
         /* STREAMLIT HEADING COLOR ALIGNMENT */
-        /* Ensures Streamlit's built-in H1/H2/H3 elements use the brand color */
+        /* Ensures Streamlit's built-in H1/H2/H3 elements use the primary brand color */
         [data-testid="stMarkdownContainer"] h1:not(.app-header h1), 
         [data-testid="stMarkdownContainer"] h2,
         [data-testid="stMarkdownContainer"] h3 {
-            color: #1e40af !important; /* Use primary brand color for headings */
+            color: #1e40af; /* Primary brand color (Indigo-700) for headings */
             font-weight: 700;
         }
 
@@ -45,25 +46,25 @@ def apply_custom_css():
         .app-header {
             background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
             padding: 2.5rem 2rem;
-            color: white !important;
+            color: white; /* Default text color in header */
             border-radius: 16px;
             margin-bottom: 2rem;
             text-align: center;
-            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.25); /* Deeper shadow */
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.25);
         }
 
         .app-header h1 {
             margin: 0;
             font-size: 2.5rem;
             font-weight: 700;
-            color: white !important;
+            color: white !important; /* MUST be !important to override global rule */
             letter-spacing: -0.025em;
         }
 
         .app-header p {
             margin-top: .75rem;
             font-size: 1.1rem;
-            color: rgba(255, 255, 255, 0.9) !important;
+            color: rgba(255, 255, 255, 0.9);
             font-weight: 500;
         }
 
@@ -75,13 +76,13 @@ def apply_custom_css():
             box-shadow: 0 1px 4px rgba(0,0,0,0.08);
             margin-bottom: 1.5rem;
             border: 1px solid #e2e8f0;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Add transition for hover */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         
         .card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.12); /* Subtle lift effect */
-            border-color: #93c5fd; /* Light blue border on hover */
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+            border-color: #93c5fd;
         }
         
         /* Inner content area of the card for context manager */
@@ -92,7 +93,7 @@ def apply_custom_css():
         .card-header {
             font-size: 1.25rem;
             font-weight: 600;
-            color: #1e293b !important;
+            color: #1e293b;
             padding-bottom: .5rem;
             border-bottom: 2px solid #e2e8f0;
         }
@@ -105,7 +106,7 @@ def apply_custom_css():
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             background: white;
             border: 1px solid #e2e8f0;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Add transition for hover */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         
         .metric-card:hover {
@@ -114,27 +115,22 @@ def apply_custom_css():
             border-color: #93c5fd;
         }
 
+        /* FIX: Use primary blue for metric values */
         .metric-value {
             font-size: 2rem;
             font-weight: 700;
-            /* FIX: Ensure visibility and use primary blue for metric values */
-            color: #1e40af !important; 
+            color: #1e40af; 
             margin: .5rem 0;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         
-        /* Ensures icon doesn't inherit value color if specific color is set */
-        .metric-value span {
-            color: inherit !important; 
-        }
-
         .metric-label {
             font-size: .8rem;
             font-weight: 600;
             text-transform: uppercase;
-            color: #64748b !important;
+            color: #64748b;
             letter-spacing: .05em;
         }
 
@@ -143,7 +139,7 @@ def apply_custom_css():
         /* REGULAR BUTTON STYLING (Applies to st.button) */
         [data-testid="stButton"] > button {
             background: #1e40af; /* Primary blue */
-            color: white !important;
+            color: white;
             border: 1px solid #1e40af;
             font-weight: 600;
             border-radius: 8px;
@@ -163,7 +159,8 @@ def apply_custom_css():
             transform: scale(0.98);
         }
 
-        /* DOWNLOAD BUTTON STYLING (Specific styling already existing) */
+        /* DOWNLOAD BUTTON STYLING */
+        /* Note: Kept !important here as download buttons often use a high-specificity base style */
         [data-testid="stDownloadButton"] button {
             background:#1e40af !important;
             color:white !important;
@@ -184,9 +181,8 @@ def apply_custom_css():
         }
 
 
-        /* --- TABLE & DATAFRAME STYLING (Addressing the black appearance) --- */
+        /* --- TABLE & DATAFRAME STYLING --- */
         
-        /* Container styling for tables/dataframes */
         [data-testid="stDataFrame"], [data-testid="stTable"] {
             border-radius: 8px;
             overflow: hidden;
@@ -204,7 +200,7 @@ def apply_custom_css():
             border-bottom: 2px solid #e2e8f0;
         }
 
-        /* Table Cells (Targets dataframe and simple tables) */
+        /* Table Cells */
         .dataframe tbody tr td,
         .stTable > div > div:not(:first-child) {
             background-color: white;
@@ -217,36 +213,36 @@ def apply_custom_css():
              background-color: #f8fafc; /* Very light subtle stripe */
         }
         
-        /* --- TAB STYLING (Equal width & multi-color indicator) --- */
+        /* --- TAB STYLING --- */
         
         [data-testid="stTabs"] {
-            /* Ensures tabs container takes full width */
             width: 100%; 
         }
 
-        /* Distribute tabs evenly up to 4, and remove default border */
         [data-testid="stTabs"] > div:first-child {
             display: flex;
             width: 100%;
-            border-bottom: 2px solid #e2e8f0 !important; /* Base divider */
+            border-bottom: 2px solid #e2e8f0 !important;
         }
         
-        /* Style individual tabs for equal width */
+        /* Style individual tabs, allowing flexible width based on content */
         [data-testid="stTabs"] button {
-            flex: 1 1 25%; /* Max 4 tabs, so 25% width */
+            /* Removed flex: 1 1 25%; for better responsiveness with many tabs */
+            flex-grow: 1;
+            flex-shrink: 1;
+            flex-basis: auto; 
             border-radius: 8px 8px 0 0;
             padding: 1rem 0;
             text-align: center;
             font-weight: 600;
-            color: #64748b !important;
-            border-bottom: 4px solid transparent !important; /* Thicker underline placeholder */
+            color: #64748b;
+            border-bottom: 4px solid transparent !important;
             transition: all 0.3s ease;
         }
         
         /* Hover effect on inactive tabs */
         [data-testid="stTabs"] button:hover {
-            color: #1e40af !important;
-            /* Add a subtle visual cue without activating the color */
+            color: #1e40af;
             border-bottom-color: #dbeafe !important;
         }
 
@@ -276,7 +272,7 @@ def apply_custom_css():
             border-bottom-color: #6366f1 !important;
         }
         
-        /* --- Existing Styles (No Changes) --- */
+        /* --- Existing Styles --- */
 
         /* ALERTS */
         .alert {
@@ -293,9 +289,9 @@ def apply_custom_css():
         }
 
         .alert-success { border-left-color:#10b981; background:#f0fdf4; }
-        .alert-info    { border-left-color:#3b82f6; background:#f0f9ff; }
+        .alert-info    { border-left-color:#3b82f6; background:#f0f9ff; }
         .alert-warning { border-left-color:#f59e0b; background:#fffbeb; }
-        .alert-error   { border-left-color:#ef4444; background:#fef2f2; }
+        .alert-error    { border-left-color:#ef4444; background:#fef2f2; }
 
         /* DIVIDER */
         .section-divider {
@@ -304,7 +300,7 @@ def apply_custom_css():
             margin: 2rem 0;
         }
 
-        /* STAGE PROGRESS (Keep existing good design) */
+        /* STAGE PROGRESS */
         .stage-container {
             padding: 2rem 1.5rem;
             background: white;
@@ -318,7 +314,7 @@ def apply_custom_css():
             display: flex;
             justify-content: center;
             gap: 1rem;
-            flex-wrap: wrap; /* Allows steps to wrap on small screens */
+            flex-wrap: wrap;
         }
         
         .stage-connector {
@@ -362,11 +358,11 @@ def apply_custom_css():
         }
 
         .stage-circle.inactive {
-            background:#f8fafc; border-color:#e2e8f0; color:#94a3b8 !important;
+            background:#f8fafc; border-color:#e2e8f0; color:#94a3b8;
         }
 
-        .stage-label { font-size:.85rem; color:#64748b !important; }
-        .stage-label.active { color:#1e40af !important; font-weight:600; }
+        .stage-label { font-size:.85rem; color:#64748b; }
+        .stage-label.active { color:#1e40af; font-weight:600; }
 
         /* FILE UPLOADER */
         [data-testid="stFileUploader"] > div {
@@ -382,8 +378,8 @@ def apply_custom_css():
         }
 
         [data-testid="stFileUploader"] label {
-            color:#1e293b !important;
-            font-weight:600 !important;
+            color:#1e293b;
+            font-weight:600;
         }
 
         </style>
@@ -391,8 +387,8 @@ def apply_custom_css():
         unsafe_allow_html=True,
     )
 
-
 def render_header(title: str, subtitle: str = ""):
+    """Renders the stylized application header."""
     st.markdown(
         f"""
         <div class="app-header">
@@ -403,8 +399,35 @@ def render_header(title: str, subtitle: str = ""):
         unsafe_allow_html=True,
     )
 
+@contextmanager
+def card(title: str, icon: str = ""):
+    """
+    Renders a stylized card container using a Python context manager.
+    
+    Usage:
+    with card("My Card Title"):
+        st.write("Content goes here...")
+    """
+    # Start the card HTML container
+    st.markdown(
+        f"""
+        <div class="card">
+            <div class="card-header">{icon if icon else ''} {title}</div>
+            <div class="card-content">
+        """,
+        unsafe_allow_html=True,
+    )
+    
+    # Yield control to the 'with' block
+    try:
+        yield
+    finally:
+        # Close the inner and outer card divs
+        st.markdown("</div></div>", unsafe_allow_html=True)
+
 
 def render_stage_progress(current_stage: float):
+    """Renders the responsive stage progress bar."""
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"),
@@ -412,7 +435,6 @@ def render_stage_progress(current_stage: float):
     ]
 
     total = len(stages)
-    # Ensure valid current_stage index (0, 1, 1.5, or 2)
     current_stage = max(0, min(current_stage, total - 1))
 
     blocks = []
@@ -420,21 +442,25 @@ def render_stage_progress(current_stage: float):
 
     # Create each stage's block and connector
     for idx, (num, label) in enumerate(stages):
-        if idx < current_stage or (idx == total - 1 and current_stage >= total - 1):
+        is_completed = (idx < current_stage)
+        is_active = (idx == int(current_stage))
+
+        if is_completed:
             status = "completed"
             icon = "✓"
-        # Current active stage (if not the final one)
-        elif idx == int(current_stage): 
+        elif is_active:
             status = "active"
             icon = num
-        # Future stages
         else:
             status = "inactive"
             icon = num
 
-        # Determine if label should be bold/blue (Active)
-        # It is active if it matches the current integer stage, OR if it is the final completed stage
-        is_active_label = (idx == int(current_stage)) or (idx == total - 1 and current_stage >= total - 1)
+        # Final stage special case: if fractional stage is passed (e.g., 2.5), it is complete
+        if idx == total - 1 and current_stage >= total - 1:
+            status = "completed"
+            icon = "✓"
+
+        is_active_label = is_active or (idx == total - 1 and current_stage >= total - 1)
 
         blocks.append(
             f"""
@@ -469,21 +495,8 @@ def render_stage_progress(current_stage: float):
     )
 
 
-def render_card(title: str, icon: str = ""):
-    st.markdown(
-        f"""
-        <div class="card">
-            <div class="card-header">{icon if icon else ''} {title}</div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def close_card():
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-def render_metric_card(label: str, value: str, col):
+def render_metric_card(label: str, value: str, col: st.delta_generator.DeltaGenerator):
+    """Renders a stylized metric card within a specified Streamlit column."""
     with col:
         st.markdown(
             f"""
@@ -497,6 +510,7 @@ def render_metric_card(label: str, value: str, col):
 
 
 def render_alert(message: str, alert_type: str = "info"):
+    """Renders a stylized alert box (success, info, warning, error)."""
     icons = {
         "success": "✓",
         "info": "ℹ",
@@ -515,24 +529,99 @@ def render_alert(message: str, alert_type: str = "info"):
 
 
 def render_section_divider():
+    """Renders a visual separator line."""
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
 
-def render_download_template_button():
-    # Helper for rendering a download button for a specific file
-    try:
-        template_path = Path("polymer_production_template.xlsx")
+def render_download_button(label: str, data: bytes | io.BytesIO, file_name: str, mime: str):
+    """
+    Renders a stylized download button for arbitrary file data.
 
-        if template_path.exists():
-            st.download_button(
-                label="Download Template",
-                data=template_path.read_bytes(),
-                file_name="polymer_production_template.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True,
-            )
-        else:
-            # Fallback for if the file is not in the same directory
-            st.error("Template file not found")
-    except Exception as e:
-        st.error(f"Error loading template: {e}")
+    Args:
+        label (str): Text displayed on the button.
+        data (bytes | io.BytesIO): The file content to download.
+        file_name (str): The default file name for the downloaded file.
+        mime (str): The MIME type of the file (e.g., "application/pdf").
+    """
+    st.download_button(
+        label=label,
+        data=data,
+        file_name=file_name,
+        mime=mime,
+        use_container_width=True,
+    )
+
+# --- Example of Usage ---
+
+def main():
+    """Demonstrates the usage of the themed components."""
+    
+    # 1. Apply Theme
+    apply_custom_css()
+    
+    # 2. Render Header
+    render_header(
+        title="Material 3 Dashboard",
+        subtitle="Refactored Streamlit components with robust styling and interaction."
+    )
+    
+    # 3. Render Stage Progress (e.g., Step 2 in progress)
+    st.markdown("## Progress Tracker")
+    render_stage_progress(current_stage=1.2)
+    render_section_divider()
+    
+    st.markdown("## Metrics & Cards")
+    
+    # 4. Render Metrics
+    col1, col2, col3 = st.columns(3)
+    render_metric_card("Total Revenue", "💰 $1.2M", col1)
+    render_metric_card("Conversion Rate", "📈 4.8%", col2)
+    render_metric_card("New Users", "👤 8,450", col3)
+
+    # 5. Render Card using the new context manager
+    with card("Data Upload & Preview", icon="⬇️"):
+        st.write(
+            "Upload your dataset below. Only CSV and Excel files are supported for processing."
+        )
+        st.file_uploader("Select File", type=["csv", "xlsx"])
+        
+        # Demonstrating the reusable download button (mocking file data)
+        mock_excel_data = b"Mock Excel Content"
+        render_download_button(
+            label="Download Blank Template",
+            data=mock_excel_data,
+            file_name="blank_template.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
+    render_section_divider()
+
+    st.markdown("## Tabs & Alerts")
+    
+    # 6. Render Tabs
+    tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Configuration", "History", "Settings"])
+    
+    with tab1:
+        render_alert("This is a success message!", "success")
+        st.write("This is the main dashboard content.")
+    
+    with tab2:
+        render_alert("Warning: Settings must be saved.", "warning")
+        st.write("Configuration details here.")
+
+    with tab3:
+        # 7. Render Buttons and Table
+        st.button("Run Simulation", use_container_width=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.table({
+            'ID': [1, 2, 3],
+            'Status': ['Completed', 'Failed', 'Running'],
+            'Runtime': ['15s', '30s', '5s']
+        })
+
+    with tab4:
+        render_alert("Info: New features are available in beta.", "info")
+        st.write("Application settings.")
+
+if __name__ == "__main__":
+    main()
