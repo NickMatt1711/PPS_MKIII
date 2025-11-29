@@ -13,232 +13,228 @@ def apply_custom_css():
         """
        <style>
         /* ------------------------------------
-        COLOR VARIABLES - Single Source of Truth
+        MATERIAL 3 LIGHT THEME - COMPLETE REFACTOR
         ------------------------------------*/
         :root {
-            /* Primary Colors */
-            --primary-500: #1e40af;
-            --primary-600: #3730a3;
-            --primary-100: #eff6ff;
+            /* Material 3 Color Tokens - Light Theme */
+            --md-sys-color-primary: #6750A4;
+            --md-sys-color-on-primary: #FFFFFF;
+            --md-sys-color-primary-container: #EADDFF;
+            --md-sys-color-on-primary-container: #21005D;
+            
+            --md-sys-color-secondary: #625B71;
+            --md-sys-color-on-secondary: #FFFFFF;
+            --md-sys-color-secondary-container: #E8DEF8;
+            --md-sys-color-on-secondary-container: #1D192B;
+            
+            --md-sys-color-tertiary: #7D5260;
+            --md-sys-color-on-tertiary: #FFFFFF;
+            --md-sys-color-tertiary-container: #FFD8E4;
+            --md-sys-color-on-tertiary-container: #31111D;
+            
+            --md-sys-color-surface: #FFFBFE;
+            --md-sys-color-on-surface: #1C1B1F;
+            --md-sys-color-surface-variant: #E7E0EC;
+            --md-sys-color-on-surface-variant: #49454F;
+            
+            --md-sys-color-background: #F8FAFC;
+            --md-sys-color-on-background: #1C1B1F;
+            
+            --md-sys-color-outline: #79747E;
+            --md-sys-color-outline-variant: #C4C7C5;
             
             /* Semantic Colors */
-            --success-500: #10b981;
-            --success-100: #d1fae5;
-            --info-500: #1e40af;
-            --info-100: #eff6ff;
-            --warning-500: #f59e0b;
-            --warning-100: #fffde7;
-            --error-500: #ef4444;
-            --error-100: #fee2e2;
+            --md-sys-color-error: #B3261E;
+            --md-sys-color-on-error: #FFFFFF;
+            --md-sys-color-error-container: #F9DEDC;
             
-            /* Neutral Colors */
-            --background: #f8fafc;
-            --surface: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #4b5563;
-            --text-muted: #64748b;
-            --border-light: #e5e7eb;
-            --border-medium: #d1d5db;
-            --border-muted: #9ca3af;
+            --md-sys-color-success: #0D652D;
+            --md-sys-color-on-success: #FFFFFF;
+            --md-sys-color-success-container: #A7F0BA;
             
-            /* Component Colors */
-            --inactive-bg: #f3f4f6;
-            --table-header: #f9fafb;
+            --md-sys-color-warning: #7C5800;
+            --md-sys-color-on-warning: #FFFFFF;
+            --md-sys-color-warning-container: #FFDEA3;
+            
+            /* Elevation */
+            --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+            --md-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+            --md-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.30);
+            
+            /* Border Radius */
+            --md-shape-corner-extra-small: 4px;
+            --md-shape-corner-small: 8px;
+            --md-shape-corner-medium: 12px;
+            --md-shape-corner-large: 16px;
         }
         
         /* ------------------------------------
-        GLOBAL BASE - Consolidated
+        GLOBAL RESET & BASE STYLES
         ------------------------------------*/
-        .stApp, .main {
-            background: var(--background) !important;
+        .stApp, .main, html, body {
+            background: var(--md-sys-color-background) !important;
+            font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
         }
         
-        /* Typography - Single declaration */
-        p, span, div, label, h1, h2, h3, h4, h5, h6 {
-            color: var(--text-primary) !important;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+        * {
+            color: var(--md-sys-color-on-background);
         }
         
         /* ------------------------------------
-        HEADER - Simplified
+        HEADER - Material 3 Style
         ------------------------------------*/
         .app-header {
-            background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
-            padding: 2.5rem 2rem;
-            border-radius: 16px;
-            margin-bottom: 2rem;
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary) !important;
+            padding: 2rem 1.5rem;
+            border-radius: var(--md-shape-corner-large);
+            margin: 1rem 0 2rem 0;
+            box-shadow: var(--md-elevation-1);
             text-align: center;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
         }
         
         .app-header h1 {
             margin: 0;
-            font-size: 2.5rem;
-            color: white !important;
+            font-size: 2.25rem;
+            font-weight: 400;
+            color: var(--md-sys-color-on-primary) !important;
+            letter-spacing: 0.5px;
         }
         
         .app-header p {
-            color: rgba(255, 255, 255, 0.9) !important;
+            color: var(--md-sys-color-on-primary) !important;
+            opacity: 0.9;
             margin-top: 0.5rem;
+            font-size: 1.1rem;
         }
         
         /* ------------------------------------
-        WIZARD / STAGE PROGRESS - Consolidated
+        WIZARD PROGRESS - Material Design
         ------------------------------------*/
         .stage-container {
-            padding: 1rem 0;
+            background: var(--md-sys-color-surface);
+            border-radius: var(--md-shape-corner-medium);
+            padding: 1.5rem;
             margin-bottom: 2rem;
-            background-color: var(--surface);
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--md-elevation-1);
         }
         
         .stage-row {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             align-items: flex-start;
-            width: 100%;
+            position: relative;
         }
         
         .stage-step {
             display: flex;
             flex-direction: column;
             align-items: center;
-            flex-grow: 1; 
+            flex: 1;
+            position: relative;
+            z-index: 2;
         }
         
         .stage-circle {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
-            justify-content: center;
             align-items: center;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
-            border: 3px solid;
-            z-index: 10;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 0.875rem;
+            border: 2px solid;
+            background: var(--md-sys-color-surface);
+            transition: all 0.2s ease;
         }
         
         .stage-label {
-            font-size: 0.9rem;
-            text-align: center;
+            font-size: 0.75rem;
             font-weight: 500;
-            color: var(--text-secondary) !important;
+            margin-top: 0.5rem;
+            text-align: center;
+            color: var(--md-sys-color-on-surface-variant);
         }
         
-        /* Consolidated Status Classes */
+        /* Stage States */
         .stage-circle.inactive {
-            background-color: var(--inactive-bg);
-            color: var(--border-muted);
-            border-color: var(--border-medium);
+            border-color: var(--md-sys-color-outline-variant);
+            color: var(--md-sys-color-outline);
         }
         
         .stage-circle.active {
-            background-color: var(--primary-500);
-            color: white;
-            border-color: var(--primary-500);
-            box-shadow: 0 0 0 5px rgba(30, 64, 175, 0.2);
+            background: var(--md-sys-color-primary);
+            border-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent);
         }
         
         .stage-circle.completed {
-            background-color: var(--success-500);
-            color: white;
-            border-color: var(--success-500);
+            background: var(--md-sys-color-success);
+            border-color: var(--md-sys-color-success);
+            color: var(--md-sys-color-on-success);
         }
         
         .stage-label.active {
-            font-weight: 700;
-            color: var(--text-primary) !important;
-        }
-        
-        .stage-connector {
-            height: 4px; 
-            background-color: var(--border-medium); 
-            flex-grow: 1;
-            margin: 0 -20px; 
-            position: relative;
-            top: 21.5px;
-            z-index: 0;
-        }
-        
-        .stage-connector.completed {
-            background-color: var(--success-500); 
-        }
-        
-        /* ------------------------------------
-        CARDS & CONTAINERS - Unified
-        ------------------------------------*/
-        .card, .metric-card, .stTabs {
-            background: var(--surface);
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border-light);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .card-header {
-            color: var(--text-primary) !important;
-            border-bottom: 1px solid var(--border-light);
-            padding-bottom: 0.75rem;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
+            color: var(--md-sys-color-on-surface);
             font-weight: 600;
         }
         
-        /* Consolidated Alert System */
-        div[data-testid="stAlert"] {
-            border-radius: 4px;
-            box-shadow: none;
-            border-left: 5px solid !important;
+        .stage-connector {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            right: 50%;
+            height: 2px;
+            background: var(--md-sys-color-outline-variant);
+            z-index: 1;
         }
         
-        div[data-testid="stAlert"]:not([class*="alert-"]) {
-            background-color: var(--info-100) !important;
-            border-left-color: var(--info-500) !important;
+        .stage-connector.completed {
+            background: var(--md-sys-color-success);
         }
-        
-        .alert-success { 
-            background-color: var(--success-100) !important; 
-            border-left-color: var(--success-500) !important; 
-        }
-        .alert-info { 
-            background-color: var(--info-100) !important; 
-            border-left-color: var(--info-500) !important; 
-        }
-        .alert-warning { 
-            background-color: var(--warning-100) !important; 
-            border-left-color: var(--warning-500) !important; 
-        }
-        .alert-error { 
-            background-color: var(--error-100) !important; 
-            border-left-color: var(--error-500) !important; 
-        }
-        
-        /* Alert text colors - simplified */
-        .alert-success p, .alert-success strong { color: var(--success-500) !important; }
-        .alert-info p, .alert-info strong { color: var(--info-500) !important; }
-        .alert-warning p, .alert-warning strong { color: var(--warning-500) !important; }
-        .alert-error p, .alert-error strong { color: var(--error-500) !important; }
         
         /* ------------------------------------
-        BUTTONS - FIXED: Ensure ALL buttons use primary theme
+        CARDS & CONTAINERS
         ------------------------------------*/
-        .stButton > button, 
+        .card, .metric-card, .stTabs {
+            background: var(--md-sys-color-surface);
+            border-radius: var(--md-shape-corner-medium);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--md-elevation-1);
+            border: none;
+        }
+        
+        .card-header {
+            color: var(--md-sys-color-on-surface) !important;
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+        }
+        
+        /* ------------------------------------
+        BUTTONS - Material 3 Filled Style
+        ------------------------------------*/
+        .stButton > button,
         .stDownloadButton > button,
-        .stDownloadButton > a, /* FIX: Download template links */
+        .stDownloadButton > a,
         section[data-testid="stFileUploader"] button,
-        div[data-testid="stBaseButton-secondary"] > button /* FIX: Secondary buttons */ {
-            background: var(--primary-500) !important;
-            color: white !important;
-            font-weight: 600 !important;
-            border-radius: 8px !important;
+        div[data-testid="stBaseButton-secondary"] > button {
+            background: var(--md-sys-color-primary) !important;
+            color: var(--md-sys-color-on-primary) !important;
             border: none !important;
+            border-radius: var(--md-shape-corner-large) !important;
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 500 !important;
+            font-size: 0.875rem !important;
+            text-transform: none !important;
+            box-shadow: var(--md-elevation-1) !important;
             transition: all 0.2s ease !important;
-            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3) !important;
-            padding: 0.5rem 1rem !important;
+            min-height: 40px !important;
         }
         
         .stButton > button:hover,
@@ -246,156 +242,218 @@ def apply_custom_css():
         .stDownloadButton > a:hover,
         section[data-testid="stFileUploader"] button:hover,
         div[data-testid="stBaseButton-secondary"] > button:hover {
-            background: var(--primary-600) !important;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4) !important;
+            background: color-mix(in srgb, var(--md-sys-color-primary) 85%, black) !important;
+            box-shadow: var(--md-elevation-2) !important;
             transform: translateY(-1px) !important;
         }
         
-        /* FIX: Ensure download links have white text */
+        /* Ensure download links look like buttons */
         .stDownloadButton > a {
             text-decoration: none !important;
-            display: inline-block !important;
-        }
-        
-        .stDownloadButton > a * {
-            color: white !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
         
         /* ------------------------------------
-        DATAFRAME & INPUTS - FIXED: Proper light mode
+        ALERTS - Material 3 Style
         ------------------------------------*/
-        /* FIX: Ensure dataframes are properly light themed */
-        div[data-testid="stDataFrame"], 
-        div[data-testid="stDataFrameContainer"],
-        div[data-testid="stDataFrame"] table,
-        div[data-testid="stDataFrame"] thead,
-        div[data-testid="stDataFrame"] tbody {
-            background-color: var(--surface) !important; 
-            color: var(--text-primary) !important;
-            border: 1px solid var(--border-light);
-            border-radius: 4px;
-            overflow: hidden; 
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        div[data-testid="stAlert"] {
+            border-radius: var(--md-shape-corner-medium) !important;
+            border: none !important;
+            box-shadow: var(--md-elevation-1) !important;
+            padding: 1rem 1.5rem !important;
+            margin: 1rem 0 !important;
+        }
+        
+        /* Base alert (info) */
+        div[data-testid="stAlert"]:not([class*="alert-"]) {
+            background: var(--md-sys-color-primary-container) !important;
+            color: var(--md-sys-color-on-primary-container) !important;
+        }
+        
+        /* Semantic alerts */
+        .alert-success {
+            background: var(--md-sys-color-success-container) !important;
+            color: var(--md-sys-color-on-success-container) !important;
+        }
+        
+        .alert-info {
+            background: var(--md-sys-color-primary-container) !important;
+            color: var(--md-sys-color-on-primary-container) !important;
+        }
+        
+        .alert-warning {
+            background: var(--md-sys-color-warning-container) !important;
+            color: var(--md-sys-color-on-warning-container) !important;
+        }
+        
+        .alert-error {
+            background: var(--md-sys-color-error-container) !important;
+            color: var(--md-sys-color-on-error) !important;
+        }
+        
+        /* Alert text */
+        div[data-testid="stAlert"] p,
+        div[data-testid="stAlert"] strong {
+            color: inherit !important;
+            margin: 0 !important;
+        }
+        
+        /* ------------------------------------
+        DATAFRAMES - Light Theme
+        ------------------------------------*/
+        div[data-testid="stDataFrame"],
+        div[data-testid="stDataFrameContainer"] {
+            background: var(--md-sys-color-surface) !important;
+            border-radius: var(--md-shape-corner-small) !important;
+            border: 1px solid var(--md-sys-color-outline-variant) !important;
+            box-shadow: var(--md-elevation-1) !important;
+            overflow: hidden !important;
+        }
+        
+        div[data-testid="stDataFrame"] table {
+            background: var(--md-sys-color-surface) !important;
         }
         
         div[data-testid="stDataFrame"] th {
-            background-color: var(--table-header) !important; 
-            color: var(--text-primary) !important;
-            font-weight: 600;
-            border-color: var(--border-light) !important;
+            background: var(--md-sys-color-surface-variant) !important;
+            color: var(--md-sys-color-on-surface-variant) !important;
+            font-weight: 500 !important;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant) !important;
         }
         
         div[data-testid="stDataFrame"] td {
-            color: var(--text-primary) !important;
-            background-color: var(--surface) !important;
-            border-color: var(--inactive-bg) !important;
+            background: var(--md-sys-color-surface) !important;
+            color: var(--md-sys-color-on-surface) !important;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant) !important;
         }
         
-        /* FIX: Ensure all table text is light mode compatible */
-        div[data-testid="stDataFrame"] tr {
-            color: var(--text-primary) !important;
+        div[data-testid="stDataFrame"] tr:hover td {
+            background: color-mix(in srgb, var(--md-sys-color-primary-container) 8%, transparent) !important;
         }
         
-        div[data-testid="stDataFrame"] * {
-            color: var(--text-primary) !important;
-        }
-        
-        /* Input Fields - Consolidated */
+        /* ------------------------------------
+        INPUT FIELDS - Material 3 Outlined
+        ------------------------------------*/
         .stTextInput input,
         .stTextInput textarea,
         .stNumberInput input,
         .stDateInput input,
-        .stTimeInput input {
-            border: 1px solid var(--border-medium) !important;
-            border-radius: 4px !important;
-            color: var(--text-primary) !important; 
-            background: var(--surface) !important;
-            padding: 0.5rem 0.75rem !important;
-            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+        .stTimeInput input,
+        .stSelectbox select {
+            background: var(--md-sys-color-surface) !important;
+            border: 1px solid var(--md-sys-color-outline) !important;
+            border-radius: var(--md-shape-corner-small) !important;
+            color: var(--md-sys-color-on-surface) !important;
+            padding: 0.75rem 1rem !important;
+            font-size: 1rem !important;
+            transition: all 0.2s ease !important;
         }
         
-        .stTextInput input:focus, 
+        .stTextInput input:focus,
         .stTextInput textarea:focus,
-        .stNumberInput input:focus, 
+        .stNumberInput input:focus,
         .stDateInput input:focus,
-        .stTimeInput input:focus {
-            border-color: var(--primary-500) !important;
-            box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.3) !important;
+        .stTimeInput input:focus,
+        .stSelectbox select:focus {
+            border-color: var(--md-sys-color-primary) !important;
+            border-width: 2px !important;
+            box-shadow: 0 0 0 1px var(--md-sys-color-primary) !important;
+            outline: none !important;
         }
         
         /* ------------------------------------
-        FILE UPLOADER - FIXED: Light theme
+        FILE UPLOADER - Material 3 Style
         ------------------------------------*/
         section[data-testid="stFileUploader"] {
-            border: 2px dashed var(--border-medium) !important; /* Lighter border */
-            border-radius: 8px !important;
-            padding: 1.5rem !important;
-            background-color: var(--surface) !important; 
-            color: var(--text-primary) !important; /* Ensure text is visible */
+            background: var(--md-sys-color-surface) !important;
+            border: 2px dashed var(--md-sys-color-outline) !important;
+            border-radius: var(--md-shape-corner-medium) !important;
+            padding: 2rem !important;
+            margin: 1rem 0 !important;
+            transition: all 0.2s ease !important;
         }
         
-        /* FIX: File uploader text colors */
+        section[data-testid="stFileUploader"]:hover {
+            border-color: var(--md-sys-color-primary) !important;
+            background: color-mix(in srgb, var(--md-sys-color-primary-container) 5%, transparent) !important;
+        }
+        
         section[data-testid="stFileUploader"] * {
-            color: var(--text-primary) !important;
+            color: var(--md-sys-color-on-surface-variant) !important;
         }
         
-        section[data-testid="stFileUploader"] span {
-            color: var(--text-secondary) !important;
+        section[data-testid="stFileUploader"] button {
+            margin-top: 1rem !important;
         }
         
         /* ------------------------------------
-        TABS STYLING
+        TABS - Material 3 Secondary
         ------------------------------------*/
+        .stTabs {
+            background: var(--md-sys-color-surface) !important;
+            padding: 0 !important;
+            box-shadow: var(--md-elevation-1) !important;
+        }
+        
         button[data-baseweb="tab"] {
-            color: var(--text-muted) !important; 
-            background-color: transparent !important;
-            font-weight: 500;
+            background: transparent !important;
+            color: var(--md-sys-color-on-surface-variant) !important;
+            font-weight: 500 !important;
+            padding: 1rem 1.5rem !important;
+            border-bottom: 2px solid transparent !important;
+            transition: all 0.2s ease !important;
         }
         
         button[data-baseweb="tab"][aria-selected="true"] {
-            color: var(--primary-500) !important; 
-            border-bottom: 3px solid var(--primary-500) !important; 
-            font-weight: 600;
+            color: var(--md-sys-color-primary) !important;
+            border-bottom-color: var(--md-sys-color-primary) !important;
+            background: color-mix(in srgb, var(--md-sys-color-primary) 5%, transparent) !important;
         }
         
         /* ------------------------------------
-        METRICS & DIVIDERS
+        METRIC CARDS
         ------------------------------------*/
+        .metric-card {
+            background: var(--md-sys-color-surface);
+            padding: 1.5rem;
+            border-radius: var(--md-shape-corner-medium);
+            box-shadow: var(--md-elevation-1);
+            text-align: center;
+        }
+        
         .metric-label {
-            font-size: 0.9rem;
-            color: var(--text-muted) !important;
+            font-size: 0.875rem;
+            color: var(--md-sys-color-on-surface-variant);
             font-weight: 500;
+            margin-bottom: 0.5rem;
         }
         
         .metric-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary-500) !important;
-            margin-top: 0.25rem;
-        }
-        
-        .section-divider {
-            margin: 2rem 0;
-            border-top: 1px solid var(--border-light);
-        }
-        
-        /* Ensure all nested button text uses white */
-        .stButton > button *,
-        .stDownloadButton > button * {
-            color: white !important;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--md-sys-color-primary);
+            line-height: 1;
         }
         
         /* ------------------------------------
-        SPECIFIC FIXES FOR STREAMLIT COMPONENTS
+        UTILITY CLASSES
         ------------------------------------*/
-        /* Fix for any remaining dark elements */
-        [data-testid]:not(div[data-testid="stDataFrame"]):not(div[data-testid="stDataFrameContainer"]) {
-            color: var(--text-primary) !important;
+        .section-divider {
+            margin: 2rem 0;
+            border: none;
+            border-top: 1px solid var(--md-sys-color-outline-variant);
         }
         
-        /* Ensure all text in the app uses light theme colors */
-        .stApp *:not(.app-header *):not(.stage-circle *):not(button *):not(.stButton *):not(.stDownloadButton *) {
-            color: var(--text-primary) !important;
+        /* Ensure all text uses proper colors */
+        .stApp *:not(button *):not(.app-header *) {
+            color: var(--md-sys-color-on-surface) !important;
+        }
+        
+        /* Fix for any Streamlit default dark styles */
+        [data-testid]:not(div[data-testid="stDataFrame"]):not(div[data-testid="stDataFrameContainer"]) {
+            color: var(--md-sys-color-on-surface) !important;
         }
         </style>
         """, 
