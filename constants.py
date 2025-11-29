@@ -20,27 +20,54 @@ SOLVER_RANDOM_SEED = 42
 
 # UI Theme Colors (Material Design Palette)
 THEME_COLORS = {
+    # Primary Colors - Blue Corporate
     'primary': '#5E7CE2',
-    'primary_light': '#E8EEFF',
-    'secondary': '#67C23A',
-    'secondary_light': '#F0F9EB',
-    'accent': '#E6A23C',
-    'accent_light': '#FDF6EC',
+    'on_primary': '#FFFFFF',
+    'primary_container': '#E8EEFF',
+    'on_primary_container': '#0D1B54',
+    
+    # Secondary Colors - Green
+    'secondary': '#67C23A', 
+    'on_secondary': '#FFFFFF',
+    'secondary_container': '#F0F9EB',
+    'on_secondary_container': '#1F4A0D',
+    
+    # Tertiary Colors - Orange/Amber
+    'tertiary': '#E6A23C',
+    'on_tertiary': '#FFFFFF',
+    'tertiary_container': '#FDF6EC',
+    'on_tertiary_container': '#4A3000',
+    
+    # Surface Colors
+    'surface': '#FFFFFF',
+    'on_surface': '#303133',
+    'surface_variant': '#F5F7FA',
+    'on_surface_variant': '#606266',
+    
+    # Background
+    'background': '#F8FAFC',
+    'on_background': '#303133',
+    
+    # Outline & Borders
+    'outline': '#DCDFE6',
+    'outline_variant': '#E4E7ED',
+    
+    # Semantic Colors
     'error': '#F56C6C',
-    'error_light': '#FEF0F0',
+    'on_error': '#FFFFFF',
+    'error_container': '#FEF0F0',
+    
     'success': '#67C23A',
-    'success_light': '#F0F9EB',
+    'on_success': '#FFFFFF',
+    'success_container': '#F0F9EB',
+    
     'warning': '#E6A23C',
-    'warning_light': '#FDF6EC',
-    'info': '#909399',
-    'info_light': '#F4F4F5',
-    'text_primary': '#303133',
-    'text_regular': '#606266',
-    'text_secondary': '#909399',
-    'border_base': '#DCDFE6',
-    'border_light': '#E4E7ED',
-    'bg_light': '#F5F7FA',
-    'bg_white': '#FFFFFF',
+    'on_warning': '#FFFFFF',
+    'warning_container': '#FDF6EC',
+    
+    'info': '#5E7CE2',
+    'on_info': '#FFFFFF',
+    'info_container': '#E8EEFF',
 }
 
 # Chart Colors (Soft Material Palette)
