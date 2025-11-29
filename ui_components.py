@@ -11,19 +11,10 @@ def apply_custom_css():
         """
         <style>
 
-        /*******************************************************
-         MATERIAL 3 CSS TOKENS (Generated from THEME_COLORS)
-        ********************************************************/
+        /*********************************************************
+         MATERIAL 3 TOKENS (Generated from THEME_COLORS)
+        **********************************************************/
         :root {
-    
-            --background-color: var(--md-sys-color-background) !important;
-            --secondary-background-color: var(--md-sys-color-surface) !important;
-            --text-color: var(--md-sys-color-on-surface) !important;
-            --primary-color: var(--md-sys-color-primary) !important;
-            --border-color: var(--md-sys-color-outline-variant) !important;
-            --heading-color: var(--md-sys-color-on-surface) !important;
-            --font: "Inter", sans-serif !important;
-
             /* PRIMARY */
             --md-sys-color-primary: #5E7CE2;
             --md-sys-color-on-primary: #FFFFFF;
@@ -36,7 +27,7 @@ def apply_custom_css():
             --md-sys-color-secondary-container: #E8F5E9;
             --md-sys-color-on-secondary-container: #1C1B1F;
 
-            /* TERTIARY (accent warm) */
+            /* TERTIARY (Accent warm tones) */
             --md-sys-color-tertiary: #C9852F;
             --md-sys-color-on-tertiary: #FFFFFF;
             --md-sys-color-tertiary-container: #FCEFD9;
@@ -47,12 +38,6 @@ def apply_custom_css():
             --md-sys-color-on-error: #FFFFFF;
             --md-sys-color-error-container: #F9DEDC;
             --md-sys-color-on-error-container: #410E0B;
-
-            /* WARNING */
-            --md-sys-color-warning: #C9852F;
-            --md-sys-color-on-warning: #FFFFFF;
-            --md-sys-color-warning-container: #FCEFD9;
-            --md-sys-color-on-warning-container: #1C1B1F;
 
             /* SUCCESS */
             --md-sys-color-success: #4BAF39;
@@ -66,7 +51,10 @@ def apply_custom_css():
             --md-sys-color-info-container: #F4F4F5;
             --md-sys-color-on-info-container: #1C1B1F;
 
-            /* TEXT */
+            /* SURFACE & BACKGROUND */
+            --md-sys-color-background: #F7F8FA;
+            --md-sys-color-surface: #FFFFFF;
+            --md-sys-color-surface-variant: #E7E0EC;
             --md-sys-color-on-surface: #1C1B1F;
             --md-sys-color-on-surface-variant: #49454F;
 
@@ -74,16 +62,9 @@ def apply_custom_css():
             --md-sys-color-outline: #79747E;
             --md-sys-color-outline-variant: #CAC5D0;
 
-            /* SURFACE & BACKGROUND */
-            --md-sys-color-surface: #FFFFFF;
-            --md-sys-color-surface-variant: #E7E0EC;
-            --md-sys-color-background: #F7F8FA;
-            --md-sys-color-on-background: #1C1B1F;
-
             /* ELEVATION */
             --md-elevation-1: 0px 1px 3px rgba(0,0,0,0.12);
             --md-elevation-2: 0px 2px 6px rgba(0,0,0,0.12);
-            --md-elevation-3: 0px 4px 8px rgba(0,0,0,0.15);
 
             /* SHAPE */
             --md-shape-corner-small: 8px;
@@ -92,112 +73,108 @@ def apply_custom_css():
         }
 
 
-        /*******************************************************
-         FIX 1 – HORIZONTAL STAGE PROGRESS
-        ********************************************************/
-        .stage-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            position: relative;
+        /*********************************************************
+         STREAMLIT — FORCE LIGHT THEME (REAL DOM SELECTORS)
+        **********************************************************/
+        html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+            background-color: var(--md-sys-color-background) !important;
+            color: var(--md-sys-color-on-surface) !important;
         }
 
-        .stage-step {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
+        /* Main container background */
+        [data-testid="stAppViewContainer"] > .main {
+            background-color: var(--md-sys-color-background) !important;
         }
 
-        .stage-connector {
-            flex: 1;
-            height: 2px;
-            background: var(--md-sys-color-outline-variant);
-            margin: 0 4px;
-            position: relative;
-            top: -18px;
+        /* Markdown text, labels, headers */
+        h1, h2, h3, h4, h5, p, label, span, div {
+            color: var(--md-sys-color-on-surface) !important;
         }
 
-        .stage-connector.completed {
-            background: var(--md-sys-color-success);
-        }
-
-
-        /*******************************************************
-         FIX 2 – TABS DISTRIBUTED 100% ACROSS WIDTH
-        ********************************************************/
-        .stTabs [data-baseweb="tab-list"] {
-            display: flex !important;
-            justify-content: space-between !important;
-            width: 100% !important;
-        }
-
-        button[data-baseweb="tab"] {
-            flex: 1 !important;
-            text-align: center !important;
-            border-bottom: 2px solid transparent !important;
-            margin: 0 !important;
-            border-radius: 0 !important;
-        }
-
-        button[data-baseweb="tab"][aria-selected="true"] {
-            border-bottom: 2px solid var(--md-sys-color-primary) !important;
-            color: var(--md-sys-color-primary) !important;
-            background: color-mix(in srgb, var(--md-sys-color-primary) 7%, transparent) !important;
-        }
-
-
-        /*******************************************************
-         FIX 3 – UPLOADER + DOWNLOAD BUTTON LIGHT MODE
-        ********************************************************/
-        section[data-testid="stFileUploader"] {
-            background: var(--md-sys-color-surface) !important;
+        /*********************************************************
+         FIXED: UPLOADER + BUTTONS (LIGHT THEME)
+        **********************************************************/
+        [data-testid="stFileUploader"] {
+            background-color: var(--md-sys-color-surface) !important;
             border: 2px dashed var(--md-sys-color-outline) !important;
+            border-radius: var(--md-shape-corner-medium) !important;
+            padding: 1rem !important;
+        }
+        [data-testid="stFileUploader"] * {
             color: var(--md-sys-color-on-surface) !important;
-            border-radius: var(--md-shape-corner-medium);
         }
 
-        section[data-testid="stFileUploader"] * {
-            color: var(--md-sys-color-on-surface) !important;
-        }
-
-        .stDownloadButton > button,
-        .stDownloadButton > a,
-        div[data-testid="stBaseButton-secondary"] > button {
-            background: var(--md-sys-color-primary) !important;
+        .stButton button, .stDownloadButton button {
+            background-color: var(--md-sys-color-primary) !important;
             color: var(--md-sys-color-on-primary) !important;
-            border: none !important;
             border-radius: var(--md-shape-corner-small) !important;
-            padding: 0.75rem 1.5rem !important;
+            padding: 0.6rem 1.4rem !important;
             font-weight: 500 !important;
+            border: none !important;
             box-shadow: var(--md-elevation-1) !important;
         }
 
 
-        /*******************************************************
-         FIX 4 – DATAFRAMES FORCED INTO LIGHT MODE
-        ********************************************************/
-        div[data-testid="stDataFrame"] *,
-        div[data-testid="stDataFrameContainer"] *,
-        .dataframe * {
-            background: var(--md-sys-color-surface) !important;
-            color: var(--md-sys-color-on-surface) !important;
+        /*********************************************************
+         FIXED: DATAFRAMES — FORCE LIGHT MODE
+        **********************************************************/
+        [data-testid="stDataFrame"] table {
+            background-color: var(--md-sys-color-surface) !important;
         }
-
-        .dataframe th {
-            background: var(--md-sys-color-surface-variant) !important;
+        [data-testid="stDataFrame"] th {
+            background-color: var(--md-sys-color-surface-variant) !important;
             color: var(--md-sys-color-on-surface-variant) !important;
         }
-
-        .dataframe td {
-            background: var(--md-sys-color-surface) !important;
+        [data-testid="stDataFrame"] td {
+            background-color: var(--md-sys-color-surface) !important;
             color: var(--md-sys-color-on-surface) !important;
         }
+        [data-testid="stDataFrame"] tbody tr:hover td {
+            background: color-mix(in srgb, var(--md-sys-color-primary-container) 15%, transparent) !important;
+        }
 
-        .dataframe tbody tr:hover td {
-            background: color-mix(in srgb, var(--md-sys-color-primary-container) 10%, transparent) !important;
+
+        /*********************************************************
+         FIXED: TABS — FULL WIDTH DISTRIBUTION
+        **********************************************************/
+        .stTabs [data-baseweb="tab-list"] {
+            display: flex !important;
+            width: 100% !important;
+        }
+        button[data-baseweb="tab"] {
+            flex: 1 !important;
+            margin: 0 !important;
+            text-align: center !important;
+            border-radius: 0 !important;
+            border-bottom: 2px solid transparent !important;
+        }
+        button[data-baseweb="tab"][aria-selected="true"] {
+            border-bottom: 2px solid var(--md-sys-color-primary) !important;
+            color: var(--md-sys-color-primary) !important;
+        }
+
+
+        /*********************************************************
+         FIXED: STAGE PROGRESS — TRUE HORIZONTAL
+        **********************************************************/
+        .stage-row {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .stage-step {
+            flex: 1;
+            text-align: center;
+        }
+        .stage-connector {
+            flex: 1;
+            height: 2px;
+            background: var(--md-sys-color-outline-variant);
+        }
+        .stage-connector.completed {
+            background: var(--md-sys-color-success);
         }
 
         </style>
