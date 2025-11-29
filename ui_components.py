@@ -223,13 +223,13 @@ def render_stage_progress(current_stage: int):
 
     # Create each stage's block and connector
     for idx, (num, label) in enumerate(stages):
-        if idx < current_stage:
+        if idx < current_stage:  # Completed stage
             status = "completed"
             icon = "✓"  # Mark as tick when completed
-        elif idx == current_stage:
+        elif idx == current_stage:  # Current stage
             status = "active"
             icon = num  # Show the stage number for the current stage
-        else:
+        else:  # Future stage
             status = "inactive"
             icon = num  # Show the stage number for the inactive stages
 
