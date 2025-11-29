@@ -15,7 +15,7 @@ def apply_custom_css():
         """
         <style>
         /* ----------------------------------------------------
-        REFRESHED LIGHT THEME CSS
+        REFRESHED LIGHT THEME CSS (FINAL FIXES)
         ----------------------------------------------------*/
 
         /* Colors Definitions */
@@ -75,17 +75,25 @@ def apply_custom_css():
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border-light);
+            padding: 1.5rem; /* Ensure cards have padding */
+            margin-bottom: 1.5rem;
         }
         
         .card-header {
             color: var(--primary-dark-text) !important;
             border-bottom: 2px solid var(--border-light);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            font-weight: 600;
         }
 
         /* ALERTS - Ensure light background */
         div[data-testid="stAlert"] {
             background-color: var(--surface-white) !important;
             border: 1px solid var(--border-light) !important;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         
         .alert-success strong { color: #15803d !important; }
@@ -94,21 +102,25 @@ def apply_custom_css():
         .alert-error strong   { color: #dc2626 !important; }
         
         /* ------------------------------------
-        BUTTONS (Primary Fix)
+        BUTTONS (Aggressive Fix for Black Text/Icon)
         ------------------------------------*/
-        /* Target general buttons, download, and uploader buttons */
         .stButton > button, 
         .stDownloadButton > button,
         section[data-testid="stFileUploader"] button {
             background: var(--primary-blue) !important;
             color: var(--surface-white) !important;
-            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3);
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            border: none !important;
+            transition: all 0.2s ease !important;
+            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3) !important;
         }
         
-        /* Ensure all nested elements (text, icons) inside the primary button are white */
+        /* EXTREME OVERRIDE: Target ALL nested elements, including icons and spans, 
+           to ensure they are white inside the button */
         .stButton > button *, 
-        .stDownloadButton > button *,
-        section[data-testid="stFileUploader"] button * {
+        .stDownloadButton > button * span,
+        section[data-testid="stFileUploader"] button * span {
             color: var(--surface-white) !important;
         }
 
@@ -117,14 +129,19 @@ def apply_custom_css():
         .stDownloadButton > button:hover,
         section[data-testid="stFileUploader"] button:hover {
             background: #3730a3 !important;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4) !important;
+            transform: translateY(-1px) !important;
         }
 
         /* ------------------------------------
         DATAFRAME STYLING (Light Mode Fix)
         ------------------------------------*/
-        div[data-testid="stDataFrame"] {
+        div[data-testid="stDataFrame"], 
+        div[data-testid="stDataFrameContainer"] {
             background-color: var(--surface-white) !important; 
             border: 1px solid var(--border-light);
+            border-radius: 8px;
+            overflow: hidden; /* Contains the border */
         }
 
         /* Force light background and dark text for all table cells/elements */
@@ -140,6 +157,7 @@ def apply_custom_css():
         /* Style for the header row background */
         div[data-testid="stDataFrame"] th {
             background-color: #f1f5f9 !important; /* Light grey header */
+            font-weight: 600;
         }
 
         /* ------------------------------------
@@ -156,8 +174,10 @@ def apply_custom_css():
         .stDateInput input,
         .stTimeInput input {
             border: 1px solid #ced4da !important;
+            border-radius: 8px !important;
             color: var(--primary-dark-text) !important; 
             background: var(--surface-white) !important;
+            padding: 0.75rem 1rem !important;
         }
 
         /* Focused state */
@@ -168,11 +188,20 @@ def apply_custom_css():
             box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.2) !important;
         }
 
+        /* Number input buttons */
+        .stNumberInput button {
+            background: var(--surface-white) !important;
+            color: var(--primary-dark-text) !important;
+            border: 1px solid #ced4da !important;
+        }
+
         /* ------------------------------------
         FILE UPLOADER - General Style
         ------------------------------------*/
         section[data-testid="stFileUploader"] {
             border: 2px dashed #10b981 !important; /* Success green border */
+            border-radius: 8px !important;
+            padding: 1rem !important;
             background-color: #f0fdf4 !important; /* Very light success background */
         }
 
