@@ -391,6 +391,9 @@ def create_production_summary(solution, production_vars, solver, grades, lines, 
             total += val
 
         row["Total Produced"] = int(total)
+        stockout_dict = solution.get('stockout', {}).get(grade, {})
+        total_stockout = sum(stockout_dict.values()) if stockout_dict else 0
+        row["Total Stockout"] = int(total_stockout)
         rows.append(row)
 
     # Total row
@@ -398,6 +401,7 @@ def create_production_summary(solution, production_vars, solver, grades, lines, 
     for line in lines:
         total_row[line] = sum(r[line] for r in rows)
     total_row["Total Produced"] = sum(r["Total Produced"] for r in rows)
+    total_row["Total Stockout"] = sum(r["Total Stockout"] for r in rows)
 
     rows.append(total_row)
     return pd.DataFrame(rows)
