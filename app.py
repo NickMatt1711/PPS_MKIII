@@ -89,7 +89,6 @@ def render_upload_stage():
                 render_alert(f"Failed to read uploaded file: {e}", "error")
 
     with col2:
-        st.markdown("#### 📥 Template")
         render_download_template_button()
 
 
