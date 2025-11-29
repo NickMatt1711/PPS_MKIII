@@ -2,7 +2,7 @@
 Material 3 Light Theme – Streamlit-Compatible (Refactored)
 Includes:
 - CSS transitions and hover effects for interactivity.
-- Improved heading color and metric card customization.
+- Improved heading color, metric card visibility, and full button/table/tab customization.
 - Stage progress bar responsiveness.
 - Card rendering using a Python context manager.
 """
@@ -117,7 +117,8 @@ def apply_custom_css():
         .metric-value {
             font-size: 2rem;
             font-weight: 700;
-            color: #1e40af !important; /* Use primary blue by default */
+            /* FIX: Ensure visibility and use primary blue for metric values */
+            color: #1e40af !important; 
             margin: .5rem 0;
             display: flex;
             justify-content: center;
@@ -136,6 +137,146 @@ def apply_custom_css():
             color: #64748b !important;
             letter-spacing: .05em;
         }
+
+        /* --- BUTTON STYLING --- */
+        
+        /* REGULAR BUTTON STYLING (Applies to st.button) */
+        [data-testid="stButton"] > button {
+            background: #1e40af; /* Primary blue */
+            color: white !important;
+            border: 1px solid #1e40af;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: .6rem 1.2rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-testid="stButton"] > button:hover {
+            background: #3730a3; /* Darker blue on hover */
+            border-color: #3730a3;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        [data-testid="stButton"] > button:active {
+            transform: scale(0.98);
+        }
+
+        /* DOWNLOAD BUTTON STYLING (Specific styling already existing) */
+        [data-testid="stDownloadButton"] button {
+            background:#1e40af !important;
+            color:white !important;
+            border:none !important;
+            font-weight:600 !important;
+            border-radius:8px !important;
+            padding:.75rem 1.5rem !important;
+            width:100% !important;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+        
+        [data-testid="stDownloadButton"] button:hover {
+            background: #1e3a8a !important;
+        }
+        
+        [data-testid="stDownloadButton"] button:active {
+            transform: scale(0.98);
+        }
+
+
+        /* --- TABLE & DATAFRAME STYLING (Addressing the black appearance) --- */
+        
+        /* Container styling for tables/dataframes */
+        [data-testid="stDataFrame"], [data-testid="stTable"] {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Table Headers */
+        .dataframe thead th, 
+        .stTable > div > div:first-child {
+            background-color: #f1f5f9; /* Light gray for headers */
+            color: #1e293b;
+            font-weight: 700;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        /* Table Cells (Targets dataframe and simple tables) */
+        .dataframe tbody tr td,
+        .stTable > div > div:not(:first-child) {
+            background-color: white;
+            color: #1e293b;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        /* Striping for better readability */
+        .dataframe tbody tr:nth-child(even) td {
+             background-color: #f8fafc; /* Very light subtle stripe */
+        }
+        
+        /* --- TAB STYLING (Equal width & multi-color indicator) --- */
+        
+        [data-testid="stTabs"] {
+            /* Ensures tabs container takes full width */
+            width: 100%; 
+        }
+
+        /* Distribute tabs evenly up to 4, and remove default border */
+        [data-testid="stTabs"] > div:first-child {
+            display: flex;
+            width: 100%;
+            border-bottom: 2px solid #e2e8f0 !important; /* Base divider */
+        }
+        
+        /* Style individual tabs for equal width */
+        [data-testid="stTabs"] button {
+            flex: 1 1 25%; /* Max 4 tabs, so 25% width */
+            border-radius: 8px 8px 0 0;
+            padding: 1rem 0;
+            text-align: center;
+            font-weight: 600;
+            color: #64748b !important;
+            border-bottom: 4px solid transparent !important; /* Thicker underline placeholder */
+            transition: all 0.3s ease;
+        }
+        
+        /* Hover effect on inactive tabs */
+        [data-testid="stTabs"] button:hover {
+            color: #1e40af !important;
+            /* Add a subtle visual cue without activating the color */
+            border-bottom-color: #dbeafe !important;
+        }
+
+        /* ACTIVE TAB INDICATORS (Different colors for up to 4 tabs) */
+        
+        /* 1st Tab: Primary Blue */
+        [data-testid="stTabs"] button[aria-selected="true"]:nth-child(1) {
+            color: #1e40af !important;
+            border-bottom-color: #1e40af !important;
+        }
+
+        /* 2nd Tab: Success Green */
+        [data-testid="stTabs"] button[aria-selected="true"]:nth-child(2) {
+            color: #10b981 !important;
+            border-bottom-color: #10b981 !important;
+        }
+
+        /* 3rd Tab: Warning Orange */
+        [data-testid="stTabs"] button[aria-selected="true"]:nth-child(3) {
+            color: #f59e0b !important;
+            border-bottom-color: #f59e0b !important;
+        }
+
+        /* 4th Tab: Secondary Purple */
+        [data-testid="stTabs"] button[aria-selected="true"]:nth-child(4) {
+            color: #6366f1 !important;
+            border-bottom-color: #6366f1 !important;
+        }
+        
+        /* --- Existing Styles (No Changes) --- */
 
         /* ALERTS */
         .alert {
@@ -163,7 +304,7 @@ def apply_custom_css():
             margin: 2rem 0;
         }
 
-        /* STAGE PROGRESS */
+        /* STAGE PROGRESS (Keep existing good design) */
         .stage-container {
             padding: 2rem 1.5rem;
             background: white;
@@ -184,14 +325,13 @@ def apply_custom_css():
             flex-grow: 1;
             height: 2px;
             background: #e2e8f0;
-            margin: 0.5rem 0.5rem 0 0.5rem; /* Better vertical alignment */
+            margin: 0.5rem 0.5rem 0 0.5rem; 
             align-self: center;
         }
         
         .stage-connector.completed {
-            background: #1e40af; /* Connector uses primary color when completed */
+            background: #1e40af; 
         }
-
 
         .stage-step {
             text-align: center;
@@ -214,7 +354,7 @@ def apply_custom_css():
 
         .stage-circle.active {
             background:#1e40af; border-color:#1e40af; color:white !important;
-            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.2); /* Focus ring effect */
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.2);
         }
 
         .stage-circle.completed {
@@ -228,27 +368,6 @@ def apply_custom_css():
         .stage-label { font-size:.85rem; color:#64748b !important; }
         .stage-label.active { color:#1e40af !important; font-weight:600; }
 
-        /* DOWNLOAD BUTTON */
-        [data-testid="stDownloadButton"] button {
-            background:#1e40af !important;
-            color:white !important;
-            border:none !important;
-            font-weight:600 !important;
-            border-radius:8px !important;
-            padding:.75rem 1.5rem !important;
-            width:100% !important;
-            transition: background-color 0.2s ease, transform 0.1s ease; /* Added transition */
-        }
-        
-        [data-testid="stDownloadButton"] button:hover {
-            background: #1e3a8a !important; /* Slightly darker blue on hover */
-        }
-        
-        [data-testid="stDownloadButton"] button:active {
-            transform: scale(0.98); /* Subtle press effect */
-        }
-
-
         /* FILE UPLOADER */
         [data-testid="stFileUploader"] > div {
             background:white !important;
@@ -259,7 +378,7 @@ def apply_custom_css():
         }
         
         [data-testid="stFileUploader"] > div:hover {
-            border-color: #93c5fd !important; /* Border color change on hover */
+            border-color: #93c5fd !important;
         }
 
         [data-testid="stFileUploader"] label {
@@ -350,59 +469,27 @@ def render_stage_progress(current_stage: float):
     )
 
 
-@contextmanager
-def custom_card(title: str, icon: str = ""):
-    """
-    A context manager to wrap Streamlit content in a custom, styled card.
-    
-    Usage:
-    with custom_card("Data Summary", icon="📊"):
-        st.write("This content is inside the card.") 
-    """
-    # Start the card HTML structure and the header
+def render_card(title: str, icon: str = ""):
     st.markdown(
         f"""
         <div class="card">
-            <div class="card-header">{icon + ' ' if icon else ''}{title}</div>
-            <div class="card-content">
+            <div class="card-header">{icon if icon else ''} {title}</div>
         """,
         unsafe_allow_html=True,
     )
-    
-    # Yield control back to the 'with' block where Streamlit commands will be executed
-    try:
-        yield 
-    finally:
-        # Close the HTML structure after the content is rendered
-        st.markdown(
-            """
-                </div> 
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
 
 
-def render_metric_card(label: str, value: str, col, value_color: str = "#1e40af", icon: str = ""):
-    """
-    Renders a customizable metric card inside a Streamlit column.
-    
-    Args:
-        label (str): The label/title of the metric.
-        value (str): The main value of the metric.
-        col: The Streamlit column object to render into.
-        value_color (str): Optional. A hex or name CSS color for the value text (e.g., '#10b981' for success).
-        icon (str): Optional. An emoji or simple text icon to display next to the value.
-    """
+def close_card():
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_metric_card(label: str, value: str, col):
     with col:
         st.markdown(
             f"""
             <div class="metric-card">
                 <div class="metric-label">{label}</div>
-                <div class="metric-value" style="color:{value_color} !important;">
-                    {'<span style="font-size:1.5rem; margin-right:8px;">' + icon + '</span>' if icon else ''}
-                    {value}
-                </div>
+                <div class="metric-value">{value}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -446,6 +533,6 @@ def render_download_template_button():
             )
         else:
             # Fallback for if the file is not in the same directory
-            st.error("Template file not found. Ensure 'polymer_production_template.xlsx' is in the application directory.")
+            st.error("Template file not found")
     except Exception as e:
         st.error(f"Error loading template: {e}")
