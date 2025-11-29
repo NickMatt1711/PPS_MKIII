@@ -224,7 +224,12 @@ def render_stage_progress(current_stage: float):
     ]
 
     total = len(stages)
-    current_stage = max(0, min(current_stage, total - 1))  # Ensure valid current_stage index
+    # Ensure valid current_stage index (0, 1, 1.5, or 2)
+    current_stage = max(0, min(current_stage, total - 1))
+
+    # Don't render anything at stage 1.5
+    if current_stage == 1.5:
+        return
 
     blocks = []
     connectors = []
