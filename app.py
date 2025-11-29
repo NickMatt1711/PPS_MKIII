@@ -13,11 +13,11 @@ from ortools.sat.python import cp_model
 
 # Import modules (expect these to be present in the repo)
 from constants import *
-from ui_components import * # Assuming this module contains apply_custom_css, render_header, render_download_button, etc.
+from ui_components import *
 from data_loader import *
 from preview_tables import *
 from solver_cp_sat import build_and_solve_model
-from postprocessing import * # uses compatibility wrapper get_or_create_grade_colors
+from postprocessing import *  # uses compatibility wrapper get_or_create_grade_colors
 
 import pandas as pd
 
@@ -30,7 +30,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# NOTE: The apply_custom_css and all helper functions rely on being defined in ui_components.py.
 apply_custom_css()
 
 # Initialize required session state keys (safe defaults)
@@ -39,8 +38,6 @@ st.session_state.setdefault(SS_UPLOADED_FILE, None)
 st.session_state.setdefault(SS_EXCEL_DATA, None)
 st.session_state.setdefault(SS_SOLUTION, None)
 st.session_state.setdefault(SS_GRADE_COLORS, {})
-# SS_THEME is checked in the final stage reset, so it should be initialized if theme changes are expected.
-st.session_state.setdefault(SS_THEME, "light") 
 
 st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
     'time_limit_min': DEFAULT_TIME_LIMIT_MIN,
@@ -93,20 +90,11 @@ def render_upload_stage():
 
     with col2:
         st.markdown("#### 📥 Template")
-        # --- FIX: Changed to use the new generic render_download_button ---
-        # Mock template data (replace with actual template generation if available)
-        mock_template_data = b"Placeholder for Excel Template" 
-        render_download_button(
-            label="Download Template",
-            data=mock_template_data,
-            file_name="production_template.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-        # --- END FIX ---
+        render_download_template_button()
 
 
     # Navigation buttons
-    if st.button("Next: Preview Data →", disabled=(st.session_state[SS_UPLOADED_FILE] is None),use_container_width=True):
+    if st.button("Next: Preview Data →", disabled=(st.session_state[SS_UPLOADED_FILE] is None),use_container_width="True"):
         # move forward only if a file is uploaded and validated already
         if st.session_state[SS_EXCEL_DATA] is not None:
             st.session_state[SS_STAGE] = 1
@@ -269,8 +257,6 @@ def render_optimization_stage():
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization in Progress")
     render_stage_progress(1.5)
 
-    # NOTE: This styling block is likely missing from the CSS and should be added 
-    # to ui_components.py's apply_custom_css if it's not working.
     st.markdown("""
         <div class="optimization-container">
             <div class="spinner"></div>
@@ -468,9 +454,7 @@ def render_results_stage():
 
             # Gantt chart (may return None)
             try:
-                # The create_gantt_chart function should produce a visual representation of the schedule
-                # for the production line, showing when each product grade is being manufactured.
-                                fig = create_gantt_chart(solution, line, data.get('dates', []), data.get('shutdown_periods', {}), grade_colors)
+                fig = create_gantt_chart(solution, line, data.get('dates', []), data.get('shutdown_periods', {}), grade_colors)
             except Exception as e:
                 fig = None
                 st.error(f"Failed to build gantt chart for {line}: {e}")
@@ -511,9 +495,7 @@ def render_results_stage():
             # allowed_lines may be dict or list; pass through as-is (postprocessing handles both)
             allowed_lines = data.get('allowed_lines', {})
             try:
-                # The create_inventory_chart function should plot the inventory level over time 
-                # compared to the minimum and maximum allowed levels.
-                                fig = create_inventory_chart(
+                fig = create_inventory_chart(
                     solution,
                     grade,
                     data.get('dates', []),
