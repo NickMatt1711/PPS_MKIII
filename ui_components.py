@@ -209,29 +209,32 @@ def render_header(title: str, subtitle: str = ""):
 
 
 def render_stage_progress(current_stage: int):
+    # Define stages and labels
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"),
-        ("3", "Results"),
+        ("3", "Results")
     ]
-
+    
     total = len(stages)
-    current_stage = max(0, min(current_stage, total - 1))  # Ensure valid current_stage index
+    
+    # Ensuring current_stage is within valid range
+    current_stage = max(0, min(current_stage, total))  # current_stage should be <= len(stages)
 
     blocks = []
     connectors = []
 
     # Create each stage's block and connector
     for idx, (num, label) in enumerate(stages):
-        if idx < current_stage:  # Completed stage
+        if idx < current_stage:  # Stage is completed
             status = "completed"
-            icon = "✓"  # Mark as tick when completed
-        elif idx == current_stage:  # Current stage
+            icon = "✓"  # Show tick for completed stages
+        elif idx == current_stage:  # Current active stage
             status = "active"
-            icon = num  # Show the stage number for the current stage
-        else:  # Future stage
+            icon = num  # Show stage number for active stage
+        else:  # Future stages
             status = "inactive"
-            icon = num  # Show the stage number for the inactive stages
+            icon = num  # Show stage number for inactive stages
 
         blocks.append(
             f"""
@@ -244,6 +247,7 @@ def render_stage_progress(current_stage: int):
             """
         )
 
+        # Add connectors between stages
         if idx < total - 1:
             connector_class = "completed" if idx < current_stage else ""
             connectors.append(f'<div class="stage-connector {connector_class}"></div>')
@@ -255,7 +259,7 @@ def render_stage_progress(current_stage: int):
         if i < len(connectors):
             html += connectors[i]
 
-    # Ensure the entire container is closed properly
+    # Render the entire container for stage progress
     st.markdown(
         f"""
         <div class="stage-container">
