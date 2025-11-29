@@ -1,181 +1,116 @@
+# FILE: ui_components.py
 """
-Material 3 Corporate Theme - PROPERLY INTEGRATED UI Components
+Material 3 Light Theme – UI helpers
 """
 
 import streamlit as st
-from constants import THEME_COLORS  # Import the theme colors
+
 
 def apply_custom_css():
-    """Apply Material 3 Light theme styling."""
     st.markdown(
         """
         <style>
-
-        /*********************************************************
-         MATERIAL 3 TOKENS (Generated from THEME_COLORS)
-        **********************************************************/
         :root {
-            /* PRIMARY */
             --md-sys-color-primary: #5E7CE2;
             --md-sys-color-on-primary: #FFFFFF;
             --md-sys-color-primary-container: #E8EEFF;
-            --md-sys-color-on-primary-container: #1C1B1F;
-
-            /* SECONDARY */
             --md-sys-color-secondary: #4BAF39;
-            --md-sys-color-on-secondary: #FFFFFF;
-            --md-sys-color-secondary-container: #E8F5E9;
-            --md-sys-color-on-secondary-container: #1C1B1F;
-
-            /* TERTIARY (Accent warm tones) */
-            --md-sys-color-tertiary: #C9852F;
-            --md-sys-color-on-tertiary: #FFFFFF;
-            --md-sys-color-tertiary-container: #FCEFD9;
-            --md-sys-color-on-tertiary-container: #1C1B1F;
-
-            /* ERROR */
-            --md-sys-color-error: #B3261E;
-            --md-sys-color-on-error: #FFFFFF;
-            --md-sys-color-error-container: #F9DEDC;
-            --md-sys-color-on-error-container: #410E0B;
-
-            /* SUCCESS */
-            --md-sys-color-success: #4BAF39;
-            --md-sys-color-on-success: #FFFFFF;
-            --md-sys-color-success-container: #E8F5E9;
-            --md-sys-color-on-success-container: #1C1B1F;
-
-            /* INFO */
-            --md-sys-color-info: #75777F;
-            --md-sys-color-on-info: #FFFFFF;
-            --md-sys-color-info-container: #F4F4F5;
-            --md-sys-color-on-info-container: #1C1B1F;
-
-            /* SURFACE & BACKGROUND */
-            --md-sys-color-background: #F7F8FA;
+            --md-sys-color-on-surface: #1C1B1F;
             --md-sys-color-surface: #FFFFFF;
             --md-sys-color-surface-variant: #E7E0EC;
-            --md-sys-color-on-surface: #1C1B1F;
-            --md-sys-color-on-surface-variant: #49454F;
-
-            /* OUTLINE */
+            --md-sys-color-background: #F7F8FA;
             --md-sys-color-outline: #79747E;
             --md-sys-color-outline-variant: #CAC5D0;
-
-            /* ELEVATION */
             --md-elevation-1: 0px 1px 3px rgba(0,0,0,0.12);
             --md-elevation-2: 0px 2px 6px rgba(0,0,0,0.12);
-
-            /* SHAPE */
             --md-shape-corner-small: 8px;
             --md-shape-corner-medium: 12px;
             --md-shape-corner-large: 16px;
         }
 
-
-        /*********************************************************
-         STREAMLIT — FORCE LIGHT THEME (REAL DOM SELECTORS)
-        **********************************************************/
+        /* Force light theme across Streamlit DOM */
         html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
             background-color: var(--md-sys-color-background) !important;
             color: var(--md-sys-color-on-surface) !important;
         }
-
-        /* Main container background */
         [data-testid="stAppViewContainer"] > .main {
             background-color: var(--md-sys-color-background) !important;
         }
 
-        /* Markdown text, labels, headers */
-        h1, h2, h3, h4, h5, p, label, span, div {
-            color: var(--md-sys-color-on-surface) !important;
+        /* Header */
+        .app-header {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary) !important;
+            padding: 20px;
+            border-radius: var(--md-shape-corner-large);
+            margin: 12px 0;
+            box-shadow: var(--md-elevation-1);
+            text-align: center;
+        }
+        .app-header h1 { margin: 0; font-size: 28px; font-weight: 600; }
+
+        /* Cards */
+        .m3-card {
+            background: var(--md-sys-color-surface);
+            border-radius: var(--md-shape-corner-medium);
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: var(--md-elevation-1);
+            border: 1px solid var(--md-sys-color-outline-variant);
         }
 
-        /*********************************************************
-         FIXED: UPLOADER + BUTTONS (LIGHT THEME)
-        **********************************************************/
+        /* Uploader */
         [data-testid="stFileUploader"] {
             background-color: var(--md-sys-color-surface) !important;
             border: 2px dashed var(--md-sys-color-outline) !important;
             border-radius: var(--md-shape-corner-medium) !important;
-            padding: 1rem !important;
+            padding: 18px !important;
         }
-        [data-testid="stFileUploader"] * {
-            color: var(--md-sys-color-on-surface) !important;
-        }
+        [data-testid="stFileUploader"] * { color: var(--md-sys-color-on-surface) !important; }
 
+        /* Buttons */
         .stButton button, .stDownloadButton button {
             background-color: var(--md-sys-color-primary) !important;
             color: var(--md-sys-color-on-primary) !important;
             border-radius: var(--md-shape-corner-small) !important;
-            padding: 0.6rem 1.4rem !important;
-            font-weight: 500 !important;
+            padding: 8px 14px !important;
+            font-weight: 600 !important;
             border: none !important;
             box-shadow: var(--md-elevation-1) !important;
         }
-
-
-        /*********************************************************
-         FIXED: DATAFRAMES — FORCE LIGHT MODE
-        **********************************************************/
-        [data-testid="stDataFrame"] table {
-            background-color: var(--md-sys-color-surface) !important;
-        }
-        [data-testid="stDataFrame"] th {
-            background-color: var(--md-sys-color-surface-variant) !important;
-            color: var(--md-sys-color-on-surface-variant) !important;
-        }
-        [data-testid="stDataFrame"] td {
-            background-color: var(--md-sys-color-surface) !important;
-            color: var(--md-sys-color-on-surface) !important;
-        }
-        [data-testid="stDataFrame"] tbody tr:hover td {
-            background: color-mix(in srgb, var(--md-sys-color-primary-container) 15%, transparent) !important;
+        .stButton button:hover, .stDownloadButton button:hover {
+            box-shadow: var(--md-elevation-2) !important;
+            transform: translateY(-2px);
         }
 
-
-        /*********************************************************
-         FIXED: TABS — FULL WIDTH DISTRIBUTION
-        **********************************************************/
-        .stTabs [data-baseweb="tab-list"] {
-            display: flex !important;
-            width: 100% !important;
-        }
-        button[data-baseweb="tab"] {
-            flex: 1 !important;
-            margin: 0 !important;
-            text-align: center !important;
-            border-radius: 0 !important;
-            border-bottom: 2px solid transparent !important;
-        }
+        /* Tabs fill width */
+        .stTabs [data-baseweb="tab-list"] { display:flex !important; width:100% !important; }
+        button[data-baseweb="tab"] { flex:1 !important; text-align:center !important; border-radius:0 !important; }
         button[data-baseweb="tab"][aria-selected="true"] {
-            border-bottom: 2px solid var(--md-sys-color-primary) !important;
+            border-bottom: 3px solid var(--md-sys-color-primary) !important;
             color: var(--md-sys-color-primary) !important;
         }
 
+        /* DataFrames light */
+        [data-testid="stDataFrame"] table { background-color: var(--md-sys-color-surface) !important; }
+        [data-testid="stDataFrame"] th {
+            background-color: var(--md-sys-color-surface-variant) !important;
+            color: var(--md-sys-color-on-surface) !important;
+            font-weight: 600 !important;
+        }
+        [data-testid="stDataFrame"] td { background-color: var(--md-sys-color-surface) !important; color: var(--md-sys-color-on-surface) !important; }
+        [data-testid="stDataFrame"] tbody tr:hover td {
+            background: color-mix(in srgb, var(--md-sys-color-primary-container) 12%, transparent) !important;
+        }
 
-        /*********************************************************
-         FIXED: STAGE PROGRESS — TRUE HORIZONTAL
-        **********************************************************/
-        .stage-row {
-            display: flex;
-            width: 100%;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        .stage-step {
-            flex: 1;
-            text-align: center;
-        }
-        .stage-connector {
-            flex: 1;
-            height: 2px;
-            background: var(--md-sys-color-outline-variant);
-        }
-        .stage-connector.completed {
-            background: var(--md-sys-color-success);
-        }
+        /* Stage progress */
+        .stage-row { display:flex; width:100%; justify-content:space-between; align-items:center; margin-bottom:12px; }
+        .stage-step { flex:1; text-align:center; }
+        .stage-connector { flex:1; height: 2px; background: var(--md-sys-color-outline-variant); margin:0 6px; }
+        .stage-connector.completed { background: var(--md-sys-color-success); }
+
+        /* Small utilities */
+        .section-divider { height:1px; background: var(--md-sys-color-outline-variant); margin:18px 0; border:none; }
 
         </style>
         """,
@@ -184,135 +119,80 @@ def apply_custom_css():
 
 
 def render_header(title: str, subtitle: str = ""):
-    """Render corporate app header."""
-    subtitle_html = f"<p>{subtitle}</p>" if subtitle else ""
-    st.markdown(
-        f"""
-        <div class="app-header">
-            <h1>{title}</h1>
-            {subtitle_html}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    subtitle_html = f"<div style='opacity:0.9;margin-top:6px'>{subtitle}</div>" if subtitle else ""
+    st.markdown(f"<div class='app-header'><h1>{title}</h1>{subtitle_html}</div>", unsafe_allow_html=True)
 
 
-def render_stage_progress(current_stage: int) -> None:
-    """Render clean stage progress indicator."""
-    stages = [
-        ("1", "Upload"),
-        ("2", "Preview & Configure"), 
-        ("3", "Results")
-    ]
-
+def render_stage_progress(current_stage_index: int):
+    stages = [("Upload",), ("Review & Configure",), ("Results",)]
     total = len(stages)
-    current_stage = max(0, min(current_stage, total - 1))
+    idx = max(0, min(current_stage_index, total - 1))
 
     html = '<div class="stage-row">'
-    
-    for idx, (num, label) in enumerate(stages):
+    for i, s in enumerate(stages):
         status = "inactive"
-        icon = num
-        
-        if idx == current_stage:
-            status = "active"
-        elif idx < current_stage:
+        if i < idx:
             status = "completed"
             icon = "✓"
-        
-        html += '<div class="stage-step">'
+        elif i == idx:
+            status = "active"
+            icon = str(i + 1)
+        else:
+            icon = str(i + 1)
+
         html += f"""
-            <div class="stage-circle {status}">{icon}</div>
-            <div class="stage-label {'active' if idx == current_stage else ''}">
-                {label}
+            <div class='stage-step'>
+                <div style='display:inline-block;padding:10px;border-radius:999px;border:2px solid var(--md-sys-color-outline-variant);
+                             background: {'var(--md-sys-color-primary)' if status=='active' else 'var(--md-sys-color-surface)'}; color: {'var(--md-sys-color-on-primary)' if status=='active' else 'var(--md-sys-color-on-surface)'}'>
+                    {icon}
+                </div>
+                <div style='margin-top:6px;font-size:0.9rem;color:var(--md-sys-color-on-surface)'>
+                    {s[0]}
+                </div>
             </div>
         """
-        html += '</div>'
-        
-        if idx < total - 1:
-            connector_class = "completed" if idx < current_stage else ""
-            html += f'<div class="stage-connector {connector_class}"></div>'
+        if i < total - 1:
+            conn_class = "completed" if i < idx else ""
+            html += f"<div class='stage-connector {conn_class}'></div>"
 
-    html += '</div>'
-
-    st.markdown(
-        f"""
-        <div class="stage-container">
-            {html}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    html += "</div>"
+    st.markdown(html, unsafe_allow_html=True)
 
 
-def render_card(title: str, icon: str = ""):
-    """Open a Material 3 card container."""
-    icon_html = f"{icon} " if icon else ""
-    st.markdown(
-        f"""
-        <div class="card">
-            <div class="card-header">{icon_html}{title}</div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def close_card():
-    """Close the card container."""
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-def render_metric_card(label: str, value: str, col):
-    """Render a Material 3 metric card."""
-    with col:
-        st.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-label">{label}</div>
-                <div class="metric-value">{value}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-
-def render_alert(message: str, alert_type: str = "info"):
-    """Render a Material 3 alert box."""
-    icons = {
-        "success": "✓",
-        "info": "ℹ", 
-        "warning": "⚠",
-        "error": "✕"
+def render_alert(message: str, kind: str = "info"):
+    color_map = {
+        "info": "var(--md-sys-color-primary-container)",
+        "success": "var(--md-sys-color-success-container)",
+        "warning": "var(--md-sys-color-tertiary)",
+        "error": "var(--md-sys-color-error-container)"
     }
-    st.markdown(
-        f"""
-        <div class="alert alert-{alert_type}">
-            <strong>{icons.get(alert_type, "ℹ")}</strong>
-            <span>{message}</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    bg = color_map.get(kind, "var(--md-sys-color-primary-container)")
+    st.markdown(f"<div class='m3-card' style='background:{bg};'>{message}</div>", unsafe_allow_html=True)
 
 
 def render_section_divider():
-    """Render a subtle divider."""
-    st.markdown('<div style="margin: 2rem 0; border-top: 1px solid var(--md-outline-variant);"></div>', unsafe_allow_html=True)
+    st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
+
+
+def render_metric_card(label: str, value: str, col):
+    with col:
+        st.markdown(f"""
+            <div class="m3-card" style="text-align:center">
+                <div style="font-size:0.9rem;color:var(--md-sys-color-on-surface)">{label}</div>
+                <div style="font-size:1.6rem;font-weight:600;color:var(--md-sys-color-primary)">{value}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
 
 def render_download_template_button():
-    """Render download template button."""
-    try:
-        # Create placeholder template data
-        template_data = b"Template file content"
-        
-        st.download_button(
-            label="📥 Download Template",
-            data=template_data,
-            file_name="polymer_production_template.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            help="Download the Excel template file",
-            use_container_width=True
-        )
-    except Exception as e:
-        st.error(f"Template download error: {e}")
+    # Lightweight placeholder: creates a small CSV in-memory template for download
+    import io
+    import pandas as pd
+    df = pd.DataFrame({"Example": []})
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="xlsxwriter") as writer:
+        df.to_excel(writer, sheet_name="Plant", index=False)
+        df.to_excel(writer, sheet_name="Inventory", index=False)
+        df.to_excel(writer, sheet_name="Demand", index=False)
+    buf.seek(0)
+    st.download_button("📥 Download Template", data=buf, file_name="template.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
