@@ -331,52 +331,8 @@ def apply_custom_css():
         div[data-testid="stDataFrameContainer"],
         .stDataFrame,
         .dataframe {
-            background: white !important;
-            border: 1px solid #e9ecef !important;
-            border-radius: 8px !important;
-            overflow: hidden !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
-        }
-
-        /* Table headers */
-        .stDataFrame thead tr th,
-        .dataframe thead tr th {
-            background: #f8f9fa !important;
-            color: #2c3e50 !important;
-            font-weight: 600 !important;
-            border-bottom: 3px solid #667eea !important;
-            padding: 12px !important;
-        }
-
-        /* Table cells */
-        .stDataFrame tbody tr,
-        .dataframe tbody tr {
-            background: white !important;
-        }
-
-        .stDataFrame tbody tr:nth-child(even),
-        .dataframe tbody tr:nth-child(even) {
-            background: #f8fafc !important;
-        }
-
-        .stDataFrame tbody tr:hover,
-        .dataframe tbody tr:hover {
-            background: #f0f4ff !important;
-        }
-
-        .stDataFrame tbody td,
-        .dataframe tbody td {
-            color: #2c3e50 !important;
-            font-weight: 500 !important;
-            border-color: #e9ecef !important;
-            padding: 10px !important;
-        }
-
-        /* Specific fix for index column */
-        .stDataFrame tbody td:first-child,
-        .dataframe tbody td:first-child {
-            background: #f8fafc !important;
-            font-weight: 600 !important;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         /* ------------------------------------
@@ -421,61 +377,10 @@ def apply_custom_css():
         FILE UPLOADER - Default style matching pasted code
         ------------------------------------*/
         section[data-testid="stFileUploader"] {
-            background: transparent !important;
-        }
-
-        section[data-testid="stFileUploader"] > div {
-            background: transparent !important;
-            border: none !important;
-            padding: 0 !important;
-        }
-
-        .stFileUploader > div > div {
-            background: transparent !important;
-            border: none !important;
-            padding: 0 !important;
-        }
-
-        /* Uploaded file styling matching pasted code */
-        .uploadedFile {
             border: 2px dashed #28a745 !important;
             border-radius: 8px !important;
             padding: 1rem !important;
             background-color: #f8fff9 !important;
-        }
-
-        /* Keep text visible */
-        .stFileUploader label,
-        .stFileUploader small {
-            color: #1e293b !important;
-        }
-
-        /* ------------------------------------
-        DOWNLOAD BUTTON - Gradient style matching pasted code + height match
-        ------------------------------------*/
-        .stDownloadButton > button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-            padding: 0.75rem 1.5rem !important;
-            font-weight: 600 !important;
-            border-radius: 8px !important;
-            border: none !important;
-            transition: all 0.3s ease !important;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
-            width: 100% !important;
-            min-height: 110px !important;
-        }
-
-        .stDownloadButton > button:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
-        }
-
-        .stDownloadButton > button p,
-        .stDownloadButton > button span,
-        .stDownloadButton > button div {
-            color: white !important;
-            font-weight: 600 !important;
         }
 
         /* ------------------------------------
