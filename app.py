@@ -52,7 +52,7 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 def render_upload_stage():
     """Stage 0: File upload"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
-    render_stage_progress(0)
+    render_stage_progress(st.session_state.get(SS_STAGE, 0))  # Render progress based on current stage
 
     st.markdown("### 📤 Upload Production Data")
     st.markdown("Upload an Excel file containing your production planning data.")
@@ -107,7 +107,7 @@ def render_upload_stage():
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Review data and configure optimization")
-    render_stage_progress(1)
+    render_stage_progress(st.session_state.get(SS_STAGE, 1))  # Render progress based on current stage
 
     excel_data = st.session_state.get(SS_EXCEL_DATA)
     if not excel_data:
@@ -255,7 +255,7 @@ def render_preview_stage():
 def render_optimization_stage():
     """Stage 1.5: Show optimization in progress with animation"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization in Progress")
-    render_stage_progress(1.5)
+    render_stage_progress(st.session_state.get(SS_STAGE, 1.5))  # Render progress based on current stage
 
     st.markdown("""
         <div class="optimization-container">
@@ -403,7 +403,7 @@ def render_optimization_stage():
 def render_results_stage():
     """Stage 2: Display results"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization Results")
-    render_stage_progress(2)
+    render_stage_progress(st.session_state.get(SS_STAGE, 2))  # Render progress based on current stage
 
     solution_data = st.session_state.get(SS_SOLUTION)
     if not solution_data:
