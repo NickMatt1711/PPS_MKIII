@@ -6,119 +6,194 @@ import streamlit as st
 from constants import THEME_COLORS  # Import the theme colors
 
 def apply_custom_css():
-    """Apply Material 3 Light theme for corporate application."""
-    
+    """Apply Material 3 Light theme styling."""
     st.markdown(
         """
-       <style>
+        <style>
 
-       /*******************************************************
-        FIX 1 — STAGE PROGRESS (TRUE HORIZONTAL)
-       ********************************************************/
-       .stage-row {
-           display: flex;
-           justify-content: space-between;
-           align-items: center;
-           width: 100%;
-           position: relative;
-       }
+        /*******************************************************
+         MATERIAL 3 CSS TOKENS (Generated from THEME_COLORS)
+        ********************************************************/
+        :root {
+            /* PRIMARY */
+            --md-sys-color-primary: #5E7CE2;
+            --md-sys-color-on-primary: #FFFFFF;
+            --md-sys-color-primary-container: #E8EEFF;
+            --md-sys-color-on-primary-container: #1C1B1F;
 
-       .stage-step {
-           flex: 1;
-           display: flex;
-           flex-direction: column;
-           align-items: center;
-           text-align: center;
-       }
+            /* SECONDARY */
+            --md-sys-color-secondary: #4BAF39;
+            --md-sys-color-on-secondary: #FFFFFF;
+            --md-sys-color-secondary-container: #E8F5E9;
+            --md-sys-color-on-secondary-container: #1C1B1F;
 
-       .stage-connector {
-           flex: 1;
-           height: 2px;
-           background: var(--md-sys-color-outline-variant);
-           margin: 0 4px;
-           position: relative;
-           top: -18px;
-       }
+            /* TERTIARY (accent warm) */
+            --md-sys-color-tertiary: #C9852F;
+            --md-sys-color-on-tertiary: #FFFFFF;
+            --md-sys-color-tertiary-container: #FCEFD9;
+            --md-sys-color-on-tertiary-container: #1C1B1F;
 
-       .stage-connector.completed {
-           background: var(--md-sys-color-success);
-       }
+            /* ERROR */
+            --md-sys-color-error: #B3261E;
+            --md-sys-color-on-error: #FFFFFF;
+            --md-sys-color-error-container: #F9DEDC;
+            --md-sys-color-on-error-container: #410E0B;
 
-       /*******************************************************
-        FIX 2 — TABS: DISTRIBUTE ACROSS FULL WIDTH
-       ********************************************************/
-       .stTabs [data-baseweb="tab-list"] {
-           display: flex !important;
-           justify-content: space-between !important;
-           width: 100% !important;
-       }
+            /* WARNING */
+            --md-sys-color-warning: #C9852F;
+            --md-sys-color-on-warning: #FFFFFF;
+            --md-sys-color-warning-container: #FCEFD9;
+            --md-sys-color-on-warning-container: #1C1B1F;
 
-       button[data-baseweb="tab"] {
-           flex: 1 !important;
-           text-align: center !important;
-           border-radius: 0 !important;
-           border-bottom: 2px solid transparent !important;
-           margin: 0 !important;
-       }
+            /* SUCCESS */
+            --md-sys-color-success: #4BAF39;
+            --md-sys-color-on-success: #FFFFFF;
+            --md-sys-color-success-container: #E8F5E9;
+            --md-sys-color-on-success-container: #1C1B1F;
 
-       button[data-baseweb="tab"][aria-selected="true"] {
-           border-bottom: 2px solid var(--md-sys-color-primary) !important;
-           color: var(--md-sys-color-primary) !important;
-           background: color-mix(in srgb, var(--md-sys-color-primary) 7%, transparent) !important;
-       }
+            /* INFO */
+            --md-sys-color-info: #75777F;
+            --md-sys-color-on-info: #FFFFFF;
+            --md-sys-color-info-container: #F4F4F5;
+            --md-sys-color-on-info-container: #1C1B1F;
 
-       /*******************************************************
-        FIX 3 — UPLOADER + DOWNLOAD TEMPLATE BUTTON LIGHT MODE
-       ********************************************************/
-       section[data-testid="stFileUploader"] {
-           background: var(--md-sys-color-surface) !important;
-           border: 2px dashed var(--md-sys-color-outline) !important;
-           color: var(--md-sys-color-on-surface) !important;
-       }
+            /* TEXT */
+            --md-sys-color-on-surface: #1C1B1F;
+            --md-sys-color-on-surface-variant: #49454F;
 
-       section[data-testid="stFileUploader"] * {
-           color: var(--md-sys-color-on-surface) !important;
-       }
+            /* OUTLINE */
+            --md-sys-color-outline: #79747E;
+            --md-sys-color-outline-variant: #CAC5D0;
 
-       .stDownloadButton > button,
-       .stDownloadButton > a,
-       div[data-testid="stBaseButton-secondary"] > button {
-           background: var(--md-sys-color-primary) !important;
-           color: var(--md-sys-color-on-primary) !important;
-           border: none !important;
-           border-radius: 10px !important;
-           padding: 0.75rem 1.5rem !important;
-           font-weight: 500 !important;
-           box-shadow: var(--md-elevation-1) !important;
-       }
+            /* SURFACE & BACKGROUND */
+            --md-sys-color-surface: #FFFFFF;
+            --md-sys-color-surface-variant: #E7E0EC;
+            --md-sys-color-background: #F7F8FA;
+            --md-sys-color-on-background: #1C1B1F;
 
-       /*******************************************************
-        FIX 4 — DATAFRAMES: FORCE LIGHT MODE 
-       ********************************************************/
-       div[data-testid="stDataFrame"] *,
-       div[data-testid="stDataFrameContainer"] *,
-       .dataframe * {
-           background: var(--md-sys-color-surface) !important;
-           color: var(--md-sys-color-on-surface) !important;
-       }
+            /* ELEVATION */
+            --md-elevation-1: 0px 1px 3px rgba(0,0,0,0.12);
+            --md-elevation-2: 0px 2px 6px rgba(0,0,0,0.12);
+            --md-elevation-3: 0px 4px 8px rgba(0,0,0,0.15);
 
-       .dataframe th {
-           background: var(--md-sys-color-surface-variant) !important;
-           color: var(--md-sys-color-on-surface-variant) !important;
-       }
+            /* SHAPE */
+            --md-shape-corner-small: 8px;
+            --md-shape-corner-medium: 12px;
+            --md-shape-corner-large: 16px;
+        }
 
-       .dataframe td {
-           background: var(--md-sys-color-surface) !important;
-           color: var(--md-sys-color-on-surface) !important;
-       }
 
-       .dataframe tbody tr:hover td {
-           background: color-mix(in srgb, var(--md-sys-color-primary-container) 10%, transparent) !important;
-       }
+        /*******************************************************
+         FIX 1 – HORIZONTAL STAGE PROGRESS
+        ********************************************************/
+        .stage-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            position: relative;
+        }
 
-       </style>
+        .stage-step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .stage-connector {
+            flex: 1;
+            height: 2px;
+            background: var(--md-sys-color-outline-variant);
+            margin: 0 4px;
+            position: relative;
+            top: -18px;
+        }
+
+        .stage-connector.completed {
+            background: var(--md-sys-color-success);
+        }
+
+
+        /*******************************************************
+         FIX 2 – TABS DISTRIBUTED 100% ACROSS WIDTH
+        ********************************************************/
+        .stTabs [data-baseweb="tab-list"] {
+            display: flex !important;
+            justify-content: space-between !important;
+            width: 100% !important;
+        }
+
+        button[data-baseweb="tab"] {
+            flex: 1 !important;
+            text-align: center !important;
+            border-bottom: 2px solid transparent !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        button[data-baseweb="tab"][aria-selected="true"] {
+            border-bottom: 2px solid var(--md-sys-color-primary) !important;
+            color: var(--md-sys-color-primary) !important;
+            background: color-mix(in srgb, var(--md-sys-color-primary) 7%, transparent) !important;
+        }
+
+
+        /*******************************************************
+         FIX 3 – UPLOADER + DOWNLOAD BUTTON LIGHT MODE
+        ********************************************************/
+        section[data-testid="stFileUploader"] {
+            background: var(--md-sys-color-surface) !important;
+            border: 2px dashed var(--md-sys-color-outline) !important;
+            color: var(--md-sys-color-on-surface) !important;
+            border-radius: var(--md-shape-corner-medium);
+        }
+
+        section[data-testid="stFileUploader"] * {
+            color: var(--md-sys-color-on-surface) !important;
+        }
+
+        .stDownloadButton > button,
+        .stDownloadButton > a,
+        div[data-testid="stBaseButton-secondary"] > button {
+            background: var(--md-sys-color-primary) !important;
+            color: var(--md-sys-color-on-primary) !important;
+            border: none !important;
+            border-radius: var(--md-shape-corner-small) !important;
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 500 !important;
+            box-shadow: var(--md-elevation-1) !important;
+        }
+
+
+        /*******************************************************
+         FIX 4 – DATAFRAMES FORCED INTO LIGHT MODE
+        ********************************************************/
+        div[data-testid="stDataFrame"] *,
+        div[data-testid="stDataFrameContainer"] *,
+        .dataframe * {
+            background: var(--md-sys-color-surface) !important;
+            color: var(--md-sys-color-on-surface) !important;
+        }
+
+        .dataframe th {
+            background: var(--md-sys-color-surface-variant) !important;
+            color: var(--md-sys-color-on-surface-variant) !important;
+        }
+
+        .dataframe td {
+            background: var(--md-sys-color-surface) !important;
+            color: var(--md-sys-color-on-surface) !important;
+        }
+
+        .dataframe tbody tr:hover td {
+            background: color-mix(in srgb, var(--md-sys-color-primary-container) 10%, transparent) !important;
+        }
+
+        </style>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
 
