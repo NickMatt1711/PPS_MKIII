@@ -18,7 +18,7 @@ DEFAULT_CONTINUITY_BONUS = 1
 SOLVER_NUM_WORKERS = 8
 SOLVER_RANDOM_SEED = 42
 
-# UI Theme Colors (Material Design Palette)
+# UI Theme Colors 
 THEME_COLORS = {
     # Primary Colors - Blue Corporate
     'primary': '#5E7CE2',
