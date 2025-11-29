@@ -2,43 +2,68 @@ import streamlit as st
 import pandas as pd
 import io
 
-# --- Constants (assuming these are defined in your constants.py) ---
-# SS_THEME, SS_STAGE, APP_ICON, etc. are assumed to be imported by app.py
-
 # --- CSS and Styling ---
 
 def apply_custom_css():
     """Applies necessary custom CSS styles for the wizard UI and components."""
-    # Note: Use f-strings for theme-dependent colors if SS_THEME were accessible, 
-    # but for simplicity, we use universal colors here.
     
     css = """
     <style>
-        /* General Streamlit Overrides */
-        section.main {
-            padding-top: 2rem; /* Reduce top padding for cleaner look */
+        /* General Streamlit Overrides for Light Theme */
+        .main {
+            background-color: #ffffff;
+        }
+        .stApp {
+            background-color: #f8f9fa;
         }
         .stButton>button {
-            border-radius: 0.5rem;
-            transition: all 0.2s;
-            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid #d0d0d0;
+            background-color: #ffffff;
+            color: #333333;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+        }
+        .stButton>button:hover {
+            background-color: #f0f0f0;
+            border-color: #a0a0a0;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
-            color: #1f77b4; /* Deep Blue for Headers */
+            color: #1a365d; /* Darker blue for better contrast in light theme */
             padding-top: 10px;
         }
         .stAlert {
-            border-radius: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid;
+        }
+        .stInfo {
+            border-color: #2196F3;
+        }
+        .stSuccess {
+            border-color: #4CAF50;
+        }
+        .stWarning {
+            border-color: #FF9800;
+        }
+        .stError {
+            border-color: #f44336;
         }
 
-        /* 1. Progress Bar / Stage Indicator */
+        /* 1. Progress Bar / Stage Indicator - Fixed for Light Theme */
         .stage-indicator {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid #ccc;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         .stage-item {
             display: flex;
@@ -48,111 +73,150 @@ def apply_custom_css():
             flex-grow: 1;
         }
         .stage-circle {
-            width: 30px;
-            height: 30px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            background-color: #ddd;
-            color: white;
+            background-color: #e9ecef;
+            color: #6c757d;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
             z-index: 10;
-            border: 2px solid #ddd;
+            border: 3px solid #e9ecef;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
         }
         .stage-item.active .stage-circle {
-            background-color: #1f77b4;
-            border-color: #1f77b4;
-            box-shadow: 0 0 10px rgba(31, 119, 180, 0.5);
+            background-color: #1976d2;
+            border-color: #1976d2;
+            color: white;
+            box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.2);
         }
         .stage-item.complete .stage-circle {
-            background-color: #2ca02c; /* Green for complete */
-            border-color: #2ca02c;
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
         }
         .stage-label {
-            margin-top: 0.5rem;
+            margin-top: 0.75rem;
             font-size: 0.85rem;
             text-align: center;
-            color: #666;
+            color: #6c757d;
             font-weight: 500;
+            max-width: 100px;
         }
         .stage-item.active .stage-label {
-            color: #1f77b4;
-            font-weight: bold;
+            color: #1976d2;
+            font-weight: 600;
         }
-        .stage-line {
+        .stage-item.complete .stage-label {
+            color: #28a745;
+        }
+        .stage-connector {
             position: absolute;
             height: 2px;
-            background-color: #ddd;
-            width: 100%;
-            top: 15px; /* Half height of circle */
+            background-color: #e9ecef;
+            top: 18px;
+            left: -50%;
+            right: 50%;
             z-index: 5;
-            transform: translateX(-50%); /* Start at the center of the previous circle */
         }
-        .stage-item:not(:first-child) .stage-line {
-            width: calc(100% + 15px); /* Extend line to touch previous circle */
-            left: 0;
-            transform: translateX(-50%);
-        }
-        .stage-item:first-child .stage-line {
+        .stage-item:first-child .stage-connector {
             display: none;
         }
-        .stage-item.complete:not(:first-child) .stage-line {
-            background-color: #2ca02c; /* Green line for completed stages */
+        .stage-item.complete .stage-connector {
+            background-color: #28a745;
         }
 
-        /* 2. Optimization Spinner Stage (Crucial Fix) */
+        /* 2. Optimization Spinner Stage - Improved for Light Theme */
         .optimization-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 3rem 0;
+            padding: 4rem 2rem;
             text-align: center;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin: 2rem 0;
         }
         .spinner {
-            border: 8px solid #f3f3f3; /* Light grey */
-            border-top: 8px solid #1f77b4; /* Blue */
+            border: 4px solid #f8f9fa;
+            border-top: 4px solid #1976d2;
             border-radius: 50%;
             width: 60px;
             height: 60px;
-            animation: spin 2s linear infinite;
-            margin-bottom: 20px;
+            animation: spin 1.5s linear infinite;
+            margin-bottom: 1.5rem;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
         .optimization-text {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #1f77b4;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1a365d;
+            margin-bottom: 0.5rem;
         }
         .optimization-subtext {
-            color: #666;
+            color: #6c757d;
             font-size: 1rem;
+            line-height: 1.5;
         }
 
-        /* 3. Metric Card Styling */
+        /* 3. Metric Card Styling - Improved for Light Theme */
         .metric-card {
-            background-color: #f0f2f6; /* Light background for card */
-            border-radius: 1rem;
-            padding: 1rem;
-            margin: 0.5rem 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 0.75rem 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             text-align: center;
+            border: 1px solid #e9ecef;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         }
         .metric-title {
             font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 0.25rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .metric-value {
-            font-size: 2rem;
+            font-size: 2.25rem;
             font-weight: 700;
-            color: #1f77b4;
+            color: #1a365d;
+            line-height: 1.2;
         }
-        
+
+        /* 4. Download Button Styling */
+        .stDownloadButton>button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+        }
+        .stDownloadButton>button:hover {
+            background-color: #218838;
+            color: white;
+        }
+
+        /* 5. Section Styling */
+        .section-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin: 1.5rem 0;
+            border: 1px solid #e9ecef;
+        }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -162,12 +226,13 @@ def apply_custom_css():
 
 def render_header(title: str, subtitle: str):
     """Renders the main header for the application."""
+    st.markdown('<div class="section-container">', unsafe_allow_html=True)
     st.title(title)
     st.markdown(f"#### {subtitle}")
-    st.write("---")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def render_stage_progress(current_stage: float):
-    """Renders the step-by-step progress indicator."""
+    """Renders the step-by-step progress indicator with fixed connector logic."""
     
     # Define stages and titles
     stages = [
@@ -178,7 +243,7 @@ def render_stage_progress(current_stage: float):
     
     html = '<div class="stage-indicator">'
     
-    for stage_id, label in stages:
+    for i, (stage_id, label) in enumerate(stages):
         is_complete = current_stage > stage_id
         is_active = stage_id == int(current_stage)
         
@@ -193,7 +258,7 @@ def render_stage_progress(current_stage: float):
         
         html += f"""
         <div class="stage-item {status_class}">
-            <div class="stage-line"></div>
+            <div class="stage-connector"></div>
             <div class="stage-circle">{circle_content}</div>
             <div class="stage-label">{label}</div>
         </div>
@@ -215,7 +280,11 @@ def render_alert(message: str, type: str = "info"):
 
 def render_section_divider():
     """Renders a visual separator for sections."""
-    st.markdown('<div style="margin-top: 1.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid #eee;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="margin: 2rem 0; height: 1px; background: linear-gradient(90deg, transparent 0%, #e0e0e0 50%, transparent 100%);"></div>', unsafe_allow_html=True)
+
+def render_section_container():
+    """Creates a container for section content with proper styling."""
+    return st.container()
 
 def render_metric_card(title: str, value: str, column: st.delta_generator.DeltaGenerator):
     """Renders a key performance metric card in the specified column."""
@@ -228,10 +297,9 @@ def render_metric_card(title: str, value: str, column: st.delta_generator.DeltaG
         """
         st.markdown(html, unsafe_allow_html=True)
 
-
 def render_download_button(label: str, data, file_name: str, mime: str):
     """
-    Renders a Streamlit download button.
+    Renders a Streamlit download button with improved styling.
     Data can be bytes (e.g., for Excel) or a string (e.g., for CSV).
     """
     st.download_button(
@@ -241,10 +309,15 @@ def render_download_button(label: str, data, file_name: str, mime: str):
         mime=mime,
         use_container_width=True
     )
-    
-# NOTE: The file app.py imports the following, but they are not used/defined here. 
-# They must be present in the final environment:
-# - from data_loader import *
-# - from preview_tables import *
-# - from solver_cp_sat import build_and_solve_model
-# - from postprocessing import * (including get_or_create_grade_colors, create_gantt_chart, etc.)
+
+def render_optimization_spinner(message: str = "Optimizing your configuration...", submessage: str = "This may take a few moments."):
+    """Renders the optimization spinner with custom messages."""
+    html = f"""
+    <div class="optimization-container">
+        <div class="spinner"></div>
+        <div class="optimization-text">{message}</div>
+        <div class="optimization-subtext">{submessage}</div>
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+    st.empty()  # Creates some space below
