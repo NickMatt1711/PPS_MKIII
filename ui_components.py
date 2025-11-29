@@ -209,22 +209,21 @@ def render_header(title: str, subtitle: str = ""):
 
 
 def render_stage_progress(current_stage: int):
-    # Define stages and labels
+    """Render the visual progress bar with stages and their current state"""
+    # Define the stages and labels
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"),
-        ("3", "Results")
+        ("3", "Optimization"),
+        ("4", "Results")
     ]
     
     total = len(stages)
+    current_stage = max(0, min(current_stage, total))  # Ensure current_stage is within bounds
     
-    # Ensuring current_stage is within valid range
-    current_stage = max(0, min(current_stage, total))  # current_stage should be <= len(stages)
-
     blocks = []
     connectors = []
 
-    # Create each stage's block and connector
     for idx, (num, label) in enumerate(stages):
         if idx < current_stage:  # Stage is completed
             status = "completed"
@@ -244,7 +243,7 @@ def render_stage_progress(current_stage: int):
                     {label}
                 </div>
             </div>
-            """
+        """
         )
 
         # Add connectors between stages
