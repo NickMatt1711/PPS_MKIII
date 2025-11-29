@@ -190,29 +190,21 @@ def apply_custom_css():
         /* Tab 1 - Blue */
         .stTabs [data-baseweb="tab"]:nth-child(1)[aria-selected="true"] {
             background: #1e40af !important;
-            color: white !important;
-            font-weight: 600;
         }
 
         /* Tab 2 - Green */
         .stTabs [data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {
             background: #059669 !important;
-            color: white !important;
-            font-weight: 600;
         }
 
         /* Tab 3 - Purple */
         .stTabs [data-baseweb="tab"]:nth-child(3)[aria-selected="true"] {
             background: #7c3aed !important;
-            color: white !important;
-            font-weight: 600;
         }
 
         /* Tab 4 - Orange */
         .stTabs [data-baseweb="tab"]:nth-child(4)[aria-selected="true"] {
             background: #ea580c !important;
-            color: white !important;
-            font-weight: 600;
         }
 
         /* ------------------------------------
@@ -398,6 +390,78 @@ def apply_custom_css():
 
         .stNumberInput label {
             color: #1e293b !important;
+            font-weight: 600 !important;
+        }
+
+        /* ------------------------------------
+        FILE UPLOADER - Light Theme (FIXED)
+        ------------------------------------*/
+        /* Uploader container */
+        section[data-testid="stFileUploader"] > div,
+        .stFileUploader > div > div {
+            background: white !important;
+            border: 2px dashed #cbd5e1 !important;
+            border-radius: 8px !important;
+            padding: 2rem !important;
+        }
+
+        .stFileUploader > div > div:hover {
+            border-color: #1e40af !important;
+            background: #f8fafc !important;
+        }
+
+        /* Uploader text */
+        .stFileUploader label,
+        .stFileUploader section,
+        .stFileUploader small,
+        .stFileUploader div {
+            color: #1e293b !important;
+            font-weight: 500 !important;
+        }
+
+        /* Uploader button */
+        .stFileUploader button {
+            background: #1e40af !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 0.5rem 1.5rem !important;
+            font-weight: 600 !important;
+            margin-top: 1rem !important;
+        }
+
+        .stFileUploader button:hover {
+            background: #3730a3 !important;
+            color: white !important;
+        }
+
+        /* ------------------------------------
+        DOWNLOAD BUTTON - Fixed to match other buttons
+        ------------------------------------*/
+        /* Download button styling */
+        .stDownloadButton > button {
+            background: #1e40af !important;
+            color: white !important;
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            border: none !important;
+            transition: all 0.2s ease !important;
+            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3) !important;
+            width: 100% !important;
+        }
+
+        .stDownloadButton > button:hover {
+            background: #3730a3 !important;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4) !important;
+            transform: translateY(-1px) !important;
+            color: white !important;
+        }
+
+        .stDownloadButton > button p,
+        .stDownloadButton > button span,
+        .stDownloadButton > button div {
+            color: white !important;
             font-weight: 600 !important;
         }
 
