@@ -520,45 +520,49 @@ def render_results_stage():
 
     # --- Summary tab ---
     with tab3:
-        st.markdown("### 📊 Production Summary")
 
-        try:
-            summary_df = create_production_summary(
-                solution,
-                solution_data.get('production_vars', {}),
-                solution_data.get('solver'),
-                data.get('grades', []),
-                data.get('lines', []),
-                data.get('num_days', 0)
-            )
-        except Exception as e:
-            summary_df = pd.DataFrame()
-            st.error(f"Failed to create production summary: {e}")
-
-        if not summary_df.empty:
-            def style_summary_grade(val):
-                if val in grade_colors and val != 'Total':
-                    return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
-                if val == 'Total':
-                    return 'background-color: #909399; color: white; font-weight: bold; text-align: center;'
-                return ''
-
+        c1, c2 = st.columns([2, 1])
+        with c1:
+            st.markdown("### 📊 Production Summary")
+    
             try:
-                styled_summary = summary_df.style.applymap(lambda v: style_summary_grade(v), subset=['Grade'])
-                st.dataframe(styled_summary, use_container_width=True)
-            except Exception:
-                st.dataframe(summary_df, use_container_width=True)
-        else:
-            st.info("No production summary available.")
+                summary_df = create_production_summary(
+                    solution,
+                    solution_data.get('production_vars', {}),
+                    solution_data.get('solver'),
+                    data.get('grades', []),
+                    data.get('lines', []),
+                    data.get('num_days', 0)
+                )
+            except Exception as e:
+                summary_df = pd.DataFrame()
+                st.error(f"Failed to create production summary: {e}")
+    
+            if not summary_df.empty:
+                def style_summary_grade(val):
+                    if val in grade_colors and val != 'Total':
+                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
+                    if val == 'Total':
+                        return 'background-color: #909399; color: white; font-weight: bold; text-align: center;'
+                    return ''
+    
+                try:
+                    styled_summary = summary_df.style.applymap(lambda v: style_summary_grade(v), subset=['Grade'])
+                    st.dataframe(styled_summary, use_container_width=True)
+                except Exception:
+                    st.dataframe(summary_df, use_container_width=True)
+            else:
+                st.info("No production summary available.")
 
-        st.markdown("### 🔄 Transitions by Line")
-        try:
-            transitions = solution.get('transitions', {}).get('per_line', {}) if isinstance(solution, dict) else {}
-            transitions_data = [{'Line': l, 'Transitions': c} for l, c in transitions.items()]
-            transitions_df = pd.DataFrame(transitions_data)
-            st.dataframe(transitions_df, use_container_width=True)
-        except Exception as e:
-            st.error(f"Failed to render transitions table: {e}")
+        with c2:
+            st.markdown("### 🔄 Transitions by Line")
+            try:
+                transitions = solution.get('transitions', {}).get('per_line', {}) if isinstance(solution, dict) else {}
+                transitions_data = [{'Line': l, 'Transitions': c} for l, c in transitions.items()]
+                transitions_df = pd.DataFrame(transitions_data)
+                st.dataframe(transitions_df, use_container_width=True)
+            except Exception as e:
+                st.error(f"Failed to render transitions table: {e}")
 
     render_section_divider()
 
