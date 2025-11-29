@@ -1,6 +1,6 @@
 """
 Material 3 Light Theme - Corporate UI Components
-Clean, professional design without sidebar
+Clean, professional design with a clear Wizard UX.
 """
 
 import streamlit as st
@@ -15,18 +15,19 @@ def apply_custom_css():
         """
         <style>
         /* ----------------------------------------------------
-        CORPORATE LIGHT THEME CSS (Wizard UX Focused)
+        REFINED CORPORATE LIGHT THEME CSS (Focus: Stability & Wizard UX)
         ----------------------------------------------------*/
 
-        /* Colors Definitions */
+        /* Colors Definitions (Using lighter, more accessible corporate shades) */
         :root {
-            --primary-blue: #1e40af;       /* Corporate Blue */
-            --primary-dark-text: #1e293b;  /* Dark Text */
-            --background-light: #f8fafc;   /* App Background */
+            --primary-blue: #1565c0;       /* Corporate Blue (Medium-Dark) */
+            --secondary-blue: #e3f2fd;     /* Very Light Blue for accents */
+            --primary-dark-text: #263238;  /* Dark Gray Text */
+            --background-light: #f5f5f5;   /* App Background (Slightly off-white) */
             --surface-white: #ffffff;      /* Card/Input Background */
-            --border-light: #e2e8f0;       /* Subtle Border */
-            --success-green: #10b981;      /* Success/Completed status */
-            --header-gradient: linear-gradient(135deg, var(--primary-blue) 0%, #3730a3 100%);
+            --border-light: #cfd8dc;       /* Subtle Border/Divider */
+            --success-green: #388e3c;      /* Success/Completed status */
+            --header-gradient: linear-gradient(135deg, var(--primary-blue) 0%, #1976d2 100%);
         }
 
         /* ------------------------------------
@@ -35,6 +36,8 @@ def apply_custom_css():
         .stApp, .main, .block-container {
             background-color: var(--background-light) !important;
             color: var(--primary-dark-text) !important;
+            /* Max width adjustment for better corporate look */
+            padding-top: 2rem;
         }
         
         /* Force Dark Text for ALL Streamlit elements */
@@ -44,20 +47,21 @@ def apply_custom_css():
         }
 
         h1, h2, h3 {
-            color: #0f172a !important;
-            font-weight: 600 !important;
+            color: #1a237e !important; /* Darker navy for headings */
+            font-weight: 700 !important;
+            margin-bottom: 0.5rem;
         }
 
         /* ------------------------------------
-        HEADER - Corporate Gradient
+        HEADER - Clean Gradient
         ------------------------------------*/
         .app-header {
             background: var(--header-gradient);
             padding: 2.5rem 2rem;
-            border-radius: 16px;
+            border-radius: 12px;
             margin-bottom: 2rem;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
         }
         
         .app-header h1 {
@@ -65,26 +69,25 @@ def apply_custom_css():
         }
         
         .app-header p {
-            color: rgba(255, 255, 255, 0.9) !important;
+            color: rgba(255, 255, 255, 0.85) !important;
         }
         
         /* ------------------------------------
-        WIZARD / STAGE PROGRESS STYLING
+        WIZARD / STAGE PROGRESS STYLING (Simplified for reliability)
         ------------------------------------*/
         .stage-container {
-            padding: 1.5rem 0;
+            padding: 1.5rem 1rem;
             margin-bottom: 2rem;
             background-color: var(--surface-white);
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border-light);
         }
         .stage-row {
             display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Align labels to the top/start */
+            justify-content: space-around;
+            align-items: flex-start;
             width: 100%;
-            padding: 0 2rem;
         }
         .stage-step {
             display: flex;
@@ -92,82 +95,74 @@ def apply_custom_css():
             align-items: center;
             flex-grow: 1; 
             min-width: 0;
+            padding: 0 10px;
         }
         .stage-circle {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: 700;
             margin-bottom: 0.5rem;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
+            font-size: 1rem;
+            border: 2px solid;
         }
         .stage-label {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-align: center;
             font-weight: 500;
-            color: #64748b !important; /* Inactive text */
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         /* Status Classes */
         .stage-circle.inactive {
-            background-color: #f1f5f9; 
-            color: #94a3b8; 
-            border: 2px solid #cbd5e1;
+            background-color: var(--background-light); 
+            color: #78909c; /* Light Gray Text */
+            border-color: #b0bec5;
         }
         .stage-circle.active {
             background-color: var(--primary-blue);
             color: var(--surface-white);
-            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.3); 
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 5px rgba(21, 101, 192, 0.2); 
         }
         .stage-circle.completed {
             background-color: var(--success-green); 
             color: var(--surface-white);
+            border-color: var(--success-green);
         }
         .stage-label.active {
-            color: var(--primary-dark-text) !important;
             font-weight: 700;
+            color: var(--primary-dark-text) !important;
         }
 
         /* Connectors */
         .stage-connector {
-            height: 4px;
-            background-color: #cbd5e1; 
+            height: 2px; /* Thinner line */
+            background-color: #b0bec5; 
             flex-grow: 1;
-            margin: 0 10px;
+            margin: 0 -10px; /* Pull connector over */
             position: relative;
-            top: 20px; /* Aligns connector to the middle of the circle */
+            top: 15px; /* Aligns connector to the middle of the circle */
             z-index: 0;
-            transition: background-color 0.3s ease;
         }
         .stage-connector.completed {
             background-color: var(--success-green); 
         }
-        /* Overlap fix for connector */
-        .stage-step:not(:last-child) {
-            margin-right: -30px; 
-        }
-        .stage-step:last-child {
-            flex-grow: 0; 
-        }
+        /* Ensure step content is layered above the connector */
         .stage-step > div {
-            z-index: 1; /* Keep circle on top of connector */
+            z-index: 1; 
         }
-
 
         /* ------------------------------------
         CARDS & ALERTS
         ------------------------------------*/
         .card {
             background: var(--surface-white);
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* More subtle shadow */
             border: 1px solid var(--border-light);
             padding: 1.5rem; 
             margin-bottom: 1.5rem;
@@ -175,26 +170,29 @@ def apply_custom_css():
         
         .card-header {
             color: var(--primary-dark-text) !important;
-            border-bottom: 2px solid var(--border-light);
-            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 0.75rem;
             margin-bottom: 1rem;
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 600;
         }
 
         /* ALERTS - Ensure light background */
         div[data-testid="stAlert"] {
-            background-color: var(--surface-white) !important;
-            border: 1px solid var(--border-light) !important;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            background-color: var(--secondary-blue) !important; /* Light accent background */
+            border-left: 5px solid var(--primary-blue) !important; /* Primary color left border */
+            border-radius: 4px;
+            box-shadow: none;
         }
         
-        .alert-success strong { color: #15803d !important; }
-        .alert-info strong    { color: #2563eb !important; }
-        .alert-warning strong { color: #f59e0b !important; }
-        .alert-error strong   { color: #dc2626 !important; }
+        /* Adjust Alert content colors */
+        .alert-success { border-left-color: var(--success-green) !important; background-color: #e8f5e9 !important; }
+        .alert-info { border-left-color: #1976d2 !important; background-color: #e3f2fd !important; }
+        .alert-warning { border-left-color: #ffb300 !important; background-color: #fffde7 !important; }
+        .alert-error { border-left-color: #d32f2f !important; background-color: #ffebee !important; }
         
+        .stAlert p, .stAlert strong { color: var(--primary-dark-text) !important; }
+
         /* ------------------------------------
         BUTTONS (Aggressive Fix)
         ------------------------------------*/
@@ -204,16 +202,15 @@ def apply_custom_css():
             background: var(--primary-blue) !important;
             color: var(--surface-white) !important;
             font-weight: 600 !important;
-            border-radius: 8px !important;
+            border-radius: 4px !important;
             border: none !important;
             transition: all 0.2s ease !important;
-            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            padding: 0.5rem 1rem !important;
         }
         
         /* EXTREME OVERRIDE: Target ALL nested elements, including icons and spans */
-        .stButton > button *, 
-        .stDownloadButton > button * span,
-        section[data-testid="stFileUploader"] button * span {
+        .stButton > button * {
             color: var(--surface-white) !important;
         }
 
@@ -221,9 +218,8 @@ def apply_custom_css():
         .stButton > button:hover,
         .stDownloadButton > button:hover,
         section[data-testid="stFileUploader"] button:hover {
-            background: #3730a3 !important;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4) !important;
-            transform: translateY(-1px) !important;
+            background: #1976d2 !important; /* Slightly lighter shade on hover */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         /* ------------------------------------
@@ -233,8 +229,9 @@ def apply_custom_css():
         div[data-testid="stDataFrameContainer"] {
             background-color: var(--surface-white) !important; 
             border: 1px solid var(--border-light);
-            border-radius: 8px;
+            border-radius: 4px;
             overflow: hidden; 
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         /* Force light background and dark text for all table cells/elements */
@@ -244,12 +241,12 @@ def apply_custom_css():
         div[data-testid="stDataFrame"] span {
             background-color: var(--surface-white) !important;
             color: var(--primary-dark-text) !important;
-            border-color: var(--border-light) !important;
+            border-color: #eceff1 !important; /* Very light grid lines */
         }
         
         /* Style for the header row background */
         div[data-testid="stDataFrame"] th {
-            background-color: #f1f5f9 !important; 
+            background-color: #eceff1 !important; /* Very light grey header */
             font-weight: 600;
         }
 
@@ -266,11 +263,12 @@ def apply_custom_css():
         div[data-testid="stSelectbox"] input,
         .stDateInput input,
         .stTimeInput input {
-            border: 1px solid #ced4da !important;
-            border-radius: 8px !important;
+            border: 1px solid #b0bec5 !important;
+            border-radius: 4px !important;
             color: var(--primary-dark-text) !important; 
             background: var(--surface-white) !important;
-            padding: 0.75rem 1rem !important;
+            padding: 0.5rem 0.75rem !important;
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
         }
 
         /* Focused state */
@@ -278,44 +276,40 @@ def apply_custom_css():
         .stNumberInput input:focus, .stDateInput input:focus,
         .stTimeInput input:focus {
             border-color: var(--primary-blue) !important;
-            box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.2) !important;
-        }
-
-        /* Number input buttons */
-        .stNumberInput button {
-            background: var(--surface-white) !important;
-            color: var(--primary-dark-text) !important;
-            border: 1px solid #ced4da !important;
+            box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.3) !important;
         }
 
         /* ------------------------------------
         FILE UPLOADER - General Style
         ------------------------------------*/
         section[data-testid="stFileUploader"] {
-            border: 2px dashed var(--success-green) !important; 
+            border: 2px dashed #90a4ae !important; 
             border-radius: 8px !important;
-            padding: 1rem !important;
-            background-color: #f0fdf4 !important; 
+            padding: 1.5rem !important;
+            background-color: #fcfcfc !important; 
         }
 
         /* ------------------------------------
         TABS STYLING
         ------------------------------------*/
         button[data-baseweb="tab"] {
-            color: #64748b !important; 
+            color: #78909c !important; 
             background-color: transparent !important;
+            font-weight: 500;
         }
 
         button[data-baseweb="tab"][aria-selected="true"] {
             color: var(--primary-blue) !important; 
             border-bottom: 3px solid var(--primary-blue) !important; 
+            font-weight: 600;
         }
         
         .stTabs {
             background-color: var(--surface-white) !important;
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 1rem;
             border: 1px solid var(--border-light);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         
         /* ------------------------------------
