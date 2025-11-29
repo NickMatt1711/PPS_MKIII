@@ -216,7 +216,7 @@ def render_header(title: str, subtitle: str = ""):
     )
 
 
-def render_stage_progress(current_stage: int):
+def render_stage_progress(current_stage: float):
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"),
@@ -224,22 +224,22 @@ def render_stage_progress(current_stage: int):
     ]
 
     total = len(stages)
-    current_stage = max(0, min(current_stage, total - 1))
+    current_stage = max(0, min(current_stage, total - 1))  # Ensure valid current_stage index
 
     blocks = []
     connectors = []
 
     # Create each stage's block and connector
     for idx, (num, label) in enumerate(stages):
-        if idx < current_stage:
+        if idx < current_stage:  # Completed stage
             status = "completed"
-            icon = "✓"
-        elif idx == current_stage:
+            icon = "✓"  # Mark as tick when completed
+        elif idx == current_stage:  # Current stage
             status = "active"
-            icon = num
-        else:
+            icon = num  # Show the stage number for the current stage
+        else:  # Future stage
             status = "inactive"
-            icon = num
+            icon = num  # Show the stage number for the inactive stages
 
         blocks.append(
             f"""
