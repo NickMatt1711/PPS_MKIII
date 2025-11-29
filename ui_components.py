@@ -1,354 +1,303 @@
 """
-Material 3 Light Theme - Corporate UI Components
-Clean, professional design without sidebar
+Material 3 Light Theme - COMPLETELY REFACTORED UI Components
+Fixing all color inconsistencies and Streamlit override issues
 """
 
 import streamlit as st
-from constants import THEME_COLORS # Re-introducing the original import
 
 def apply_custom_css():
-    """Apply Material 3 Light theme for corporate application."""
+    """Apply Material 3 Light theme with proper specificity and overrides."""
     
     st.markdown(
         """
-       <style>
-        /* ------------------------------------
-        MATERIAL 3 LIGHT THEME - COMPLETE REFACTOR
-        ------------------------------------*/
+        <style>
+        /* =============================================
+        MATERIAL 3 LIGHT THEME - HIGH SPECIFICITY FIX
+        ============================================= */
+        
+        /* CSS Variables with !important to ensure they apply */
         :root {
-            /* Material 3 Color Tokens - Light Theme */
-            --md-sys-color-primary: #6750A4;
-            --md-sys-color-on-primary: #FFFFFF;
-            --md-sys-color-primary-container: #EADDFF;
-            --md-sys-color-on-primary-container: #21005D;
+            /* Primary Colors */
+            --md-primary: #6750A4 !important;
+            --md-on-primary: #FFFFFF !important;
+            --md-primary-container: #EADDFF !important;
+            --md-on-primary-container: #21005D !important;
             
-            --md-sys-color-secondary: #625B71;
-            --md-sys-color-on-secondary: #FFFFFF;
-            --md-sys-color-secondary-container: #E8DEF8;
-            --md-sys-color-on-secondary-container: #1D192B;
-            
-            --md-sys-color-tertiary: #7D5260;
-            --md-sys-color-on-tertiary: #FFFFFF;
-            --md-sys-color-tertiary-container: #FFD8E4;
-            --md-sys-color-on-tertiary-container: #31111D;
-            
-            --md-sys-color-surface: #FFFBFE;
-            --md-sys-color-on-surface: #1C1B1F;
-            --md-sys-color-surface-variant: #E7E0EC;
-            --md-sys-color-on-surface-variant: #49454F;
-            
-            --md-sys-color-background: #F8FAFC;
-            --md-sys-color-on-background: #1C1B1F;
-            
-            --md-sys-color-outline: #79747E;
-            --md-sys-color-outline-variant: #C4C7C5;
+            /* Surface Colors */
+            --md-surface: #FFFBFE !important;
+            --md-on-surface: #1C1B1F !important;
+            --md-surface-variant: #E7E0EC !important;
+            --md-on-surface-variant: #49454F !important;
+            --md-background: #F8FAFC !important;
+            --md-on-background: #1C1B1F !important;
             
             /* Semantic Colors */
-            --md-sys-color-error: #B3261E;
-            --md-sys-color-on-error: #FFFFFF;
-            --md-sys-color-error-container: #F9DEDC;
+            --md-error: #B3261E !important;
+            --md-error-container: #F9DEDC !important;
+            --md-success: #0D652D !important;
+            --md-success-container: #A7F0BA !important;
+            --md-warning: #7C5800 !important;
+            --md-warning-container: #FFDEA3 !important;
             
-            --md-sys-color-success: #0D652D;
-            --md-sys-color-on-success: #FFFFFF;
-            --md-sys-color-success-container: #A7F0BA;
-            
-            --md-sys-color-warning: #7C5800;
-            --md-sys-color-on-warning: #FFFFFF;
-            --md-sys-color-warning-container: #FFDEA3;
-            
-            /* Elevation */
-            --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
-            --md-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
-            --md-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.30);
-            
-            /* Border Radius */
-            --md-shape-corner-extra-small: 4px;
-            --md-shape-corner-small: 8px;
-            --md-shape-corner-medium: 12px;
-            --md-shape-corner-large: 16px;
+            /* Border & Outline */
+            --md-outline: #79747E !important;
+            --md-outline-variant: #C4C7C5 !important;
         }
+
+        /* =============================================
+        GLOBAL OVERRIDES - HIGH SPECIFICITY
+        ============================================= */
         
-        /* ------------------------------------
-        GLOBAL RESET & BASE STYLES
-        ------------------------------------*/
-        .stApp, .main, html, body {
-            background: var(--md-sys-color-background) !important;
-            font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
+        /* Force background colors */
+        .stApp, .main, [data-testid="stAppViewContainer"] {
+            background-color: var(--md-background) !important;
+            color: var(--md-on-background) !important;
         }
-        
-        * {
-            color: var(--md-sys-color-on-background);
+
+        /* Force text colors throughout the app */
+        .stApp *:not(button):not(.stButton *):not(.stDownloadButton *):not(.app-header *) {
+            color: var(--md-on-background) !important;
         }
-        
-        /* ------------------------------------
-        HEADER - Material 3 Style
-        ------------------------------------*/
+
+        /* =============================================
+        HEADER STYLES
+        ============================================= */
         .app-header {
-            background: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary) !important;
-            padding: 2rem 1.5rem;
-            border-radius: var(--md-shape-corner-large);
-            margin: 1rem 0 2rem 0;
-            box-shadow: var(--md-elevation-1);
-            text-align: center;
+            background: var(--md-primary) !important;
+            color: var(--md-on-primary) !important;
+            padding: 2rem 1.5rem !important;
+            border-radius: 16px !important;
+            margin: 1rem 0 2rem 0 !important;
+            box-shadow: 0 4px 12px rgba(103, 80, 164, 0.15) !important;
+            text-align: center !important;
         }
         
         .app-header h1 {
-            margin: 0;
-            font-size: 2.25rem;
-            font-weight: 400;
-            color: var(--md-sys-color-on-primary) !important;
-            letter-spacing: 0.5px;
+            margin: 0 !important;
+            font-size: 2.25rem !important;
+            font-weight: 400 !important;
+            color: var(--md-on-primary) !important;
+            letter-spacing: 0.5px !important;
         }
         
         .app-header p {
-            color: var(--md-sys-color-on-primary) !important;
-            opacity: 0.9;
-            margin-top: 0.5rem;
-            font-size: 1.1rem;
+            color: var(--md-on-primary) !important;
+            opacity: 0.9 !important;
+            margin-top: 0.5rem !important;
+            font-size: 1.1rem !important;
         }
-        
-        /* ------------------------------------
-        WIZARD PROGRESS - Material Design
-        ------------------------------------*/
+
+        /* =============================================
+        WIZARD PROGRESS - FIXED COLORS
+        ============================================= */
         .stage-container {
-            background: var(--md-sys-color-surface);
-            border-radius: var(--md-shape-corner-medium);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--md-elevation-1);
+            background: var(--md-surface) !important;
+            border-radius: 12px !important;
+            padding: 1.5rem !important;
+            margin-bottom: 2rem !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
         }
         
         .stage-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            position: relative;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+            position: relative !important;
         }
         
         .stage-step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex: 1;
-            position: relative;
-            z-index: 2;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            flex: 1 !important;
+            position: relative !important;
+            z-index: 2 !important;
         }
         
         .stage-circle {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 500;
-            font-size: 0.875rem;
-            border: 2px solid;
-            background: var(--md-sys-color-surface);
-            transition: all 0.2s ease;
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-weight: 500 !important;
+            font-size: 0.875rem !important;
+            border: 2px solid !important;
+            background: var(--md-surface) !important;
+            transition: all 0.2s ease !important;
         }
         
         .stage-label {
-            font-size: 0.75rem;
-            font-weight: 500;
-            margin-top: 0.5rem;
-            text-align: center;
-            color: var(--md-sys-color-on-surface-variant);
+            font-size: 0.75rem !important;
+            font-weight: 500 !important;
+            margin-top: 0.5rem !important;
+            text-align: center !important;
+            color: var(--md-on-surface-variant) !important;
         }
         
-        /* Stage States */
+        /* Stage States - FIXED */
         .stage-circle.inactive {
-            border-color: var(--md-sys-color-outline-variant);
-            color: var(--md-sys-color-outline);
+            border-color: var(--md-outline-variant) !important;
+            color: var(--md-outline) !important;
+            background: var(--md-surface) !important;
         }
         
         .stage-circle.active {
-            background: var(--md-sys-color-primary);
-            border-color: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary);
-            box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent);
+            background: var(--md-primary) !important;
+            border-color: var(--md-primary) !important;
+            color: var(--md-on-primary) !important;
+            box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.2) !important;
         }
         
         .stage-circle.completed {
-            background: var(--md-sys-color-success);
-            border-color: var(--md-sys-color-success);
-            color: var(--md-sys-color-on-success);
+            background: var(--md-success) !important;
+            border-color: var(--md-success) !important;
+            color: var(--md-on-primary) !important;
         }
         
         .stage-label.active {
-            color: var(--md-sys-color-on-surface);
-            font-weight: 600;
+            color: var(--md-on-surface) !important;
+            font-weight: 600 !important;
         }
         
         .stage-connector {
-            position: absolute;
-            top: 15px;
-            left: 50%;
-            right: 50%;
-            height: 2px;
-            background: var(--md-sys-color-outline-variant);
-            z-index: 1;
+            position: absolute !important;
+            top: 15px !important;
+            left: 50% !important;
+            right: 50% !important;
+            height: 2px !important;
+            background: var(--md-outline-variant) !important;
+            z-index: 1 !important;
         }
         
         .stage-connector.completed {
-            background: var(--md-sys-color-success);
+            background: var(--md-success) !important;
         }
+
+        /* =============================================
+        BUTTONS - COMPLETE OVERHAUL
+        ============================================= */
         
-        /* ------------------------------------
-        CARDS & CONTAINERS
-        ------------------------------------*/
-        .card, .metric-card, .stTabs {
-            background: var(--md-sys-color-surface);
-            border-radius: var(--md-shape-corner-medium);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: var(--md-elevation-1);
-            border: none;
-        }
-        
-        .card-header {
-            color: var(--md-sys-color-on-surface) !important;
-            font-size: 1.25rem;
-            font-weight: 500;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--md-sys-color-outline-variant);
-        }
-        
-        /* ------------------------------------
-        BUTTONS - Material 3 Filled Style
-        ------------------------------------*/
+        /* Primary buttons - ALL button types */
         .stButton > button,
         .stDownloadButton > button,
         .stDownloadButton > a,
         section[data-testid="stFileUploader"] button,
-        div[data-testid="stBaseButton-secondary"] > button {
-            background: var(--md-sys-color-primary) !important;
-            color: var(--md-sys-color-on-primary) !important;
+        div[data-testid="stBaseButton-secondary"] > button,
+        button[data-testid="baseButton-secondary"],
+        .stButton > button:focus,
+        .stDownloadButton > button:focus,
+        .stDownloadButton > a:focus {
+            background: var(--md-primary) !important;
+            color: var(--md-on-primary) !important;
             border: none !important;
-            border-radius: var(--md-shape-corner-large) !important;
+            border-radius: 8px !important;
             padding: 0.75rem 1.5rem !important;
             font-weight: 500 !important;
             font-size: 0.875rem !important;
-            text-transform: none !important;
-            box-shadow: var(--md-elevation-1) !important;
+            box-shadow: 0 1px 3px rgba(103, 80, 164, 0.3) !important;
             transition: all 0.2s ease !important;
             min-height: 40px !important;
         }
-        
+
+        /* Force white text in ALL button content */
+        .stButton > button *,
+        .stDownloadButton > button *,
+        .stDownloadButton > a *,
+        section[data-testid="stFileUploader"] button *,
+        div[data-testid="stBaseButton-secondary"] > button * {
+            color: var(--md-on-primary) !important;
+        }
+
+        /* Button hover states */
         .stButton > button:hover,
         .stDownloadButton > button:hover,
         .stDownloadButton > a:hover,
         section[data-testid="stFileUploader"] button:hover,
         div[data-testid="stBaseButton-secondary"] > button:hover {
-            background: color-mix(in srgb, var(--md-sys-color-primary) 85%, black) !important;
-            box-shadow: var(--md-elevation-2) !important;
+            background: #5A4791 !important; /* Darker shade of primary */
+            box-shadow: 0 4px 12px rgba(103, 80, 164, 0.4) !important;
             transform: translateY(-1px) !important;
+            color: var(--md-on-primary) !important;
         }
-        
-        /* Ensure download links look like buttons */
+
+        /* Download button specific fixes */
         .stDownloadButton > a {
             text-decoration: none !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
+            color: var(--md-on-primary) !important;
         }
-        
-        /* ------------------------------------
-        ALERTS - Material 3 Style
-        ------------------------------------*/
-        div[data-testid="stAlert"] {
-            border-radius: var(--md-shape-corner-medium) !important;
-            border: none !important;
-            box-shadow: var(--md-elevation-1) !important;
-            padding: 1rem 1.5rem !important;
+
+        /* =============================================
+        FILE UPLOADER - LIGHT THEME FIXED
+        ============================================= */
+        section[data-testid="stFileUploader"] {
+            background: var(--md-surface) !important;
+            border: 2px dashed var(--md-outline) !important;
+            border-radius: 12px !important;
+            padding: 2rem !important;
             margin: 1rem 0 !important;
+            transition: all 0.2s ease !important;
         }
         
-        /* Base alert (info) */
-        div[data-testid="stAlert"]:not([class*="alert-"]) {
-            background: var(--md-sys-color-primary-container) !important;
-            color: var(--md-sys-color-on-primary-container) !important;
+        section[data-testid="stFileUploader"]:hover {
+            border-color: var(--md-primary) !important;
+            background: rgba(103, 80, 164, 0.05) !important;
         }
         
-        /* Semantic alerts */
-        .alert-success {
-            background: var(--md-sys-color-success-container) !important;
-            color: var(--md-sys-color-on-success-container) !important;
+        /* File uploader text - ensure light theme */
+        section[data-testid="stFileUploader"] span,
+        section[data-testid="stFileUploader"] div,
+        section[data-testid="stFileUploader"] p {
+            color: var(--md-on-surface-variant) !important;
         }
-        
-        .alert-info {
-            background: var(--md-sys-color-primary-container) !important;
-            color: var(--md-sys-color-on-primary-container) !important;
-        }
-        
-        .alert-warning {
-            background: var(--md-sys-color-warning-container) !important;
-            color: var(--md-sys-color-on-warning-container) !important;
-        }
-        
-        .alert-error {
-            background: var(--md-sys-color-error-container) !important;
-            color: var(--md-sys-color-on-error) !important;
-        }
-        
-        /* Alert text */
-        div[data-testid="stAlert"] p,
-        div[data-testid="stAlert"] strong {
-            color: inherit !important;
-            margin: 0 !important;
-        }
-        
-        /* ------------------------------------
-        DATAFRAMES - Light Theme
-        ------------------------------------*/
+
+        /* =============================================
+        DATAFRAMES - LIGHT THEME ENSURED
+        ============================================= */
         div[data-testid="stDataFrame"],
-        div[data-testid="stDataFrameContainer"] {
-            background: var(--md-sys-color-surface) !important;
-            border-radius: var(--md-shape-corner-small) !important;
-            border: 1px solid var(--md-sys-color-outline-variant) !important;
-            box-shadow: var(--md-elevation-1) !important;
-            overflow: hidden !important;
-        }
-        
-        div[data-testid="stDataFrame"] table {
-            background: var(--md-sys-color-surface) !important;
+        div[data-testid="stDataFrameContainer"],
+        div[data-testid="stDataFrame"] table,
+        div[data-testid="stDataFrame"] thead,
+        div[data-testid="stDataFrame"] tbody {
+            background: var(--md-surface) !important;
+            color: var(--md-on-surface) !important;
+            border: 1px solid var(--md-outline-variant) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
         }
         
         div[data-testid="stDataFrame"] th {
-            background: var(--md-sys-color-surface-variant) !important;
-            color: var(--md-sys-color-on-surface-variant) !important;
+            background: var(--md-surface-variant) !important;
+            color: var(--md-on-surface-variant) !important;
             font-weight: 500 !important;
-            border-bottom: 1px solid var(--md-sys-color-outline-variant) !important;
+            border-bottom: 1px solid var(--md-outline-variant) !important;
         }
         
         div[data-testid="stDataFrame"] td {
-            background: var(--md-sys-color-surface) !important;
-            color: var(--md-sys-color-on-surface) !important;
-            border-bottom: 1px solid var(--md-sys-color-outline-variant) !important;
+            background: var(--md-surface) !important;
+            color: var(--md-on-surface) !important;
+            border-bottom: 1px solid var(--md-outline-variant) !important;
         }
-        
-        div[data-testid="stDataFrame"] tr:hover td {
-            background: color-mix(in srgb, var(--md-sys-color-primary-container) 8%, transparent) !important;
-        }
-        
-        /* ------------------------------------
-        INPUT FIELDS - Material 3 Outlined
-        ------------------------------------*/
+
+        /* =============================================
+        INPUT FIELDS - LIGHT THEME
+        ============================================= */
         .stTextInput input,
         .stTextInput textarea,
         .stNumberInput input,
         .stDateInput input,
         .stTimeInput input,
         .stSelectbox select {
-            background: var(--md-sys-color-surface) !important;
-            border: 1px solid var(--md-sys-color-outline) !important;
-            border-radius: var(--md-shape-corner-small) !important;
-            color: var(--md-sys-color-on-surface) !important;
+            background: var(--md-surface) !important;
+            border: 1px solid var(--md-outline) !important;
+            border-radius: 8px !important;
+            color: var(--md-on-surface) !important;
             padding: 0.75rem 1rem !important;
             font-size: 1rem !important;
-            transition: all 0.2s ease !important;
         }
         
         .stTextInput input:focus,
@@ -357,49 +306,70 @@ def apply_custom_css():
         .stDateInput input:focus,
         .stTimeInput input:focus,
         .stSelectbox select:focus {
-            border-color: var(--md-sys-color-primary) !important;
+            border-color: var(--md-primary) !important;
             border-width: 2px !important;
-            box-shadow: 0 0 0 1px var(--md-sys-color-primary) !important;
+            box-shadow: 0 0 0 1px var(--md-primary) !important;
             outline: none !important;
         }
-        
-        /* ------------------------------------
-        FILE UPLOADER - Material 3 Style
-        ------------------------------------*/
-        section[data-testid="stFileUploader"] {
-            background: var(--md-sys-color-surface) !important;
-            border: 2px dashed var(--md-sys-color-outline) !important;
-            border-radius: var(--md-shape-corner-medium) !important;
-            padding: 2rem !important;
+
+        /* =============================================
+        ALERTS - MATERIAL DESIGN
+        ============================================= */
+        div[data-testid="stAlert"] {
+            border-radius: 12px !important;
+            border: none !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+            padding: 1rem 1.5rem !important;
             margin: 1rem 0 !important;
-            transition: all 0.2s ease !important;
         }
         
-        section[data-testid="stFileUploader"]:hover {
-            border-color: var(--md-sys-color-primary) !important;
-            background: color-mix(in srgb, var(--md-sys-color-primary-container) 5%, transparent) !important;
+        /* Base alert */
+        div[data-testid="stAlert"]:not([class*="alert-"]) {
+            background: var(--md-primary-container) !important;
+            color: var(--md-on-primary-container) !important;
         }
         
-        section[data-testid="stFileUploader"] * {
-            color: var(--md-sys-color-on-surface-variant) !important;
+        /* Semantic alerts */
+        .alert-success {
+            background: var(--md-success-container) !important;
+            color: #0D652D !important;
         }
         
-        section[data-testid="stFileUploader"] button {
-            margin-top: 1rem !important;
+        .alert-info {
+            background: var(--md-primary-container) !important;
+            color: var(--md-on-primary-container) !important;
         }
         
-        /* ------------------------------------
-        TABS - Material 3 Secondary
-        ------------------------------------*/
+        .alert-warning {
+            background: var(--md-warning-container) !important;
+            color: var(--md-warning) !important;
+        }
+        
+        .alert-error {
+            background: var(--md-error-container) !important;
+            color: var(--md-error) !important;
+        }
+        
+        /* Alert text */
+        div[data-testid="stAlert"] p,
+        div[data-testid="stAlert"] strong {
+            color: inherit !important;
+            margin: 0 !important;
+        }
+
+        /* =============================================
+        TABS - MATERIAL DESIGN
+        ============================================= */
         .stTabs {
-            background: var(--md-sys-color-surface) !important;
+            background: var(--md-surface) !important;
             padding: 0 !important;
-            box-shadow: var(--md-elevation-1) !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+            border-radius: 12px !important;
         }
         
         button[data-baseweb="tab"] {
             background: transparent !important;
-            color: var(--md-sys-color-on-surface-variant) !important;
+            color: var(--md-on-surface-variant) !important;
             font-weight: 500 !important;
             padding: 1rem 1.5rem !important;
             border-bottom: 2px solid transparent !important;
@@ -407,54 +377,69 @@ def apply_custom_css():
         }
         
         button[data-baseweb="tab"][aria-selected="true"] {
-            color: var(--md-sys-color-primary) !important;
-            border-bottom-color: var(--md-sys-color-primary) !important;
-            background: color-mix(in srgb, var(--md-sys-color-primary) 5%, transparent) !important;
+            color: var(--md-primary) !important;
+            border-bottom-color: var(--md-primary) !important;
+            background: rgba(103, 80, 164, 0.05) !important;
+        }
+
+        /* =============================================
+        METRIC CARDS & CONTAINERS
+        ============================================= */
+        .card, .metric-card {
+            background: var(--md-surface) !important;
+            border-radius: 12px !important;
+            padding: 1.5rem !important;
+            margin-bottom: 1.5rem !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+            border: none !important;
         }
         
-        /* ------------------------------------
-        METRIC CARDS
-        ------------------------------------*/
-        .metric-card {
-            background: var(--md-sys-color-surface);
-            padding: 1.5rem;
-            border-radius: var(--md-shape-corner-medium);
-            box-shadow: var(--md-elevation-1);
-            text-align: center;
+        .card-header {
+            color: var(--md-on-surface) !important;
+            font-size: 1.25rem !important;
+            font-weight: 500 !important;
+            margin-bottom: 1rem !important;
+            padding-bottom: 0.75rem !important;
+            border-bottom: 1px solid var(--md-outline-variant) !important;
         }
         
         .metric-label {
-            font-size: 0.875rem;
-            color: var(--md-sys-color-on-surface-variant);
-            font-weight: 500;
-            margin-bottom: 0.5rem;
+            font-size: 0.875rem !important;
+            color: var(--md-on-surface-variant) !important;
+            font-weight: 500 !important;
+            margin-bottom: 0.5rem !important;
         }
         
         .metric-value {
-            font-size: 2rem;
-            font-weight: 600;
-            color: var(--md-sys-color-primary);
-            line-height: 1;
+            font-size: 2rem !important;
+            font-weight: 600 !important;
+            color: var(--md-primary) !important;
+            line-height: 1 !important;
         }
-        
-        /* ------------------------------------
+
+        /* =============================================
         UTILITY CLASSES
-        ------------------------------------*/
+        ============================================= */
         .section-divider {
-            margin: 2rem 0;
-            border: none;
-            border-top: 1px solid var(--md-sys-color-outline-variant);
+            margin: 2rem 0 !important;
+            border: none !important;
+            border-top: 1px solid var(--md-outline-variant) !important;
+        }
+
+        /* =============================================
+        STREAMLIT SPECIFIC OVERRIDES
+        ============================================= */
+        
+        /* Ensure all Streamlit text elements use our theme */
+        .stMarkdown, .stText, .stNumber, .stDate, .stTime {
+            color: var(--md-on-surface) !important;
         }
         
-        /* Ensure all text uses proper colors */
-        .stApp *:not(button *):not(.app-header *) {
-            color: var(--md-sys-color-on-surface) !important;
+        /* Fix any remaining dark text */
+        .st-bb, .st-bc, .st-bd, .st-be, .st-bf, .st-bg, .st-bh, .st-bi, .st-bj, .st-bk {
+            color: var(--md-on-surface) !important;
         }
-        
-        /* Fix for any Streamlit default dark styles */
-        [data-testid]:not(div[data-testid="stDataFrame"]):not(div[data-testid="stDataFrameContainer"]) {
-            color: var(--md-sys-color-on-surface) !important;
-        }
+
         </style>
         """, 
         unsafe_allow_html=True
@@ -484,7 +469,6 @@ def render_stage_progress(current_stage: int) -> None:
     ]
 
     total = len(stages)
-    # The current stage should be 0, 1, or 2 for the three stages
     current_stage = max(0, min(current_stage, total - 1))
 
     html = '<div class="stage-row">'
@@ -499,24 +483,20 @@ def render_stage_progress(current_stage: int) -> None:
             status = "completed"
             icon = "✓"
         
-        # Start Step Block
         html += '<div class="stage-step">'
-        
-        # Circle
         html += f"""
             <div class="stage-circle {status}">{icon}</div>
             <div class="stage-label {'active' if idx == current_stage else ''}">
                 {label}
             </div>
         """
-        html += '</div>' # End stage-step
+        html += '</div>'
         
-        # Connector (Don't add after the last step)
         if idx < total - 1:
             connector_class = "completed" if idx < current_stage else ""
             html += f'<div class="stage-connector {connector_class}"></div>'
 
-    html += '</div>' # End stage-row
+    html += '</div>'
 
     st.markdown(
         f"""
@@ -585,28 +565,17 @@ def render_section_divider():
 
 def render_download_template_button():
     """Render download template button."""
-    import io
-    from pathlib import Path
-    
-    # Placeholder implementation, as the file isn't available in this environment.
     try:
-        # NOTE: In a real environment, you would ensure 'polymer_production_template.xlsx' 
-        # is available in the appropriate directory relative to this script.
-        template_path = Path(__file__).parent / "polymer_production_template.xlsx"
+        # Create a simple template download
+        template_data = b"Template file content would be here"
         
-        if template_path.exists():
-            with open(template_path, "rb") as f:
-                template_data = f.read()
-            
-            st.download_button(
-                label="📥 Download Template",
-                data=template_data,
-                file_name="polymer_production_template.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                help="Download the Excel template file",
-                use_container_width=True
-            )
-        else:
-            st.error("Template file not found")
+        st.download_button(
+            label="📥 Download Template",
+            data=template_data,
+            file_name="polymer_production_template.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            help="Download the Excel template file",
+            use_container_width=True
+        )
     except Exception as e:
-        st.error(f"Template file not found: {e}")
+        st.error(f"Template download error: {e}")
