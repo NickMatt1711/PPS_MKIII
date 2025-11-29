@@ -13,29 +13,58 @@ def apply_custom_css():
         """
         <style>
         /* ------------------------------------
-        GLOBAL BASE - Material 3 Light
+        COLOR VARIABLES - Single Source of Truth
         ------------------------------------*/
-        .stApp {
-            background: #f8fafc !important;
+        :root {
+            /* Primary Colors */
+            --primary-500: #1e40af;
+            --primary-600: #3730a3;
+            --primary-100: #eff6ff;
+            
+            /* Semantic Colors */
+            --success-500: #10b981;
+            --success-100: #d1fae5;
+            --info-500: #1e40af;
+            --info-100: #eff6ff;
+            --warning-500: #f59e0b;
+            --warning-100: #fffde7;
+            --error-500: #ef4444;
+            --error-100: #fee2e2;
+            
+            /* Neutral Colors */
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #4b5563;
+            --text-muted: #64748b;
+            --border-light: #e5e7eb;
+            --border-medium: #d1d5db;
+            --border-muted: #9ca3af;
+            
+            /* Component Colors */
+            --inactive-bg: #f3f4f6;
+            --table-header: #f9fafb;
         }
         
-        .main {
-            background: #f8fafc !important;
+        /* ------------------------------------
+        GLOBAL BASE - Consolidated
+        ------------------------------------*/
+        .stApp, .main {
+            background: var(--background) !important;
         }
-
-        /* Material 3 Typography - Force light text */
+        
+        /* Typography - Single declaration */
         p, span, div, label, h1, h2, h3, h4, h5, h6 {
-            color: #1e293b !important;
+            color: var(--text-primary) !important;
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
-
+        
         /* ------------------------------------
-        HEADER - Corporate Gradient
+        HEADER - Simplified
         ------------------------------------*/
         .app-header {
-            background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
+            background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
             padding: 2.5rem 2rem;
-            color: white !important;
             border-radius: 16px;
             margin-bottom: 2rem;
             text-align: center;
@@ -52,29 +81,32 @@ def apply_custom_css():
             color: rgba(255, 255, 255, 0.9) !important;
             margin-top: 0.5rem;
         }
-
+        
         /* ------------------------------------
-        WIZARD / STAGE PROGRESS STYLING
+        WIZARD / STAGE PROGRESS - Consolidated
         ------------------------------------*/
         .stage-container {
             padding: 1rem 0;
             margin-bottom: 2rem;
-            background-color: white;
+            background-color: var(--surface);
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
+        
         .stage-row {
             display: flex;
             justify-content: space-around;
             align-items: flex-start;
             width: 100%;
         }
+        
         .stage-step {
             display: flex;
             flex-direction: column;
             align-items: center;
             flex-grow: 1; 
         }
+        
         .stage-circle {
             width: 40px;
             height: 40px;
@@ -86,101 +118,118 @@ def apply_custom_css():
             margin-bottom: 0.5rem;
             font-size: 1.1rem;
             border: 3px solid;
-            z-index: 10; /* Ensure it overlaps connector */
+            z-index: 10;
         }
+        
         .stage-label {
             font-size: 0.9rem;
             text-align: center;
             font-weight: 500;
-            color: #4b5563 !important;
+            color: var(--text-secondary) !important;
         }
-
-        /* Status Classes */
+        
+        /* Consolidated Status Classes */
         .stage-circle.inactive {
-            background-color: #f3f4f6;
-            color: #9ca3af;
-            border-color: #d1d5db;
+            background-color: var(--inactive-bg);
+            color: var(--border-muted);
+            border-color: var(--border-medium);
         }
+        
         .stage-circle.active {
-            background-color: #1e40af;
+            background-color: var(--primary-500);
             color: white;
-            border-color: #1e40af;
+            border-color: var(--primary-500);
             box-shadow: 0 0 0 5px rgba(30, 64, 175, 0.2);
         }
+        
         .stage-circle.completed {
-            background-color: #10b981;
+            background-color: var(--success-500);
             color: white;
-            border-color: #10b981;
+            border-color: var(--success-500);
         }
+        
         .stage-label.active {
             font-weight: 700;
-            color: #1e293b !important;
+            color: var(--text-primary) !important;
         }
-
-        /* Connectors */
+        
         .stage-connector {
             height: 4px; 
-            background-color: #d1d5db; 
+            background-color: var(--border-medium); 
             flex-grow: 1;
             margin: 0 -20px; 
             position: relative;
-            top: 21.5px; /* (40/2 + 3/2) - (4/2) = 21.5 */
+            top: 21.5px;
             z-index: 0;
         }
+        
         .stage-connector.completed {
-            background-color: #10b981; 
+            background-color: var(--success-500); 
         }
-        .stage-step > div { /* Re-layered z-index */
-            position: relative;
-            z-index: 1; 
-        }
-
+        
         /* ------------------------------------
-        CARDS & ALERTS
+        CARDS & CONTAINERS - Unified
         ------------------------------------*/
-        .card {
-            background: white;
+        .card, .metric-card, .stTabs {
+            background: var(--surface);
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e5e7eb;
-            padding: 1.5rem; 
+            border: 1px solid var(--border-light);
+            padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
         
         .card-header {
-            color: #1e293b !important;
-            border-bottom: 1px solid #e5e7eb;
+            color: var(--text-primary) !important;
+            border-bottom: 1px solid var(--border-light);
             padding-bottom: 0.75rem;
             margin-bottom: 1rem;
             font-size: 1.1rem;
             font-weight: 600;
         }
         
+        /* Consolidated Alert System */
         div[data-testid="stAlert"] {
-            background-color: #eff6ff !important;
-            border-left: 5px solid #1e40af !important;
             border-radius: 4px;
             box-shadow: none;
+            border-left: 5px solid !important;
         }
-        .stAlert p, .stAlert strong { color: #1e40af !important; }
         
-        /* Specific Alert styles */
-        .alert-success { background-color: #d1fae5 !important; border-left-color: #059669 !important; }
-        .alert-info { background-color: #eff6ff !important; border-left-color: #3b82f6 !important; }
-        .alert-warning { background-color: #fffde7 !important; border-left-color: #f59e0b !important; }
-        .alert-error { background-color: #fee2e2 !important; border-left-color: #ef4444 !important; }
-        .alert-success p, .alert-success strong { color: #059669 !important; }
-        .alert-info p, .alert-info strong { color: #3b82f6 !important; }
-        .alert-warning p, .alert-warning strong { color: #f59e0b !important; }
-        .alert-error p, .alert-error strong { color: #ef4444 !important; }
-
+        div[data-testid="stAlert"]:not([class*="alert-"]) {
+            background-color: var(--info-100) !important;
+            border-left-color: var(--info-500) !important;
+        }
+        
+        .alert-success { 
+            background-color: var(--success-100) !important; 
+            border-left-color: var(--success-500) !important; 
+        }
+        .alert-info { 
+            background-color: var(--info-100) !important; 
+            border-left-color: var(--info-500) !important; 
+        }
+        .alert-warning { 
+            background-color: var(--warning-100) !important; 
+            border-left-color: var(--warning-500) !important; 
+        }
+        .alert-error { 
+            background-color: var(--error-100) !important; 
+            border-left-color: var(--error-500) !important; 
+        }
+        
+        /* Alert text colors - simplified */
+        .alert-success p, .alert-success strong { color: var(--success-500) !important; }
+        .alert-info p, .alert-info strong { color: var(--info-500) !important; }
+        .alert-warning p, .alert-warning strong { color: var(--warning-500) !important; }
+        .alert-error p, .alert-error strong { color: var(--error-500) !important; }
+        
         /* ------------------------------------
-        BUTTONS - Primary Look
+        BUTTONS - Consolidated
         ------------------------------------*/
         .stButton > button, 
         .stDownloadButton > button,
         section[data-testid="stFileUploader"] button {
-            background: #1e40af !important;
+            background: var(--primary-500) !important;
             color: white !important;
             font-weight: 600 !important;
             border-radius: 8px !important;
@@ -193,128 +242,106 @@ def apply_custom_css():
         .stButton > button:hover,
         .stDownloadButton > button:hover,
         section[data-testid="stFileUploader"] button:hover {
-            background: #3730a3 !important;
+            background: var(--primary-600) !important;
             box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4) !important;
             transform: translateY(-1px) !important;
         }
-
+        
         /* ------------------------------------
-        DATAFRAME STYLING (Light Mode)
+        DATAFRAME & INPUTS - Consolidated
         ------------------------------------*/
         div[data-testid="stDataFrame"], 
         div[data-testid="stDataFrameContainer"] {
-            background-color: white !important; 
-            border: 1px solid #e5e7eb;
+            background-color: var(--surface) !important; 
+            border: 1px solid var(--border-light);
             border-radius: 4px;
             overflow: hidden; 
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
-
+        
         div[data-testid="stDataFrame"] th {
-            background-color: #f9fafb !important; 
-            color: #1e293b !important;
+            background-color: var(--table-header) !important; 
+            color: var(--text-primary) !important;
             font-weight: 600;
-            border-color: #e5e7eb !important;
+            border-color: var(--border-light) !important;
         }
         
         div[data-testid="stDataFrame"] td {
-            color: #1e293b !important;
-            background-color: white !important;
-            border-color: #f3f4f6 !important;
+            color: var(--text-primary) !important;
+            background-color: var(--surface) !important;
+            border-color: var(--inactive-bg) !important;
         }
-
-        /* ------------------------------------
-        INPUT FIELDS (Light Mode)
-        ------------------------------------*/
+        
+        /* Input Fields - Consolidated */
         .stTextInput input,
         .stTextInput textarea,
         .stNumberInput input,
         .stDateInput input,
         .stTimeInput input {
-            border: 1px solid #d1d5db !important;
+            border: 1px solid var(--border-medium) !important;
             border-radius: 4px !important;
-            color: #1e293b !important; 
-            background: white !important;
+            color: var(--text-primary) !important; 
+            background: var(--surface) !important;
             padding: 0.5rem 0.75rem !important;
             box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
         }
-
-        .stTextInput input:focus, .stTextInput textarea:focus,
-        .stNumberInput input:focus, .stDateInput input:focus,
+        
+        .stTextInput input:focus, 
+        .stTextInput textarea:focus,
+        .stNumberInput input:focus, 
+        .stDateInput input:focus,
         .stTimeInput input:focus {
-            border-color: #1e40af !important;
+            border-color: var(--primary-500) !important;
             box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.3) !important;
-        }
-
-        /* ------------------------------------
-        FILE UPLOADER
-        ------------------------------------*/
-        section[data-testid="stFileUploader"] {
-            border: 2px dashed #9ca3af !important; 
-            border-radius: 8px !important;
-            padding: 1.5rem !important;
-            background-color: #fcfcfc !important; 
         }
         
         /* ------------------------------------
-        TABS STYLING
+        FILE UPLOADER & TABS
         ------------------------------------*/
+        section[data-testid="stFileUploader"] {
+            border: 2px dashed var(--border-muted) !important; 
+            border-radius: 8px !important;
+            padding: 1.5rem !important;
+            background-color: var(--surface) !important; 
+        }
+        
         button[data-baseweb="tab"] {
-            color: #64748b !important; 
+            color: var(--text-muted) !important; 
             background-color: transparent !important;
             font-weight: 500;
         }
-
+        
         button[data-baseweb="tab"][aria-selected="true"] {
-            color: #1e40af !important; 
-            border-bottom: 3px solid #1e40af !important; 
+            color: var(--primary-500) !important; 
+            border-bottom: 3px solid var(--primary-500) !important; 
             font-weight: 600;
         }
         
-        .stTabs {
-            background-color: white !important;
-            border-radius: 8px;
-            padding: 1rem;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-
         /* ------------------------------------
-        SECTION DIVIDER
+        METRICS & DIVIDERS
         ------------------------------------*/
-        .section-divider {
-            margin: 2rem 0;
-            border-top: 1px solid #e5e7eb;
-        }
-        
-        /* ------------------------------------
-        METRIC CARDS (Placeholder style)
-        ------------------------------------*/
-        .metric-card {
-            background-color: white;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e5e7eb;
-            text-align: center;
-        }
         .metric-label {
             font-size: 0.9rem;
-            color: #64748b !important;
+            color: var(--text-muted) !important;
             font-weight: 500;
         }
+        
         .metric-value {
             font-size: 1.8rem;
             font-weight: 700;
-            color: #1e40af !important;
+            color: var(--primary-500) !important;
             margin-top: 0.25rem;
         }
         
-        /* Ensure all nested text uses dark color */
+        .section-divider {
+            margin: 2rem 0;
+            border-top: 1px solid var(--border-light);
+        }
+        
+        /* Ensure all nested button text uses white */
         .stButton > button * {
             color: white !important;
         }
-
         </style>
         """, 
         unsafe_allow_html=True
