@@ -6,299 +6,118 @@ import streamlit as st
 from constants import THEME_COLORS  # Import the theme colors
 
 def apply_custom_css():
-    """Apply Material 3 Corporate theme with proper color integration."""
+    """Apply Material 3 Light theme for corporate application."""
     
     st.markdown(
-        f"""
-        <style>
-        /* =============================================
-        MATERIAL 3 CORPORATE THEME - USING CONSTANTS
-        ============================================= */
-        
-        /* CSS Variables from constants.py */
-        :root {{
-            /* Primary Colors */
-            --md-primary: {THEME_COLORS['primary']} !important;
-            --md-on-primary: {THEME_COLORS['on_primary']} !important;
-            --md-primary-container: {THEME_COLORS['primary_container']} !important;
-            
-            /* Surface Colors */
-            --md-surface: {THEME_COLORS['surface']} !important;
-            --md-on-surface: {THEME_COLORS['on_surface']} !important;
-            --md-surface-variant: {THEME_COLORS['surface_variant']} !important;
-            --md-on-surface-variant: {THEME_COLORS['on_surface_variant']} !important;
-            --md-background: {THEME_COLORS['background']} !important;
-            --md-on-background: {THEME_COLORS['on_background']} !important;
-            
-            /* Semantic Colors */
-            --md-error: {THEME_COLORS['error']} !important;
-            --md-error-container: {THEME_COLORS['error_container']} !important;
-            --md-success: {THEME_COLORS['success']} !important;
-            --md-success-container: {THEME_COLORS['success_container']} !important;
-            --md-warning: {THEME_COLORS['warning']} !important;
-            --md-warning-container: {THEME_COLORS['warning_container']} !important;
-            
-            /* Border & Outline */
-            --md-outline: {THEME_COLORS['outline']} !important;
-            --md-outline-variant: {THEME_COLORS['outline_variant']} !important;
-        }}
+        """
+       <style>
 
-        /* =============================================
-        GLOBAL OVERRIDES
-        ============================================= */
-        
-        .stApp, .main, [data-testid="stAppViewContainer"] {{
-            background-color: var(--md-background) !important;
-            color: var(--md-on-background) !important;
-        }}
+       /*******************************************************
+        FIX 1 — STAGE PROGRESS (TRUE HORIZONTAL)
+       ********************************************************/
+       .stage-row {
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           width: 100%;
+           position: relative;
+       }
 
-        /* Force text colors */
-        .stApp * {{
-            color: var(--md-on-background) !important;
-        }}
+       .stage-step {
+           flex: 1;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           text-align: center;
+       }
 
-        /* =============================================
-        HEADER STYLES
-        ============================================= */
-        .app-header {{
-            background: var(--md-primary) !important;
-            color: var(--md-on-primary) !important;
-            padding: 2rem 1.5rem !important;
-            border-radius: 16px !important;
-            margin: 1rem 0 2rem 0 !important;
-            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.15) !important;
-            text-align: center !important;
-        }}
-        
-        .app-header h1 {{
-            color: var(--md-on-primary) !important;
-            margin: 0 !important;
-            font-size: 2.25rem !important;
-            font-weight: 400 !important;
-        }}
-        
-        .app-header p {{
-            color: var(--md-on-primary) !important;
-            opacity: 0.9 !important;
-        }}
+       .stage-connector {
+           flex: 1;
+           height: 2px;
+           background: var(--md-sys-color-outline-variant);
+           margin: 0 4px;
+           position: relative;
+           top: -18px;
+       }
 
-        /* =============================================
-        BUTTONS - WHITE TEXT ENFORCED
-        ============================================= */
-        
-        /* ALL buttons */
-        .stButton > button,
-        .stDownloadButton > button,
-        .stDownloadButton > a,
-        section[data-testid="stFileUploader"] button,
-        div[data-testid="stBaseButton-secondary"] > button {{
-            background: var(--md-primary) !important;
-            color: var(--md-on-primary) !important;
-            border: none !important;
-            border-radius: 8px !important;
-            padding: 0.75rem 1.5rem !important;
-            font-weight: 500 !important;
-            box-shadow: 0 1px 3px rgba(94, 124, 226, 0.3) !important;
-            transition: all 0.2s ease !important;
-        }}
+       .stage-connector.completed {
+           background: var(--md-sys-color-success);
+       }
 
-        /* Force white text in button content */
-        .stButton > button *,
-        .stDownloadButton > button *,
-        .stDownloadButton > a *,
-        section[data-testid="stFileUploader"] button *,
-        div[data-testid="stBaseButton-secondary"] > button * {{
-            color: var(--md-on-primary) !important;
-        }}
+       /*******************************************************
+        FIX 2 — TABS: DISTRIBUTE ACROSS FULL WIDTH
+       ********************************************************/
+       .stTabs [data-baseweb="tab-list"] {
+           display: flex !important;
+           justify-content: space-between !important;
+           width: 100% !important;
+       }
 
-        /* Button hover states */
-        .stButton > button:hover,
-        .stDownloadButton > button:hover,
-        .stDownloadButton > a:hover,
-        section[data-testid="stFileUploader"] button:hover,
-        div[data-testid="stBaseButton-secondary"] > button:hover {{
-            background: #4A67D6 !important; /* Darker blue */
-            box-shadow: 0 4px 12px rgba(94, 124, 226, 0.4) !important;
-            transform: translateY(-1px) !important;
-            color: var(--md-on-primary) !important;
-        }}
+       button[data-baseweb="tab"] {
+           flex: 1 !important;
+           text-align: center !important;
+           border-radius: 0 !important;
+           border-bottom: 2px solid transparent !important;
+           margin: 0 !important;
+       }
 
-        /* =============================================
-        FILE UPLOADER - LIGHT THEME
-        ============================================= */
-        section[data-testid="stFileUploader"] {{
-            background: var(--md-surface) !important;
-            border: 2px dashed var(--md-outline) !important;
-            border-radius: 12px !important;
-            padding: 2rem !important;
-            margin: 1rem 0 !important;
-        }}
-        
-        section[data-testid="stFileUploader"]:hover {{
-            border-color: var(--md-primary) !important;
-            background: var(--md-primary-container) !important;
-        }}
-        
-        section[data-testid="stFileUploader"] * {{
-            color: var(--md-on-surface-variant) !important;
-        }}
+       button[data-baseweb="tab"][aria-selected="true"] {
+           border-bottom: 2px solid var(--md-sys-color-primary) !important;
+           color: var(--md-sys-color-primary) !important;
+           background: color-mix(in srgb, var(--md-sys-color-primary) 7%, transparent) !important;
+       }
 
-        /* =============================================
-        DATAFRAMES - LIGHT THEME
-        ============================================= */
-        div[data-testid="stDataFrame"],
-        div[data-testid="stDataFrameContainer"] {{
-            background: var(--md-surface) !important;
-            border: 1px solid var(--md-outline-variant) !important;
-            border-radius: 8px !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-        }}
-        
-        div[data-testid="stDataFrame"] th {{
-            background: var(--md-surface-variant) !important;
-            color: var(--md-on-surface-variant) !important;
-            font-weight: 500 !important;
-        }}
-        
-        div[data-testid="stDataFrame"] td {{
-            background: var(--md-surface) !important;
-            color: var(--md-on-surface) !important;
-        }}
+       /*******************************************************
+        FIX 3 — UPLOADER + DOWNLOAD TEMPLATE BUTTON LIGHT MODE
+       ********************************************************/
+       section[data-testid="stFileUploader"] {
+           background: var(--md-sys-color-surface) !important;
+           border: 2px dashed var(--md-sys-color-outline) !important;
+           color: var(--md-sys-color-on-surface) !important;
+       }
 
-        /* =============================================
-        PROGRESS INDICATOR
-        ============================================= */
-        .stage-container {{
-            background: var(--md-surface) !important;
-            border-radius: 12px !important;
-            padding: 1.5rem !important;
-            margin-bottom: 2rem !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-        }}
-        
-        .stage-circle {{
-            width: 32px !important;
-            height: 32px !important;
-            border-radius: 50% !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            font-weight: 500 !important;
-            font-size: 0.875rem !important;
-            border: 2px solid !important;
-        }}
-        
-        .stage-circle.inactive {{
-            background: var(--md-surface) !important;
-            border-color: var(--md-outline-variant) !important;
-            color: var(--md-on-surface-variant) !important;
-        }}
-        
-        .stage-circle.active {{
-            background: var(--md-primary) !important;
-            border-color: var(--md-primary) !important;
-            color: var(--md-on-primary) !important;
-        }}
-        
-        .stage-circle.completed {{
-            background: var(--md-success) !important;
-            border-color: var(--md-success) !important;
-            color: var(--md-on-primary) !important;
-        }}
-        
-        .stage-label {{
-            color: var(--md-on-surface-variant) !important;
-            font-size: 0.75rem !important;
-        }}
-        
-        .stage-label.active {{
-            color: var(--md-on-surface) !important;
-            font-weight: 600 !important;
-        }}
+       section[data-testid="stFileUploader"] * {
+           color: var(--md-sys-color-on-surface) !important;
+       }
 
-        /* =============================================
-        CARDS AND METRICS
-        ============================================= */
-        .card, .metric-card {{
-            background: var(--md-surface) !important;
-            border-radius: 12px !important;
-            padding: 1.5rem !important;
-            margin-bottom: 1.5rem !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-        }}
-        
-        .metric-label {{
-            color: var(--md-on-surface-variant) !important;
-            font-size: 0.875rem !important;
-        }}
-        
-        .metric-value {{
-            color: var(--md-primary) !important;
-            font-size: 2rem !important;
-            font-weight: 600 !important;
-        }}
+       .stDownloadButton > button,
+       .stDownloadButton > a,
+       div[data-testid="stBaseButton-secondary"] > button {
+           background: var(--md-sys-color-primary) !important;
+           color: var(--md-sys-color-on-primary) !important;
+           border: none !important;
+           border-radius: 10px !important;
+           padding: 0.75rem 1.5rem !important;
+           font-weight: 500 !important;
+           box-shadow: var(--md-elevation-1) !important;
+       }
 
-        /* =============================================
-        ALERTS
-        ============================================= */
-        div[data-testid="stAlert"] {{
-            border-radius: 12px !important;
-            border: none !important;
-            padding: 1rem 1.5rem !important;
-            margin: 1rem 0 !important;
-        }}
-        
-        .alert-success {{
-            background: var(--md-success-container) !important;
-            color: var(--md-success) !important;
-        }}
-        
-        .alert-info {{
-            background: var(--md-primary-container) !important;
-            color: var(--md-primary) !important;
-        }}
-        
-        .alert-warning {{
-            background: var(--md-warning-container) !important;
-            color: var(--md-warning) !important;
-        }}
-        
-        .alert-error {{
-            background: var(--md-error-container) !important;
-            color: var(--md-error) !important;
-        }}
+       /*******************************************************
+        FIX 4 — DATAFRAMES: FORCE LIGHT MODE 
+       ********************************************************/
+       div[data-testid="stDataFrame"] *,
+       div[data-testid="stDataFrameContainer"] *,
+       .dataframe * {
+           background: var(--md-sys-color-surface) !important;
+           color: var(--md-sys-color-on-surface) !important;
+       }
 
-        /* =============================================
-        INPUT FIELDS
-        ============================================= */
-        .stTextInput input,
-        .stNumberInput input {{
-            background: var(--md-surface) !important;
-            border: 1px solid var(--md-outline) !important;
-            border-radius: 8px !important;
-            color: var(--md-on-surface) !important;
-            padding: 0.75rem 1rem !important;
-        }}
+       .dataframe th {
+           background: var(--md-sys-color-surface-variant) !important;
+           color: var(--md-sys-color-on-surface-variant) !important;
+       }
 
-        /* =============================================
-        TABS
-        ============================================= */
-        .stTabs {{
-            background: var(--md-surface) !important;
-            border-radius: 12px !important;
-        }}
-        
-        button[data-baseweb="tab"] {{
-            color: var(--md-on-surface-variant) !important;
-        }}
-        
-        button[data-baseweb="tab"][aria-selected="true"] {{
-            color: var(--md-primary) !important;
-            border-bottom-color: var(--md-primary) !important;
-        }}
+       .dataframe td {
+           background: var(--md-sys-color-surface) !important;
+           color: var(--md-sys-color-on-surface) !important;
+       }
 
-        </style>
-        """, 
+       .dataframe tbody tr:hover td {
+           background: color-mix(in srgb, var(--md-sys-color-primary-container) 10%, transparent) !important;
+       }
+
+       </style>
+        """,
         unsafe_allow_html=True
     )
 
