@@ -519,7 +519,7 @@ def render_stage_progress(current_stage: int) -> None:
     connectors = []
     
     for idx, (num, label) in enumerate(stages):
-        if idx < current_stage:
+        if idx < current_stage or (idx == total - 1 and current_stage >= total - 1):
             status = "completed"
             icon = "✓"
         elif idx == current_stage:
