@@ -15,7 +15,7 @@ def apply_custom_css():
         """
         <style>
         /* ----------------------------------------------------
-        REFRESHED LIGHT THEME CSS (FINAL FIXES)
+        CORPORATE LIGHT THEME CSS (Wizard UX Focused)
         ----------------------------------------------------*/
 
         /* Colors Definitions */
@@ -25,6 +25,7 @@ def apply_custom_css():
             --background-light: #f8fafc;   /* App Background */
             --surface-white: #ffffff;      /* Card/Input Background */
             --border-light: #e2e8f0;       /* Subtle Border */
+            --success-green: #10b981;      /* Success/Completed status */
             --header-gradient: linear-gradient(135deg, var(--primary-blue) 0%, #3730a3 100%);
         }
 
@@ -66,6 +67,99 @@ def apply_custom_css():
         .app-header p {
             color: rgba(255, 255, 255, 0.9) !important;
         }
+        
+        /* ------------------------------------
+        WIZARD / STAGE PROGRESS STYLING
+        ------------------------------------*/
+        .stage-container {
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+            background-color: var(--surface-white);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-light);
+        }
+        .stage-row {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align labels to the top/start */
+            width: 100%;
+            padding: 0 2rem;
+        }
+        .stage-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1; 
+            min-width: 0;
+        }
+        .stage-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        .stage-label {
+            font-size: 0.9rem;
+            text-align: center;
+            font-weight: 500;
+            color: #64748b !important; /* Inactive text */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Status Classes */
+        .stage-circle.inactive {
+            background-color: #f1f5f9; 
+            color: #94a3b8; 
+            border: 2px solid #cbd5e1;
+        }
+        .stage-circle.active {
+            background-color: var(--primary-blue);
+            color: var(--surface-white);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.3); 
+        }
+        .stage-circle.completed {
+            background-color: var(--success-green); 
+            color: var(--surface-white);
+        }
+        .stage-label.active {
+            color: var(--primary-dark-text) !important;
+            font-weight: 700;
+        }
+
+        /* Connectors */
+        .stage-connector {
+            height: 4px;
+            background-color: #cbd5e1; 
+            flex-grow: 1;
+            margin: 0 10px;
+            position: relative;
+            top: 20px; /* Aligns connector to the middle of the circle */
+            z-index: 0;
+            transition: background-color 0.3s ease;
+        }
+        .stage-connector.completed {
+            background-color: var(--success-green); 
+        }
+        /* Overlap fix for connector */
+        .stage-step:not(:last-child) {
+            margin-right: -30px; 
+        }
+        .stage-step:last-child {
+            flex-grow: 0; 
+        }
+        .stage-step > div {
+            z-index: 1; /* Keep circle on top of connector */
+        }
+
 
         /* ------------------------------------
         CARDS & ALERTS
@@ -75,7 +169,7 @@ def apply_custom_css():
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border-light);
-            padding: 1.5rem; /* Ensure cards have padding */
+            padding: 1.5rem; 
             margin-bottom: 1.5rem;
         }
         
@@ -102,7 +196,7 @@ def apply_custom_css():
         .alert-error strong   { color: #dc2626 !important; }
         
         /* ------------------------------------
-        BUTTONS (Aggressive Fix for Black Text/Icon)
+        BUTTONS (Aggressive Fix)
         ------------------------------------*/
         .stButton > button, 
         .stDownloadButton > button,
@@ -116,8 +210,7 @@ def apply_custom_css():
             box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3) !important;
         }
         
-        /* EXTREME OVERRIDE: Target ALL nested elements, including icons and spans, 
-           to ensure they are white inside the button */
+        /* EXTREME OVERRIDE: Target ALL nested elements, including icons and spans */
         .stButton > button *, 
         .stDownloadButton > button * span,
         section[data-testid="stFileUploader"] button * span {
@@ -141,7 +234,7 @@ def apply_custom_css():
             background-color: var(--surface-white) !important; 
             border: 1px solid var(--border-light);
             border-radius: 8px;
-            overflow: hidden; /* Contains the border */
+            overflow: hidden; 
         }
 
         /* Force light background and dark text for all table cells/elements */
@@ -156,7 +249,7 @@ def apply_custom_css():
         
         /* Style for the header row background */
         div[data-testid="stDataFrame"] th {
-            background-color: #f1f5f9 !important; /* Light grey header */
+            background-color: #f1f5f9 !important; 
             font-weight: 600;
         }
 
@@ -199,23 +292,23 @@ def apply_custom_css():
         FILE UPLOADER - General Style
         ------------------------------------*/
         section[data-testid="stFileUploader"] {
-            border: 2px dashed #10b981 !important; /* Success green border */
+            border: 2px dashed var(--success-green) !important; 
             border-radius: 8px !important;
             padding: 1rem !important;
-            background-color: #f0fdf4 !important; /* Very light success background */
+            background-color: #f0fdf4 !important; 
         }
 
         /* ------------------------------------
         TABS STYLING
         ------------------------------------*/
         button[data-baseweb="tab"] {
-            color: #64748b !important; /* Inactive tab color */
+            color: #64748b !important; 
             background-color: transparent !important;
         }
 
         button[data-baseweb="tab"][aria-selected="true"] {
-            color: var(--primary-blue) !important; /* Active tab text color */
-            border-bottom: 3px solid var(--primary-blue) !important; /* Active tab indicator */
+            color: var(--primary-blue) !important; 
+            border-bottom: 3px solid var(--primary-blue) !important; 
         }
         
         .stTabs {
@@ -226,8 +319,12 @@ def apply_custom_css():
         }
         
         /* ------------------------------------
-        STAGE PROGRESS (No CSS changes needed for this part, as it relies on inline styles)
+        SECTION DIVIDER
         ------------------------------------*/
+        .section-divider {
+            margin: 2rem 0;
+            border-top: 1px solid var(--border-light);
+        }
 
         </style>
         """, 
