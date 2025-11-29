@@ -1,11 +1,3 @@
-"""
-Material 3 Light Theme – Streamlit-Compatible (Refactored)
-DOM selectors updated to current data-testid schema
-Invalid / deprecated selectors removed
-No deep-nesting CSS
-No HTML invalid nesting
-"""
-
 import streamlit as st
 from pathlib import Path
 
@@ -227,24 +219,26 @@ def render_stage_progress(current_stage: float):
     # Ensure valid current_stage index (0, 1, 1.5, or 2)
     current_stage = max(0, min(current_stage, total - 1))
 
-    # Don't render anything at stage 1.5
-    if current_stage == 1.5:
-        return
-
     blocks = []
     connectors = []
 
     # Create each stage's block and connector
     for idx, (num, label) in enumerate(stages):
-        if idx < current_stage or (idx == 2 and current_stage == 2): # Completed stage
+        # Determine if stage should be marked as completed
+        # Stage is completed if:
+        # - It's before the current stage, OR
+        # - It's stage 1 (Preview) and we're at stage 1.5 or beyond
+        is_completed = (idx < current_stage) or (idx == 1 and current_stage >= 1.5)
+        
+        if is_completed:
             status = "completed"
-            icon = "✓"  # Mark as tick when completed
+            icon = "✓"
         elif idx == current_stage:  # Current stage
             status = "active"
-            icon = num  # Show the stage number for the current stage
+            icon = num
         else:  # Future stage
             status = "inactive"
-            icon = num  # Show the stage number for the inactive stages
+            icon = num
 
         blocks.append(
             f"""
@@ -258,7 +252,9 @@ def render_stage_progress(current_stage: float):
         )
 
         if idx < total - 1:
-            connector_class = "completed" if idx < current_stage else ""
+            # Connector is completed if the current stage AND the next stage are completed
+            connector_completed = (idx < current_stage) or (idx == 1 and current_stage >= 1.5)
+            connector_class = "completed" if connector_completed else ""
             connectors.append(f'<div class="stage-connector {connector_class}"></div>')
 
     # Combine blocks and connectors into HTML
