@@ -190,21 +190,29 @@ def apply_custom_css():
         /* Tab 1 - Blue */
         .stTabs [data-baseweb="tab"]:nth-child(1)[aria-selected="true"] {
             background: #1e40af !important;
+            color: white !important;
+            font-weight: 600;
         }
 
         /* Tab 2 - Green */
         .stTabs [data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {
             background: #059669 !important;
+            color: white !important;
+            font-weight: 600;
         }
 
         /* Tab 3 - Purple */
         .stTabs [data-baseweb="tab"]:nth-child(3)[aria-selected="true"] {
             background: #7c3aed !important;
+            color: white !important;
+            font-weight: 600;
         }
 
         /* Tab 4 - Orange */
         .stTabs [data-baseweb="tab"]:nth-child(4)[aria-selected="true"] {
             background: #ea580c !important;
+            color: white !important;
+            font-weight: 600;
         }
 
         /* ------------------------------------
