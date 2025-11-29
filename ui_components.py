@@ -166,7 +166,7 @@ def apply_custom_css():
             border-radius: 8px;
             background: transparent;
             padding: 0.75rem 1rem;
-            font-weight: 500;
+            font-weight: 600;
             color: #64748b !important;
             transition: all 0.2s ease;
             flex: 1;
@@ -181,28 +181,28 @@ def apply_custom_css():
             color: #1e293b !important;
         }
 
-        /* Active tabs with colored backgrounds and white text */
+        /* Active tabs - white text with colored backgrounds */
         .stTabs [data-baseweb="tab"][aria-selected="true"] {
-            color: white !important;
-            font-weight: 600;
+            font-weight: 700;
         }
 
-        /* Tab 1 - Blue */
+        .stTabs [data-baseweb="tab"][aria-selected="true"] * {
+            color: white !important;
+        }
+
+        /* Tab colors */
         .stTabs [data-baseweb="tab"]:nth-child(1)[aria-selected="true"] {
             background: #1e40af !important;
         }
 
-        /* Tab 2 - Green */
         .stTabs [data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {
             background: #059669 !important;
         }
 
-        /* Tab 3 - Purple */
         .stTabs [data-baseweb="tab"]:nth-child(3)[aria-selected="true"] {
             background: #7c3aed !important;
         }
 
-        /* Tab 4 - Orange */
         .stTabs [data-baseweb="tab"]:nth-child(4)[aria-selected="true"] {
             background: #ea580c !important;
         }
