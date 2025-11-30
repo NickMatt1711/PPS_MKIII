@@ -6,116 +6,145 @@ Clean, professional design without sidebar
 import streamlit as st
 from constants import THEME_COLORS
 
-
 def apply_custom_css():
     """Apply Material 3 Light theme for corporate application."""
     
+    # Extract colors from constants
+    primary = THEME_COLORS['primary']
+    primary_light = THEME_COLORS['primary_light']
+    primary_container = THEME_COLORS['primary_container']
+    on_primary = THEME_COLORS['on_primary']
+    
+    secondary = THEME_COLORS['secondary']
+    secondary_container = THEME_COLORS['secondary_container']
+    
+    surface = THEME_COLORS['surface']
+    surface_variant = THEME_COLORS['surface_variant']
+    on_surface = THEME_COLORS['on_surface']
+    on_surface_variant = THEME_COLORS['on_surface_variant']
+    
+    background = THEME_COLORS['background']
+    on_background = THEME_COLORS['on_background']
+    
+    border = THEME_COLORS['border']
+    border_light = THEME_COLORS['border_light']
+    outline = THEME_COLORS['outline']
+    
+    error = THEME_COLORS['error']
+    error_light = THEME_COLORS['error_light']
+    success = THEME_COLORS['success']
+    success_light = THEME_COLORS['success_light']
+    warning = THEME_COLORS['warning']
+    warning_light = THEME_COLORS['warning_light']
+    info = THEME_COLORS['info']
+    info_light = THEME_COLORS['info_light']
+    
     st.markdown(
-        """
+        f"""
         <style>
         /* ------------------------------------
         GLOBAL BASE - Material 3 Light
         ------------------------------------*/
-        .stApp {
-            background: #f8fafc !important;
-        }
+        .stApp {{
+            background: {background} !important;
+        }}
         
-        .main {
-            background: #f8fafc !important;
-        }
+        .main {{
+            background: {background} !important;
+        }}
 
         /* Material 3 Typography - Force light text */
-        p, span, div, label, h1, h2, h3, h4, h5, h6 {
-            color: #1e293b !important;
+        p, span, div, label, h1, h2, h3, h4, h5, h6 {{
+            color: {on_surface} !important;
             font-family: 'Segoe UI', system-ui, sans-serif;
-        }
+        }}
 
         /* ------------------------------------
         HEADER - Corporate Gradient
         ------------------------------------*/
-        .app-header {
-            background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
+        .app-header {{
+            background: linear-gradient(135deg, {primary} 0%, {primary_light} 100%);
             padding: 2.5rem 2rem;
-            color: white !important;
+            color: {on_primary} !important;
             border-radius: 16px;
             margin-bottom: 2rem;
             text-align: center;
             box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
-        }
+        }}
         
-        .app-header h1 {
+        .app-header h1 {{
             margin: 0;
             font-size: 2.5rem;
             font-weight: 700;
-            color: white !important;
+            color: {on_primary} !important;
             letter-spacing: -0.025em;
-        }
+        }}
         
-        .app-header p {
+        .app-header p {{
             margin: 0.75rem 0 0 0;
             font-size: 1.1rem;
             color: rgba(255, 255, 255, 0.9) !important;
             font-weight: 500;
-        }
+        }}
 
         /* ------------------------------------
         CARDS - Material 3 Elevation
         ------------------------------------*/
-        .card {
-            background: white;
+        .card {{
+            background: {surface};
             padding: 1.5rem;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             margin-bottom: 1.5rem;
-            border: 1px solid #e2e8f0;
-        }
+            border: 1px solid {border_light};
+        }}
         
-        .card-header {
+        .card-header {{
             font-size: 1.25rem;
             font-weight: 600;
             margin-bottom: 1rem;
-            color: #1e293b !important;
+            color: {on_surface} !important;
             padding-bottom: 0.5rem;
-            border-bottom: 2px solid #e2e8f0;
-        }
+            border-bottom: 2px solid {border_light};
+        }}
 
         /* ------------------------------------
         METRIC CARDS - Subtle Colors
         ------------------------------------*/
-        .metric-card {
+        .metric-card {{
             padding: 1.5rem 1rem;
             border-radius: 12px;
             text-align: center;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             transition: all 0.2s ease;
-            background: white;
-            border: 1px solid #e2e8f0;
-        }
+            background: {surface};
+            border: 1px solid {border_light};
+        }}
         
-        .metric-card:hover {
+        .metric-card:hover {{
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             transform: translateY(-2px);
-        }
+        }}
 
-        .metric-value {
+        .metric-value {{
             font-size: 2rem;
             font-weight: 700;
-            color: #1e293b !important;
+            color: {on_surface} !important;
             margin: 0.5rem 0;
-        }
+        }}
 
-        .metric-label {
+        .metric-label {{
             font-size: 0.875rem;
             font-weight: 600;
             text-transform: uppercase;
-            color: #64748b !important;
+            color: {on_surface_variant} !important;
             letter-spacing: 0.05em;
-        }
+        }}
 
         /* ------------------------------------
         ALERT BOXES - Material 3
         ------------------------------------*/
-        .alert {
+        .alert {{
             padding: 1rem 1.5rem;
             border-radius: 8px;
             margin-bottom: 1rem;
@@ -124,153 +153,150 @@ def apply_custom_css():
             align-items: center;
             border-left: 4px solid;
             font-weight: 500;
-            background: white;
+            background: {surface};
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
+        }}
 
-        .alert-success {
-            border-left-color: #10b981;
-            background: #f0fdf4;
-        }
+        .alert-success {{
+            border-left-color: {success};
+            background: {success_light};
+            color: {on_surface} !important;
+        }}
 
-        .alert-info {
-            border-left-color: #3b82f6;
-            background: #f0f9ff;
-        }
+        .alert-info {{
+            border-left-color: {info};
+            background: {info_light};
+            color: {on_surface} !important;
+        }}
 
-        .alert-warning {
-            border-left-color: #f59e0b;
-            background: #fffbeb;
-        }
+        .alert-warning {{
+            border-left-color: {warning};
+            background: {warning_light};
+            color: {on_surface} !important;
+        }}
 
-        .alert-error {
-            border-left-color: #ef4444;
-            background: #fef2f2;
-        }
+        .alert-error {{
+            border-left-color: {error};
+            background: {error_light};
+            color: {on_surface} !important;
+        }}
 
         /* ------------------------------------
-        TABS - Fixed Text Colors
+        TABS - Full Width with Light Theme
         ------------------------------------*/
-        .stTabs [data-baseweb="tab-list"] {
-            background: white;
+        .stTabs [data-baseweb="tab-list"] {{
+            background: {surface};
             padding: 0.5rem;
             border-radius: 12px;
             gap: 0.5rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e2e8f0;
+            border: 1px solid {border_light};
             display: flex;
             justify-content: space-between;
-        }
+            width: 100%;
+        }}
 
-        .stTabs [data-baseweb="tab"] {
+        .stTabs [data-baseweb="tab"] {{
             border-radius: 8px;
             background: transparent;
             padding: 0.75rem 1rem;
             font-weight: 600;
-            color: #64748b !important;
+            color: {on_surface_variant} !important;
             transition: all 0.2s ease;
             flex: 1;
             text-align: center;
             display: flex;
             justify-content: center;
             align-items: center;
-        }
+        }}
 
-        .stTabs [data-baseweb="tab"]:hover {
-            background: #f1f5f9;
-            color: #1e293b !important;
-        }
+        .stTabs [data-baseweb="tab"]:hover {{
+            background: {surface_variant};
+            color: {on_surface} !important;
+        }}
 
-        /* Active tabs - white text with colored backgrounds */
-        .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        .stTabs [data-baseweb="tab"][aria-selected="true"] {{
             font-weight: 700;
-        }
+            background: {primary} !important;
+            color: {on_primary} !important;
+        }}
 
-        .stTabs [data-baseweb="tab"][aria-selected="true"] * {
-            color: white !important;
-        }
-
-        /* Tab colors */
-        .stTabs [data-baseweb="tab"]:nth-child(1)[aria-selected="true"] {
-            background: #1e40af !important;
-        }
-
-        .stTabs [data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {
-            background: #059669 !important;
-        }
-
-        .stTabs [data-baseweb="tab"]:nth-child(3)[aria-selected="true"] {
-            background: #7c3aed !important;
-        }
-
-        .stTabs [data-baseweb="tab"]:nth-child(4)[aria-selected="true"] {
-            background: #ea580c !important;
-        }
+        .stTabs [data-baseweb="tab"][aria-selected="true"] * {{
+            color: {on_primary} !important;
+        }}
 
         /* ------------------------------------
         BUTTONS - Material 3 Filled
         ------------------------------------*/
-        .stButton > button {
-            background: #1e40af !important;
-            color: white !important;
+        .stButton > button,
+        .stDownloadButton > button {{
+            background: {primary} !important;
+            color: {on_primary} !important;
             padding: 0.75rem 2rem;
             font-weight: 600 !important;
             border-radius: 8px;
             border: none !important;
             transition: all 0.2s ease;
             box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3);
-        }
+        }}
         
-        .stButton > button:hover {
-            background: #3730a3 !important;
+        .stButton > button:hover,
+        .stDownloadButton > button:hover {{
+            background: {primary_light} !important;
             box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
             transform: translateY(-1px);
-        }
+        }}
 
         .stButton > button p,
         .stButton > button span,
-        .stButton > button div {
-            color: white !important;
+        .stButton > button div,
+        .stDownloadButton > button p,
+        .stDownloadButton > button span,
+        .stDownloadButton > button div {{
+            color: {on_primary} !important;
             font-weight: 600 !important;
-        }
+        }}
 
         /* ------------------------------------
-        STAGE PROGRESS - Clean Steps
+        STAGE PROGRESS - Full Width Horizontal
         ------------------------------------*/
-        .stage-container {
+        .stage-container {{
             padding: 2rem 1.5rem;
-            background: white;
+            background: {surface};
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             margin-bottom: 2rem;
-            border: 1px solid #e2e8f0;
-        }
+            border: 1px solid {border_light};
+        }}
 
-        .stage-row {
+        .stage-row {{
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 1rem;
-        }
+            max-width: 100%;
+            margin: 0 auto;
+        }}
 
-        .stage-step {
+        .stage-step {{
             flex: 0 0 auto;
             text-align: center;
-            min-width: 100px;
-        }
+            min-width: 120px;
+        }}
 
-        .stage-connector {
-            flex: 0 0 60px;
+        .stage-connector {{
+            flex: 1 1 80px;
             height: 2px;
-            background: #e2e8f0;
+            background: {border_light};
             border-radius: 1px;
-        }
+            max-width: 120px;
+        }}
 
-        .stage-connector.completed {
-            background: #1e40af;
-        }
+        .stage-connector.completed {{
+            background: {primary};
+        }}
 
-        .stage-circle {
+        .stage-circle {{
             width: 48px;
             height: 48px;
             border-radius: 50%;
@@ -282,126 +308,248 @@ def apply_custom_css():
             margin: 0 auto 0.5rem auto;
             transition: all 0.2s ease;
             border: 2px solid;
-        }
+        }}
 
-        .stage-circle.active {
-            background: #1e40af;
-            color: white !important;
-            border-color: #1e40af;
-        }
+        .stage-circle.active {{
+            background: {primary};
+            color: {on_primary} !important;
+            border-color: {primary};
+        }}
 
-        .stage-circle.completed {
-            background: #10b981;
-            color: white !important;
-            border-color: #10b981;
-        }
+        .stage-circle.completed {{
+            background: {success};
+            color: {on_primary} !important;
+            border-color: {success};
+        }}
 
-        .stage-circle.inactive {
-            background: #f8fafc;
-            color: #94a3b8 !important;
-            border-color: #e2e8f0;
-        }
+        .stage-circle.inactive {{
+            background: {surface_variant};
+            color: {on_surface_variant} !important;
+            border-color: {border_light};
+        }}
 
-        .stage-label {
+        .stage-label {{
             font-size: 0.875rem;
-            color: #64748b !important;
+            color: {on_surface_variant} !important;
             font-weight: 500;
-        }
+        }}
 
-        .stage-label.active {
-            color: #1e40af !important;
+        .stage-label.active {{
+            color: {primary} !important;
             font-weight: 600;
-        }
+        }}
 
         /* ------------------------------------
         SECTION DIVIDER
         ------------------------------------*/
-        .section-divider {
+        .section-divider {{
             height: 1px;
-            background: #e2e8f0;
+            background: {border_light};
             margin: 2rem 0;
             border: none;
-        }
+        }}
 
         /* ------------------------------------
-        DATAFRAME STYLING - Enhanced style matching pasted code
+        DATAFRAME STYLING - FORCE LIGHT THEME
         ------------------------------------*/
-        /* Target all dataframes */
-        div[data-testid="stDataFrame"], 
-        div[data-testid="stDataFrameContainer"],
+        div[data-testid="stDataFrame"],
+        div[data-testid="stDataFrameResizable"],
         .stDataFrame,
-        .dataframe {
+        .dataframe {{
+            background: {surface} !important;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid {border_light} !important;
+        }}
+
+        div[data-testid="stDataFrame"] *,
+        div[data-testid="stDataFrameResizable"] *,
+        .stDataFrame *,
+        .dataframe * {{
+            background: {surface} !important;
+            color: {on_surface} !important;
+        }}
+
+        div[data-testid="stDataFrame"] thead th,
+        div[data-testid="stDataFrameResizable"] thead th,
+        .dataframe thead th {{
+            background: {surface_variant} !important;
+            color: {on_surface} !important;
+            font-weight: 600 !important;
+            border-bottom: 2px solid {border} !important;
+        }}
+
+        div[data-testid="stDataFrame"] tbody td,
+        div[data-testid="stDataFrameResizable"] tbody td,
+        .dataframe tbody td {{
+            background: {surface} !important;
+            color: {on_surface} !important;
+            border-bottom: 1px solid {border_light} !important;
+        }}
+
+        div[data-testid="stDataFrame"] tbody tr:hover,
+        div[data-testid="stDataFrame"] tbody tr:hover td,
+        .dataframe tbody tr:hover,
+        .dataframe tbody tr:hover td {{
+            background: {surface_variant} !important;
+        }}
 
         /* ------------------------------------
-        INPUT FIELDS - Enhanced style matching pasted code
+        INPUT FIELDS - Light Grey Borders
         ------------------------------------*/
         .stNumberInput > div > div > input,
-        .stNumberInput input {
-            border: 1px solid #ced4da !important;
+        .stNumberInput input,
+        .stTextInput input,
+        .stTextInput textarea {{
+            border: 1px solid {border} !important;
             border-radius: 8px !important;
             font-weight: 500 !important;
-            color: #2c3e50 !important;
-            background: white !important;
+            color: {on_surface} !important;
+            background: {surface} !important;
             padding: 0.75rem !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
-        }
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+        }}
 
         .stNumberInput > div > div > input:focus,
-        .stNumberInput input:focus {
-            border-color: #667eea !important;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15) !important;
-            background: white !important;
-        }
+        .stNumberInput input:focus,
+        .stTextInput input:focus,
+        .stTextInput textarea:focus {{
+            border-color: {primary} !important;
+            box-shadow: 0 0 0 3px {primary_container} !important;
+            background: {surface} !important;
+        }}
 
-        .stNumberInput label {
-            color: #2c3e50 !important;
+        .stNumberInput label,
+        .stTextInput label {{
+            color: {on_surface} !important;
             font-weight: 600 !important;
-        }
+        }}
 
-        /* Number input buttons */
-        .stNumberInput button {
-            background: white !important;
-            color: #2c3e50 !important;
-            border: 1px solid #ced4da !important;
-        }
+        .stNumberInput button {{
+            background: {surface} !important;
+            color: {on_surface} !important;
+            border: 1px solid {border} !important;
+        }}
 
-        .stNumberInput button:hover {
-            background: #f8f9fa !important;
-            border-color: #667eea !important;
-        }
+        .stNumberInput button:hover {{
+            background: {surface_variant} !important;
+            border-color: {primary} !important;
+        }}
 
         /* ------------------------------------
-        FILE UPLOADER - Default style matching pasted code
+        FILE UPLOADER - Light Theme with Visible Text
         ------------------------------------*/
-        section[data-testid="stFileUploader"] {
-            border: 2px dashed #28a745 !important;
+        section[data-testid="stFileUploader"] {{
+            border: 2px dashed {border} !important;
+            border-radius: 12px !important;
+            padding: 2rem !important;
+            background: {surface} !important;
+            transition: all 0.2s ease;
+        }}
+
+        section[data-testid="stFileUploader"]:hover {{
+            border-color: {primary} !important;
+            background: {primary_container} !important;
+        }}
+
+        section[data-testid="stFileUploader"] label,
+        section[data-testid="stFileUploader"] span,
+        section[data-testid="stFileUploader"] p,
+        section[data-testid="stFileUploader"] small,
+        section[data-testid="stFileUploader"] div {{
+            color: {on_surface} !important;
+            font-weight: 500 !important;
+        }}
+
+        section[data-testid="stFileUploader"] button {{
+            background: {primary} !important;
+            color: {on_primary} !important;
+            border: none !important;
+            margin-top: 1rem !important;
+        }}
+
+        /* ------------------------------------
+        OPTIMIZATION LOADING - Center Aligned
+        ------------------------------------*/
+        .optimization-container {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            background: {surface};
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin: 2rem 0;
+            min-height: 300px;
+        }}
+
+        .spinner {{
+            width: 64px;
+            height: 64px;
+            border: 4px solid {border_light};
+            border-top-color: {primary};
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }}
+
+        @keyframes spin {{
+            to {{ transform: rotate(360deg); }}
+        }}
+
+        .optimization-text {{
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: {on_surface} !important;
+            margin-top: 1.5rem;
+        }}
+
+        .optimization-subtext {{
+            font-size: 1rem;
+            color: {on_surface_variant} !important;
+            margin-top: 0.5rem;
+        }}
+
+        /* ------------------------------------
+        PROGRESS BAR - Full Width
+        ------------------------------------*/
+        .stProgress {{
+            width: 100% !important;
+        }}
+
+        .stProgress > div {{
+            width: 100% !important;
+        }}
+
+        .stProgress > div > div {{
+            background-color: {primary} !important;
+        }}
+
+        /* ------------------------------------
+        TEXT ELEMENTS - Force Light Colors
+        ------------------------------------*/
+        .stMarkdown, .stText, .stLabel, .stSubheader {{
+            color: {on_surface} !important;
+        }}
+
+        h1, h2, h3, h4 {{
+            color: {on_surface} !important;
+            font-weight: 600 !important;
+        }}
+
+        /* Expander styling */
+        .streamlit-expanderHeader {{
+            background: {surface} !important;
+            color: {on_surface} !important;
+            border: 1px solid {border_light} !important;
             border-radius: 8px !important;
-            padding: 1rem !important;
-            background-color: #f8fff9 !important;
-        }
+        }}
 
-        /* ------------------------------------
-        TEXT ELEMENTS - Force light colors
-        ------------------------------------*/
-        /* Force all text to be visible */
-        .stMarkdown, .stText, .stLabel, .stSubheader {
-            color: #1e293b !important;
-        }
-
-        /* Input labels */
-        .stNumberInput label, .stTextInput label {
-            color: #1e293b !important;
-            font-weight: 600 !important;
-        }
-
-        /* Section headers */
-        h1, h2, h3 {
-            color: #0f172a !important;
-            font-weight: 600 !important;
-        }
+        .streamlit-expanderContent {{
+            background: {surface} !important;
+            border: 1px solid {border_light} !important;
+            border-top: none !important;
+        }}
         </style>
         """, 
         unsafe_allow_html=True
@@ -423,7 +571,7 @@ def render_header(title: str, subtitle: str = ""):
 
 
 def render_stage_progress(current_stage: int) -> None:
-    """Render clean stage progress indicator."""
+    """Render horizontal full-width stage progress indicator."""
     stages = [
         ("1", "Upload"),
         ("2", "Preview & Configure"), 
@@ -437,7 +585,7 @@ def render_stage_progress(current_stage: int) -> None:
     connectors = []
     
     for idx, (num, label) in enumerate(stages):
-        if idx < current_stage or (idx == total - 1 and current_stage >= total - 1):
+        if idx < current_stage:
             status = "completed"
             icon = "✓"
         elif idx == current_stage:
