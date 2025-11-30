@@ -230,7 +230,8 @@ def apply_custom_css():
         ------------------------------------*/
         .stButton > button,
         .stDownloadButton > button,
-        section[data-testid="stFileUploader"] button {{
+        section[data-testid="stFileUploader"] button,
+        .stDownloadButton > button {{
             background: {primary} !important;
             color: {on_primary} !important;
             padding: 0.75rem 2rem !important;
@@ -243,7 +244,8 @@ def apply_custom_css():
         
         .stButton > button:hover,
         .stDownloadButton > button:hover,
-        section[data-testid="stFileUploader"] button:hover {{
+        section[data-testid="stFileUploader"] button:hover,
+        .stDownloadButton > button:hover {{
             background: {primary_light} !important;
             box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4) !important;
             transform: translateY(-1px) !important;
@@ -257,7 +259,10 @@ def apply_custom_css():
         .stDownloadButton > button div,
         section[data-testid="stFileUploader"] button p,
         section[data-testid="stFileUploader"] button span,
-        section[data-testid="stFileUploader"] button div {{
+        section[data-testid="stFileUploader"] button div,
+        .stDownloadButton > button p,
+        .stDownloadButton > button span,
+        .stDownloadButton > button div {{
             color: {on_primary} !important;
             font-weight: 600 !important;
         }}
@@ -358,7 +363,9 @@ def apply_custom_css():
         DATAFRAME STYLING - LIGHT THEME WITH VISIBLE TEXT
         ------------------------------------*/
         div[data-testid="stDataFrame"],
-        div[data-testid="stDataFrameResizable"] {{
+        div[data-testid="stDataFrameResizable"],
+        .stDataFrame,
+        .dataframe {{
             background: {surface} !important;
             border-radius: 8px !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
@@ -368,20 +375,25 @@ def apply_custom_css():
 
         /* Table wrapper */
         div[data-testid="stDataFrame"] > div,
-        div[data-testid="stDataFrameResizable"] > div {{
+        div[data-testid="stDataFrameResizable"] > div,
+        .stDataFrame > div {{
             background: {surface} !important;
         }}
 
         /* All table elements */
         div[data-testid="stDataFrame"] table,
-        div[data-testid="stDataFrameResizable"] table {{
+        div[data-testid="stDataFrameResizable"] table,
+        .stDataFrame table,
+        .dataframe table {{
             background: {surface} !important;
             color: {on_surface} !important;
         }}
 
         /* Headers - styled background, dark text */
         div[data-testid="stDataFrame"] thead th,
-        div[data-testid="stDataFrameResizable"] thead th {{
+        div[data-testid="stDataFrameResizable"] thead th,
+        .stDataFrame thead th,
+        .dataframe thead th {{
             background: {surface_variant} !important;
             color: {on_surface} !important;
             font-weight: 600 !important;
@@ -391,7 +403,9 @@ def apply_custom_css():
 
         /* Body cells - white background, dark text */
         div[data-testid="stDataFrame"] tbody td,
-        div[data-testid="stDataFrameResizable"] tbody td {{
+        div[data-testid="stDataFrameResizable"] tbody td,
+        .stDataFrame tbody td,
+        .dataframe tbody td {{
             background: {surface} !important;
             color: {on_surface} !important;
             border-bottom: 1px solid {border_light} !important;
@@ -400,14 +414,18 @@ def apply_custom_css():
 
         /* Hover effect - light grey background */
         div[data-testid="stDataFrame"] tbody tr:hover td,
-        div[data-testid="stDataFrameResizable"] tbody tr:hover td {{
+        div[data-testid="stDataFrameResizable"] tbody tr:hover td,
+        .stDataFrame tbody tr:hover td,
+        .dataframe tbody tr:hover td {{
             background: {surface_variant} !important;
             color: {on_surface} !important;
         }}
 
         /* Index column if present */
         div[data-testid="stDataFrame"] tbody th,
-        div[data-testid="stDataFrameResizable"] tbody th {{
+        div[data-testid="stDataFrameResizable"] tbody th,
+        .stDataFrame tbody th,
+        .dataframe tbody th {{
             background: {surface_variant} !important;
             color: {on_surface} !important;
             font-weight: 600 !important;
@@ -465,6 +483,7 @@ def apply_custom_css():
             padding: 2rem !important;
             background: {surface} !important;
             transition: all 0.2s ease !important;
+            color: {on_surface} !important;
         }}
 
         section[data-testid="stFileUploader"]:hover {{
@@ -472,8 +491,8 @@ def apply_custom_css():
             background: {primary_container} !important;
         }}
 
-        /* All text in uploader */
-        section[data-testid="stFileUploader"] *:not(button):not(button *) {{
+        /* All text in uploader - force light theme */
+        section[data-testid="stFileUploader"] * {{
             color: {on_surface} !important;
         }}
 
@@ -489,6 +508,33 @@ def apply_custom_css():
         /* Uploaded file info */
         section[data-testid="stFileUploader"] > div > div {{
             color: {on_surface} !important;
+            background: {surface} !important;
+        }}
+
+        /* File names and status */
+        section[data-testid="stFileUploader"] div[role="list"] {{
+            background: {surface} !important;
+        }}
+
+        section[data-testid="stFileUploader"] div[role="listitem"] {{
+            background: {surface_variant} !important;
+            border: 1px solid {border_light} !important;
+            border-radius: 8px !important;
+            color: {on_surface} !important;
+            padding: 0.5rem 1rem !important;
+            margin: 0.25rem 0 !important;
+        }}
+
+        /* ------------------------------------
+        DOWNLOAD BUTTON - Consistent with other buttons
+        ------------------------------------*/
+        .stDownloadButton {{
+            width: 100%;
+        }}
+
+        .stDownloadButton > button {{
+            width: 100% !important;
+            margin: 0.5rem 0 !important;
         }}
 
         /* ------------------------------------
@@ -572,6 +618,74 @@ def apply_custom_css():
             background: {surface} !important;
             border: 1px solid {border_light} !important;
             border-top: none !important;
+        }}
+
+        /* ------------------------------------
+        TABLE SPECIFIC OVERRIDES - Ensure light theme
+        ------------------------------------*/
+        .stTable {{
+            background: {surface} !important;
+            color: {on_surface} !important;
+            border-radius: 8px !important;
+            border: 1px solid {border_light} !important;
+        }}
+
+        .stTable table {{
+            background: {surface} !important;
+            color: {on_surface} !important;
+        }}
+
+        .stTable thead th {{
+            background: {surface_variant} !important;
+            color: {on_surface} !important;
+        }}
+
+        .stTable tbody td {{
+            background: {surface} !important;
+            color: {on_surface} !important;
+        }}
+
+        /* ------------------------------------
+        SELECT BOXES AND DROPDOWNS - Light Theme
+        ------------------------------------*/
+        .stSelectbox > div > div {{
+            background: {surface} !important;
+            color: {on_surface} !important;
+            border: 1px solid {border} !important;
+        }}
+
+        .stSelectbox label {{
+            color: {on_surface} !important;
+        }}
+
+        /* ------------------------------------
+        RADIO BUTTONS - Light Theme
+        ------------------------------------*/
+        .stRadio > div {{
+            background: {surface} !important;
+            color: {on_surface} !important;
+        }}
+
+        .stRadio label {{
+            color: {on_surface} !important;
+        }}
+
+        /* ------------------------------------
+        CHECKBOXES - Light Theme  
+        ------------------------------------*/
+        .stCheckbox > label {{
+            color: {on_surface} !important;
+        }}
+
+        /* ------------------------------------
+        SLIDERS - Light Theme
+        ------------------------------------*/
+        .stSlider > div {{
+            color: {on_surface} !important;
+        }}
+
+        .stSlider label {{
+            color: {on_surface} !important;
         }}
         </style>
         """, 
@@ -705,7 +819,7 @@ def render_section_divider():
 
 
 def render_download_template_button():
-    """Render download template button."""
+    """Render download template button with consistent styling."""
     import io
     from pathlib import Path
     
@@ -716,6 +830,7 @@ def render_download_template_button():
             with open(template_path, "rb") as f:
                 template_data = f.read()
             
+            # This will now use the same styling as other buttons due to the CSS
             st.download_button(
                 label="📥 Download Template",
                 data=template_data,
