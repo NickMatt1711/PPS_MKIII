@@ -1,3 +1,11 @@
+"""
+Material 3 Light Theme - Corporate UI Components
+Clean, professional design without sidebar
+"""
+
+import streamlit as st
+from constants import THEME_COLORS
+
 def apply_custom_css():
     """Apply Material 3 Light theme for corporate application."""
     
