@@ -18,63 +18,58 @@ DEFAULT_CONTINUITY_BONUS = 1
 SOLVER_NUM_WORKERS = 8
 SOLVER_RANDOM_SEED = 42
 
-# UI Theme Colors 
+# UI Theme Colors (Material 3 Light Theme)
 THEME_COLORS = {
-    # Primary Colors - Blue Corporate
-    'primary': '#5E7CE2',
-    'on_primary': '#FFFFFF',
-    'primary_container': '#E8EEFF',
-    'on_primary_container': '#0D1B54',
+    # Primary colors
+    'primary': '#1e40af',           # Blue-700
+    'primary_light': '#3b82f6',     # Blue-500
+    'primary_container': '#dbeafe', # Blue-100
+    'on_primary': '#ffffff',
     
-    # Secondary Colors - Green
-    'secondary': '#67C23A', 
-    'on_secondary': '#FFFFFF',
-    'secondary_container': '#F0F9EB',
-    'on_secondary_container': '#1F4A0D',
+    # Secondary colors
+    'secondary': '#059669',         # Emerald-600
+    'secondary_light': '#10b981',   # Emerald-500
+    'secondary_container': '#d1fae5', # Emerald-100
+    'on_secondary': '#ffffff',
     
-    # Tertiary Colors - Orange/Amber
-    'tertiary': '#E6A23C',
-    'on_tertiary': '#FFFFFF',
-    'tertiary_container': '#FDF6EC',
-    'on_tertiary_container': '#4A3000',
+    # Surface colors
+    'surface': '#ffffff',
+    'surface_variant': '#f1f5f9',   # Slate-100
+    'on_surface': '#1e293b',        # Slate-800
+    'on_surface_variant': '#64748b', # Slate-500
     
-    # Surface Colors
-    'surface': '#FFFFFF',
-    'on_surface': '#303133',
-    'surface_variant': '#F5F7FA',
-    'on_surface_variant': '#606266',
+    # Background colors
+    'background': '#f8fafc',        # Slate-50
+    'on_background': '#0f172a',     # Slate-900
     
-    # Background
-    'background': '#F8FAFC',
-    'on_background': '#303133',
+    # Border colors
+    'border': '#cbd5e1',            # Slate-300
+    'border_light': '#e2e8f0',      # Slate-200
+    'outline': '#94a3b8',           # Slate-400
     
-    # Outline & Borders
-    'outline': '#DCDFE6',
-    'outline_variant': '#E4E7ED',
+    # Semantic colors
+    'error': '#ef4444',             # Red-500
+    'error_light': '#fef2f2',       # Red-50
+    'on_error': '#ffffff',
     
-    # Semantic Colors
-    'error': '#F56C6C',
-    'on_error': '#FFFFFF',
-    'error_container': '#FEF0F0',
+    'success': '#10b981',           # Emerald-500
+    'success_light': '#f0fdf4',     # Green-50
+    'on_success': '#ffffff',
     
-    'success': '#67C23A',
-    'on_success': '#FFFFFF',
-    'success_container': '#F0F9EB',
+    'warning': '#f59e0b',           # Amber-500
+    'warning_light': '#fffbeb',     # Amber-50
+    'on_warning': '#ffffff',
     
-    'warning': '#E6A23C',
-    'on_warning': '#FFFFFF',
-    'warning_container': '#FDF6EC',
-    
-    'info': '#5E7CE2',
-    'on_info': '#FFFFFF',
-    'info_container': '#E8EEFF',
+    'info': '#3b82f6',              # Blue-500
+    'info_light': '#f0f9ff',        # Sky-50
+    'on_info': '#ffffff',
 }
 
 # Chart Colors (Soft Material Palette)
 CHART_COLORS = [
-    '#5E7CE2', '#67C23A', '#E6A23C', '#F56C6C', '#409EFF',
-    '#85CE61', '#EEBC59', '#EF7C8E', '#6CBFFF', '#95DE64',
-    '#FFD666', '#FF9C9C', '#40C9C6', '#73D897', '#FFC069',
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+    '#06b6d4', '#14b8a6', '#f97316', '#ec4899', '#6366f1',
+    '#84cc16', '#a855f7', '#22d3ee', '#fb923c', '#f43f5e',
 ]
 
 # File Upload Configuration
@@ -120,5 +115,5 @@ SS_EXCEL_DATA = "excel_data"
 SS_OPTIMIZATION_PARAMS = "opt_params"
 SS_SOLUTION = "solution"
 SS_SOLVER_STATUS = "solver_status"
-SS_GRADE_COLORS = "grade_colors"  # Store consistent grade colors
-SS_THEME = "app_theme"  # Store theme preference (light/dark)
+SS_GRADE_COLORS = "grade_colors"
+SS_THEME = "app_theme"
