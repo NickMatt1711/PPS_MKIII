@@ -226,25 +226,27 @@ def apply_custom_css():
         }}
 
         /* ------------------------------------
-        BUTTONS - Material 3 Filled
+        BUTTONS - Material 3 Filled (ALL BUTTONS)
         ------------------------------------*/
         .stButton > button,
-        .stDownloadButton > button {{
+        .stDownloadButton > button,
+        section[data-testid="stFileUploader"] button {{
             background: {primary} !important;
             color: {on_primary} !important;
-            padding: 0.75rem 2rem;
+            padding: 0.75rem 2rem !important;
             font-weight: 600 !important;
-            border-radius: 8px;
+            border-radius: 8px !important;
             border: none !important;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3);
+            transition: all 0.2s ease !important;
+            box-shadow: 0 1px 3px rgba(30, 64, 175, 0.3) !important;
         }}
         
         .stButton > button:hover,
-        .stDownloadButton > button:hover {{
+        .stDownloadButton > button:hover,
+        section[data-testid="stFileUploader"] button:hover {{
             background: {primary_light} !important;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
-            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4) !important;
+            transform: translateY(-1px) !important;
         }}
 
         .stButton > button p,
@@ -252,7 +254,10 @@ def apply_custom_css():
         .stButton > button div,
         .stDownloadButton > button p,
         .stDownloadButton > button span,
-        .stDownloadButton > button div {{
+        .stDownloadButton > button div,
+        section[data-testid="stFileUploader"] button p,
+        section[data-testid="stFileUploader"] button span,
+        section[data-testid="stFileUploader"] button div {{
             color: {on_primary} !important;
             font-weight: 600 !important;
         }}
@@ -350,48 +355,62 @@ def apply_custom_css():
         }}
 
         /* ------------------------------------
-        DATAFRAME STYLING - FORCE LIGHT THEME
+        DATAFRAME STYLING - LIGHT THEME WITH VISIBLE TEXT
         ------------------------------------*/
         div[data-testid="stDataFrame"],
-        div[data-testid="stDataFrameResizable"],
-        .stDataFrame,
-        .dataframe {{
+        div[data-testid="stDataFrameResizable"] {{
             background: {surface} !important;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 8px !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
             border: 1px solid {border_light} !important;
+            overflow: auto !important;
         }}
 
-        div[data-testid="stDataFrame"] *,
-        div[data-testid="stDataFrameResizable"] *,
-        .stDataFrame *,
-        .dataframe * {{
+        /* Table wrapper */
+        div[data-testid="stDataFrame"] > div,
+        div[data-testid="stDataFrameResizable"] > div {{
+            background: {surface} !important;
+        }}
+
+        /* All table elements */
+        div[data-testid="stDataFrame"] table,
+        div[data-testid="stDataFrameResizable"] table {{
             background: {surface} !important;
             color: {on_surface} !important;
         }}
 
+        /* Headers - styled background, dark text */
         div[data-testid="stDataFrame"] thead th,
-        div[data-testid="stDataFrameResizable"] thead th,
-        .dataframe thead th {{
+        div[data-testid="stDataFrameResizable"] thead th {{
             background: {surface_variant} !important;
             color: {on_surface} !important;
             font-weight: 600 !important;
             border-bottom: 2px solid {border} !important;
+            padding: 0.75rem !important;
         }}
 
+        /* Body cells - white background, dark text */
         div[data-testid="stDataFrame"] tbody td,
-        div[data-testid="stDataFrameResizable"] tbody td,
-        .dataframe tbody td {{
+        div[data-testid="stDataFrameResizable"] tbody td {{
             background: {surface} !important;
             color: {on_surface} !important;
             border-bottom: 1px solid {border_light} !important;
+            padding: 0.75rem !important;
         }}
 
-        div[data-testid="stDataFrame"] tbody tr:hover,
+        /* Hover effect - light grey background */
         div[data-testid="stDataFrame"] tbody tr:hover td,
-        .dataframe tbody tr:hover,
-        .dataframe tbody tr:hover td {{
+        div[data-testid="stDataFrameResizable"] tbody tr:hover td {{
             background: {surface_variant} !important;
+            color: {on_surface} !important;
+        }}
+
+        /* Index column if present */
+        div[data-testid="stDataFrame"] tbody th,
+        div[data-testid="stDataFrameResizable"] tbody th {{
+            background: {surface_variant} !important;
+            color: {on_surface} !important;
+            font-weight: 600 !important;
         }}
 
         /* ------------------------------------
@@ -417,6 +436,7 @@ def apply_custom_css():
             border-color: {primary} !important;
             box-shadow: 0 0 0 3px {primary_container} !important;
             background: {surface} !important;
+            outline: none !important;
         }}
 
         .stNumberInput label,
@@ -444,7 +464,7 @@ def apply_custom_css():
             border-radius: 12px !important;
             padding: 2rem !important;
             background: {surface} !important;
-            transition: all 0.2s ease;
+            transition: all 0.2s ease !important;
         }}
 
         section[data-testid="stFileUploader"]:hover {{
@@ -452,20 +472,23 @@ def apply_custom_css():
             background: {primary_container} !important;
         }}
 
-        section[data-testid="stFileUploader"] label,
-        section[data-testid="stFileUploader"] span,
-        section[data-testid="stFileUploader"] p,
-        section[data-testid="stFileUploader"] small,
-        section[data-testid="stFileUploader"] div {{
+        /* All text in uploader */
+        section[data-testid="stFileUploader"] *:not(button):not(button *) {{
             color: {on_surface} !important;
-            font-weight: 500 !important;
         }}
 
-        section[data-testid="stFileUploader"] button {{
-            background: {primary} !important;
-            color: {on_primary} !important;
-            border: none !important;
-            margin-top: 1rem !important;
+        section[data-testid="stFileUploader"] label {{
+            color: {on_surface} !important;
+            font-weight: 600 !important;
+        }}
+
+        section[data-testid="stFileUploader"] small {{
+            color: {on_surface_variant} !important;
+        }}
+
+        /* Uploaded file info */
+        section[data-testid="stFileUploader"] > div > div {{
+            color: {on_surface} !important;
         }}
 
         /* ------------------------------------
