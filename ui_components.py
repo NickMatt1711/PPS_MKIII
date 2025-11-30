@@ -185,14 +185,31 @@ def render_metric_card(label: str, value: str, col):
 
 
 def render_download_template_button():
-    # Lightweight placeholder: creates a small CSV in-memory template for download
     import io
-    import pandas as pd
-    df = pd.DataFrame({"Example": []})
+    from openpyxl import Workbook
+
+    wb = Workbook()
+
+    # Create Plant sheet
+    ws = wb.active
+    ws.title = "Plant"
+    ws.append(["Example Column"])  # adjust as you like
+
+    # Inventory sheet
+    ws2 = wb.create_sheet("Inventory")
+    ws2.append(["Example Column"])
+
+    # Demand sheet
+    ws3 = wb.create_sheet("Demand")
+    ws3.append(["Example Column"])
+
     buf = io.BytesIO()
-    with pd.ExcelWriter(buf, engine="xlsxwriter") as writer:
-        df.to_excel(writer, sheet_name="Plant", index=False)
-        df.to_excel(writer, sheet_name="Inventory", index=False)
-        df.to_excel(writer, sheet_name="Demand", index=False)
+    wb.save(buf)
     buf.seek(0)
-    st.download_button("📥 Download Template", data=buf, file_name="template.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+    st.download_button(
+        "📥 Download Template",
+        data=buf,
+        file_name="template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
