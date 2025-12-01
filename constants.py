@@ -20,49 +20,52 @@ SOLVER_RANDOM_SEED = 42
 
 # UI Theme Colors (Material 3 Light Theme)
 THEME_COLORS = {
-    # Primary colors
-    'primary': '#1e40af',           # Blue-700
-    'primary_light': '#3b82f6',     # Blue-500
-    'primary_container': '#dbeafe', # Blue-100
-    'on_primary': '#ffffff',
-    
-    # Secondary colors
-    'secondary': '#059669',         # Emerald-600
-    'secondary_light': '#10b981',   # Emerald-500
-    'secondary_container': '#d1fae5', # Emerald-100
-    'on_secondary': '#ffffff',
-    
-    # Surface colors
-    'surface': '#ffffff',
-    'surface_variant': '#f1f5f9',   # Slate-100
-    'on_surface': '#1e293b',        # Slate-800
-    'on_surface_variant': '#64748b', # Slate-500
-    
+    # Primary colors (Blue-based industrial accent)
+    'primary': '#3855A3',              # M3-style mid-chroma blue
+    'primary_light': '#6F8CE6',        # Tone ~70 (hover states, subtle accents)
+    'primary_container': '#DCE3FF',    # Tone ~90 container
+    'on_primary': '#FFFFFF',
+
+    # Secondary colors (Neutralized teal for supportive elements)
+    'secondary': '#4B6B68',            # Low-chroma teal/industrial green
+    'secondary_light': '#789C98',      # Tone ~70
+    'secondary_container': '#DCE6E5',  # Tone ~92
+    'on_secondary': '#FFFFFF',
+
+    # Surface colors (Material 3 neutrals: warm-grey industrial surfaces)
+    'surface': '#F9FAFB',              # Tone 98
+    'surface_variant': '#E3E8EF',      # Tone 90 (cards, panels)
+    'on_surface': '#1B1F24',           # Tone 15
+    'on_surface_variant': '#5A636F',   # Tone 50
+
     # Background colors
-    'background': '#f8fafc',        # Slate-50
-    'on_background': '#0f172a',     # Slate-900
-    
-    # Border colors
-    'border': '#cbd5e1',            # Slate-300
-    'border_light': '#e2e8f0',      # Slate-200
-    'outline': '#94a3b8',           # Slate-400
-    
-    # Semantic colors
-    'error': '#ef4444',             # Red-500
-    'error_light': '#fef2f2',       # Red-50
-    'on_error': '#ffffff',
-    
-    'success': '#10b981',           # Emerald-500
-    'success_light': '#f0fdf4',     # Green-50
-    'on_success': '#ffffff',
-    
-    'warning': '#f59e0b',           # Amber-500
-    'warning_light': '#fffbeb',     # Amber-50
-    'on_warning': '#ffffff',
-    
-    'info': '#3b82f6',              # Blue-500
-    'info_light': '#f0f9ff',        # Sky-50
-    'on_info': '#ffffff',
+    'background': '#F7F8FA',           # Slightly warm neutral
+    'on_background': '#1A1D22',
+
+    # Borders / outlines (M3 uses outline + outline-variant)
+    'border': '#C6CDD7',               # Tone 80
+    'border_light': '#E4E7EB',         # Tone 92
+    'outline': '#9299A3',              # Tone 60
+
+    # Error colors (Material 3 Red)
+    'error': '#BA1A1A',                # Tone 40
+    'error_light': '#FFEDEA',          # Tone 95
+    'on_error': '#FFFFFF',
+
+    # Success (Green but desaturated for industrial feel)
+    'success': '#2F7D4F',              # Low chroma, strong contrast
+    'success_light': '#E6F3EB',        # Tone 94
+    'on_success': '#FFFFFF',
+
+    # Warning (Amber, softened to match M3 tonal ramp)
+    'warning': '#A66E00',              # Strong amber tone 40
+    'warning_light': '#FFF4E3',        # Tone 95
+    'on_warning': '#FFFFFF',
+
+    # Info (Blue accent aligned with primary palette)
+    'info': '#2E6BCF',                 # Tone 50–55 (solid contrast)
+    'info_light': '#E7F0FF',           # Tone 94
+    'on_info': '#FFFFFF',
 }
 
 # Chart Colors (Soft Material Palette)
