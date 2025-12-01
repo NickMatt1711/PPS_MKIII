@@ -220,6 +220,19 @@ FINAL POLISHED UI
   background: var(--md-sys-color-success);
 }
 
+/* =============================
+TABS DISTRIBUTION FIX
+============================= */
+.stTabs [role="tablist"] {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+.stTabs [role="tab"] {
+  flex: 1;
+  text-align: center;
+}
+
 """
 
 # -------------------------------
