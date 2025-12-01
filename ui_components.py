@@ -48,6 +48,7 @@ CORPORATE LIGHT THEME CSS
   --md-sys-color-on-error: #FFFFFF;
   --md-sys-color-error-container: #F8D7DA;
 
+  /* Correct shape variables */
   --md-shape-corner-small: 8px;
   --md-shape-corner-medium: 12px;
   --md-shape-corner-large: 16px;
@@ -61,7 +62,7 @@ CORPORATE LIGHT THEME CSS
 }
 
 /* =============================
-BUTTONS — Now Gradient
+BUTTONS — Gradient
 ============================= */
 .stButton>button,
 button[data-testid="stDownloadButton"] {
@@ -71,8 +72,8 @@ button[data-testid="stDownloadButton"] {
   padding: 0.75rem 1.5rem !important;
   font-weight: 500 !important;
   font-size: 0.875rem !important;
-  text-transform: none !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+  text-transform: none !important;
   transition: all 0.2s ease !important;
 }
 .stButton>button:hover,
@@ -81,7 +82,7 @@ button[data-testid="stDownloadButton"]:hover {
 }
 
 /* =============================
-Header — Now Gradient
+Header — Gradient
 ============================= */
 .app-header {
   background: linear-gradient(135deg, #0A74DA, #4BA3F4);
@@ -100,10 +101,12 @@ Header — Now Gradient
   font-size: 0.95rem;
 }
 
-/* Cards */
+/* =============================
+Cards
+============================= */
 .card, .metric-card, .stTabs {
   background: var(--md-sys-color-surface);
-  border-radius: var(--md-sys-color-shape-corner-medium);
+  border-radius: var(--md-shape-corner-medium);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -115,9 +118,11 @@ Header — Now Gradient
   margin-bottom: 1rem;
 }
 
-/* Alerts */
+/* =============================
+Alerts
+============================= */
 div[data-testid="stAlert"] {
-  border-radius: var(--md-sys-color-shape-corner-medium);
+  border-radius: var(--md-shape-corner-medium);
   padding: 1rem 1.5rem;
   margin: 1rem 0;
 }
@@ -127,13 +132,11 @@ div[data-testid="stAlert"] {
 .alert-error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error); }
 
 /* =============================
-Stage Progress — Gradient Removed
+Stage Progress
 ============================= */
-
-/* Stage Container */
 .stage-container {
   background: var(--md-sys-color-surface);
-  border-radius: var(--md-sys-color-shape-corner-medium);
+  border-radius: var(--md-shape-corner-medium);
   padding: 1.5rem;
   margin-bottom: 2rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
@@ -204,10 +207,8 @@ Stage Progress — Gradient Removed
 }
 
 /* =============================
-Modern UI Enhancements
+Tabs
 ============================= */
-
-/* Tabs */
 .stTabs [role="tab"] {
   flex: 1;
   text-align: center;
@@ -233,7 +234,7 @@ Modern UI Enhancements
 }
 
 /* =============================
-Metric Cards — Distinct Colors
+Metric Cards — Gradient Variants
 ============================= */
 .metric-card:nth-child(1) {
   background: linear-gradient(135deg, #E6F0FA, #BBD7F5);
@@ -248,7 +249,7 @@ Metric Cards — Distinct Colors
   background: linear-gradient(135deg, #F8D7DA, #F1A2A9);
 }
 .metric-card {
-  border-radius: var(--md-sys-color-shape-corner-medium);
+  border-radius: var(--md-shape-corner-medium);
   padding: 1rem;
   text-align: center;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -284,7 +285,6 @@ Loading Spinner
   font-size: 0.9rem;
   color: var(--md-sys-color-on-surface-variant);
 }
-
 
 """
 
