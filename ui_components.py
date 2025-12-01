@@ -120,27 +120,77 @@ div[data-testid="stAlert"] {
 .alert-error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error); }
 
 
-/* Fix stage progress alignment */
+/* =============================
+ENHANCED STAGE PROGRESS DESIGN
+============================= */
+.stage-container {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
 .stage-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  position: relative;
 }
 
-/* Strengthen download button override */
-div[data-testid="stDownloadButton"] > button {
-  background: var(--md-sys-color-primary) !important;
-  color: var(--md-sys-color-on-primary) !important;
-  border-radius: var(--md-shape-corner-large) !important;
-  padding: 0.75rem 1.5rem !important;
-  font-weight: 500 !important;
-  font-size: 0.875rem !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
-  transition: all 0.2s ease !important;
+.stage-connector {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--md-sys-color-outline-variant);
+  z-index: 1;
 }
-div[data-testid="stDownloadButton"] > button:hover {
-  background: #085BB5 !important;
+.stage-connector.completed {
+  background: var(--md-sys-color-success);
+}
+
+.stage-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+.stage-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+  border: 3px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface);
+  transition: all 0.3s ease;
+}
+.stage-circle.active {
+  background: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+.stage-circle.completed {
+  background: var(--md-sys-color-success);
+  border-color: var(--md-sys-color-success);
+  color: var(--md-sys-color-on-success);
+}
+
+.stage-label {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.stage-label.active {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
 }
 
 """
