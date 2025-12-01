@@ -120,14 +120,71 @@ div[data-testid="stAlert"] {
 .alert-error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error); }
 
 
+/* =============================
+ANIMATED TIMELINE STYLE
+============================= */
+.stage-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.stage-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.stage-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  border: 3px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface);
+  transition: transform 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
+}
+.stage-circle.active {
+  transform: scale(1.15);
+  background: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+.stage-circle.completed {
+  background: var(--md-sys-color-success);
+  border-color: var(--md-sys-color-success);
+  color: var(--md-sys-color-on-success);
+}
+.stage-circle.completed::after {
+  content: '✓';
+  font-size: 1.4rem;
+}
+
+.stage-label {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.stage-label.active {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+
 .stage-connector {
-  position: absolute;
-  top: 24px;
-  left: 0;
-  right: 0;
+  flex: 1;
   height: 4px;
   background: var(--md-sys-color-outline-variant);
-  z-index: 1;
+  margin: 0 0.5rem;
+  transition: background-color 0.4s ease;
 }
 .stage-connector.completed {
   background: var(--md-sys-color-success);
@@ -174,7 +231,6 @@ def render_stage_progress(current_stage: int):
             status = "completed"
             display_icon = "✓"
 
-        # If last stage and current_stage == last index, show tick
         if idx == total-1 and current_stage == total-1:
             display_icon = "✓"
 
@@ -183,7 +239,6 @@ def render_stage_progress(current_stage: int):
         html += f'<div class="stage-label {"active" if idx==current_stage else ""}">{label}</div>'
         html += '</div>'
 
-        # Add connector except after last stage
         if idx < total-1:
             connector_class = "completed" if idx < current_stage else ""
             html += f'<div class="stage-connector {connector_class}"></div>'
