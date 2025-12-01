@@ -10,256 +10,114 @@ from pathlib import Path
 # -------------------------------
 # CSS - Material 3 Light Theme
 # -------------------------------
-CUSTOM_CSS = """
-/* =============================
-   COLOR TOKENS
-   ============================= */
+CUSTOM_CSS = """/* =============================
+CORPORATE LIGHT THEME CSS
+============================= */
 :root {
-    --md-sys-color-primary: #6750A4;
-    --md-sys-color-on-primary: #FFFFFF;
-    --md-sys-color-primary-container: #EADDFF;
-    --md-sys-color-on-primary-container: #21005D;
-    --md-sys-color-secondary: #625B71;
-    --md-sys-color-on-secondary: #FFFFFF;
-    --md-sys-color-secondary-container: #E8DEF8;
-    --md-sys-color-on-secondary-container: #1D192B;
-    --md-sys-color-surface: #FFFBFE;
-    --md-sys-color-on-surface: #1C1B1F;
-    --md-sys-color-surface-variant: #E7E0EC;
-    --md-sys-color-on-surface-variant: #49454F;
-    --md-sys-color-background: #F8FAFC;
-    --md-sys-color-on-background: #1C1B1F;
-    --md-sys-color-outline: #79747E;
-    --md-sys-color-outline-variant: #C4C7C5;
-    --md-sys-color-error: #B3261E;
-    --md-sys-color-on-error: #FFFFFF;
-    --md-sys-color-error-container: #F9DEDC;
-    --md-sys-color-success: #0D652D;
-    --md-sys-color-on-success: #FFFFFF;
-    --md-sys-color-success-container: #A7F0BA;
-    --md-sys-color-warning: #7C5800;
-    --md-sys-color-on-warning: #FFFFFF;
-    --md-sys-color-warning-container: #FFDEA3;
-    --md-shape-corner-small: 8px;
-    --md-shape-corner-medium: 12px;
-    --md-shape-corner-large: 16px;
+  --md-sys-color-primary: #0A74DA;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #E6F0FA;
+  --md-sys-color-on-primary-container: #0A2E5C;
+
+  --md-sys-color-secondary: #5A6F8E;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #F0F4F8;
+  --md-sys-color-on-secondary-container: #1D2939;
+
+  --md-sys-color-surface: #FFFFFF;
+  --md-sys-color-on-surface: #212529;
+  --md-sys-color-surface-variant: #F1F3F5;
+  --md-sys-color-on-surface-variant: #495057;
+
+  --md-sys-color-background: #F9FAFB;
+  --md-sys-color-on-background: #212529;
+
+  --md-sys-color-outline: #CED4DA;
+  --md-sys-color-outline-variant: #DEE2E6;
+
+  --md-sys-color-success: #28A745;
+  --md-sys-color-on-success: #FFFFFF;
+  --md-sys-color-success-container: #DFF6E3;
+
+  --md-sys-color-warning: #FFC107;
+  --md-sys-color-on-warning: #212529;
+  --md-sys-color-warning-container: #FFF3CD;
+
+  --md-sys-color-error: #DC3545;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: #F8D7DA;
+
+  --md-shape-corner-small: 8px;
+  --md-shape-corner-medium: 12px;
+  --md-shape-corner-large: 16px;
 }
 
-/* =============================
-   GLOBAL STYLES
-   ============================= */
+/* Global Styles */
 .stApp, html, body {
-    background: var(--md-sys-color-background) !important;
-    font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
-    color: var(--md-sys-color-on-background);
+  background: var(--md-sys-color-background) !important;
+  font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
+  color: var(--md-sys-color-on-background);
 }
 
-* {
-    color: var(--md-sys-color-on-background);
-}
-
-/* =============================
-   BUTTON FIXES
-   ============================= */
+/* Buttons */
 .stButton>button, button[data-testid="stDownloadButton"] {
-    background: var(--md-sys-color-primary) !important;
-    color: var(--md-sys-color-on-primary) !important;
-    border-radius: var(--md-shape-corner-large) !important;
-    padding: 0.75rem 1.5rem !important;
-    font-weight: 500 !important;
-    font-size: 0.875rem !important;
-    text-transform: none !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
-    min-height: 40px !important;
-    transition: all 0.2s ease !important;
+  background: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  border-radius: var(--md-shape-corner-large) !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  text-transform: none !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+  transition: all 0.2s ease !important;
 }
 .stButton>button:hover, button[data-testid="stDownloadButton"]:hover {
-    background: rgba(103,80,164,0.85) !important;
-    transform: translateY(-1px) !important;
+  background: #085BB5 !important;
 }
 
-/* =============================
-   TABLE / DATAFRAME LIGHT MODE
-   ============================= */
-.stDataFrame, .css-1d391kg, .stTable td, .stTable th {
-    background-color: var(--md-sys-color-surface) !important;
-    color: var(--md-sys-color-on-surface) !important;
-    border-color: var(--md-sys-color-outline-variant) !important;
-}
-.stDataFrame th {
-    font-weight: 600 !important;
-}
-
-/* =============================
-   HEADER
-   ============================= */
+/* Header */
 .app-header {
-    background: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary) !important;
-    padding: 2rem 1.5rem;
-    border-radius: var(--md-shape-corner-large);
-    text-align: center;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary) !important;
+  padding: 2rem 1.5rem;
+  border-radius: var(--md-shape-corner-large);
+  text-align: center;
 }
-
 .app-header h1 {
-    margin: 0;
-    font-size: 2.25rem;
-    font-weight: 400;
-    letter-spacing: 0.5px;
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 500;
 }
-
 .app-header p {
-    color: var(--md-sys-color-on-primary) !important;
-    opacity: 0.9;
-    margin-top: 0.5rem;
-    font-size: 1.1rem;
+  opacity: 0.9;
+  font-size: 1rem;
 }
 
-/* =============================
-   STAGE / PROGRESS INDICATOR
-   ============================= */
-.stage-container {
-    background: var(--md-sys-color-surface);
-    border-radius: var(--md-shape-corner-medium);
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-
-.stage-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    position: relative;
-}
-
-.stage-step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-    position: relative;
-    z-index: 2;
-}
-
-.stage-circle {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 500;
-    font-size: 0.875rem;
-    border: 2px solid;
-    background: var(--md-sys-color-surface);
-    transition: all 0.2s ease;
-}
-
-.stage-label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    margin-top: 0.5rem;
-    text-align: center;
-    color: var(--md-sys-color-on-surface-variant);
-}
-
-.stage-circle.inactive {
-    border-color: var(--md-sys-color-outline-variant);
-    color: var(--md-sys-color-outline);
-}
-
-.stage-circle.active {
-    background: var(--md-sys-color-primary);
-    border-color: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary);
-}
-
-.stage-circle.completed {
-    background: var(--md-sys-color-success);
-    border-color: var(--md-sys-color-success);
-    color: var(--md-sys-color-on-success);
-}
-
-.stage-label.active {
-    color: var(--md-sys-color-on-surface);
-    font-weight: 600;
-}
-
-.stage-connector {
-    position: absolute;
-    top: 15px;
-    left: 50%;
-    right: 50%;
-    height: 2px;
-    background: var(--md-sys-color-outline-variant);
-    z-index: 1;
-}
-
-.stage-connector.completed {
-    background: var(--md-sys-color-success);
-}
-
-/* =============================
-   CARDS / METRICS / BUTTONS
-   ============================= */
+/* Cards */
 .card, .metric-card, .stTabs {
-    background: var(--md-sys-color-surface);
-    border-radius: var(--md-shape-corner-medium);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-
 .card-header {
-    color: var(--md-sys-color-on-surface) !important;
-    font-size: 1.25rem;
-    font-weight: 500;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  font-size: 1.25rem;
+  font-weight: 500;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  margin-bottom: 1rem;
 }
 
-
-/* =============================
-   ALERTS
-   ============================= */
+/* Alerts */
 div[data-testid="stAlert"] {
-    border-radius: var(--md-shape-corner-medium);
-    border: none;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-    padding: 1rem 1.5rem;
-    margin: 1rem 0;
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
 }
-
-.alert-success {
-    background: var(--md-sys-color-success-container);
-    color: var(--md-sys-color-on-success-container);
-}
-
-.alert-info {
-    background: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-}
-
-.alert-warning {
-    background: var(--md-sys-color-warning-container);
-    color: var(--md-sys-color-on-warning-container);
-}
-
-.alert-error {
-    background: var(--md-sys-color-error-container);
-    color: var(--md-sys-color-on-error);
-}
-
-/* =============================
-   DIVIDERS
-   ============================= */
-.section-divider {
-    margin: 2rem 0;
-    border: none;
-    border-top: 1px solid var(--md-sys-color-outline-variant);
-}
+.alert-success { background: var(--md-sys-color-success-container); color: var(--md-sys-color-on-success); }
+.alert-info { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+.alert-warning { background: var(--md-sys-color-warning-container); color: var(--md-sys-color-on-warning); }
+.alert-error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error); }
 """
 
 # -------------------------------
