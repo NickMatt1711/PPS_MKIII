@@ -131,67 +131,28 @@ ENHANCED STAGE PROGRESS DESIGN
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 
+
 .stage-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   position: relative;
 }
-
-.stage-connector {
+.stage-bar {
   position: absolute;
   top: 20px;
   left: 0;
   right: 0;
-  height: 4px;
+  height: 6px;
   background: var(--md-sys-color-outline-variant);
-  z-index: 1;
+  border-radius: 3px;
 }
-.stage-connector.completed {
-  background: var(--md-sys-color-success);
-}
-
-.stage-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 2;
-}
-
-.stage-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 1rem;
-  border: 3px solid var(--md-sys-color-outline-variant);
-  background: var(--md-sys-color-surface);
-  transition: all 0.3s ease;
-}
-.stage-circle.active {
+.stage-bar-fill {
+  height: 6px;
   background: var(--md-sys-color-primary);
-  border-color: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-}
-.stage-circle.completed {
-  background: var(--md-sys-color-success);
-  border-color: var(--md-sys-color-success);
-  color: var(--md-sys-color-on-success);
+  border-radius: 3px;
+  width: 50%; /* dynamic based on stage */
 }
 
-.stage-label {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface-variant);
-}
-.stage-label.active {
-  color: var(--md-sys-color-on-surface);
-  font-weight: 600;
-}
 
 """
 
