@@ -121,6 +121,106 @@ div[data-testid="stAlert"] {
 
 
 /* =============================
+FINAL POLISHED UI
+============================= */
+
+/* Header Resized */
+.app-header {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary) !important;
+  padding: 1rem 1.5rem; /* Reduced padding */
+  border-radius: var(--md-shape-corner-large);
+  text-align: center;
+}
+.app-header h1 {
+  margin: 0;
+  font-size: 1.75rem; /* Reduced size */
+  font-weight: 500;
+}
+.app-header p {
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+/* Stage Container */
+.stage-container {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+/* Stage Row Alignment */
+.stage-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
+}
+
+.stage-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 100px;
+  position: relative;
+  z-index: 2;
+}
+
+.stage-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  border: 3px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface);
+  transition: transform 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
+}
+.stage-circle.active {
+  transform: scale(1.15);
+  background: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+.stage-circle.completed {
+  background: var(--md-sys-color-success);
+  border-color: var(--md-sys-color-success);
+  color: var(--md-sys-color-on-success);
+}
+.stage-circle.completed::after {
+  content: '';
+  font-size: 1.4rem;
+}
+
+.stage-label {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.stage-label.active {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+
+.stage-connector {
+  flex: 1;
+  height: 4px;
+  background: var(--md-sys-color-outline-variant);
+  margin: 0 0.5rem;
+  transition: background-color 0.4s ease;
+}
+.stage-connector.completed {
+  background: var(--md-sys-color-success);
+}
+
+/* =============================
 MODERN UI ENHANCEMENTS
 ============================= */
 
@@ -212,6 +312,8 @@ MODERN UI ENHANCEMENTS
   color: var(--md-sys-color-on-surface-variant);
 }
 
+
+
 """
 
 # -------------------------------
@@ -237,32 +339,38 @@ def render_header(title: str, subtitle: str = ""):
 # -------------------------------
 # STAGE PROGRESS
 # -------------------------------
+
 def render_stage_progress(current_stage: int):
-    stages = [("1","Upload"),("2","Preview & Configure"),("3","Results")]
+    stages = [("📤","Upload"),("📄","Preview & Configure"),("📊","Results")]
     total = len(stages)
     current_stage = max(0, min(current_stage, total-1))
     html = '<div class="stage-row">'
-    
-    for idx,(num,label) in enumerate(stages):
+
+    for idx,(icon,label) in enumerate(stages):
         status = "inactive"
-        icon = num
+        display_icon = icon
         if idx == current_stage:
             status = "active"
         elif idx < current_stage:
             status = "completed"
-            icon = "✓"
-        
+            display_icon = "✓"
+
+        if idx == total-1 and current_stage == total-1:
+            status = "completed"
+            display_icon = "✓"
+
         html += f'<div class="stage-step">'
-        html += f'<div class="stage-circle {status}">{icon}</div>'
+        html += f'<div class="stage-circle {status}">{display_icon}</div>'
         html += f'<div class="stage-label {"active" if idx==current_stage else ""}">{label}</div>'
         html += '</div>'
-        
+
         if idx < total-1:
             connector_class = "completed" if idx < current_stage else ""
             html += f'<div class="stage-connector {connector_class}"></div>'
-    
+
     html += '</div>'
     st.markdown(f'<div class="stage-container">{html}</div>', unsafe_allow_html=True)
+
 
 
 # -------------------------------
