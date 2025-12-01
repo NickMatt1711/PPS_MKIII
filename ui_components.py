@@ -220,9 +220,8 @@ FINAL POLISHED UI
   background: var(--md-sys-color-success);
 }
 
-/* =============================
-TABS DISTRIBUTION FIX
-============================= */
+
+/* Tabs equally distributed */
 .stTabs [role="tablist"] {
   display: flex;
   justify-content: space-between;
@@ -231,7 +230,58 @@ TABS DISTRIBUTION FIX
 .stTabs [role="tab"] {
   flex: 1;
   text-align: center;
+  font-weight: 600;
+  padding: 0.75rem;
+  transition: background-color 0.3s ease;
 }
+
+/* Different colors for up to 4 tabs when selected */
+.stTabs [role="tab"]:nth-child(1)[aria-selected="true"] {
+  background-color: #0A74DA; /* Blue */
+  color: #FFFFFF;
+}
+.stTabs [role="tab"]:nth-child(2)[aria-selected="true"] {
+  background-color: #28A745; /* Green */
+  color: #FFFFFF;
+}
+.stTabs [role="tab"]:nth-child(3)[aria-selected="true"] {
+  background-color: #FFC107; /* Amber */
+  color: #212529;
+}
+.stTabs [role="tab"]:nth-child(4)[aria-selected="true"] {
+  background-color: #DC3545; /* Red */
+  color: #FFFFFF;
+}
+
+/* Metric cards with different background colors */
+.metric-card:nth-child(1) {
+  background-color: #E6F0FA; /* Light Blue */
+}
+.metric-card:nth-child(2) {
+  background-color: #DFF6E3; /* Light Green */
+}
+.metric-card:nth-child(3) {
+  background-color: #FFF3CD; /* Light Amber */
+}
+.metric-card:nth-child(4) {
+  background-color: #F8D7DA; /* Light Red */
+}
+.metric-card {
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.metric-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.metric-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
 
 """
 
