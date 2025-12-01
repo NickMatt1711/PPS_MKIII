@@ -10,7 +10,8 @@ from pathlib import Path
 # -------------------------------
 # CSS - Material 3 Light Theme
 # -------------------------------
-CUSTOM_CSS = """/* =============================
+CUSTOM_CSS = """
+/* =============================
 CORPORATE LIGHT THEME CSS
 ============================= */
 :root {
@@ -59,9 +60,12 @@ CORPORATE LIGHT THEME CSS
   color: var(--md-sys-color-on-background);
 }
 
-/* Buttons */
-.stButton>button, button[data-testid="stDownloadButton"] {
-  background: var(--md-sys-color-primary) !important;
+/* =============================
+BUTTONS — Now Gradient
+============================= */
+.stButton>button,
+button[data-testid="stDownloadButton"] {
+  background: linear-gradient(135deg, #0A74DA, #4BA3F4) !important;
   color: var(--md-sys-color-on-primary) !important;
   border-radius: var(--md-shape-corner-large) !important;
   padding: 0.75rem 1.5rem !important;
@@ -71,32 +75,35 @@ CORPORATE LIGHT THEME CSS
   box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
   transition: all 0.2s ease !important;
 }
-.stButton>button:hover, button[data-testid="stDownloadButton"]:hover {
-  background: #085BB5 !important;
+.stButton>button:hover,
+button[data-testid="stDownloadButton"]:hover {
+  background: linear-gradient(135deg, #085BB5, #3D8CD9) !important;
 }
 
-/* Header */
+/* =============================
+Header — Now Gradient
+============================= */
 .app-header {
-  background: var(--md-sys-color-primary);
+  background: linear-gradient(135deg, #0A74DA, #4BA3F4);
   color: var(--md-sys-color-on-primary) !important;
-  padding: 2rem 1.5rem;
+  padding: 1rem 1.5rem;
   border-radius: var(--md-shape-corner-large);
   text-align: center;
 }
 .app-header h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 500;
 }
 .app-header p {
   opacity: 0.9;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 /* Cards */
 .card, .metric-card, .stTabs {
   background: var(--md-sys-color-surface);
-  border-radius: var(--md-shape-corner-medium);
+  border-radius: var(--md-sys-color-shape-corner-medium);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -110,7 +117,7 @@ CORPORATE LIGHT THEME CSS
 
 /* Alerts */
 div[data-testid="stAlert"] {
-  border-radius: var(--md-shape-corner-medium);
+  border-radius: var(--md-sys-color-shape-corner-medium);
   padding: 1rem 1.5rem;
   margin: 1rem 0;
 }
@@ -119,39 +126,19 @@ div[data-testid="stAlert"] {
 .alert-warning { background: var(--md-sys-color-warning-container); color: var(--md-sys-color-on-warning); }
 .alert-error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error); }
 
-
 /* =============================
-FINAL POLISHED UI
+Stage Progress — Gradient Removed
 ============================= */
-
-/* Header Resized */
-.app-header {
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary) !important;
-  padding: 1rem 1.5rem; /* Reduced padding */
-  border-radius: var(--md-shape-corner-large);
-  text-align: center;
-}
-.app-header h1 {
-  margin: 0;
-  font-size: 1.75rem; /* Reduced size */
-  font-weight: 500;
-}
-.app-header p {
-  opacity: 0.9;
-  font-size: 0.95rem;
-}
 
 /* Stage Container */
 .stage-container {
   background: var(--md-sys-color-surface);
-  border-radius: var(--md-shape-corner-medium);
+  border-radius: var(--md-sys-color-shape-corner-medium);
   padding: 1.5rem;
   margin-bottom: 2rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 
-/* Stage Row Alignment */
 .stage-row {
   display: flex;
   justify-content: space-between;
@@ -193,10 +180,6 @@ FINAL POLISHED UI
   border-color: var(--md-sys-color-success);
   color: var(--md-sys-color-on-success);
 }
-.stage-circle.completed::after {
-  content: '';
-  font-size: 1.4rem;
-}
 
 .stage-label {
   margin-top: 0.5rem;
@@ -221,10 +204,10 @@ FINAL POLISHED UI
 }
 
 /* =============================
-MODERN UI ENHANCEMENTS
+Modern UI Enhancements
 ============================= */
 
-/* Gradient and shadow for tabs */
+/* Tabs */
 .stTabs [role="tab"] {
   flex: 1;
   text-align: center;
@@ -235,56 +218,45 @@ MODERN UI ENHANCEMENTS
 .stTabs [role="tab"]:nth-child(1)[aria-selected="true"] {
   background: linear-gradient(135deg, #0A74DA, #4BA3F4);
   color: #FFFFFF;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 .stTabs [role="tab"]:nth-child(2)[aria-selected="true"] {
   background: linear-gradient(135deg, #28A745, #5DDC7A);
   color: #FFFFFF;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 .stTabs [role="tab"]:nth-child(3)[aria-selected="true"] {
   background: linear-gradient(135deg, #FFC107, #FFD76A);
   color: #212529;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 .stTabs [role="tab"]:nth-child(4)[aria-selected="true"] {
   background: linear-gradient(135deg, #DC3545, #F08080);
   color: #FFFFFF;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
-/* Metric cards with gradients */
+/* =============================
+Metric Cards — Distinct Colors
+============================= */
 .metric-card:nth-child(1) {
-  background: linear-gradient(135deg, #E6F0FA, #CDE4F7);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background: linear-gradient(135deg, #E6F0FA, #BBD7F5);
 }
 .metric-card:nth-child(2) {
-  background: linear-gradient(135deg, #DFF6E3, #B8EAC5);
+  background: linear-gradient(135deg, #DFF6E3, #AEE8C1);
 }
 .metric-card:nth-child(3) {
-  background: linear-gradient(135deg, #FFF3CD, #FFE8A1);
+  background: linear-gradient(135deg, #FFF3CD, #FFE29A);
 }
 .metric-card:nth-child(4) {
-  background: linear-gradient(135deg, #F8D7DA, #F1AEB5);
+  background: linear-gradient(135deg, #F8D7DA, #F1A2A9);
 }
 .metric-card {
-  border-radius: var(--md-shape-corner-medium);
+  border-radius: var(--md-sys-color-shape-corner-medium);
   padding: 1rem;
   text-align: center;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-/* Stage circles with gradient */
-.stage-circle.active {
-  background: linear-gradient(135deg, #0A74DA, #4BA3F4);
-  border-color: #0A74DA;
-}
-.stage-circle.completed {
-  background: linear-gradient(135deg, #28A745, #5DDC7A);
-  border-color: #28A745;
-}
-
-/* Loading spinner */
+/* =============================
+Loading Spinner
+============================= */
 .spinner {
   width: 40px;
   height: 40px;
@@ -298,6 +270,7 @@ MODERN UI ENHANCEMENTS
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
 .optimization-container {
   text-align: center;
   margin-bottom: 1rem;
@@ -311,7 +284,6 @@ MODERN UI ENHANCEMENTS
   font-size: 0.9rem;
   color: var(--md-sys-color-on-surface-variant);
 }
-
 
 
 """
