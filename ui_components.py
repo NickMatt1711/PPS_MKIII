@@ -244,7 +244,7 @@ Tabs
 
 .stTabs [role="tab"]:nth-child(3)[aria-selected="true"] {
   background: linear-gradient(135deg, #FFC107, #FFD76A) !important;
-  color: #212529 !important;
+  color: #FFFFFF !important;
 }
 
 .stTabs [role="tab"]:nth-child(4)[aria-selected="true"] {
