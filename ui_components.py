@@ -257,48 +257,58 @@ Tabs
   color: var(--md-sys-color-on-surface-variant) !important;
 }
 
+/* =============================
+Metric Cards — Gradient Variants
+============================= */
 
-# =============================
-# Metric Cards — Gradient Variants
-# ============================= */
+/* Base metric card styling */
 .metric-card {
-  border-radius: var(--md-shape-corner-medium);
-  padding: 1.5rem;
-  text-align: center;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  margin-bottom: 1rem;
+  border-radius: var(--md-shape-corner-medium) !important;
+  padding: 1.5rem !important;
+  text-align: center !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+  margin-bottom: 1rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-/* Target cards by their position in parent container */
-div[class*="column"]:nth-child(1) .metric-card {
+/* Specific gradient backgrounds for each position */
+.metric-card:nth-of-type(1) {
   background: linear-gradient(135deg, #E6F0FA, #BBD7F5) !important;
 }
 
-div[class*="column"]:nth-child(2) .metric-card {
+.metric-card:nth-of-type(2) {
   background: linear-gradient(135deg, #DFF6E3, #AEE8C1) !important;
 }
 
-div[class*="column"]:nth-child(3) .metric-card {
+.metric-card:nth-of-type(3) {
   background: linear-gradient(135deg, #FFF3CD, #FFE29A) !important;
 }
 
-div[class*="column"]:nth-child(4) .metric-card {
+.metric-card:nth-of-type(4) {
   background: linear-gradient(135deg, #F8D7DA, #F1A2A9) !important;
 }
 
 .metric-label {
-  font-size: 0.875rem;
-  color: var(--md-sys-color-on-surface-variant);
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  font-size: 0.875rem !important;
+  color: var(--md-sys-color-on-surface-variant) !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.5rem !important;
+  text-align: center !important;
+  width: 100% !important;
 }
 
 .metric-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--md-sys-color-on-surface);
-  line-height: 1;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  color: var(--md-sys-color-on-surface) !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  width: 100% !important;
 }
+
 /* =============================
 Loading Spinner
 ============================= */
@@ -406,7 +416,10 @@ def close_card():
 def render_metric_card(label: str, value: str, col):
     with col:
         st.markdown(
-            f'<div class="metric-card"><div class="metric-label">{label}</div><div class="metric-value">{value}</div></div>',
+            f'''<div class="metric-card">
+                <div class="metric-label">{label}</div>
+                <div class="metric-value">{value}</div>
+            </div>''',
             unsafe_allow_html=True
         )
 
