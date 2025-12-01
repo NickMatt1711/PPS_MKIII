@@ -272,28 +272,46 @@ Metric Cards — Gradient Variants
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
+  min-height: 120px !important;
 }
 
-/* Specific gradient backgrounds for each position */
-.metric-card:nth-of-type(1) {
+/* Target by parent column position - using data-testid */
+[data-testid="column"]:nth-child(1) .metric-card {
   background: linear-gradient(135deg, #E6F0FA, #BBD7F5) !important;
 }
 
-.metric-card:nth-of-type(2) {
+[data-testid="column"]:nth-child(2) .metric-card {
   background: linear-gradient(135deg, #DFF6E3, #AEE8C1) !important;
 }
 
-.metric-card:nth-of-type(3) {
+[data-testid="column"]:nth-child(3) .metric-card {
   background: linear-gradient(135deg, #FFF3CD, #FFE29A) !important;
 }
 
-.metric-card:nth-of-type(4) {
+[data-testid="column"]:nth-child(4) .metric-card {
+  background: linear-gradient(135deg, #F8D7DA, #F1A2A9) !important;
+}
+
+/* Fallback: target by order in document */
+.metric-card:nth-child(1) {
+  background: linear-gradient(135deg, #E6F0FA, #BBD7F5) !important;
+}
+
+.metric-card:nth-child(2) {
+  background: linear-gradient(135deg, #DFF6E3, #AEE8C1) !important;
+}
+
+.metric-card:nth-child(3) {
+  background: linear-gradient(135deg, #FFF3CD, #FFE29A) !important;
+}
+
+.metric-card:nth-child(4) {
   background: linear-gradient(135deg, #F8D7DA, #F1A2A9) !important;
 }
 
 .metric-label {
   font-size: 0.875rem !important;
-  color: var(--md-sys-color-on-surface-variant) !important;
+  color: #495057 !important;
   font-weight: 600 !important;
   margin-bottom: 0.5rem !important;
   text-align: center !important;
@@ -303,7 +321,7 @@ Metric Cards — Gradient Variants
 .metric-value {
   font-size: 2rem !important;
   font-weight: 700 !important;
-  color: var(--md-sys-color-on-surface) !important;
+  color: #212529 !important;
   line-height: 1 !important;
   text-align: center !important;
   width: 100% !important;
