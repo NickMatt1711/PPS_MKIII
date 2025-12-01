@@ -229,7 +229,7 @@ def render_stage_progress(current_stage: int):
             status = "active"
         elif idx < current_stage:
             status = "completed"
-            displayicon = ""
+            display_icon = "✓"
 
         html += f'<div class="stage-step">'
         html += f'<div class="stage-circle {status}">{display_icon}</div>'
