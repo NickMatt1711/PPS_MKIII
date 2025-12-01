@@ -120,46 +120,47 @@ div[data-testid="stAlert"] {
 .alert-error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error); }
 
 
-/* Streamlit Overrides for Light Theme */
+/* =============================
+REFINED CORPORATE LIGHT THEME FIXES
+============================= */
 
-/* File Uploader */
-.stFileUploader, .stFileUploader div {
-  background: var(--md-sys-color-surface) !important;
-  color: var(--md-sys-color-on-surface) !important;
-  border: 1px solid var(--md-sys-color-outline-variant) !important;
-  border-radius: var(--md-shape-corner-medium) !important;
-}
-
-/* Tabs */
-.stTabs [role="tablist"] {
-  background: var(--md-sys-color-surface) !important;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-.stTabs [role="tab"] {
-  color: var(--md-sys-color-on-surface-variant) !important;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-}
-.stTabs [role="tab"][aria-selected="true"] {
-  border-bottom: 3px solid var(--md-sys-color-primary);
-  color: var(--md-sys-color-primary) !important;
-  font-weight: 600;
-}
-
-/* DataFrame */
-.stDataFrame, .stTable, .stDataFrame div {
-  background: var(--md-sys-color-surface) !important;
-  color: var(--md-sys-color-on-surface) !important;
-}
-
-/* Download Button */
+/* Download Button - match primary button style */
 button[data-testid="stDownloadButton"] {
   background: var(--md-sys-color-primary) !important;
   color: var(--md-sys-color-on-primary) !important;
   border-radius: var(--md-shape-corner-large) !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+  transition: all 0.2s ease !important;
+}
+button[data-testid="stDownloadButton"]:hover {
+  background: #085BB5 !important;
 }
 
-/* Stage Progress Enhancements */
+/* File Uploader - clean look */
+.stFileUploader, .stFileUploader div[data-testid="stFileUploaderDropzone"] {
+  background: var(--md-sys-color-surface) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  border-radius: var(--md-shape-corner-medium) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  padding: 0.75rem !important;
+}
+
+/* Stage Progress - restore hierarchy */
+.stage-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 2px solid;
+  background: var(--md-sys-color-surface);
+}
 .stage-circle.inactive {
   border-color: var(--md-sys-color-outline-variant);
   color: var(--md-sys-color-outline);
@@ -174,9 +175,50 @@ button[data-testid="stDownloadButton"] {
   border-color: var(--md-sys-color-success);
   color: var(--md-sys-color-on-success);
 }
+.stage-label {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
 .stage-label.active {
   color: var(--md-sys-color-on-surface);
   font-weight: 600;
+}
+.stage-connector {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  right: 50%;
+  height: 2px;
+  background: var(--md-sys-color-outline-variant);
+}
+.stage-connector.completed {
+  background: var(--md-sys-color-success);
+}
+
+/* Tabs - visible headers */
+.stTabs [role="tablist"] {
+  background: var(--md-sys-color-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+.stTabs [role="tab"] {
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+}
+.stTabs [role="tab"][aria-selected="true"] {
+  border-bottom: 3px solid var(--md-sys-color-primary);
+  color: var(--md-sys-color-primary);
+}
+
+/* DataFrame - ensure text visibility */
+.stDataFrame, .stTable td, .stTable th {
+  background-color: var(--md-sys-color-surface) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  border-color: var(--md-sys-color-outline-variant) !important;
+}
+.stDataFrame th {
+  font-weight: 600 !important;
 }
 
 """
