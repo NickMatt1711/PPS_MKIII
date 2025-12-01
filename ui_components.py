@@ -209,52 +209,96 @@ Stage Progress
 /* =============================
 Tabs
 ============================= */
+.stTabs {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium) !important;
+  overflow: hidden;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: var(--md-shape-corner-medium) !important;
+}
+
 .stTabs [role="tab"] {
   flex: 1;
   text-align: center;
   font-weight: 600;
   padding: 0.75rem;
+  border-radius: var(--md-shape-corner-small) !important;
   transition: background 0.3s ease, box-shadow 0.3s ease;
-}
-.stTabs [role="tab"]:nth-child(1)[aria-selected="true"] {
-  background: linear-gradient(135deg, #0A74DA, #4BA3F4);
-  color: #FFFFFF;
-}
-.stTabs [role="tab"]:nth-child(2)[aria-selected="true"] {
-  background: linear-gradient(135deg, #28A745, #5DDC7A);
-  color: #FFFFFF;
-}
-.stTabs [role="tab"]:nth-child(3)[aria-selected="true"] {
-  background: linear-gradient(135deg, #FFC107, #FFD76A);
-  color: #212529;
-}
-.stTabs [role="tab"]:nth-child(4)[aria-selected="true"] {
-  background: linear-gradient(135deg, #DC3545, #F08080);
-  color: #FFFFFF;
+  border: none !important;
 }
 
-/* =============================
-Metric Cards — Gradient Variants
-============================= */
-.metric-card:nth-child(1) {
-  background: linear-gradient(135deg, #E6F0FA, #BBD7F5);
+.stTabs [role="tab"]:nth-child(1)[aria-selected="true"] {
+  background: linear-gradient(135deg, #0A74DA, #4BA3F4) !important;
+  color: #FFFFFF !important;
 }
-.metric-card:nth-child(2) {
-  background: linear-gradient(135deg, #DFF6E3, #AEE8C1);
+
+.stTabs [role="tab"]:nth-child(2)[aria-selected="true"] {
+  background: linear-gradient(135deg, #28A745, #5DDC7A) !important;
+  color: #FFFFFF !important;
 }
-.metric-card:nth-child(3) {
-  background: linear-gradient(135deg, #FFF3CD, #FFE29A);
+
+.stTabs [role="tab"]:nth-child(3)[aria-selected="true"] {
+  background: linear-gradient(135deg, #FFC107, #FFD76A) !important;
+  color: #212529 !important;
 }
-.metric-card:nth-child(4) {
-  background: linear-gradient(135deg, #F8D7DA, #F1A2A9);
+
+.stTabs [role="tab"]:nth-child(4)[aria-selected="true"] {
+  background: linear-gradient(135deg, #DC3545, #F08080) !important;
+  color: #FFFFFF !important;
 }
+
+.stTabs [role="tab"]:not([aria-selected="true"]) {
+  background: var(--md-sys-color-surface) !important;
+  color: var(--md-sys-color-on-surface-variant) !important;
+}
+
+
+# =============================
+# Metric Cards — Gradient Variants
+# ============================= */
 .metric-card {
   border-radius: var(--md-shape-corner-medium);
-  padding: 1rem;
+  padding: 1.5rem;
   text-align: center;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
 }
 
+/* Target cards by their position in parent container */
+div[class*="column"]:nth-child(1) .metric-card {
+  background: linear-gradient(135deg, #E6F0FA, #BBD7F5) !important;
+}
+
+div[class*="column"]:nth-child(2) .metric-card {
+  background: linear-gradient(135deg, #DFF6E3, #AEE8C1) !important;
+}
+
+div[class*="column"]:nth-child(3) .metric-card {
+  background: linear-gradient(135deg, #FFF3CD, #FFE29A) !important;
+}
+
+div[class*="column"]:nth-child(4) .metric-card {
+  background: linear-gradient(135deg, #F8D7DA, #F1A2A9) !important;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+  line-height: 1;
+}
 /* =============================
 Loading Spinner
 ============================= */
