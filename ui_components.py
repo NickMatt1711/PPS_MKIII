@@ -194,7 +194,7 @@ FINAL POLISHED UI
   color: var(--md-sys-color-on-success);
 }
 .stage-circle.completed::after {
-  content: '✓';
+  content: '';
   font-size: 1.4rem;
 }
 
@@ -262,6 +262,7 @@ def render_stage_progress(current_stage: int):
             display_icon = "✓"
 
         if idx == total-1 and current_stage == total-1:
+            status = "completed"
             display_icon = "✓"
 
         html += f'<div class="stage-step">'
