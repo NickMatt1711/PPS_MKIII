@@ -120,24 +120,6 @@ div[data-testid="stAlert"] {
 .alert-error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error); }
 
 
-/* =============================
-ICON + LABEL TIMELINE STYLE
-============================= */
-.stage-container {
-  background: var(--md-sys-color-surface);
-  border-radius: var(--md-shape-corner-medium);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-
-.stage-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-}
-
 .stage-connector {
   position: absolute;
   top: 24px;
@@ -149,52 +131,6 @@ ICON + LABEL TIMELINE STYLE
 }
 .stage-connector.completed {
   background: var(--md-sys-color-success);
-}
-
-.stage-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 2;
-}
-
-.stage-circle {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  border: 3px solid var(--md-sys-color-outline-variant);
-  background: var(--md-sys-color-surface);
-  transition: transform 0.3s ease, background 0.3s ease;
-}
-.stage-circle.active {
-  transform: scale(1.1);
-  background: var(--md-sys-color-primary);
-  border-color: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-}
-.stage-circle.completed {
-  background: var(--md-sys-color-success);
-  border-color: var(--md-sys-color-success);
-  color: var(--md-sys-color-on-success);
-}
-.stage-circle.completed::after {
-  content: '✓';
-  font-size: 1.4rem;
-}
-
-.stage-label {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface-variant);
-}
-.stage-label.active {
-  color: var(--md-sys-color-on-surface);
-  font-weight: 600;
 }
 
 """
@@ -228,7 +164,6 @@ def render_stage_progress(current_stage: int):
     total = len(stages)
     current_stage = max(0, min(current_stage, total-1))
     html = '<div class="stage-row">'
-    html += '<div class="stage-connector"></div>'
 
     for idx,(icon,label) in enumerate(stages):
         status = "inactive"
@@ -237,12 +172,21 @@ def render_stage_progress(current_stage: int):
             status = "active"
         elif idx < current_stage:
             status = "completed"
-            display_icon = ""
+            display_icon = "✓"
+
+        # If last stage and current_stage == last index, show tick
+        if idx == total-1 and current_stage == total-1:
+            display_icon = "✓"
 
         html += f'<div class="stage-step">'
         html += f'<div class="stage-circle {status}">{display_icon}</div>'
         html += f'<div class="stage-label {"active" if idx==current_stage else ""}">{label}</div>'
         html += '</div>'
+
+        # Add connector except after last stage
+        if idx < total-1:
+            connector_class = "completed" if idx < current_stage else ""
+            html += f'<div class="stage-connector {connector_class}"></div>'
 
     html += '</div>'
     st.markdown(f'<div class="stage-container">{html}</div>', unsafe_allow_html=True)
