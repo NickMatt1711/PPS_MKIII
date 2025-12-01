@@ -62,10 +62,11 @@ CORPORATE LIGHT THEME CSS
 }
 
 /* =============================
-BUTTONS — Gradient
+BUTTONS — Gradient + Consistent Sizing
 ============================= */
 .stButton>button,
-button[data-testid="stDownloadButton"] {
+button[data-testid="stDownloadButton"],
+.stDownloadButton>button {
   background: linear-gradient(135deg, #0A74DA, #4BA3F4) !important;
   color: var(--md-sys-color-on-primary) !important;
   border-radius: var(--md-shape-corner-large) !important;
@@ -75,21 +76,41 @@ button[data-testid="stDownloadButton"] {
   box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
   text-transform: none !important;
   transition: all 0.2s ease !important;
+  min-height: 48px !important;
+  border: none !important;
 }
 .stButton>button:hover,
-button[data-testid="stDownloadButton"]:hover {
+button[data-testid="stDownloadButton"]:hover,
+.stDownloadButton>button:hover {
   background: linear-gradient(135deg, #085BB5, #3D8CD9) !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+  transform: translateY(-1px);
+}
+
+.stButton>button:disabled {
+  background: var(--md-sys-color-surface-variant) !important;
+  color: var(--md-sys-color-on-surface-variant) !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+
+/* Secondary Button Style */
+.stButton>button.secondary-button {
+  background: var(--md-sys-color-surface) !important;
+  color: var(--md-sys-color-primary) !important;
+  border: 2px solid var(--md-sys-color-primary) !important;
 }
 
 /* =============================
-Header — Gradient
+Header — Gradient + Better Spacing
 ============================= */
 .app-header {
   background: linear-gradient(135deg, #0A74DA, #4BA3F4);
   color: var(--md-sys-color-on-primary) !important;
-  padding: 1rem 1.5rem;
+  padding: 1.5rem 2rem;
   border-radius: var(--md-shape-corner-large);
   text-align: center;
+  margin-bottom: 2rem;
 }
 .app-header h1 {
   margin: 0;
@@ -99,10 +120,11 @@ Header — Gradient
 .app-header p {
   opacity: 0.9;
   font-size: 0.95rem;
+  margin-top: 0.5rem;
 }
 
 /* =============================
-Cards
+Cards — Better Padding
 ============================= */
 .card, .metric-card, .stTabs {
   background: var(--md-sys-color-surface);
@@ -116,10 +138,20 @@ Cards
   font-weight: 500;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+}
+
+/* Parameter Section Card */
+.param-section-card {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 /* =============================
-Alerts
+Alerts — Better Spacing
 ============================= */
 div[data-testid="stAlert"] {
   border-radius: var(--md-shape-corner-medium);
@@ -132,12 +164,12 @@ div[data-testid="stAlert"] {
 .alert-error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error); }
 
 /* =============================
-Stage Progress
+Stage Progress — Improved Layout
 ============================= */
 .stage-container {
   background: var(--md-sys-color-surface);
   border-radius: var(--md-shape-corner-medium);
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
   margin-bottom: 2rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
@@ -185,10 +217,11 @@ Stage Progress
 }
 
 .stage-label {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--md-sys-color-on-surface-variant);
+  text-align: center;
 }
 .stage-label.active {
   color: var(--md-sys-color-on-surface);
@@ -207,12 +240,15 @@ Stage Progress
 }
 
 /* =============================
-Tabs
+Tabs — Sticky Navigation
 ============================= */
 .stTabs {
   background: var(--md-sys-color-surface);
   border-radius: var(--md-shape-corner-medium) !important;
   overflow: hidden;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .stTabs [data-baseweb="tab-list"] {
@@ -257,11 +293,14 @@ Tabs
   color: var(--md-sys-color-on-surface-variant) !important;
 }
 
-/* =============================
-Metric Cards — Gradient Variants
-============================= */
+/* Tab Content Padding */
+.stTabs [role="tabpanel"] {
+  padding: 1.5rem 0.5rem;
+}
 
-/* Base metric card styling */
+/* =============================
+Metric Cards — Consistent Sizing
+============================= */
 .metric-card {
   border-radius: var(--md-shape-corner-medium) !important;
   padding: 1.5rem !important;
@@ -272,7 +311,7 @@ Metric Cards — Gradient Variants
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  min-height: 120px !important;
+  min-height: 140px !important;
 }
 
 .metric-card-blue {
@@ -295,7 +334,7 @@ Metric Cards — Gradient Variants
   font-size: 0.875rem !important;
   color: #495057 !important;
   font-weight: 600 !important;
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 0.75rem !important;
   text-align: center !important;
   width: 100% !important;
 }
@@ -310,8 +349,17 @@ Metric Cards — Gradient Variants
 }
 
 /* =============================
-Loading Spinner
+Loading/Progress Container
 ============================= */
+.progress-container {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 2rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
 .spinner {
   width: 40px;
   height: 40px;
@@ -328,16 +376,59 @@ Loading Spinner
 
 .optimization-container {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 .optimization-text {
   font-size: 1.1rem;
   font-weight: 600;
   margin-top: 0.5rem;
+  color: var(--md-sys-color-on-surface);
 }
 .optimization-subtext {
   font-size: 0.9rem;
   color: var(--md-sys-color-on-surface-variant);
+  margin-top: 0.25rem;
+}
+
+/* =============================
+Upload Section
+============================= */
+.upload-section {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 2rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+section[data-testid="stFileUploader"] {
+  margin-bottom: 1rem;
+}
+
+/* =============================
+Navigation Footer
+============================= */
+.nav-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* =============================
+Section Spacing
+============================= */
+.section-divider {
+  height: 1px;
+  background: var(--md-sys-color-outline-variant);
+  margin: 2rem 0;
+}
+
+.chart-container {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 """
@@ -365,7 +456,6 @@ def render_header(title: str, subtitle: str = ""):
 # -------------------------------
 # STAGE PROGRESS
 # -------------------------------
-
 def render_stage_progress(current_stage: int):
     stages = [("📤","Upload"),("📄","Preview & Configure"),("📊","Results")]
     total = len(stages)
@@ -398,7 +488,6 @@ def render_stage_progress(current_stage: int):
     st.markdown(f'<div class="stage-container">{html}</div>', unsafe_allow_html=True)
 
 
-
 # -------------------------------
 # CARD
 # -------------------------------
@@ -407,6 +496,18 @@ def render_card(title: str, icon: str = ""):
     st.markdown(f'<div class="card"><div class="card-header">{icon_html}{title}</div>', unsafe_allow_html=True)
 
 def close_card():
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+# -------------------------------
+# PARAMETER SECTION CARD
+# -------------------------------
+def render_param_card_start(title: str):
+    """Open a parameter section card."""
+    st.markdown(f'<div class="param-section-card"><h4 style="margin-bottom: 1rem;">{title}</h4>', unsafe_allow_html=True)
+
+def render_param_card_end():
+    """Close a parameter section card."""
     st.markdown('</div>', unsafe_allow_html=True)
 
 
@@ -449,6 +550,54 @@ def render_section_divider():
 
 
 # -------------------------------
+# UPLOAD SECTION
+# -------------------------------
+def render_upload_section_start():
+    """Open upload section container."""
+    st.markdown('<div class="upload-section">', unsafe_allow_html=True)
+
+def render_upload_section_end():
+    """Close upload section container."""
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+# -------------------------------
+# PROGRESS CONTAINER
+# -------------------------------
+def render_progress_container_start():
+    """Open progress container for optimization stage."""
+    st.markdown('<div class="progress-container">', unsafe_allow_html=True)
+
+def render_progress_container_end():
+    """Close progress container."""
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+# -------------------------------
+# NAVIGATION FOOTER
+# -------------------------------
+def render_nav_footer_start():
+    """Open navigation footer."""
+    st.markdown('<div class="nav-footer">', unsafe_allow_html=True)
+
+def render_nav_footer_end():
+    """Close navigation footer."""
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+# -------------------------------
+# CHART CONTAINER
+# -------------------------------
+def render_chart_container_start():
+    """Open chart container."""
+    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+
+def render_chart_container_end():
+    """Close chart container."""
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+# -------------------------------
 # DOWNLOAD TEMPLATE
 # -------------------------------
 def render_download_template_button():
@@ -458,7 +607,7 @@ def render_download_template_button():
             with open(template_path, "rb") as f:
                 template_data = f.read()
             st.download_button(
-                label="🔥 Download Template",
+                label="📥 Download Template",
                 data=template_data,
                 file_name="polymer_production_template.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
