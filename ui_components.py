@@ -59,6 +59,38 @@ CUSTOM_CSS = """
 }
 
 /* =============================
+   BUTTON FIXES
+   ============================= */
+.stButton>button, button[data-testid="stDownloadButton"] {
+    background: var(--md-sys-color-primary) !important;
+    color: var(--md-sys-color-on-primary) !important;
+    border-radius: var(--md-shape-corner-large) !important;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    text-transform: none !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+    min-height: 40px !important;
+    transition: all 0.2s ease !important;
+}
+.stButton>button:hover, button[data-testid="stDownloadButton"]:hover {
+    background: rgba(103,80,164,0.85) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* =============================
+   TABLE / DATAFRAME LIGHT MODE
+   ============================= */
+.stDataFrame, .css-1d391kg, .stTable td, .stTable th {
+    background-color: var(--md-sys-color-surface) !important;
+    color: var(--md-sys-color-on-surface) !important;
+    border-color: var(--md-sys-color-outline-variant) !important;
+}
+.stDataFrame th {
+    font-weight: 600 !important;
+}
+
+/* =============================
    HEADER
    ============================= */
 .app-header {
@@ -188,22 +220,6 @@ CUSTOM_CSS = """
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
-.stButton > button {
-    background: var(--md-sys-color-primary) !important;
-    color: var(--md-sys-color-on-primary) !important;
-    border-radius: var(--md-shape-corner-large) !important;
-    padding: 0.75rem 1.5rem !important;
-    font-weight: 500 !important;
-    font-size: 0.875rem !important;
-    text-transform: none !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
-    transition: all 0.2s ease !important;
-    min-height: 40px !important;
-}
-.stButton > button:hover {
-    background: rgba(103,80,164,0.85) !important;
-    transform: translateY(-1px) !important;
-}
 
 /* =============================
    ALERTS
