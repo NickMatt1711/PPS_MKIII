@@ -227,7 +227,7 @@ def render_stage_progress(current_stage: int):
         display_icon = icon
         if idx == current_stage:
             status = "active"
-        elif idx < current_stage or idx = 2:
+        elif idx < current_stage:
             status = "completed"
             display_icon = "✓"
 
