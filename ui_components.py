@@ -118,6 +118,67 @@ div[data-testid="stAlert"] {
 .alert-info { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
 .alert-warning { background: var(--md-sys-color-warning-container); color: var(--md-sys-color-on-warning); }
 .alert-error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error); }
+
+
+/* Streamlit Overrides for Light Theme */
+
+/* File Uploader */
+.stFileUploader, .stFileUploader div {
+  background: var(--md-sys-color-surface) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  border-radius: var(--md-shape-corner-medium) !important;
+}
+
+/* Tabs */
+.stTabs [role="tablist"] {
+  background: var(--md-sys-color-surface) !important;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+.stTabs [role="tab"] {
+  color: var(--md-sys-color-on-surface-variant) !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+}
+.stTabs [role="tab"][aria-selected="true"] {
+  border-bottom: 3px solid var(--md-sys-color-primary);
+  color: var(--md-sys-color-primary) !important;
+  font-weight: 600;
+}
+
+/* DataFrame */
+.stDataFrame, .stTable, .stDataFrame div {
+  background: var(--md-sys-color-surface) !important;
+  color: var(--md-sys-color-on-surface) !important;
+}
+
+/* Download Button */
+button[data-testid="stDownloadButton"] {
+  background: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  border-radius: var(--md-shape-corner-large) !important;
+}
+
+/* Stage Progress Enhancements */
+.stage-circle.inactive {
+  border-color: var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-outline);
+}
+.stage-circle.active {
+  background: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+.stage-circle.completed {
+  background: var(--md-sys-color-success);
+  border-color: var(--md-sys-color-success);
+  color: var(--md-sys-color-on-success);
+}
+.stage-label.active {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+
 """
 
 # -------------------------------
