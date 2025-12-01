@@ -123,35 +123,23 @@ div[data-testid="stAlert"] {
 /* =============================
 ENHANCED STAGE PROGRESS DESIGN
 ============================= */
-.stage-container {
+
+.stage-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   background: var(--md-sys-color-surface);
-  border-radius: var(--md-shape-corner-medium);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  border: 3px solid var(--md-sys-color-outline-variant);
 }
-
-
-.stage-row {
-  display: flex;
-  justify-content: space-between;
-  position: relative;
-}
-.stage-bar {
-  position: absolute;
-  top: 20px;
-  left: 0;
-  right: 0;
-  height: 6px;
-  background: var(--md-sys-color-outline-variant);
-  border-radius: 3px;
-}
-.stage-bar-fill {
-  height: 6px;
+.stage-circle.active {
+  transform: scale(1.1);
   background: var(--md-sys-color-primary);
-  border-radius: 3px;
-  width: 50%; /* dynamic based on stage */
 }
+.stage-circle.completed::after {
+  content: '✓';
+  font-size: 1.2rem;
+}
+
 
 
 """
