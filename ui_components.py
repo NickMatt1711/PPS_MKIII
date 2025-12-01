@@ -275,37 +275,19 @@ Metric Cards — Gradient Variants
   min-height: 120px !important;
 }
 
-/* Target by parent column position - using data-testid */
-[data-testid="column"]:nth-child(1) .metric-card {
+.metric-card-blue {
   background: linear-gradient(135deg, #E6F0FA, #BBD7F5) !important;
 }
 
-[data-testid="column"]:nth-child(2) .metric-card {
+.metric-card-green {
   background: linear-gradient(135deg, #DFF6E3, #AEE8C1) !important;
 }
 
-[data-testid="column"]:nth-child(3) .metric-card {
+.metric-card-yellow {
   background: linear-gradient(135deg, #FFF3CD, #FFE29A) !important;
 }
 
-[data-testid="column"]:nth-child(4) .metric-card {
-  background: linear-gradient(135deg, #F8D7DA, #F1A2A9) !important;
-}
-
-/* Fallback: target by order in document */
-.metric-card:nth-child(1) {
-  background: linear-gradient(135deg, #E6F0FA, #BBD7F5) !important;
-}
-
-.metric-card:nth-child(2) {
-  background: linear-gradient(135deg, #DFF6E3, #AEE8C1) !important;
-}
-
-.metric-card:nth-child(3) {
-  background: linear-gradient(135deg, #FFF3CD, #FFE29A) !important;
-}
-
-.metric-card:nth-child(4) {
+.metric-card-red {
   background: linear-gradient(135deg, #F8D7DA, #F1A2A9) !important;
 }
 
@@ -431,10 +413,19 @@ def close_card():
 # -------------------------------
 # METRIC CARD
 # -------------------------------
-def render_metric_card(label: str, value: str, col):
+def render_metric_card(label: str, value: str, col, card_index: int = 0):
+    """Render a metric card with gradient background."""
+    gradient_classes = [
+        'metric-card-blue',
+        'metric-card-green', 
+        'metric-card-yellow',
+        'metric-card-red'
+    ]
+    card_class = gradient_classes[card_index % 4] if card_index < 4 else 'metric-card'
+    
     with col:
         st.markdown(
-            f'''<div class="metric-card">
+            f'''<div class="metric-card {card_class}">
                 <div class="metric-label">{label}</div>
                 <div class="metric-value">{value}</div>
             </div>''',
