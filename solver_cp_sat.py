@@ -454,7 +454,7 @@ def build_and_solve_model(
         for d in range(num_days):
             objective += stockout_penalty * stockout_vars[(grade, d)]
     
-    # Transition penalties
+    # Transition penalties and continuity bonuses
     for line in lines:
         for d in range(num_days - 1):
             for grade1 in grades:
