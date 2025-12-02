@@ -1,11 +1,12 @@
 """
 Configuration and constants for the Polymer Production Scheduler
+Enhanced UX version with proper stage management
 """
 
 # Application Configuration
 APP_TITLE = "Polymer Production Scheduler"
 APP_ICON = "🏭"
-VERSION = "3.0.0"
+VERSION = "3.1.0"
 
 # Default Optimization Parameters
 DEFAULT_TIME_LIMIT_MIN = 10
@@ -18,55 +19,11 @@ DEFAULT_CONTINUITY_BONUS = 1
 SOLVER_NUM_WORKERS = 8
 SOLVER_RANDOM_SEED = 42
 
-# UI Theme Colors (Material 3 Light Theme)
-THEME_COLORS = {
-    # Primary colors (Blue-based industrial accent)
-    'primary': '#3855A3',              # M3-style mid-chroma blue
-    'primary_light': '#6F8CE6',        # Tone ~70 (hover states, subtle accents)
-    'primary_container': '#DCE3FF',    # Tone ~90 container
-    'on_primary': '#FFFFFF',
-
-    # Secondary colors (Neutralized teal for supportive elements)
-    'secondary': '#4B6B68',            # Low-chroma teal/industrial green
-    'secondary_light': '#789C98',      # Tone ~70
-    'secondary_container': '#DCE6E5',  # Tone ~92
-    'on_secondary': '#FFFFFF',
-
-    # Surface colors (Material 3 neutrals: warm-grey industrial surfaces)
-    'surface': '#F9FAFB',              # Tone 98
-    'surface_variant': '#E3E8EF',      # Tone 90 (cards, panels)
-    'on_surface': '#1B1F24',           # Tone 15
-    'on_surface_variant': '#5A636F',   # Tone 50
-
-    # Background colors
-    'background': '#F7F8FA',           # Slightly warm neutral
-    'on_background': '#1A1D22',
-
-    # Borders / outlines (M3 uses outline + outline-variant)
-    'border': '#C6CDD7',               # Tone 80
-    'border_light': '#E4E7EB',         # Tone 92
-    'outline': '#9299A3',              # Tone 60
-
-    # Error colors (Material 3 Red)
-    'error': '#BA1A1A',                # Tone 40
-    'error_light': '#FFEDEA',          # Tone 95
-    'on_error': '#FFFFFF',
-
-    # Success (Green but desaturated for industrial feel)
-    'success': '#2F7D4F',              # Low chroma, strong contrast
-    'success_light': '#E6F3EB',        # Tone 94
-    'on_success': '#FFFFFF',
-
-    # Warning (Amber, softened to match M3 tonal ramp)
-    'warning': '#A66E00',              # Strong amber tone 40
-    'warning_light': '#FFF4E3',        # Tone 95
-    'on_warning': '#FFFFFF',
-
-    # Info (Blue accent aligned with primary palette)
-    'info': '#2E6BCF',                 # Tone 50–55 (solid contrast)
-    'info_light': '#E7F0FF',           # Tone 94
-    'on_info': '#FFFFFF',
-}
+# Stage Management (proper numeric stages)
+STAGE_UPLOAD = 0
+STAGE_PREVIEW = 1
+STAGE_OPTIMIZING = 2
+STAGE_RESULTS = 3
 
 # Chart Colors (Soft Material Palette)
 CHART_COLORS = [
@@ -105,11 +62,6 @@ INVENTORY_COLUMNS = {
     'rerun': 'Rerun Allowed',
     'min_closing': 'Min. Closing Inventory',
 }
-
-# Wizard Stage Names
-STAGE_UPLOAD = "upload"
-STAGE_PREVIEW = "preview"
-STAGE_RESULTS = "results"
 
 # Session State Keys
 SS_STAGE = "wizard_stage"
