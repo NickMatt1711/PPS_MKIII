@@ -24,7 +24,11 @@ def _ensure_date(d: Any) -> date:
     try:
         return datetime.strptime(str(d), "%d-%b-%y").date()
     except Exception:
-        return datetime.strptime(str(d), "%Y-%m-%d").date()
+        try:
+            return datetime.strptime(str(d), "%Y-%m-%d").date()
+        except Exception:
+            # If all parsing fails, return today's date
+            return date.today()
 
 
 # ===============================================================
@@ -222,7 +226,7 @@ def create_gantt_chart(
 
 
 # ===============================================================
-#  INVENTORY CHART
+#  INVENTORY CHART (FIXED DATE ARITHMETIC)
 # ===============================================================
 
 def create_inventory_chart(
@@ -272,39 +276,16 @@ def create_inventory_chart(
     highest_val = max(inv_vals[:last_actual_day]) if last_actual_day > 0 else inv_vals[0]
     lowest_val = min(inv_vals[:last_actual_day]) if last_actual_day > 0 else inv_vals[0]
 
-    # Annotations (only for demand period)
-    annotations = []
-    
-    if last_actual_day > 0:
-        # Ensure we have valid dates
-        start_date = dates[0]
-        end_date = dates[last_actual_day - 1] if last_actual_day < len(dates) else dates[-1]
-        
-        annotations.extend([
-            dict(
-                x=start_date, y=start_val,
-                text=f"Start: {start_val:.0f}",
-                showarrow=True, arrowhead=2,
-                ax=-40, ay=30,
-                font=dict(color="black", size=11),
-                bgcolor="white", bordercolor="gray"
-            ),
-            dict(
-                x=end_date, y=end_val,
-                text=f"End: {end_val:.0f}",
-                showarrow=True, arrowhead=2,
-                ax=40, ay=30,
-                font=dict(color="black", size=11),
-                bgcolor="white", bordercolor="gray"
-            )
-        ])
+    # FIXED: Ensure we're using date objects, not mixing with integers
+    start_date = dates[0] if len(dates) > 0 else date.today()
+    end_date = dates[last_actual_day - 1] if last_actual_day > 0 and last_actual_day <= len(dates) else dates[-1] if len(dates) > 0 else date.today()
     
     # Find indices for highest/lowest within demand period
     highest_idx = inv_vals.index(highest_val) if highest_val in inv_vals[:last_actual_day] else 0
     lowest_idx = inv_vals.index(lowest_val) if lowest_val in inv_vals[:last_actual_day] else 0
     
-    highest_x = dates[highest_idx]
-    lowest_x = dates[lowest_idx]
+    highest_date = dates[highest_idx] if highest_idx < len(dates) else start_date
+    lowest_date = dates[lowest_idx] if lowest_idx < len(dates) else start_date
 
     fig = go.Figure()
 
@@ -352,22 +333,23 @@ def create_inventory_chart(
     for line in lines_for_grade:
         if line in shutdown_periods and shutdown_periods[line]:
             shutdown_days = shutdown_periods[line]
-            start_shutdown = dates[shutdown_days[0]]
-            end_shutdown = dates[shutdown_days[-1]]
-            
-            fig.add_vrect(
-                x0=start_shutdown,
-                x1=end_shutdown + timedelta(days=1),
-                fillcolor="red",
-                opacity=0.1,
-                layer="below",
-                line_width=0,
-                annotation_text=f"Shutdown: {line}" if not shutdown_added else "",
-                annotation_position="top left",
-                annotation_font_size=14,
-                annotation_font_color="red"
-            )
-            shutdown_added = True
+            if shutdown_days and len(shutdown_days) > 0:
+                start_shutdown = dates[shutdown_days[0]] if shutdown_days[0] < len(dates) else start_date
+                end_shutdown = dates[shutdown_days[-1]] if shutdown_days[-1] < len(dates) else end_date
+                
+                fig.add_vrect(
+                    x0=start_shutdown,
+                    x1=end_shutdown + timedelta(days=1),
+                    fillcolor="red",
+                    opacity=0.1,
+                    layer="below",
+                    line_width=0,
+                    annotation_text=f"Shutdown: {line}" if not shutdown_added else "",
+                    annotation_position="top left",
+                    annotation_font_size=14,
+                    annotation_font_color="red"
+                )
+                shutdown_added = True
 
     # Min/Max lines
     if min_inv is not None:
@@ -392,9 +374,10 @@ def create_inventory_chart(
     annotations = []
     
     if last_actual_day > 0:
+        # FIXED: Ensure we're using date objects
         annotations.extend([
             dict(
-                x=start_x, y=start_val,
+                x=start_date, y=start_val,
                 text=f"Start: {start_val:.0f}",
                 showarrow=True, arrowhead=2,
                 ax=-40, ay=30,
@@ -402,7 +385,7 @@ def create_inventory_chart(
                 bgcolor="white", bordercolor="gray"
             ),
             dict(
-                x=end_x, y=end_val,
+                x=end_date, y=end_val,
                 text=f"End: {end_val:.0f}",
                 showarrow=True, arrowhead=2,
                 ax=40, ay=30,
@@ -414,7 +397,7 @@ def create_inventory_chart(
     if highest_val > start_val and highest_idx < last_actual_day:
         annotations.append(
             dict(
-                x=highest_x, y=highest_val,
+                x=highest_date, y=highest_val,
                 text=f"High: {highest_val:.0f}",
                 showarrow=True, arrowhead=2,
                 ax=0, ay=-40,
@@ -426,13 +409,31 @@ def create_inventory_chart(
     if lowest_val < start_val and lowest_idx < last_actual_day:
         annotations.append(
             dict(
-                x=lowest_x, y=lowest_val,
+                x=lowest_date, y=lowest_val,
                 text=f"Low: {lowest_val:.0f}",
                 showarrow=True, arrowhead=2,
                 ax=0, ay=40,
                 font=dict(color="firebrick", size=11),
                 bgcolor="white", bordercolor="gray"
             )
+        )
+
+    # Add annotations one by one
+    for ann in annotations:
+        fig.add_annotation(
+            x=ann['x'],
+            y=ann['y'],
+            text=ann['text'],
+            showarrow=ann['showarrow'],
+            arrowhead=ann['arrowhead'],
+            ax=ann['ax'],
+            ay=ann['ay'],
+            font=ann['font'],
+            bgcolor=ann['bgcolor'],
+            bordercolor=ann['bordercolor'],
+            borderwidth=1,
+            borderpad=4,
+            opacity=0.9
         )
 
     fig.update_layout(
@@ -465,24 +466,6 @@ def create_inventory_chart(
             bgcolor="rgba(255, 255, 255, 0.8)"
         )
     )
-    
-    # Add annotations one by one
-    for ann in annotations:
-        fig.add_annotation(
-            x=ann['x'],
-            y=ann['y'],
-            text=ann['text'],
-            showarrow=ann['showarrow'],
-            arrowhead=ann['arrowhead'],
-            ax=ann['ax'],
-            ay=ann['ay'],
-            font=ann['font'],
-            bgcolor=ann['bgcolor'],
-            bordercolor=ann['bordercolor'],
-            borderwidth=1,
-            borderpad=4,
-            opacity=0.9
-        )
 
     return fig
 
@@ -558,7 +541,7 @@ def create_production_summary(solution, production_vars, solver, grades, lines, 
                     except:
                         # If solver object not available, try to get from solution dict
                         try:
-                            date_key = d.strftime("%d-%b-%y") if hasattr(d, 'strftime') else f"Day_{d}"
+                            date_key = f"Day_{d}" if not hasattr(d, 'strftime') else d.strftime("%d-%b-%y")
                             production_data = solution.get('production', {}).get(grade, {})
                             if date_key in production_data:
                                 val += production_data[date_key]
@@ -592,6 +575,7 @@ def create_production_summary(solution, production_vars, solver, grades, lines, 
     rows.append(total_row)
     return pd.DataFrame(rows)
 
+
 # ===============================================================
 #  STOCKOUT DETAILS TABLE
 # ===============================================================
@@ -605,9 +589,6 @@ def create_stockout_details_table(
     """Create detailed table of stockout occurrences."""
     rows = []
     
-    # Determine last actual planning day (before buffer)
-    last_actual_day = len(dates) - buffer_days if buffer_days > 0 else len(dates)
-    
     stockout_dict = solution.get('stockout', {})
     
     for grade in sorted(grades):
@@ -615,42 +596,15 @@ def create_stockout_details_table(
             grade_stockouts = stockout_dict[grade]
             for date_str, stockout_qty in grade_stockouts.items():
                 if stockout_qty > 0:
-                    # Try to parse date string
-                    try:
-                        if isinstance(date_str, str):
-                            # Handle date format conversion
-                            try:
-                                date_obj = datetime.strptime(date_str, "%d-%b-%y")
-                            except:
-                                # Try other formats
-                                date_obj = datetime.strptime(date_str, "%Y-%m-%d")
-                        else:
-                            date_obj = date_str
-                        
-                        # Check if within demand period (not buffer)
-                        date_index = -1
-                        for i, d in enumerate(dates):
-                            if i >= last_actual_day:
-                                break
-                            if _ensure_date(d) == _ensure_date(date_obj):
-                                date_index = i
-                                break
-                        
-                        if date_index >= 0:  # Only include if within demand period
-                            rows.append({
-                                "Date": _ensure_date(date_obj).strftime("%d-%b-%y"),
-                                "Grade": grade,
-                                "Stockout Quantity (MT)": stockout_qty,
-                                "Day Index": date_index
-                            })
-                    except Exception as e:
-                        # Skip if date parsing fails
-                        continue
+                    rows.append({
+                        "Date": date_str,
+                        "Grade": grade,
+                        "Stockout Quantity (MT)": stockout_qty
+                    })
     
     if not rows:
         return pd.DataFrame()
     
     df = pd.DataFrame(rows)
     df = df.sort_values(["Date", "Grade"])
-    df = df.reset_index(drop=True)
     return df
