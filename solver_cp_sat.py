@@ -235,7 +235,13 @@ def build_and_solve_model(
                 model.Add(sum(producing_vars) <= 1)
     
     # 3. Material running constraints (HARD)
+    # Track which lines have initial forced running
+    material_running_map = {}
     for plant, (material, expected_days) in material_running_info.items():
+        material_running_map[plant] = {
+            'material': material,
+            'expected_days': min(expected_days, num_days)  # Cap at num_days
+        }
         for d in range(min(expected_days, num_days)):
             if is_allowed_combination(material, plant):
                 model.Add(get_is_producing_var(material, plant, d) == 1)
@@ -314,11 +320,10 @@ def build_and_solve_model(
             except ValueError:
                 pass
     
-    # ========== MIN/MAX RUN DAYS - HARD CONSTRAINTS ==========
-    # These must be respected regardless of transition penalties
-    
-    # Create start of run indicators
-    is_start_of_run = {}
+    # ========== CORRECTED MIN/MAX RUN DAYS LOGIC ==========
+    # Material running forces initial production for X days
+    # After that, solver decides whether to continue or switch
+    # If solver decides to continue, it must run for at least min_run days
     
     for grade in grades:
         for line in allowed_lines[grade]:
@@ -326,70 +331,151 @@ def build_and_solve_model(
             min_run = min_run_days.get(grade_plant_key, 1)
             max_run = max_run_days.get(grade_plant_key, 9999)
             
-            # Create start variables
-            for d in range(num_days):
-                start_var = model.NewBoolVar(f'start_{grade}_{line}_{d}')
-                is_start_of_run[(grade, line, d)] = start_var
-                
-                prod_today = get_is_producing_var(grade, line, d)
-                
-                if d == 0:
-                    # Start on day 0 if producing
-                    if prod_today is not None:
-                        model.Add(start_var == prod_today)
-                else:
-                    prod_yesterday = get_is_producing_var(grade, line, d - 1)
-                    if prod_today is not None and prod_yesterday is not None:
-                        # Start if producing today AND not producing yesterday
-                        # start = prod_today AND NOT prod_yesterday
-                        model.Add(start_var <= prod_today)
-                        model.Add(start_var <= 1 - prod_yesterday)
-                        model.Add(start_var >= prod_today - prod_yesterday)
+            # Check if this line has material running
+            has_material_running = line in material_running_map
+            material_running_grade = material_running_map[line]['material'] if has_material_running else None
+            material_running_days = material_running_map[line]['expected_days'] if has_material_running else 0
             
-            # ========== MINIMUM RUN DAYS - HARD CONSTRAINT ==========
-            # If we start a run on day d, we must produce for at least min_run days
-            for d in range(num_days):
-                start_var = is_start_of_run[(grade, line, d)]
+            # ========== MINIMUM RUN DAYS CONSTRAINT ==========
+            # This applies ONLY if solver decides to continue after material running ends
+            
+            if has_material_running and material_running_grade == grade:
+                # This grade is forced for the initial material_running_days
+                # The decision point is: at day material_running_days, do we continue?
                 
-                # Check how many consecutive days we have from day d
-                available_days = 0
-                run_days_vars = []
+                # Create a decision variable: continue_after_material_running
+                # This is 1 if we produce on day material_running_days (the day after forced period ends)
+                # and 0 if we stop
                 
-                for offset in range(min_run):
-                    day_idx = d + offset
-                    if day_idx >= num_days:
-                        break
+                if material_running_days < num_days:
+                    continue_var = model.NewBoolVar(f'continue_{grade}_{line}_{material_running_days}')
+                    prod_day_after = get_is_producing_var(grade, line, material_running_days)
                     
-                    # Skip if shutdown day
-                    if line in shutdown_periods and day_idx in shutdown_periods[line]:
+                    if prod_day_after is not None:
+                        # continue_var = 1 if producing on day material_running_days
+                        model.Add(continue_var == prod_day_after)
+                        
+                        # If we continue (continue_var = 1), we must run for at least min_run days total
+                        # This includes the material running days + additional days
+                        total_min_days = min_run
+                        days_already_forced = material_running_days
+                        days_still_needed = max(0, total_min_days - days_already_forced)
+                        
+                        if days_still_needed > 0:
+                            # We need to produce for additional days_still_needed days
+                            additional_days_vars = []
+                            for offset in range(days_still_needed):
+                                day_idx = material_running_days + offset
+                                if day_idx >= num_days:
+                                    break
+                                
+                                # Skip shutdown days
+                                if line in shutdown_periods and day_idx in shutdown_periods[line]:
+                                    # Shutdown breaks the run
+                                    break
+                                
+                                prod_var = get_is_producing_var(grade, line, day_idx)
+                                if prod_var is not None:
+                                    additional_days_vars.append(prod_var)
+                            
+                            # If we have enough days to satisfy min_run, enforce it
+                            if len(additional_days_vars) >= days_still_needed:
+                                for i in range(days_still_needed):
+                                    model.Add(additional_days_vars[i] == 1).OnlyEnforceIf(continue_var)
+            
+            else:
+                # No material running for this grade on this line
+                # Normal min-run constraint applies to any run
+                
+                for d in range(num_days - min_run + 1):
+                    # Check if this could be start of a run
+                    # A run starts if producing today AND (day 0 OR not producing yesterday)
+                    
+                    prod_today = get_is_producing_var(grade, line, d)
+                    if prod_today is None:
                         continue
                     
-                    prod_var = get_is_producing_var(grade, line, day_idx)
-                    if prod_var is not None:
-                        available_days += 1
-                        run_days_vars.append(prod_var)
-                
-                # If we have enough available days to satisfy min_run
-                if available_days >= min_run:
-                    # If this is a start, enforce production on all run_days_vars
-                    for prod_var in run_days_vars[:min_run]:
-                        model.Add(prod_var == 1).OnlyEnforceIf(start_var)
+                    if d == 0:
+                        # Day 0: if producing, it's a start
+                        # Enforce min_run days
+                        run_days_vars = []
+                        valid_for_min_run = True
+                        
+                        for offset in range(min_run):
+                            day_idx = d + offset
+                            if day_idx >= num_days:
+                                valid_for_min_run = False
+                                break
+                            
+                            # Skip shutdown days
+                            if line in shutdown_periods and day_idx in shutdown_periods[line]:
+                                valid_for_min_run = False
+                                break
+                            
+                            prod_var = get_is_producing_var(grade, line, day_idx)
+                            if prod_var is not None:
+                                run_days_vars.append(prod_var)
+                            else:
+                                valid_for_min_run = False
+                                break
+                        
+                        if valid_for_min_run and len(run_days_vars) == min_run:
+                            # If producing on day 0, must continue for min_run days
+                            for prod_var in run_days_vars:
+                                model.Add(prod_var == 1).OnlyEnforceIf(prod_today)
+                    
+                    else:
+                        prod_yesterday = get_is_producing_var(grade, line, d - 1)
+                        if prod_yesterday is not None:
+                            # Create start indicator
+                            starts_run = model.NewBoolVar(f'starts_run_{grade}_{line}_{d}')
+                            
+                            # starts_run = prod_today AND NOT prod_yesterday
+                            model.Add(starts_run <= prod_today)
+                            model.Add(starts_run <= 1 - prod_yesterday)
+                            model.Add(starts_run >= prod_today - prod_yesterday)
+                            
+                            # If starts_run = 1, enforce min_run days
+                            run_days_vars = []
+                            valid_for_min_run = True
+                            
+                            for offset in range(min_run):
+                                day_idx = d + offset
+                                if day_idx >= num_days:
+                                    valid_for_min_run = False
+                                    break
+                                
+                                # Skip shutdown days
+                                if line in shutdown_periods and day_idx in shutdown_periods[line]:
+                                    valid_for_min_run = False
+                                    break
+                                
+                                prod_var = get_is_producing_var(grade, line, day_idx)
+                                if prod_var is not None:
+                                    run_days_vars.append(prod_var)
+                                else:
+                                    valid_for_min_run = False
+                                    break
+                            
+                            if valid_for_min_run and len(run_days_vars) == min_run:
+                                for prod_var in run_days_vars:
+                                    model.Add(prod_var == 1).OnlyEnforceIf(starts_run)
             
-            # ========== MAXIMUM RUN DAYS - HARD CONSTRAINT ==========
-            # Cannot produce the same grade for more than max_run consecutive days
+            # ========== MAXIMUM RUN DAYS CONSTRAINT ==========
+            # This applies to ALL runs, including material running
+            
             for d in range(num_days - max_run):
-                # Check consecutive days from d to d+max_run
-                valid_sequence = True
+                # Check sequence of max_run + 1 consecutive days
                 consecutive_vars = []
+                valid_sequence = True
                 
                 for offset in range(max_run + 1):
                     day_idx = d + offset
-                    
                     if day_idx >= num_days:
                         valid_sequence = False
                         break
                     
-                    # Skip if shutdown day (shutdown breaks the sequence)
+                    # Shutdown days break the sequence
                     if line in shutdown_periods and day_idx in shutdown_periods[line]:
                         valid_sequence = False
                         break
@@ -432,14 +518,42 @@ def build_and_solve_model(
         for line in allowed_lines[grade]:
             grade_plant_key = (grade, line)
             if not rerun_allowed.get(grade_plant_key, True):
-                # Count start of runs
+                # Count how many times this grade starts a run
+                # Exclude material running from the count
+                
                 start_vars = []
                 for d in range(num_days):
-                    if (grade, line, d) in is_start_of_run:
-                        start_vars.append(is_start_of_run[(grade, line, d)])
+                    # Skip if this is within material running period
+                    has_material_running = line in material_running_map
+                    if has_material_running:
+                        material_running_grade = material_running_map[line]['material']
+                        material_running_days = material_running_map[line]['expected_days']
+                        if material_running_grade == grade and d < material_running_days:
+                            continue
+                    
+                    # Check if this is a start
+                    prod_today = get_is_producing_var(grade, line, d)
+                    if prod_today is None:
+                        continue
+                    
+                    if d == 0:
+                        # Day 0 could be a start (if not material running)
+                        start_vars.append(prod_today)
+                    else:
+                        prod_yesterday = get_is_producing_var(grade, line, d - 1)
+                        if prod_yesterday is not None:
+                            # Create start indicator
+                            start_indicator = model.NewBoolVar(f'rerun_start_{grade}_{line}_{d}')
+                            
+                            # start_indicator = prod_today AND NOT prod_yesterday
+                            model.Add(start_indicator <= prod_today)
+                            model.Add(start_indicator <= 1 - prod_yesterday)
+                            model.Add(start_indicator >= prod_today - prod_yesterday)
+                            
+                            start_vars.append(start_indicator)
                 
                 if start_vars:
-                    # HARD CONSTRAINT: Can start at most once
+                    # Can start at most once (excluding material running)
                     model.Add(sum(start_vars) <= 1)
     
     if progress_callback:
@@ -527,7 +641,6 @@ def build_and_solve_model(
                     objective_terms.append(transition_penalty * trans_var)
     
     # 5. Idle line penalty (SOFT - to minimize gaps, but not required)
-    # This helps but is not a hard constraint
     idle_penalty = 500  # Lower than transition penalty to prioritize min runs
     for line in lines:
         for d in range(num_days):
