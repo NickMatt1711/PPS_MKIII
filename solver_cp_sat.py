@@ -166,7 +166,6 @@ def build_and_solve_model(
     buffer_days: int,
     stockout_penalty: int,
     transition_penalty: int,
-    continuity_bonus: int,
     time_limit_min: int,
     progress_callback=None
 ) -> Tuple[int, SolutionCallback, cp_model.CpSolver]:
