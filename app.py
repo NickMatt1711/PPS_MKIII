@@ -299,8 +299,13 @@ def render_optimization_stage():
         inventory_data = process_inventory_data(excel_data['Inventory'], plant_data['lines'])
         progress_bar.progress(0.2)
 
-        status_text.info("📄 Validating shutdown constraints...")
+        status_text.info("📄 Processing demand data...")
+        demand_data, dates, num_days = process_demand_data(excel_data['Demand'], params['buffer_days'])
+        formatted_dates = [d.strftime('%d-%b-%y') for d in dates]
+        progress_bar.progress(0.3)
 
+        status_text.info("📄 Validating shutdown constraints...")
+        
         # Validate pre-shutdown and restart grades
         invalid_grades_warning = []
         for line, grade in plant_data.get('pre_shutdown_grades', {}).items():
@@ -308,22 +313,17 @@ def render_optimization_stage():
                 invalid_grades_warning.append(f"Pre-shutdown grade '{grade}' for line '{line}' is not a valid grade.")
             elif line not in inventory_data['allowed_lines'][grade]:
                 invalid_grades_warning.append(f"Pre-shutdown grade '{grade}' for line '{line}' is not allowed on that line.")
-        
+
         for line, grade in plant_data.get('restart_grades', {}).items():
             if grade not in inventory_data['grades']:
                 invalid_grades_warning.append(f"Restart grade '{grade}' for line '{line}' is not a valid grade.")
             elif line not in inventory_data['allowed_lines'][grade]:
                 invalid_grades_warning.append(f"Restart grade '{grade}' for line '{line}' is not allowed on that line.")
-        
+
         if invalid_grades_warning:
             for warning in invalid_grades_warning:
-                st.warning(warning)
+                render_alert(warning, "warning")
             st.warning("⚠️ Invalid shutdown/restart grades may cause infeasible solutions.")
-    
-        status_text.info("📄 Processing demand data...")
-        demand_data, dates, num_days = process_demand_data(excel_data['Demand'], params['buffer_days'])
-        formatted_dates = [d.strftime('%d-%b-%y') for d in dates]
-        progress_bar.progress(0.3)
 
         status_text.info("📄 Processing shutdown periods...")
         shutdown_periods = process_shutdown_dates(plant_data.get('shutdown_periods', {}), dates)
@@ -501,15 +501,14 @@ def render_results_stage():
             st.markdown(f"#### 🏭 {line}")
             
             # Display shutdown constraints info if applicable
-            if line in data.get('pre_shutdown_grades', {}) or line in data.get('restart_grades', {}):
-                constraints_info = []
-                if line in data.get('pre_shutdown_grades', {}):
-                    constraints_info.append(f"**Pre-Shutdown Grade:** {data['pre_shutdown_grades'][line]}")
-                if line in data.get('restart_grades', {}):
-                    constraints_info.append(f"**Restart Grade:** {data['restart_grades'][line]}")
-                
-                if constraints_info:
-                    st.info(" | ".join(constraints_info))
+            constraints_info = []
+            if line in data.get('pre_shutdown_grades', {}):
+                constraints_info.append(f"**Pre-Shutdown Grade:** {data['pre_shutdown_grades'][line]}")
+            if line in data.get('restart_grades', {}):
+                constraints_info.append(f"**Restart Grade:** {data['restart_grades'][line]}")
+            
+            if constraints_info:
+                st.info(" | ".join(constraints_info))
 
             # Gantt chart
             try:
