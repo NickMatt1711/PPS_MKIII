@@ -470,10 +470,6 @@ def build_and_solve_model(
                     model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade1, line, d)].Not())
                     model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade2, line, d + 1)].Not())
                     objective += transition_penalty * trans_var
-            
-            for grade in grades:
-                if line in allowed_lines[grade]:
-                    model.AddBoolAnd([is_producing[(grade, line, d)], is_producing[(grade, line, d + 1)]]).OnlyEnforceIf(continuity)
     
     model.Minimize(objective)
     
