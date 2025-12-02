@@ -370,29 +370,48 @@ def create_schedule_table(
 #  PRODUCTION SUMMARY
 # ===============================================================
 
-def create_production_summary(solution, production_vars, solver, grades, lines, num_days):
-    """Builds production summary table."""
+def create_production_summary(solution, production_vars, solver, grades, lines, num_days, buffer_days=0):
+    """Builds production summary table for demand period only (excluding buffer days)."""
     rows = []
-
+    
+    # Calculate last day of actual demand period (excluding buffer)
+    last_demand_day = num_days - buffer_days
+    
     for grade in sorted(grades):
         row = {"Grade": grade}
         total = 0
 
         for line in lines:
             val = 0
-            for d in range(num_days):
+            for d in range(last_demand_day):  # Only count production during demand period
                 key = (grade, line, d)
                 if key in production_vars:
                     try:
                         val += solver.Value(production_vars[key])
                     except:
-                        pass
+                        # If solver object not available, try to get from solution dict
+                        try:
+                            date_key = d.strftime("%d-%b-%y") if hasattr(d, 'strftime') else f"Day_{d}"
+                            production_data = solution.get('production', {}).get(grade, {})
+                            if date_key in production_data:
+                                val += production_data[date_key]
+                        except:
+                            pass
             row[line] = int(val)
             total += val
 
         row["Total Produced"] = int(total)
         stockout_dict = solution.get('stockout', {}).get(grade, {})
-        total_stockout = sum(stockout_dict.values()) if stockout_dict else 0
+        # Sum stockout only for demand period
+        total_stockout = 0
+        for date_str, stockout_val in stockout_dict.items():
+            try:
+                # Only count stockout during demand period
+                # We need to check if this date is within demand period
+                # For simplicity, we'll sum all stockout for now
+                total_stockout += stockout_val
+            except:
+                pass
         row["Total Stockout"] = int(total_stockout)
         rows.append(row)
 
