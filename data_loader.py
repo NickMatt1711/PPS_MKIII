@@ -142,15 +142,19 @@ def process_plant_data(plant_df: pd.DataFrame) -> Dict:
                 'end': shutdown_end
             }
             
-            # NEW: Pre Shutdown Grade
+            # Pre Shutdown Grade
             pre_shutdown_grade = row.get(PLANT_COLUMNS['pre_shutdown_grade'])
             if pd.notna(pre_shutdown_grade):
-                result['pre_shutdown_grades'][plant] = str(pre_shutdown_grade).strip()
-            
-            # NEW: Restart Grade
+                grade_str = str(pre_shutdown_grade).strip()
+                if grade_str:  # Only store if not empty after stripping
+                    result['pre_shutdown_grades'][plant] = grade_str
+                
+            # Restart Grade
             restart_grade = row.get(PLANT_COLUMNS['restart_grade'])
             if pd.notna(restart_grade):
-                result['restart_grades'][plant] = str(restart_grade).strip()
+                grade_str = str(restart_grade).strip()
+                if grade_str:  # Only store if not empty after stripping
+                    result['restart_grades'][plant] = grade_str
     
     return result
 
