@@ -142,14 +142,14 @@ def process_plant_data(plant_df: pd.DataFrame) -> Dict:
                 'end': shutdown_end
             }
             
-            # Pre Shutdown Grade
+            # NEW: Pre Shutdown Grade - only store if not empty/blank
             pre_shutdown_grade = row.get(PLANT_COLUMNS['pre_shutdown_grade'])
             if pd.notna(pre_shutdown_grade):
                 grade_str = str(pre_shutdown_grade).strip()
                 if grade_str:  # Only store if not empty after stripping
                     result['pre_shutdown_grades'][plant] = grade_str
-                
-            # Restart Grade
+            
+            # NEW: Restart Grade - only store if not empty/blank
             restart_grade = row.get(PLANT_COLUMNS['restart_grade'])
             if pd.notna(restart_grade):
                 grade_str = str(restart_grade).strip()
@@ -306,3 +306,28 @@ def process_shutdown_dates(shutdown_periods: Dict, dates: List) -> Dict:
             processed[plant] = []
     
     return processed
+
+
+def process_transition_rules(transition_dfs: Dict) -> Dict:
+    """Process transition matrices - extract plant name from sheet name"""
+    transition_rules = {}
+    
+    for sheet_name, df in transition_dfs.items():
+        # Extract plant name from sheet name (e.g., "Transition_Plant1" -> "Plant1")
+        if sheet_name.startswith('Transition_'):
+            plant_name = sheet_name.replace('Transition_', '')
+        else:
+            plant_name = sheet_name
+        
+        if df is not None:
+            transition_rules[plant_name] = {}
+            for prev_grade in df.index:
+                allowed_transitions = []
+                for current_grade in df.columns:
+                    if str(df.loc[prev_grade, current_grade]).lower() == 'yes':
+                        allowed_transitions.append(current_grade)
+                transition_rules[plant_name][prev_grade] = allowed_transitions
+        else:
+            transition_rules[plant_name] = None
+    
+    return transition_rules
