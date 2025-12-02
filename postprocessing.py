@@ -171,7 +171,7 @@ def create_inventory_chart(
     last_actual_day = len(dates) - buffer_days
 
     start_val = inv_vals[0]
-    end_val = inv_vals[last_actual_day]-1
+    end_val = inv_vals[last_actual_day - 1]
     highest_val = max(inv_vals[:last_actual_day + 1])
     lowest_val = min(inv_vals[:last_actual_day + 1])
 
