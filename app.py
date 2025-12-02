@@ -56,36 +56,6 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 })
 
 
-# ========== STOCKOUT SUMMARY FUNCTION ==========
-def create_stockout_summary_table(solution, grades):
-    """Create summary table of stockout occurrences."""
-    rows = []
-    
-    stockout_dict = solution.get('stockout', {})
-    
-    total_stockout = 0
-    for grade in sorted(grades):
-        grade_stockout = 0
-        if grade in stockout_dict:
-            for stockout_qty in stockout_dict[grade].values():
-                if stockout_qty > 0:
-                    grade_stockout += stockout_qty
-        
-        rows.append({
-            "Grade": grade,
-            "Total Stockout (MT)": grade_stockout
-        })
-        total_stockout += grade_stockout
-    
-    # Add total row
-    rows.append({
-        "Grade": "TOTAL",
-        "Total Stockout (MT)": total_stockout
-    })
-    
-    return pd.DataFrame(rows)
-
-
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
     """Stage 0: File upload"""
@@ -665,37 +635,40 @@ def render_results_stage():
         # Add stockout summary table below
         st.markdown("### ⚠️ Stockout Summary")
         try:
-            stockout_df = create_stockout_summary_table(
+            stockout_df = create_stockout_details_table(
                 solution,
-                data.get('grades', [])
+                data.get('grades', []),
+                data.get('dates', []),
+                buffer_days=data.get('buffer_days', 0)
             )
         except Exception as e:
             stockout_df = pd.DataFrame()
-            st.error(f"Failed to create stockout summary: {e}")
+            st.error(f"Failed to create stockout details table: {e}")
         
         if not stockout_df.empty:
-            def highlight_stockout(val):
-                if isinstance(val, (int, float)):
-                    if val > 0:
-                        return 'background-color: #FFE6E6; color: #9C0006; font-weight: bold;'
-                return ''
-            
             try:
                 styled_stockout = stockout_df.style.applymap(
-                    highlight_stockout, subset=['Total Stockout (MT)']
+                    highlight_stockout, subset=['Stockout Quantity (MT)']
                 )
-                st.dataframe(styled_stockout, use_container_width=True)
+                st.dataframe(styled_stockout, use_container_width=True, height=400)
             except Exception:
-                st.dataframe(stockout_df, use_container_width=True)
-            
-            # Show total stockout
-            total_stockout = stockout_df.iloc[-1]['Total Stockout (MT)']
-            if total_stockout > 0:
-                st.warning(f"**Total stockout across all grades: {total_stockout:,.0f} MT**")
-            else:
-                st.success("✅ No stockouts occurred during the demand period!")
+                st.dataframe(stockout_df, use_container_width=True, height=400)
+           
         else:
-            st.info("No stockout data available.")
+            st.success("✅ No stockouts occurred during the demand period!")
+            
+            # Show total stockout from solution if available (should be 0)
+            total_stockouts_from_solution = 0
+            try:
+                for g in data.get('grades', []):
+                    total_stockouts_from_solution += sum(solution.get('stockout', {}).get(g, {}).values())
+            except:
+                pass
+            
+            if total_stockouts_from_solution == 0:
+                st.info("All demand was satisfied with production and inventory.")
+            else:
+                st.warning(f"Note: Total stockout reported in solution: {total_stockouts_from_solution:,.0f} MT")
 
     render_section_divider()
 
