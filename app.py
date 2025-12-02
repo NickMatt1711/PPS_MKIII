@@ -23,6 +23,14 @@ from postprocessing import *
 import pandas as pd
 
 
+STAGE_MAP = {
+    "UPLOAD": 0,
+    "PREVIEW": 1,
+    "OPTIMIZING": 2,
+    "RESULTS": 3
+}
+
+
 # Page configuration
 st.set_page_config(
     page_title=APP_TITLE,
@@ -53,7 +61,7 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 def render_upload_stage():
     """Stage 0: File upload"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
-    render_stage_progress(STAGE_UPLOAD)
+    render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
     st.markdown("### 📤 Upload Production Data")
     st.markdown("Upload an Excel file containing your production planning data.")
@@ -118,7 +126,7 @@ def render_upload_stage():
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Review data and configure optimization")
-    render_stage_progress(STAGE_PREVIEW)
+    render_stage_progress(STAGE_MAP.get(STAGE_PREVIEW, 1))
 
     excel_data = st.session_state.get(SS_EXCEL_DATA)
     if not excel_data:
@@ -269,7 +277,7 @@ def render_preview_stage():
 def render_optimization_stage():
     """Stage 2: Show optimization in progress"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization in Progress")
-    render_stage_progress(STAGE_OPTIMIZING)
+    render_stage_progress(STAGE_MAP.get(STAGE_OPTIMIZING, 2))
 
     st.markdown("""
         <div class="optimization-container">
@@ -426,7 +434,7 @@ def render_optimization_stage():
 def render_results_stage():
     """Stage 3: Display results"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization Results")
-    render_stage_progress(STAGE_RESULTS)
+    render_stage_progress(STAGE_MAP.get(STAGE_RESULTS, 3))
 
     solution_data = st.session_state.get(SS_SOLUTION)
     if not solution_data:
