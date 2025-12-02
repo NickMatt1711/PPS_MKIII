@@ -514,7 +514,9 @@ def render_results_stage():
             try:
                 fig = create_gantt_chart(
                     solution, line, data.get('dates', []), 
-                    data.get('shutdown_periods', {}), grade_colors
+                    data.get('shutdown_periods', {}), grade_colors,
+                    capacities=plant_data.get('capacities', {}),  # NEW: pass capacities
+                    buffer_days=data.get('buffer_days', 0)        # NEW: pass buffer_days
                 )
             except Exception as e:
                 fig = None
@@ -596,7 +598,8 @@ def render_results_stage():
                     solution_data.get('solver'),
                     data.get('grades', []),
                     data.get('lines', []),
-                    data.get('num_days', 0)
+                    data.get('num_days', 0),
+                    buffer_days=data.get('buffer_days', 0)  # NEW: pass buffer_days
                 )
             except Exception as e:
                 summary_df = pd.DataFrame()
