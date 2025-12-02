@@ -131,17 +131,12 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
 
     def calculate_objective_breakdown(self, solver_objective):
         """Calculate detailed breakdown of the objective value"""
-        # This would need access to penalty parameters - would be better to pass them in
-        # For now, we'll calculate based on what we can see in the solution
         breakdown = {
             'stockout': 0,
             'transitions': 0,
             'solver_objective': solver_objective,
             'calculated_total': 0
         }
-        
-        # Note: To get exact breakdown, we would need to track the actual penalty variables
-        # This is a simplified version
         return breakdown
 
     def num_solutions(self):
@@ -189,21 +184,17 @@ def build_and_solve_model(
     def is_allowed_combination(grade, line):
         return line in allowed_lines.get(grade, [])
     
-    # Create production variables
+    # Create production variables - FIXED: No special buffer day treatment
     for grade in grades:
         for line in allowed_lines[grade]:
             for d in range(num_days):
                 key = (grade, line, d)
                 is_producing[key] = model.NewBoolVar(f'is_producing_{grade}_{line}_{d}')
                 
-                if d < num_days - buffer_days:
-                    production_value = model.NewIntVar(0, capacities[line], f'production_{grade}_{line}_{d}')
-                    model.Add(production_value == capacities[line]).OnlyEnforceIf(is_producing[key])
-                    model.Add(production_value == 0).OnlyEnforceIf(is_producing[key].Not())
-                else:
-                    production_value = model.NewIntVar(0, capacities[line], f'production_{grade}_{line}_{d}')
-                    model.Add(production_value <= capacities[line] * is_producing[key])
-                
+                # FIX 1: Remove buffer day special case - always enforce full capacity or zero
+                production_value = model.NewIntVar(0, capacities[line], f'production_{grade}_{line}_{d}')
+                model.Add(production_value == capacities[line]).OnlyEnforceIf(is_producing[key])
+                model.Add(production_value == 0).OnlyEnforceIf(is_producing[key].Not())
                 production[key] = production_value
     
     # Helper functions
@@ -339,9 +330,9 @@ def build_and_solve_model(
     if progress_callback:
         progress_callback(0.5, "Adding capacity constraints...")
     
-    # Capacity constraints
+    # Capacity constraints - FIXED: Always enforce full capacity
     for line in lines:
-        for d in range(num_days - buffer_days):
+        for d in range(num_days):
             if line in shutdown_periods and d in shutdown_periods[line]:
                 continue
             production_vars = [
@@ -350,16 +341,8 @@ def build_and_solve_model(
                 if is_allowed_combination(grade, line)
             ]
             if production_vars:
+                # FIX 2: Always require sum = capacity (not <= for buffer days)
                 model.Add(sum(production_vars) == capacities[line])
-        
-        for d in range(num_days - buffer_days, num_days):
-            production_vars = [
-                get_production_var(grade, line, d) 
-                for grade in grades 
-                if is_allowed_combination(grade, line)
-            ]
-            if production_vars:
-                model.Add(sum(production_vars) <= capacities[line])
     
     if progress_callback:
         progress_callback(0.6, "Adding run constraints...")
@@ -376,7 +359,7 @@ def build_and_solve_model(
             except ValueError:
                 pass
     
-    # Min/Max run days
+    # Min/Max run days - COMPLETELY REWRITTEN TO FIX BUG
     is_start_vars = {}
     run_end_vars = {}
     
@@ -386,6 +369,7 @@ def build_and_solve_model(
             min_run = min_run_days.get(grade_plant_key, 1)
             max_run = max_run_days.get(grade_plant_key, 9999)
             
+            # Create start and end variables
             for d in range(num_days):
                 is_start = model.NewBoolVar(f'start_{grade}_{line}_{d}')
                 is_start_vars[(grade, line, d)] = is_start
@@ -395,57 +379,84 @@ def build_and_solve_model(
                 
                 current_prod = get_is_producing_var(grade, line, d)
                 
-                if d > 0:
+                # Define start: producing today AND (day 0 OR not producing yesterday)
+                if d == 0:
+                    if current_prod is not None:
+                        model.Add(is_start == current_prod)
+                else:
                     prev_prod = get_is_producing_var(grade, line, d - 1)
                     if current_prod is not None and prev_prod is not None:
-                        model.AddBoolAnd([current_prod, prev_prod.Not()]).OnlyEnforceIf(is_start)
-                        model.AddBoolOr([current_prod.Not(), prev_prod]).OnlyEnforceIf(is_start.Not())
-                else:
-                    if current_prod is not None:
-                        model.Add(current_prod == 1).OnlyEnforceIf(is_start)
-                        model.Add(is_start == 1).OnlyEnforceIf(current_prod)
+                        # Start if producing today AND not producing yesterday
+                        model.Add(is_start >= current_prod - prev_prod)
+                        model.Add(is_start <= current_prod)
+                        model.Add(is_start <= 1 - prev_prod)
                 
-                if d < num_days - 1:
+                # Define end: producing today AND (last day OR not producing tomorrow)
+                if d == num_days - 1:
+                    if current_prod is not None:
+                        model.Add(is_end == current_prod)
+                else:
                     next_prod = get_is_producing_var(grade, line, d + 1)
                     if current_prod is not None and next_prod is not None:
-                        model.AddBoolAnd([current_prod, next_prod.Not()]).OnlyEnforceIf(is_end)
-                        model.AddBoolOr([current_prod.Not(), next_prod]).OnlyEnforceIf(is_end.Not())
-                else:
-                    if current_prod is not None:
-                        model.Add(current_prod == 1).OnlyEnforceIf(is_end)
-                        model.Add(is_end == 1).OnlyEnforceIf(current_prod)
+                        # End if producing today AND not producing tomorrow
+                        model.Add(is_end >= current_prod - next_prod)
+                        model.Add(is_end <= current_prod)
+                        model.Add(is_end <= 1 - next_prod)
             
-            # Minimum run days
-            for d in range(num_days):
-                is_start = is_start_vars[(grade, line, d)]
-                max_possible_run = 0
+            # FIX 3: CORRECT MINIMUM RUN DAYS CONSTRAINT
+            # Ensure that if we start a run, it continues for at least min_run days
+            for d in range(num_days - min_run + 1):
+                # Check for shutdown days in the min_run period
+                valid_period = True
+                shutdown_days_in_period = 0
                 for k in range(min_run):
                     if d + k < num_days:
                         if line in shutdown_periods and (d + k) in shutdown_periods[line]:
-                            break
-                        max_possible_run += 1
+                            shutdown_days_in_period += 1
                 
-                if max_possible_run >= min_run:
-                    for k in range(min_run):
-                        if d + k < num_days:
-                            if line in shutdown_periods and (d + k) in shutdown_periods[line]:
-                                continue
-                            future_prod = get_is_producing_var(grade, line, d + k)
-                            if future_prod is not None:
-                                model.Add(future_prod == 1).OnlyEnforceIf(is_start)
+                # If shutdown days in period, adjust min_run requirement
+                effective_min_run = min_run - shutdown_days_in_period
+                if effective_min_run <= 0:
+                    continue
+                
+                # Create constraint: if start at day d, must produce for effective_min_run days
+                start_var = is_start_vars[(grade, line, d)]
+                
+                # Collect production variables for the min_run period (excluding shutdown days)
+                production_in_period = []
+                for k in range(min_run):
+                    if d + k < num_days:
+                        if line in shutdown_periods and (d + k) in shutdown_periods[line]:
+                            continue
+                        prod_var = get_is_producing_var(grade, line, d + k)
+                        if prod_var is not None:
+                            production_in_period.append(prod_var)
+                
+                # Only enforce if we have enough non-shutdown days
+                if len(production_in_period) >= effective_min_run:
+                    # If this is a start day, enforce production for at least effective_min_run days
+                    for prod_var in production_in_period[:effective_min_run]:
+                        model.Add(prod_var == 1).OnlyEnforceIf(start_var)
             
-            # Maximum run days
+            # FIX 4: CORRECT MAXIMUM RUN DAYS CONSTRAINT
+            # Ensure no run exceeds max_run days
             for d in range(num_days - max_run):
+                # Check consecutive days from d to d+max_run
                 consecutive_days = []
+                valid_sequence = True
+                
                 for k in range(max_run + 1):
                     if d + k < num_days:
                         if line in shutdown_periods and (d + k) in shutdown_periods[line]:
+                            # Shutdown breaks the sequence
+                            valid_sequence = False
                             break
                         prod_var = get_is_producing_var(grade, line, d + k)
                         if prod_var is not None:
                             consecutive_days.append(prod_var)
                 
-                if len(consecutive_days) == max_run + 1:
+                if valid_sequence and len(consecutive_days) == max_run + 1:
+                    # Cannot produce on all max_run+1 consecutive days
                     model.Add(sum(consecutive_days) <= max_run)
     
     if progress_callback:
@@ -523,8 +534,27 @@ def build_and_solve_model(
                     
                     objective_terms.append(transition_penalty * trans_var)
     
-    # REMOVED: continuity bonus (as requested)
-    # No continuity terms are added to objective_terms
+    # 5. ADDED: Penalty for idle production (to prevent end gaps)
+    idle_penalty = 1000  # High penalty for idle lines
+    for line in lines:
+        for d in range(num_days):
+            if line in shutdown_periods and d in shutdown_periods[line]:
+                continue
+                
+            is_idle = model.NewBoolVar(f'idle_{line}_{d}')
+            
+            # Collect all production variables for this line and day
+            producing_vars = [
+                is_producing[(grade, line, d)] 
+                for grade in grades 
+                if (grade, line, d) in is_producing
+            ]
+            
+            if producing_vars:
+                # is_idle = 1 if sum(producing_vars) == 0
+                model.Add(sum(producing_vars) == 0).OnlyEnforceIf(is_idle)
+                model.Add(sum(producing_vars) == 1).OnlyEnforceIf(is_idle.Not())
+                objective_terms.append(idle_penalty * is_idle)
     
     # Set the objective
     if objective_terms:
