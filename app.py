@@ -455,7 +455,7 @@ def render_results_stage():
     st.markdown("### 📊 Key Performance Metrics")
     
     # Use 2x2 grid on mobile, 4 columns on desktop
-    col1, col2, col3, col4 = st.columns(1,1,1,1)
+    col1, col2, col3, col4 = st.columns([1,1,1,1])
 
     objective_val = solution.get('objective', 0) if isinstance(solution, dict) else 0
     transitions_total = solution.get('transitions', {}).get('total', 0) if isinstance(solution, dict) else 0
