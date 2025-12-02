@@ -424,21 +424,31 @@ def build_and_solve_model(
     
     # Transition rules
     for line in lines:
-        if transition_rules.get(line):
-            for d in range(num_days - 1):
-                for prev_grade in grades:
-                    if prev_grade in transition_rules[line] and is_allowed_combination(prev_grade, line):
-                        allowed_next = transition_rules[line][prev_grade]
-                        for current_grade in grades:
-                            if (current_grade != prev_grade and 
-                                current_grade not in allowed_next and 
-                                is_allowed_combination(current_grade, line)):
-                                
-                                prev_var = get_is_producing_var(prev_grade, line, d)
-                                current_var = get_is_producing_var(current_grade, line, d + 1)
-                                
-                                if prev_var is not None and current_var is not None:
-                                    model.Add(prev_var + current_var <= 1)
+        for d in range(num_days - 1):
+            for g1 in grades:
+                if line not in allowed_lines[g1]:
+                    continue
+                for g2 in grades:
+                    if g1 == g2 or line not in allowed_lines[g2]:
+                        continue
+    
+                    # Skip forbidden transitions
+                    if transition_rules.get(line) and \
+                       g1 in transition_rules[line] and \
+                       g2 not in transition_rules[line][g1]:
+                        continue
+    
+                    p1 = is_producing[(g1, line, d)]
+                    p2 = is_producing[(g2, line, d+1)]
+    
+                    trans = model.NewBoolVar(f"trans_{line}_{d}_{g1}_to_{g2}")
+    
+                    # trans = AND(p1, p2)
+                    model.AddBoolAnd([p1, p2]).OnlyEnforceIf(trans)
+                    model.Add(trans >= p1 + p2 - 1)
+    
+                    objective.append(transition_penalty * trans)
+
     
     # Rerun allowed constraints
     for grade in grades:
