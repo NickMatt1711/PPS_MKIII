@@ -236,12 +236,11 @@ def build_and_solve_model(
     
     # 3. Material running constraints (HARD)
     # Track which lines have initial forced running
-    initial_running_lines = {}
+    initial_running_info = {}
     for plant, (material, expected_days) in material_running_info.items():
-        initial_running_lines[plant] = {
+        initial_running_info[plant] = {
             'material': material,
-            'expected_days': expected_days,
-            'is_continuation': True  # This is a continuation from before planning horizon
+            'expected_days': expected_days
         }
         for d in range(min(expected_days, num_days)):
             if is_allowed_combination(material, plant):
@@ -321,11 +320,7 @@ def build_and_solve_model(
             except ValueError:
                 pass
     
-    # ========== MIN/MAX RUN DAYS - HARD CONSTRAINTS ==========
-    # BUT: Minimum run days does NOT apply to initial forced running period
-    
-    # Create start of run indicators
-    is_start_of_run = {}
+    # ========== CORRECTED MIN/MAX RUN DAYS LOGIC ==========
     
     for grade in grades:
         for line in allowed_lines[grade]:
@@ -334,91 +329,113 @@ def build_and_solve_model(
             max_run = max_run_days.get(grade_plant_key, 9999)
             
             # Check if this line has initial forced running
-            is_initial_running = (line in initial_running_lines and 
-                                 initial_running_lines[line]['material'] == grade)
+            is_initial_running = (line in initial_running_info and 
+                                 initial_running_info[line]['material'] == grade)
+            initial_run_days = initial_running_info[line]['expected_days'] if is_initial_running else 0
             
-            # Create start variables
-            for d in range(num_days):
-                start_var = model.NewBoolVar(f'start_{grade}_{line}_{d}')
-                is_start_of_run[(grade, line, d)] = start_var
-                
-                prod_today = get_is_producing_var(grade, line, d)
-                
-                if d == 0:
-                    # Start on day 0 if producing AND not part of initial forced running
-                    # (initial forced running is a continuation, not a new start)
-                    if prod_today is not None:
-                        if is_initial_running:
-                            # Day 0 is forced running, so NOT a start
-                            model.Add(start_var == 0)
-                        else:
-                            # Day 0 could be a start if producing
-                            model.Add(start_var == prod_today)
-                else:
-                    prod_yesterday = get_is_producing_var(grade, line, d - 1)
-                    if prod_today is not None and prod_yesterday is not None:
-                        # Start if producing today AND not producing yesterday
-                        # start = prod_today AND NOT prod_yesterday
-                        model.Add(start_var <= prod_today)
-                        model.Add(start_var <= 1 - prod_yesterday)
-                        model.Add(start_var >= prod_today - prod_yesterday)
+            # Create run start and end indicators
+            run_starts = []
+            run_ends = []
             
-            # ========== MINIMUM RUN DAYS - HARD CONSTRAINT ==========
-            # If we start a NEW run on day d, we must produce for at least min_run days
-            # BUT: This does NOT apply to initial forced running period!
+            # ========== SIMPLE BUT EFFECTIVE MIN-RUN CONSTRAINT ==========
+            # For each day, if we're producing, check forward to ensure min-run days
             
-            for d in range(num_days):
-                start_var = is_start_of_run[(grade, line, d)]
-                
-                # Skip if this is day 0 and it's initial forced running
-                if d == 0 and is_initial_running:
+            for start_day in range(num_days):
+                # Skip if beyond the planning horizon for min_run check
+                if start_day + min_run > num_days:
                     continue
                 
-                # Skip if this day is within initial forced running period
-                if is_initial_running and d < initial_running_lines[line]['expected_days']:
+                # Check if this could be the start of a new run
+                # A run starts if:
+                # 1. We're producing this grade on start_day
+                # 2. Either start_day == 0 OR we're not producing this grade on start_day-1
+                
+                # But wait - if this is within initial forced running period,
+                # it's not a "new start", it's a continuation
+                
+                is_possible_start = True
+                if is_initial_running:
+                    # If we're in the initial forced running period, this is not a new start
+                    if start_day < initial_run_days:
+                        is_possible_start = False
+                    # Also, the day after initial forced running ends could be a start
+                    # if we continue with the same grade
+                    elif start_day == initial_run_days:
+                        # Check if we were producing yesterday (last day of initial run)
+                        if start_day > 0:
+                            prev_var = get_is_producing_var(grade, line, start_day - 1)
+                            if prev_var is not None:
+                                # If we were producing yesterday, this is continuation, not start
+                                is_possible_start = False
+                
+                if not is_possible_start:
                     continue
                 
-                # Check how many consecutive days we have from day d
-                available_days = 0
+                # Create a variable that indicates a run starts at start_day
+                run_starts_at = model.NewBoolVar(f'run_starts_{grade}_{line}_{start_day}')
+                run_starts.append(run_starts_at)
+                
+                # Link run_starts_at to production variables:
+                # run_starts_at = 1 if:
+                # 1. Producing at start_day
+                # 2. AND (start_day == 0 OR not producing at start_day-1)
+                
+                prod_at_start = get_is_producing_var(grade, line, start_day)
+                if prod_at_start is None:
+                    continue
+                
+                # Condition 1: Must be producing at start_day
+                model.Add(run_starts_at <= prod_at_start)
+                
+                # Condition 2: If start_day > 0, must NOT be producing at start_day-1
+                if start_day > 0:
+                    prod_before = get_is_producing_var(grade, line, start_day - 1)
+                    if prod_before is not None:
+                        model.Add(run_starts_at <= 1 - prod_before)
+                
+                # Condition 3: If run_starts_at = 1, then we must produce for min_run days
+                # Collect production variables for the next min_run days
                 run_days_vars = []
+                valid_for_min_run = True
                 
                 for offset in range(min_run):
-                    day_idx = d + offset
+                    day_idx = start_day + offset
                     if day_idx >= num_days:
+                        valid_for_min_run = False
                         break
                     
-                    # Skip if shutdown day
+                    # Skip shutdown days (they break the run)
                     if line in shutdown_periods and day_idx in shutdown_periods[line]:
-                        continue
+                        valid_for_min_run = False
+                        break
                     
                     prod_var = get_is_producing_var(grade, line, day_idx)
                     if prod_var is not None:
-                        available_days += 1
                         run_days_vars.append(prod_var)
+                    else:
+                        valid_for_min_run = False
+                        break
                 
-                # If we have enough available days to satisfy min_run
-                if available_days >= min_run:
-                    # If this is a start, enforce production on all run_days_vars
-                    for prod_var in run_days_vars[:min_run]:
-                        model.Add(prod_var == 1).OnlyEnforceIf(start_var)
+                # If we have enough valid days, enforce min-run constraint
+                if valid_for_min_run and len(run_days_vars) == min_run:
+                    # If this is a start, all run_days_vars must be 1
+                    for prod_var in run_days_vars:
+                        model.Add(prod_var == 1).OnlyEnforceIf(run_starts_at)
             
-            # ========== MAXIMUM RUN DAYS - HARD CONSTRAINT ==========
-            # Cannot produce the same grade for more than max_run consecutive days
-            # This DOES apply to initial forced running too!
-            
-            for d in range(num_days - max_run):
-                # Check consecutive days from d to d+max_run
-                valid_sequence = True
+            # ========== MAX RUN DAYS CONSTRAINT ==========
+            # Cannot produce same grade for more than max_run consecutive days
+            for start_day in range(num_days - max_run):
+                # Check sequence of max_run + 1 days
                 consecutive_vars = []
+                valid_sequence = True
                 
                 for offset in range(max_run + 1):
-                    day_idx = d + offset
-                    
+                    day_idx = start_day + offset
                     if day_idx >= num_days:
                         valid_sequence = False
                         break
                     
-                    # Skip if shutdown day (shutdown breaks the sequence)
+                    # Shutdown days break the sequence
                     if line in shutdown_periods and day_idx in shutdown_periods[line]:
                         valid_sequence = False
                         break
@@ -431,8 +448,46 @@ def build_and_solve_model(
                         break
                 
                 if valid_sequence and len(consecutive_vars) == max_run + 1:
-                    # Cannot have all max_run+1 days producing this grade
+                    # Cannot have all max_run+1 days as 1
                     model.Add(sum(consecutive_vars) <= max_run)
+            
+            # ========== RERUN ALLOWED CONSTRAINT ==========
+            if not rerun_allowed.get(grade_plant_key, True):
+                # Count how many times this grade starts a run
+                # But exclude initial forced running from the count
+                count_starts = []
+                for start_day in range(num_days):
+                    # Skip if this is within initial forced running
+                    if is_initial_running and start_day < initial_run_days:
+                        continue
+                    
+                    # Check if this could be a start
+                    if start_day >= num_days:
+                        continue
+                    
+                    # Create a start indicator
+                    start_indicator = model.NewBoolVar(f'rerun_start_{grade}_{line}_{start_day}')
+                    
+                    prod_today = get_is_producing_var(grade, line, start_day)
+                    if prod_today is None:
+                        continue
+                    
+                    # Condition: start if producing today AND (day 0 OR not producing yesterday)
+                    if start_day == 0:
+                        model.Add(start_indicator == prod_today)
+                    else:
+                        prod_yesterday = get_is_producing_var(grade, line, start_day - 1)
+                        if prod_yesterday is not None:
+                            # start_indicator = prod_today AND NOT prod_yesterday
+                            model.Add(start_indicator <= prod_today)
+                            model.Add(start_indicator <= 1 - prod_yesterday)
+                            model.Add(start_indicator >= prod_today - prod_yesterday)
+                    
+                    count_starts.append(start_indicator)
+                
+                if count_starts:
+                    # Can start at most once (excluding initial forced running)
+                    model.Add(sum(count_starts) <= 1)
     
     if progress_callback:
         progress_callback(0.5, "Adding transition constraints...")
@@ -455,26 +510,6 @@ def build_and_solve_model(
                                 if prev_var is not None and current_var is not None:
                                     # HARD CONSTRAINT: Cannot have forbidden transition
                                     model.Add(prev_var + current_var <= 1)
-    
-    # 7. Rerun allowed constraints (HARD)
-    for grade in grades:
-        for line in allowed_lines[grade]:
-            grade_plant_key = (grade, line)
-            if not rerun_allowed.get(grade_plant_key, True):
-                # Count start of runs (excluding initial forced running)
-                start_vars = []
-                for d in range(num_days):
-                    if (grade, line, d) in is_start_of_run:
-                        # Check if this is initial forced running
-                        is_initial = (line in initial_running_lines and 
-                                     initial_running_lines[line]['material'] == grade and
-                                     d < initial_running_lines[line]['expected_days'])
-                        if not is_initial:
-                            start_vars.append(is_start_of_run[(grade, line, d)])
-                
-                if start_vars:
-                    # HARD CONSTRAINT: Can start at most once (excluding initial forced)
-                    model.Add(sum(start_vars) <= 1)
     
     if progress_callback:
         progress_callback(0.6, "Adding soft constraints...")
@@ -561,7 +596,6 @@ def build_and_solve_model(
                     objective_terms.append(transition_penalty * trans_var)
     
     # 5. Idle line penalty (SOFT - to minimize gaps, but not required)
-    # This helps but is not a hard constraint
     idle_penalty = 500  # Lower than transition penalty to prioritize min runs
     for line in lines:
         for d in range(num_days):
