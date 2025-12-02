@@ -147,7 +147,6 @@ def build_and_solve_model(
     buffer_days: int,
     stockout_penalty: int,
     transition_penalty: int,
-    continuity_bonus: int,
     time_limit_min: int,
     progress_callback=None
 ) -> Tuple[int, SolutionCallback, cp_model.CpSolver]:
@@ -455,7 +454,7 @@ def build_and_solve_model(
         for d in range(num_days):
             objective += stockout_penalty * stockout_vars[(grade, d)]
     
-    # Transition penalties and continuity bonuses
+    # Transition penalties
     for line in lines:
         for d in range(num_days - 1):
             for grade1 in grades:
@@ -474,9 +473,7 @@ def build_and_solve_model(
             
             for grade in grades:
                 if line in allowed_lines[grade]:
-                    continuity = model.NewBoolVar(f'continuity_{line}_{d}_{grade}')
                     model.AddBoolAnd([is_producing[(grade, line, d)], is_producing[(grade, line, d + 1)]]).OnlyEnforceIf(continuity)
-                    objective += -continuity_bonus * continuity
     
     model.Minimize(objective)
     
