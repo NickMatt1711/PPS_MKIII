@@ -217,6 +217,10 @@ def render_preview_stage():
             step=1
         )
         
+            "Continuity bonus",
+            min_value=0,
+            step=1
+        )
 
 
     # persist parameters
