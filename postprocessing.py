@@ -183,7 +183,7 @@ def create_inventory_chart(
     fig = go.Figure()
 
     fig.add_trace(go.Scatter(
-        x=dates,
+        x=dates-buffer_days,
         y=inv_vals,
         mode="lines+markers",
         name=grade,
