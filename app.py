@@ -56,6 +56,32 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 })
 
 
+# ========== STOCKOUT DETAILS FUNCTION ==========
+def create_stockout_details_table(solution, grades, dates, buffer_days=0):
+    """Create detailed table of stockout occurrences."""
+    rows = []
+    
+    stockout_dict = solution.get('stockout', {})
+    
+    for grade in sorted(grades):
+        if grade in stockout_dict:
+            grade_stockouts = stockout_dict[grade]
+            for date_str, stockout_qty in grade_stockouts.items():
+                if stockout_qty > 0:
+                    rows.append({
+                        "Date": date_str,
+                        "Grade": grade,
+                        "Stockout Quantity (MT)": stockout_qty
+                    })
+    
+    if not rows:
+        return pd.DataFrame()
+    
+    df = pd.DataFrame(rows)
+    df = df.sort_values(["Date", "Grade"])
+    return df
+
+
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
     """Stage 0: File upload"""
@@ -416,7 +442,7 @@ def render_optimization_stage():
                     'initial_inventory': inventory_data['initial_inventory'],
                     'pre_shutdown_grades': plant_data.get('pre_shutdown_grades', {}),
                     'restart_grades': plant_data.get('restart_grades', {}),
-                    'capacities': plant_data.get('capacities', {}),  # ADD THIS LINE
+                    'capacities': plant_data.get('capacities', {}),
                 }
             }
 
@@ -511,12 +537,13 @@ def render_results_stage():
             if constraints_info:
                 st.info(" | ".join(constraints_info))
 
-            # Gantt chart
+            # Gantt chart - FIXED: Use capacities from data
             try:
+                capacities = data.get('capacities', {})
                 fig = create_gantt_chart(
                     solution, line, data.get('dates', []), 
                     data.get('shutdown_periods', {}), grade_colors,
-                    capacities=plant_data.get('capacities', {}),
+                    capacities=capacities,
                     buffer_days=data.get('buffer_days', 0)
                 )
             except Exception as e:
@@ -639,7 +666,7 @@ def render_results_stage():
         st.markdown("### ⚠️ Stockout Details")
         st.markdown("List of all stockout occurrences during the demand period.")
         
-        # Create stockout details table
+        # Create stockout details table using our local function
         try:
             stockout_df = create_stockout_details_table(
                 solution,
