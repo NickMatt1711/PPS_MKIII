@@ -58,133 +58,100 @@ def create_gantt_chart(
     line: str,
     dates: List[date],
     shutdown_periods: Dict,
-    grade_colors: Dict,
-    capacities: Dict = None,
-    buffer_days: int = 0
+    grade_colors: Dict
 ):
 
     dates = [_ensure_date(d) for d in dates]
-    
-    # Determine last actual planning day (before buffer)
-    last_actual_day = len(dates) - buffer_days
 
     schedule = solution.get("is_producing", {}).get(line, {})
-    production_data = solution.get("production", {})
 
     gantt_rows = []
-    
+
     for d in range(len(dates)):
         ds = dates[d].strftime("%d-%b-%y")
-        grade_today = schedule.get(ds)
-        
-        # Skip buffer days in gantt chart
-        if d >= last_actual_day:
-            continue
-            
-        if grade_today:
-            # Get production amount for this day
-            production_today = 0
-            if grade_today in production_data:
-                production_today = production_data[grade_today].get(ds, 0)
-            
-            gantt_rows.append({
-                "Grade": grade_today,
-                "Production (MT)": production_today,
-                "Start": dates[d],
-                "Finish": dates[d] + timedelta(days=1),
-                "Line": line,
-                "Day_Index": d
-            })
+
+        for grade in grade_colors:
+            if schedule.get(ds) == grade:
+                gantt_rows.append({
+                    "Grade": grade,
+                    "Start": dates[d],
+                    "Finish": dates[d] + timedelta(days=1),
+                    "Line": line
+                })
 
     if not gantt_rows:
         return None
 
     df = pd.DataFrame(gantt_rows)
-    
-    # Create figure - SIMPLIFIED: Use bar chart instead of gantt
-    fig = go.Figure()
-    
-    # Group by grade
-    for grade in df["Grade"].unique():
-        grade_df = df[df["Grade"] == grade]
-        
-        # Add bar for each production day
-        fig.add_trace(go.Bar(
-            x=grade_df["Start"],
-            y=grade_df["Production (MT)"],
-            name=grade,
-            marker_color=grade_colors.get(grade, "#5E7CE2"),
-            hovertemplate="Date: %{x|%d-%b-%y}<br>" +
-                         f"Line: {line}<br>" +
-                         "Grade: " + grade + "<br>" +
-                         "Production: %{y:,.0f} MT<extra></extra>"
-        ))
+
+    fig = px.timeline(
+        df,
+        x_start="Start",
+        x_end="Finish",
+        y="Grade",
+        color="Grade",
+        color_discrete_map=grade_colors,
+        category_orders={"Grade": sorted(grade_colors.keys())},
+    )
 
     # Shutdown shading
     if line in shutdown_periods and shutdown_periods[line]:
         sd = shutdown_periods[line]
-        # Filter shutdown days within demand period
-        sd_within_demand = [d for d in sd if d < last_actual_day]
-        if sd_within_demand:
-            x0 = dates[sd_within_demand[0]]
-            x1 = dates[sd_within_demand[-1]] + timedelta(days=1)
+        x0 = dates[sd[0]]
+        x1 = dates[sd[-1]] + timedelta(days=1)
 
-            fig.add_vrect(
-                x0=x0,
-                x1=x1,
-                fillcolor="red",
-                opacity=0.12,
-                layer="below",
-                line_width=0,
-                annotation_text="Shutdown",
-                annotation_position="top left",
-                annotation_font_color="red"
-            )
+        fig.add_vrect(
+            x0=x0,
+            x1=x1,
+            fillcolor="red",
+            opacity=0.12,
+            layer="below",
+            line_width=0,
+            annotation_text="Shutdown",
+            annotation_position="top left",
+            annotation_font_color="red"
+        )
 
-    # Production summary
-    total_production = df["Production (MT)"].sum()
-    avg_production = df["Production (MT)"].mean() if len(df) > 0 else 0
-    days_produced = len(df)
+    fig.update_yaxes(
+        autorange="reversed",
+        showgrid=True,
+        gridcolor="lightgray",
+        tickfont=dict(color="gray", size=12)
+    )
+    fig.update_xaxes(
+        tickformat="%d-%b",
+        dtick="D1",
+        showgrid=True,
+        gridcolor="lightgray",
+        tickfont=dict(color="gray", size=12)
+    )
 
     fig.update_layout(
-        title=f"{line} Production Schedule<br><sup>Total: {total_production:,.0f} MT | Avg: {avg_production:,.0f} MT/day | Days: {days_produced}/{last_actual_day}</sup>",
-        xaxis=dict(
-            title="Date",
-            tickformat="%d-%b",
-            dtick="D1",
-            showgrid=True,
-            gridcolor="lightgray",
-            tickfont=dict(color="gray", size=12)
-        ),
-        yaxis=dict(
-            title="Production (MT)",
-            showgrid=True,
-            gridcolor="lightgray",
-            tickfont=dict(color="gray", size=12)
-        ),
         height=350,
+        bargap=0.2,
         plot_bgcolor="white",
         paper_bgcolor="white",
-        margin=dict(l=60, r=80, t=100, b=60),
+        margin=dict(l=80, r=160, t=60, b=60),
         font=dict(size=12, color="gray"),
         showlegend=True,
+        legend_title_text="Grade",
         legend=dict(
             traceorder="normal",
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1,
-            bgcolor="rgba(255,255,255,0)"
-        ),
-        barmode="stack"
+            orientation="v",
+            yanchor="middle",
+            y=0.5,
+            xanchor="left",
+            x=1.02,
+            bgcolor="rgba(255,255,255,0)",
+            font_color="gray"
+        )
     )
     
     return fig
 
 
 # ===============================================================
-#  INVENTORY CHART (FIXED DATE ARITHMETIC)
+#  INVENTORY CHART
 # ===============================================================
 
 def create_inventory_chart(
@@ -206,42 +173,28 @@ def create_inventory_chart(
 
     # Determine last actual planning day (before buffer)
     last_actual_day = len(dates) - buffer_days
-    
-    # Get production data for this grade
-    production_dict = solution.get("production", {}).get(grade, {})
-    production_vals = []
-    
-    for i, d in enumerate(dates):
-        date_str = d.strftime("%d-%b-%y")
-        # For buffer days, production is 0
-        if i >= last_actual_day:
-            production_vals.append(0)
-        else:
-            production_vals.append(production_dict.get(date_str, 0))
+
+    start_val = inv_vals[0]
+    end_val = inv_vals[last_actual_day]
+    highest_val = max(inv_vals[:last_actual_day + 1])
+    lowest_val = min(inv_vals[:last_actual_day + 1])
+
+    start_x = dates[0]
+    end_x = dates[last_actual_day]
+    highest_x = dates[inv_vals.index(highest_val)]
+    lowest_x = dates[inv_vals.index(lowest_val)]
 
     fig = go.Figure()
 
-    # Inventory line
     fig.add_trace(go.Scatter(
         x=dates,
         y=inv_vals,
         mode="lines+markers",
-        name=f"{grade} Inventory",
+        name=grade,
         line=dict(color=grade_colors.get(grade, "#5E7CE2"), width=3),
         marker=dict(size=6),
         hovertemplate="Date: %{x|%d-%b-%y}<br>Inventory: %{y:.0f} MT<extra></extra>"
     ))
-
-    # Add vertical line to separate demand period from buffer
-    if buffer_days > 0 and last_actual_day < len(dates):
-        fig.add_vline(
-            x=dates[last_actual_day],
-            line_dash="dash",
-            line_color="gray",
-            opacity=0.5,
-            annotation_text="Buffer Period Start",
-            annotation_position="top right"
-        )
 
     # Handle allowed_lines (dict or list)
     if isinstance(allowed_lines, dict):
@@ -254,24 +207,22 @@ def create_inventory_chart(
     for line in lines_for_grade:
         if line in shutdown_periods and shutdown_periods[line]:
             shutdown_days = shutdown_periods[line]
-            if shutdown_days and len(shutdown_days) > 0:
-                start_shutdown = dates[shutdown_days[0]] if shutdown_days[0] < len(dates) else dates[0]
-                end_shutdown = dates[shutdown_days[-1]] if shutdown_days[-1] < len(dates) else dates[-1]
-                
-                # FIXED: Ensure we're adding timedelta to date object, not int
-                fig.add_vrect(
-                    x0=start_shutdown,
-                    x1=end_shutdown + timedelta(days=1),
-                    fillcolor="red",
-                    opacity=0.1,
-                    layer="below",
-                    line_width=0,
-                    annotation_text=f"Shutdown: {line}" if not shutdown_added else "",
-                    annotation_position="top left",
-                    annotation_font_size=14,
-                    annotation_font_color="red"
-                )
-                shutdown_added = True
+            start_shutdown = dates[shutdown_days[0]]
+            end_shutdown = dates[shutdown_days[-1]]
+            
+            fig.add_vrect(
+                x0=start_shutdown,
+                x1=end_shutdown + timedelta(days=1),
+                fillcolor="red",
+                opacity=0.1,
+                layer="below",
+                line_width=0,
+                annotation_text=f"Shutdown: {line}" if not shutdown_added else "",
+                annotation_position="top left",
+                annotation_font_size=14,
+                annotation_font_color="red"
+            )
+            shutdown_added = True
 
     # Min/Max lines
     if min_inv is not None:
@@ -292,63 +243,48 @@ def create_inventory_chart(
             annotation_font_color="green"
         )
 
-    # Calculate summary statistics
-    if last_actual_day > 0:
-        inv_in_demand_period = inv_vals[:last_actual_day]
-        if inv_in_demand_period:
-            start_val = inv_in_demand_period[0]
-            end_val = inv_in_demand_period[-1]
-            highest_val = max(inv_in_demand_period)
-            lowest_val = min(inv_in_demand_period)
-            
-            # Add annotations
-            annotations = []
-            
-            # Start annotation
-            annotations.append(dict(
-                x=dates[0], y=start_val,
-                text=f"Start: {start_val:.0f}",
-                showarrow=True, arrowhead=2,
-                ax=-40, ay=30,
-                font=dict(color="black", size=11),
-                bgcolor="white", bordercolor="gray"
-            ))
-            
-            # End annotation (if different from start)
-            if last_actual_day > 1:
-                annotations.append(dict(
-                    x=dates[last_actual_day-1], y=end_val,
-                    text=f"End: {end_val:.0f}",
-                    showarrow=True, arrowhead=2,
-                    ax=40, ay=30,
-                    font=dict(color="black", size=11),
-                    bgcolor="white", bordercolor="gray"
-                ))
-            
-            # Add annotations to figure
-            for ann in annotations:
-                fig.add_annotation(
-                    x=ann['x'],
-                    y=ann['y'],
-                    text=ann['text'],
-                    showarrow=ann['showarrow'],
-                    arrowhead=ann['arrowhead'],
-                    ax=ann['ax'],
-                    ay=ann['ay'],
-                    font=ann['font'],
-                    bgcolor=ann['bgcolor'],
-                    bordercolor=ann['bordercolor'],
-                    borderwidth=1,
-                    borderpad=4,
-                    opacity=0.9
-                )
+    # Annotations
+    annotations = [
+        dict(
+            x=start_x, y=start_val,
+            text=f"Start: {start_val:.0f}",
+            showarrow=True, arrowhead=2,
+            ax=-40, ay=30,
+            font=dict(color="black", size=11),
+            bgcolor="white", bordercolor="gray"
+        ),
+        dict(
+            x=end_x, y=end_val,
+            text=f"End: {end_val:.0f}",
+            showarrow=True, arrowhead=2,
+            ax=40, ay=30,
+            font=dict(color="black", size=11),
+            bgcolor="white", bordercolor="gray"
+        ),
+        dict(
+            x=highest_x, y=highest_val,
+            text=f"High: {highest_val:.0f}",
+            showarrow=True, arrowhead=2,
+            ax=0, ay=-40,
+            font=dict(color="darkgreen", size=11),
+            bgcolor="white", bordercolor="gray"
+        ),
+        dict(
+            x=lowest_x, y=lowest_val,
+            text=f"Low: {lowest_val:.0f}",
+            showarrow=True, arrowhead=2,
+            ax=0, ay=40,
+            font=dict(color="firebrick", size=11),
+            bgcolor="white", bordercolor="gray"
+        )
+    ]
 
     fig.update_layout(
-        title=f"{grade} Inventory",
         xaxis=dict(
             title="Date",
             showgrid=True,
             gridcolor="lightgray",
+            tickvals=dates,
             tickformat="%d-%b",
             tickfont=dict(color="#333333", size=12),
             dtick="D1"
@@ -363,16 +299,27 @@ def create_inventory_chart(
         paper_bgcolor="white",
         margin=dict(l=60, r=80, t=80, b=60),
         font=dict(size=12, color="gray"),
-        height=400,
-        showlegend=True,
-        legend=dict(
-            yanchor="top",
-            y=0.99,
-            xanchor="right",
-            x=0.99,
-            bgcolor="rgba(255, 255, 255, 0.8)"
-        )
+        height=420,
+        showlegend=False
     )
+    
+    # Add annotations one by one
+    for ann in annotations:
+        fig.add_annotation(
+            x=ann['x'],
+            y=ann['y'],
+            text=ann['text'],
+            showarrow=ann['showarrow'],
+            arrowhead=ann['arrowhead'],
+            ax=ann['ax'],
+            ay=ann['ay'],
+            font=ann['font'],
+            bgcolor=ann['bgcolor'],
+            bordercolor=ann['bordercolor'],
+            borderwidth=1,
+            borderpad=4,
+            opacity=0.9
+        )
 
     return fig
 
