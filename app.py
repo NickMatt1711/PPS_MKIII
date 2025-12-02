@@ -525,7 +525,7 @@ def render_results_stage():
     tab1, tab2, tab3 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables"])
 
     # --- Production Schedule tab ---
-    with tab1:
+     with tab1:
         st.markdown("### 📅 Production Schedule")
 
         for line in data.get('lines', []):
@@ -541,14 +541,13 @@ def render_results_stage():
             if constraints_info:
                 st.info(" | ".join(constraints_info))
 
-            # Gantt chart - FIXED: Use capacities from data
+            # Gantt chart
             try:
-                capacities = data.get('capacities', {})
                 fig = create_gantt_chart(
                     solution, line, data.get('dates', []), 
                     data.get('shutdown_periods', {}), grade_colors,
-                    capacities=capacities,
-                    buffer_days=data.get('buffer_days', 0)
+                    capacities=plant_data.get('capacities', {}),  # NEW: pass capacities
+                    buffer_days=data.get('buffer_days', 0)        # NEW: pass buffer_days
                 )
             except Exception as e:
                 fig = None
