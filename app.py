@@ -1,7 +1,7 @@
 """
 Polymer Production Scheduler - Main Application (Enhanced UX)
 A wizard-based Streamlit app for multi-plant production optimization
-Version 3.1.0 - Enhanced stage management and responsive design
+Version 3.2.0 - Enhanced stage management and responsive design
 """
 
 import streamlit as st
@@ -323,7 +323,7 @@ def render_optimization_stage():
             except Exception:
                 pass
 
-        # Run solver (NO LOGIC CHANGES - preserved exactly)
+        # Run solver with NEW parameters
         status, solution_callback, solver = build_and_solve_model(
             grades=inventory_data['grades'],
             lines=plant_data['lines'],
@@ -343,6 +343,8 @@ def render_optimization_stage():
             rerun_allowed=inventory_data.get('rerun_allowed', {}),
             material_running_info=plant_data.get('material_running', {}),
             shutdown_periods=shutdown_periods,
+            pre_shutdown_grades=plant_data.get('pre_shutdown_grades', {}),  # NEW
+            restart_grades=plant_data.get('restart_grades', {}),           # NEW
             transition_rules=transition_rules,
             buffer_days=params['buffer_days'],
             stockout_penalty=params['stockout_penalty'],
@@ -391,6 +393,8 @@ def render_optimization_stage():
                     'min_inventory': inventory_data['min_inventory'],
                     'max_inventory': inventory_data['max_inventory'],
                     'initial_inventory': inventory_data['initial_inventory'],
+                    'pre_shutdown_grades': plant_data.get('pre_shutdown_grades', {}),  # NEW
+                    'restart_grades': plant_data.get('restart_grades', {}),           # NEW
                 }
             }
 
@@ -474,6 +478,17 @@ def render_results_stage():
 
         for line in data.get('lines', []):
             st.markdown(f"#### 🏭 {line}")
+            
+            # Display shutdown constraints info if applicable
+            if line in data.get('pre_shutdown_grades', {}) or line in data.get('restart_grades', {}):
+                constraints_info = []
+                if line in data.get('pre_shutdown_grades', {}):
+                    constraints_info.append(f"**Pre-Shutdown Grade:** {data['pre_shutdown_grades'][line]}")
+                if line in data.get('restart_grades', {}):
+                    constraints_info.append(f"**Restart Grade:** {data['restart_grades'][line]}")
+                
+                if constraints_info:
+                    st.info(" | ".join(constraints_info))
 
             # Gantt chart
             try:
