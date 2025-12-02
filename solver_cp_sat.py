@@ -172,12 +172,11 @@ def build_and_solve_model(
                 key = (grade, line, d)
                 is_producing[key] = model.NewBoolVar(f'is_producing_{grade}_{line}_{d}')
                 
+                production_value = model.NewIntVar(0, capacities[line], f'production_{grade}_{line}_{d}')
                 if d < num_days - buffer_days:
-                    production_value = model.NewIntVar(0, capacities[line], f'production_{grade}_{line}_{d}')
                     model.Add(production_value == capacities[line]).OnlyEnforceIf(is_producing[key])
                     model.Add(production_value == 0).OnlyEnforceIf(is_producing[key].Not())
                 else:
-                    production_value = model.NewIntVar(0, capacities[line], f'production_{grade}_{line}_{d}')
                     model.Add(production_value <= capacities[line] * is_producing[key])
                 
                 production[key] = production_value
@@ -244,7 +243,8 @@ def build_and_solve_model(
         progress_callback(0.3, "Adding inventory balance constraints...")
     
     # Inventory balance
-    objective = 0
+    # Replace scalar objective accumulation with a list to collect terms
+    objective = []  # previously was 0; now a list of terms to sum at the end
     
     for grade in grades:
         model.Add(inventory_vars[(grade, 0)] == initial_inventory[grade])
@@ -268,6 +268,9 @@ def build_and_solve_model(
             # Step 3: Calculate stockout based on unmet demand
             model.Add(stockout_vars[(grade, d)] == demand_today - supplied)
             
+            # Add stockout penalty term (collect, do not mutate numeric objective)
+            objective.append(stockout_penalty * stockout_vars[(grade, d)])
+            
             # Step 4: Calculate closing inventory
             model.Add(inventory_vars[(grade, d + 1)] == inventory_vars[(grade, d)] + produced_today - supplied)
             
@@ -286,7 +289,7 @@ def build_and_solve_model(
                 deficit = model.NewIntVar(0, 100000, f'deficit_{grade}_{d}')
                 model.Add(deficit >= min_inv_value - inventory_tomorrow)
                 model.Add(deficit >= 0)
-                objective += stockout_penalty * deficit
+                objective.append(stockout_penalty * deficit)
     
     # Minimum closing inventory
     for grade in grades:
@@ -297,7 +300,7 @@ def build_and_solve_model(
             closing_deficit = model.NewIntVar(0, 100000, f'closing_deficit_{grade}')
             model.Add(closing_deficit >= min_closing - closing_inventory)
             model.Add(closing_deficit >= 0)
-            objective += stockout_penalty * closing_deficit * 3
+            objective.append(stockout_penalty * closing_deficit * 3)
     
     # Maximum inventory
     for grade in grades:
@@ -450,12 +453,9 @@ def build_and_solve_model(
     if progress_callback:
         progress_callback(0.8, "Building objective function...")
     
-    # Stockout penalties
-    for grade in grades:
-        for d in range(num_days):
-            objective += stockout_penalty * stockout_vars[(grade, d)]
+    # Stockout penalties already appended in inventory loop above
     
-    # Transition penalties and continuity bonuses
+    # Transition penalties (ONLY) — collect into objective list
     for line in lines:
         for d in range(num_days - 1):
             for grade1 in grades:
@@ -470,15 +470,12 @@ def build_and_solve_model(
                     model.AddBoolAnd([is_producing[(grade1, line, d)], is_producing[(grade2, line, d + 1)]]).OnlyEnforceIf(trans_var)
                     model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade1, line, d)].Not())
                     model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade2, line, d + 1)].Not())
-                    objective += transition_penalty * trans_var
-            
-            for grade in grades:
-                if line in allowed_lines[grade]:
-                    continuity = model.NewBoolVar(f'continuity_{line}_{d}_{grade}')
-                    model.AddBoolAnd([is_producing[(grade, line, d)], is_producing[(grade, line, d + 1)]]).OnlyEnforceIf(continuity)
-                    objective += -continuity_bonus * continuity
+                    objective.append(transition_penalty * trans_var)
     
-    model.Minimize(objective)
+    # DO NOT add continuity bonus terms (we removed them intentionally)
+    
+    # Finalize objective
+    model.Minimize(sum(objective))
     
     if progress_callback:
         progress_callback(0.9, "Solving optimization problem...")
