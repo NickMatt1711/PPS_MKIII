@@ -462,4 +462,3 @@ def create_stockout_details_table(
     df = pd.DataFrame(rows)
     df = df.sort_values(["Date", "Grade"])
     return df
-Key Changes
