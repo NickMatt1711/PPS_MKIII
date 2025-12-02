@@ -162,6 +162,8 @@ def build_and_solve_model(
     rerun_allowed: Dict,
     material_running_info: Dict,
     shutdown_periods: Dict,
+    pre_shutdown_grades: Dict,  # NEW parameter
+    restart_grades: Dict,       # NEW parameter
     transition_rules: Dict,
     buffer_days: int,
     stockout_penalty: int,
@@ -250,6 +252,36 @@ def build_and_solve_model(
                 for other_material in grades:
                     if other_material != material and is_allowed_combination(other_material, plant):
                         model.Add(get_is_producing_var(other_material, plant, d) == 0)
+    
+    # ========== NEW: PRE-SHUTDOWN AND RESTART GRADE CONSTRAINTS ==========
+    if progress_callback:
+        progress_callback(0.15, "Adding shutdown/restart constraints...")
+    
+    for line in lines:
+        if line in shutdown_periods and shutdown_periods[line]:
+            shutdown_days = shutdown_periods[line]
+            
+            # Pre-Shutdown Grade constraint
+            if line in pre_shutdown_grades and pre_shutdown_grades[line]:
+                pre_grade = pre_shutdown_grades[line]
+                if pre_grade in grades and is_allowed_combination(pre_grade, line):
+                    # Day before shutdown must produce the pre-shutdown grade
+                    day_before = shutdown_days[0] - 1
+                    if day_before >= 0:
+                        var = get_is_producing_var(pre_grade, line, day_before)
+                        if var is not None:
+                            model.Add(var == 1)
+            
+            # Restart Grade constraint
+            if line in restart_grades and restart_grades[line]:
+                restart_grade = restart_grades[line]
+                if restart_grade in grades and is_allowed_combination(restart_grade, line):
+                    # Day after shutdown must produce the restart grade
+                    day_after = shutdown_days[-1] + 1
+                    if day_after < num_days:
+                        var = get_is_producing_var(restart_grade, line, day_after)
+                        if var is not None:
+                            model.Add(var == 1)
     
     if progress_callback:
         progress_callback(0.2, "Adding inventory constraints...")
