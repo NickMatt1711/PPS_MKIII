@@ -44,6 +44,7 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
     'buffer_days': DEFAULT_BUFFER_DAYS,
     'stockout_penalty': DEFAULT_STOCKOUT_PENALTY,
     'transition_penalty': DEFAULT_TRANSITION_PENALTY,
+    'continuity_bonus': DEFAULT_CONTINUITY_BONUS,
 })
 
 
@@ -217,6 +218,13 @@ def render_preview_stage():
             step=1
         )
         
+        continuity_bonus = st.number_input(
+            "Continuity bonus",
+            min_value=0,
+            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['continuity_bonus']),
+            step=1
+        )
+
 
     # persist parameters
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
@@ -224,6 +232,7 @@ def render_preview_stage():
         'buffer_days': int(buffer_days),
         'stockout_penalty': float(stockout_penalty),
         'transition_penalty': float(transition_penalty),
+        'continuity_bonus': float(continuity_bonus),
     }
 
     render_section_divider()
@@ -326,6 +335,7 @@ def render_optimization_stage():
             buffer_days=params['buffer_days'],
             stockout_penalty=params['stockout_penalty'],
             transition_penalty=params['transition_penalty'],
+            continuity_bonus=params['continuity_bonus'],
             time_limit_min=params['time_limit_min'],
             progress_callback=progress_callback
         )
@@ -425,8 +435,6 @@ def render_results_stage():
         total_stockouts = 0
 
     render_metric_card("Objective Value", f"{objective_val:,.0f}", c1, 0)
-# Optional: Add KPI breakdown for penalties
-# (Future enhancement: compute contributions if solver returns them)
     render_metric_card("Total Transitions", str(transitions_total), c2, 1)
     render_metric_card("Total Stockouts", f"{total_stockouts:,.0f} MT", c3, 2)
     render_metric_card("Time Elapsed", f"{solve_time:.1f}s", c4, 3)
