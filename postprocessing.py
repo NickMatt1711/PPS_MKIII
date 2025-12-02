@@ -168,10 +168,10 @@ def create_inventory_chart(
     inv_vals = [inv_dict.get(d.strftime("%d-%b-%y"), 0) for d in dates]
 
     # Determine last actual planning day (before buffer)
-    last_actual_day = len(dates) - buffer_days
+    last_actual_day = len(dates) - buffer_days - 1
 
     start_val = inv_vals[0]
-    end_val = inv_vals[last_actual_day - 1]
+    end_val = inv_vals[last_actual_day]
     highest_val = max(inv_vals[:last_actual_day + 1])
     lowest_val = min(inv_vals[:last_actual_day + 1])
 
