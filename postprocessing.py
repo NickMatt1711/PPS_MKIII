@@ -567,3 +567,66 @@ def create_production_summary(solution, production_vars, solver, grades, lines, 
 
     rows.append(total_row)
     return pd.DataFrame(rows)
+
+# ===============================================================
+#  STOCKOUT DETAILS TABLE
+# ===============================================================
+
+def create_stockout_details_table(
+    solution: Dict,
+    grades: List[str],
+    dates: List[date],
+    buffer_days: int = 0
+) -> pd.DataFrame:
+    """Create detailed table of stockout occurrences."""
+    rows = []
+    
+    # Determine last actual planning day (before buffer)
+    last_actual_day = len(dates) - buffer_days if buffer_days > 0 else len(dates)
+    
+    stockout_dict = solution.get('stockout', {})
+    
+    for grade in sorted(grades):
+        if grade in stockout_dict:
+            grade_stockouts = stockout_dict[grade]
+            for date_str, stockout_qty in grade_stockouts.items():
+                if stockout_qty > 0:
+                    # Try to parse date string
+                    try:
+                        if isinstance(date_str, str):
+                            # Handle date format conversion
+                            try:
+                                date_obj = datetime.strptime(date_str, "%d-%b-%y")
+                            except:
+                                # Try other formats
+                                date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+                        else:
+                            date_obj = date_str
+                        
+                        # Check if within demand period (not buffer)
+                        date_index = -1
+                        for i, d in enumerate(dates):
+                            if i >= last_actual_day:
+                                break
+                            if _ensure_date(d) == _ensure_date(date_obj):
+                                date_index = i
+                                break
+                        
+                        if date_index >= 0:  # Only include if within demand period
+                            rows.append({
+                                "Date": _ensure_date(date_obj).strftime("%d-%b-%y"),
+                                "Grade": grade,
+                                "Stockout Quantity (MT)": stockout_qty,
+                                "Day Index": date_index
+                            })
+                    except Exception as e:
+                        # Skip if date parsing fails
+                        continue
+    
+    if not rows:
+        return pd.DataFrame()
+    
+    df = pd.DataFrame(rows)
+    df = df.sort_values(["Date", "Grade"])
+    df = df.reset_index(drop=True)
+    return df
