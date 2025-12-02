@@ -272,8 +272,32 @@ def create_inventory_chart(
     highest_val = max(inv_vals[:last_actual_day]) if last_actual_day > 0 else inv_vals[0]
     lowest_val = min(inv_vals[:last_actual_day]) if last_actual_day > 0 else inv_vals[0]
 
-    start_x = dates[0]
-    end_x = dates[last_actual_day - 1] if last_actual_day > 0 else dates[0]
+    # Annotations (only for demand period)
+    annotations = []
+    
+    if last_actual_day > 0:
+        # Ensure we have valid dates
+        start_date = dates[0]
+        end_date = dates[last_actual_day - 1] if last_actual_day < len(dates) else dates[-1]
+        
+        annotations.extend([
+            dict(
+                x=start_date, y=start_val,
+                text=f"Start: {start_val:.0f}",
+                showarrow=True, arrowhead=2,
+                ax=-40, ay=30,
+                font=dict(color="black", size=11),
+                bgcolor="white", bordercolor="gray"
+            ),
+            dict(
+                x=end_date, y=end_val,
+                text=f"End: {end_val:.0f}",
+                showarrow=True, arrowhead=2,
+                ax=40, ay=30,
+                font=dict(color="black", size=11),
+                bgcolor="white", bordercolor="gray"
+            )
+        ])
     
     # Find indices for highest/lowest within demand period
     highest_idx = inv_vals.index(highest_val) if highest_val in inv_vals[:last_actual_day] else 0
