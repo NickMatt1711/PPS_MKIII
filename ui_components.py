@@ -1,18 +1,17 @@
 """
 ui_components.py
-Material 3 Light Theme - Corporate UI Components
-All UI elements and CSS are self-contained in this file.
+Material 3 Light Theme - Enhanced UX with improved responsiveness and accessibility
 """
 
 import streamlit as st
 from pathlib import Path
 
 # -------------------------------
-# CSS - Material 3 Light Theme
+# CSS - Material 3 Light Theme (Enhanced)
 # -------------------------------
 CUSTOM_CSS = """
 /* =============================
-CORPORATE LIGHT THEME CSS
+CORPORATE LIGHT THEME CSS - ENHANCED
 ============================= */
 :root {
   --md-sys-color-primary: #0A74DA;
@@ -48,7 +47,6 @@ CORPORATE LIGHT THEME CSS
   --md-sys-color-on-error: #FFFFFF;
   --md-sys-color-error-container: #F8D7DA;
 
-  /* Correct shape variables */
   --md-shape-corner-small: 8px;
   --md-shape-corner-medium: 12px;
   --md-shape-corner-large: 16px;
@@ -62,9 +60,11 @@ CORPORATE LIGHT THEME CSS
 }
 
 /* =============================
-BUTTONS — Gradient
+BUTTONS - Enhanced Hierarchy
 ============================= */
-.stButton>button,
+/* Primary Button */
+.stButton>button[kind="primary"],
+.stButton>button:not([kind]),
 button[data-testid="stDownloadButton"] {
   background: linear-gradient(135deg, #0A74DA, #4BA3F4) !important;
   color: var(--md-sys-color-on-primary) !important;
@@ -72,74 +72,144 @@ button[data-testid="stDownloadButton"] {
   padding: 0.75rem 1.5rem !important;
   font-weight: 500 !important;
   font-size: 0.875rem !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
   text-transform: none !important;
   transition: all 0.2s ease !important;
+  border: none !important;
 }
-.stButton>button:hover,
+
+.stButton>button[kind="primary"]:hover,
+.stButton>button:not([kind]):hover,
 button[data-testid="stDownloadButton"]:hover {
   background: linear-gradient(135deg, #085BB5, #3D8CD9) !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+  transform: translateY(-1px);
+}
+
+/* Secondary Button */
+.stButton>button[kind="secondary"] {
+  background: var(--md-sys-color-surface) !important;
+  color: var(--md-sys-color-primary) !important;
+  border: 2px solid var(--md-sys-color-primary) !important;
+  border-radius: var(--md-shape-corner-large) !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  transition: all 0.2s ease !important;
+}
+
+.stButton>button[kind="secondary"]:hover {
+  background: var(--md-sys-color-primary-container) !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+}
+
+/* Focus states for accessibility */
+.stButton>button:focus-visible,
+button[data-testid="stDownloadButton"]:focus-visible {
+  outline: 3px solid #4BA3F4 !important;
+  outline-offset: 2px !important;
+}
+
+/* Disabled state */
+.stButton>button:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
 }
 
 /* =============================
-Header — Gradient
+Header - Enhanced
 ============================= */
 .app-header {
   background: linear-gradient(135deg, #0A74DA, #4BA3F4);
   color: var(--md-sys-color-on-primary) !important;
-  padding: 1rem 1.5rem;
+  padding: 1.5rem 2rem;
   border-radius: var(--md-shape-corner-large);
   text-align: center;
+  box-shadow: 0 4px 12px rgba(10, 116, 218, 0.25);
+  margin-bottom: 2rem;
 }
+
 .app-header h1 {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: 1.875rem;
   font-weight: 500;
+  letter-spacing: -0.5px;
 }
+
 .app-header p {
-  opacity: 0.9;
-  font-size: 0.95rem;
+  opacity: 0.95;
+  font-size: 1rem;
+  margin-top: 0.5rem;
 }
 
 /* =============================
-Cards
+Cards - Enhanced
 ============================= */
 .card, .metric-card, .stTabs {
   background: var(--md-sys-color-surface);
   border-radius: var(--md-shape-corner-medium);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  transition: box-shadow 0.2s ease;
 }
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
 .card-header {
   font-size: 1.25rem;
   font-weight: 500;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  padding-bottom: 1rem;
   margin-bottom: 1rem;
 }
 
 /* =============================
-Alerts
+Alerts - Enhanced
 ============================= */
 div[data-testid="stAlert"] {
   border-radius: var(--md-shape-corner-medium);
   padding: 1rem 1.5rem;
   margin: 1rem 0;
+  border-left: 4px solid;
 }
-.alert-success { background: var(--md-sys-color-success-container); color: var(--md-sys-color-on-success); }
-.alert-info { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
-.alert-warning { background: var(--md-sys-color-warning-container); color: var(--md-sys-color-on-warning); }
-.alert-error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error); }
+
+.alert-success { 
+  background: var(--md-sys-color-success-container); 
+  color: var(--md-sys-color-on-success);
+  border-left-color: var(--md-sys-color-success);
+}
+
+.alert-info { 
+  background: var(--md-sys-color-primary-container); 
+  color: var(--md-sys-color-on-primary-container);
+  border-left-color: var(--md-sys-color-primary);
+}
+
+.alert-warning { 
+  background: var(--md-sys-color-warning-container); 
+  color: var(--md-sys-color-on-warning);
+  border-left-color: var(--md-sys-color-warning);
+}
+
+.alert-error { 
+  background: var(--md-sys-color-error-container); 
+  color: var(--md-sys-color-on-error);
+  border-left-color: var(--md-sys-color-error);
+}
 
 /* =============================
-Stage Progress
+Stage Progress - Enhanced (4 stages)
 ============================= */
 .stage-container {
   background: var(--md-sys-color-surface);
   border-radius: var(--md-shape-corner-medium);
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .stage-row {
@@ -155,41 +225,48 @@ Stage Progress
   flex-direction: column;
   align-items: center;
   flex: 1;
-  min-width: 100px;
+  min-width: 80px;
   position: relative;
   z-index: 2;
 }
 
 .stage-circle {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   border: 3px solid var(--md-sys-color-outline-variant);
   background: var(--md-sys-color-surface);
-  transition: transform 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
 .stage-circle.active {
   transform: scale(1.15);
   background: var(--md-sys-color-primary);
   border-color: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
+  box-shadow: 0 4px 12px rgba(10, 116, 218, 0.4);
 }
+
 .stage-circle.completed {
   background: var(--md-sys-color-success);
   border-color: var(--md-sys-color-success);
   color: var(--md-sys-color-on-success);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
 }
 
 .stage-label {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--md-sys-color-on-surface-variant);
+  text-align: center;
 }
+
 .stage-label.active {
   color: var(--md-sys-color-on-surface);
   font-weight: 600;
@@ -200,14 +277,16 @@ Stage Progress
   height: 4px;
   background: var(--md-sys-color-outline-variant);
   margin: 0 0.5rem;
-  transition: background-color 0.4s ease;
+  transition: background-color 0.3s ease;
+  border-radius: 2px;
 }
+
 .stage-connector.completed {
   background: var(--md-sys-color-success);
 }
 
 /* =============================
-Tabs
+Tabs - Enhanced with dynamic colors
 ============================= */
 .stTabs {
   background: var(--md-sys-color-surface);
@@ -217,7 +296,7 @@ Tabs
 
 .stTabs [data-baseweb="tab-list"] {
   gap: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.75rem;
   background: var(--md-sys-color-surface-variant);
   border-radius: var(--md-shape-corner-medium) !important;
 }
@@ -226,30 +305,34 @@ Tabs
   flex: 1;
   text-align: center;
   font-weight: 600;
-  padding: 0.75rem;
+  padding: 0.875rem 1rem;
   border-radius: var(--md-shape-corner-small) !important;
-  transition: background 0.3s ease, box-shadow 0.3s ease;
+  transition: all 0.2s ease;
   border: none !important;
 }
 
 .stTabs [role="tab"]:nth-child(1)[aria-selected="true"] {
   background: linear-gradient(135deg, #0A74DA, #4BA3F4) !important;
   color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(10, 116, 218, 0.3);
 }
 
 .stTabs [role="tab"]:nth-child(2)[aria-selected="true"] {
   background: linear-gradient(135deg, #28A745, #5DDC7A) !important;
   color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
 }
 
 .stTabs [role="tab"]:nth-child(3)[aria-selected="true"] {
   background: linear-gradient(135deg, #FFC107, #FFD76A) !important;
-  color: #FFFFFF !important;
+  color: #212529 !important;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
 }
 
 .stTabs [role="tab"]:nth-child(4)[aria-selected="true"] {
   background: linear-gradient(135deg, #DC3545, #F08080) !important;
   color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
 
 .stTabs [role="tab"]:not([aria-selected="true"]) {
@@ -257,22 +340,30 @@ Tabs
   color: var(--md-sys-color-on-surface-variant) !important;
 }
 
-/* =============================
-Metric Cards — Gradient Variants
-============================= */
+.stTabs [role="tab"]:not([aria-selected="true"]):hover {
+  background: var(--md-sys-color-surface-variant) !important;
+}
 
-/* Base metric card styling */
+/* =============================
+Metric Cards - Enhanced with hover effects
+============================= */
 .metric-card {
   border-radius: var(--md-shape-corner-medium) !important;
-  padding: 1.5rem !important;
+  padding: 1.75rem 1.5rem !important;
   text-align: center !important;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
   margin-bottom: 1rem !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  min-height: 120px !important;
+  min-height: 140px !important;
+  transition: all 0.2s ease !important;
+}
+
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
 }
 
 .metric-card-blue {
@@ -295,13 +386,15 @@ Metric Cards — Gradient Variants
   font-size: 0.875rem !important;
   color: #495057 !important;
   font-weight: 600 !important;
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 0.75rem !important;
   text-align: center !important;
   width: 100% !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .metric-value {
-  font-size: 2rem !important;
+  font-size: 2.25rem !important;
   font-weight: 700 !important;
   color: #212529 !important;
   line-height: 1 !important;
@@ -310,17 +403,18 @@ Metric Cards — Gradient Variants
 }
 
 /* =============================
-Loading Spinner
+Loading States - Enhanced
 ============================= */
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #E0E0E0;
-  border-top: 4px solid #0A74DA;
+  width: 48px;
+  height: 48px;
+  border: 5px solid #E0E0E0;
+  border-top: 5px solid #0A74DA;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 1rem auto;
+  margin: 1.5rem auto;
 }
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -328,25 +422,175 @@ Loading Spinner
 
 .optimization-container {
   text-align: center;
-  margin-bottom: 1rem;
-}
-.optimization-text {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-top: 0.5rem;
-}
-.optimization-subtext {
-  font-size: 0.9rem;
-  color: var(--md-sys-color-on-surface-variant);
+  margin: 2rem auto;
+  padding: 2rem;
 }
 
+.optimization-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.optimization-subtext {
+  font-size: 1rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 0.5rem;
+}
+
+/* Skeleton Loader */
+.skeleton-loader {
+  padding: 1rem;
+}
+
+.skeleton-row {
+  height: 40px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  margin-bottom: 12px;
+  border-radius: 8px;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* =============================
+Error States - Enhanced
+============================= */
+.error-container {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: var(--md-sys-color-error-container);
+  border-radius: var(--md-shape-corner-medium);
+  margin: 2rem 0;
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.error-container h3 {
+  color: var(--md-sys-color-error);
+  margin-bottom: 0.5rem;
+}
+
+.error-container p {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 1rem;
+}
+
+/* =============================
+Section Divider
+============================= */
+.section-divider {
+  height: 1px;
+  background: var(--md-sys-color-outline-variant);
+  margin: 2rem 0;
+}
+
+/* =============================
+Responsive Design
+============================= */
+@media (max-width: 768px) {
+  .stage-row {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .stage-connector {
+    width: 4px;
+    height: 40px;
+    margin: 0.5rem 0;
+  }
+  
+  .metric-card {
+    margin-bottom: 1rem !important;
+  }
+  
+  .app-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .app-header {
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stage-circle {
+    width: 44px;
+    height: 44px;
+    font-size: 1.1rem;
+  }
+  
+  .stage-label {
+    font-size: 0.75rem;
+  }
+  
+  .metric-value {
+    font-size: 1.75rem !important;
+  }
+}
+
+/* =============================
+Data Tables Enhancement
+============================= */
+.dataframe-container {
+  border-radius: var(--md-shape-corner-medium);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* =============================
+Accessibility Enhancements
+============================= */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+  z-index: 100;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .stage-circle {
+    border-width: 4px;
+  }
+  
+  .stButton>button {
+    border: 2px solid currentColor !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 """
 
 # -------------------------------
 # APPLY CSS
 # -------------------------------
 def apply_custom_css():
-    """Inject Material 3 corporate theme."""
+    """Inject Material 3 corporate theme with enhanced UX."""
     st.markdown(f"<style>{CUSTOM_CSS}</style>", unsafe_allow_html=True)
 
 
@@ -354,7 +598,7 @@ def apply_custom_css():
 # HEADER
 # -------------------------------
 def render_header(title: str, subtitle: str = ""):
-    """Render corporate app header."""
+    """Render corporate app header with enhanced styling."""
     subtitle_html = f"<p>{subtitle}</p>" if subtitle else ""
     st.markdown(
         f'<div class="app-header"><h1>{title}</h1>{subtitle_html}</div>',
@@ -363,34 +607,38 @@ def render_header(title: str, subtitle: str = ""):
 
 
 # -------------------------------
-# STAGE PROGRESS
+# STAGE PROGRESS (4 stages)
 # -------------------------------
-
 def render_stage_progress(current_stage: int):
-    stages = [("📤","Upload"),("📄","Preview & Configure"),("📊","Results")]
+    """Render 4-stage progress indicator with proper numbering."""
+    stages = [
+        ("📤", "Upload"),
+        ("📄", "Configure"),
+        ("⚡", "Optimizing"),
+        ("📊", "Results")
+    ]
+    
     total = len(stages)
-    current_stage = max(0, min(current_stage, total-1))
+    current_stage = max(0, min(current_stage, total - 1))
+    
     html = '<div class="stage-row">'
 
-    for idx,(icon,label) in enumerate(stages):
+    for idx, (icon, label) in enumerate(stages):
         status = "inactive"
         display_icon = icon
-        if idx == current_stage:
+        
+        if idx < current_stage:
+            status = "completed"
+            display_icon = "✓"
+        elif idx == current_stage:
             status = "active"
-        elif idx < current_stage:
-            status = "completed"
-            display_icon = "✓"
-
-        if idx == total-1 and current_stage == total-1:
-            status = "completed"
-            display_icon = "✓"
 
         html += f'<div class="stage-step">'
         html += f'<div class="stage-circle {status}">{display_icon}</div>'
-        html += f'<div class="stage-label {"active" if idx==current_stage else ""}">{label}</div>'
+        html += f'<div class="stage-label {"active" if idx == current_stage else ""}">{label}</div>'
         html += '</div>'
 
-        if idx < total-1:
+        if idx < total - 1:
             connector_class = "completed" if idx < current_stage else ""
             html += f'<div class="stage-connector {connector_class}"></div>'
 
@@ -398,30 +646,34 @@ def render_stage_progress(current_stage: int):
     st.markdown(f'<div class="stage-container">{html}</div>', unsafe_allow_html=True)
 
 
-
 # -------------------------------
 # CARD
 # -------------------------------
 def render_card(title: str, icon: str = ""):
+    """Render card container with optional icon."""
     icon_html = f"{icon} " if icon else ""
-    st.markdown(f'<div class="card"><div class="card-header">{icon_html}{title}</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="card"><div class="card-header">{icon_html}{title}</div>',
+        unsafe_allow_html=True
+    )
 
 def close_card():
+    """Close card container."""
     st.markdown('</div>', unsafe_allow_html=True)
 
 
 # -------------------------------
-# METRIC CARD
+# METRIC CARD (Enhanced with hover)
 # -------------------------------
 def render_metric_card(label: str, value: str, col, card_index: int = 0):
-    """Render a metric card with gradient background."""
+    """Render a metric card with gradient background and hover effect."""
     gradient_classes = [
         'metric-card-blue',
         'metric-card-green', 
         'metric-card-yellow',
         'metric-card-red'
     ]
-    card_class = gradient_classes[card_index % 4] if card_index < 4 else 'metric-card'
+    card_class = gradient_classes[card_index % 4]
     
     with col:
         st.markdown(
@@ -437,14 +689,52 @@ def render_metric_card(label: str, value: str, col, card_index: int = 0):
 # ALERT
 # -------------------------------
 def render_alert(message: str, alert_type: str = "info"):
-    icons = {"success":"✓","info":"ℹ","warning":"⚠","error":"✖"}
-    st.markdown(f'<div class="alert alert-{alert_type}"><strong>{icons.get(alert_type,"ℹ")}</strong> <span>{message}</span></div>', unsafe_allow_html=True)
+    """Render styled alert with icon."""
+    icons = {
+        "success": "✓",
+        "info": "ℹ",
+        "warning": "⚠",
+        "error": "✖"
+    }
+    st.markdown(
+        f'<div class="alert alert-{alert_type}">'
+        f'<strong>{icons.get(alert_type, "ℹ")}</strong> '
+        f'<span>{message}</span></div>',
+        unsafe_allow_html=True
+    )
+
+
+# -------------------------------
+# ERROR STATE
+# -------------------------------
+def render_error_state(error_type: str, message: str):
+    """Render enhanced error state with icon."""
+    st.markdown(f"""
+        <div class="error-container">
+            <div class="error-icon">❌</div>
+            <h3>{error_type}</h3>
+            <p>{message}</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+# -------------------------------
+# SKELETON LOADER
+# -------------------------------
+def render_skeleton_loader(rows: int = 3):
+    """Render skeleton loader for loading states."""
+    skeleton_html = '<div class="skeleton-loader">'
+    for _ in range(rows):
+        skeleton_html += '<div class="skeleton-row"></div>'
+    skeleton_html += '</div>'
+    st.markdown(skeleton_html, unsafe_allow_html=True)
 
 
 # -------------------------------
 # SECTION DIVIDER
 # -------------------------------
 def render_section_divider():
+    """Render section divider line."""
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
 
@@ -452,13 +742,14 @@ def render_section_divider():
 # DOWNLOAD TEMPLATE
 # -------------------------------
 def render_download_template_button():
+    """Render download template button."""
     try:
         template_path = Path(__file__).parent / "polymer_production_template.xlsx"
         if template_path.exists():
             with open(template_path, "rb") as f:
                 template_data = f.read()
             st.download_button(
-                label="🔥 Download Template",
+                label="📥 Download Template",
                 data=template_data,
                 file_name="polymer_production_template.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -468,4 +759,3 @@ def render_download_template_button():
             st.error("Template file not found")
     except Exception as e:
         st.error(f"Template file not found: {e}")
-      
