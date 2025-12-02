@@ -428,3 +428,38 @@ def create_production_summary(solution, production_vars, solver, grades, lines, 
 
     rows.append(total_row)
     return pd.DataFrame(rows)
+
+
+# ===============================================================
+#  STOCKOUT DETAILS TABLE
+# ===============================================================
+
+def create_stockout_details_table(
+    solution: Dict,
+    grades: List[str],
+    dates: List[date],
+    buffer_days: int = 0
+) -> pd.DataFrame:
+    """Create detailed table of stockout occurrences."""
+    rows = []
+    
+    stockout_dict = solution.get('stockout', {})
+    
+    for grade in sorted(grades):
+        if grade in stockout_dict:
+            grade_stockouts = stockout_dict[grade]
+            for date_str, stockout_qty in grade_stockouts.items():
+                if stockout_qty > 0:
+                    rows.append({
+                        "Date": date_str,
+                        "Grade": grade,
+                        "Stockout Quantity (MT)": stockout_qty
+                    })
+    
+    if not rows:
+        return pd.DataFrame()
+    
+    df = pd.DataFrame(rows)
+    df = df.sort_values(["Date", "Grade"])
+    return df
+Key Changes
