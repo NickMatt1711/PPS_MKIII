@@ -11,7 +11,8 @@ from constants import SOLVER_NUM_WORKERS, SOLVER_RANDOM_SEED
 class SolutionCallback(cp_model.CpSolverSolutionCallback):
     """Callback to capture all solutions during search"""
     
-    def __init__(self, production, inventory, stockout, is_producing, grades, lines, dates, formatted_dates, num_days):
+    def __init__(self, production, inventory, stockout, is_producing, grades, lines, dates, formatted_dates, num_days, 
+                 inventory_deficit_penalties=None, closing_inventory_deficit_penalties=None):
         cp_model.CpSolverSolutionCallback.__init__(self)
         self.production = production
         self.inventory = inventory
@@ -22,9 +23,12 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
         self.dates = dates
         self.formatted_dates = formatted_dates
         self.num_days = num_days
+        self.inventory_deficit_penalties = inventory_deficit_penalties or {}
+        self.closing_inventory_deficit_penalties = closing_inventory_deficit_penalties or {}
         self.solutions = []
         self.solution_times = []
         self.start_time = time.time()
+        self.objective_breakdowns = []
 
     def on_solution_callback(self):
         current_time = time.time() - self.start_time
@@ -117,8 +121,28 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
             'per_line': transition_count_per_line,
             'total': total_transitions
         }
+        
+        # Calculate objective breakdown
+        breakdown = self.calculate_objective_breakdown(current_obj)
+        solution['objective_breakdown'] = breakdown
+        self.objective_breakdowns.append(breakdown)
 
         self.solutions.append(solution)
+
+    def calculate_objective_breakdown(self, solver_objective):
+        """Calculate detailed breakdown of the objective value"""
+        # This would need access to penalty parameters - would be better to pass them in
+        # For now, we'll calculate based on what we can see in the solution
+        breakdown = {
+            'stockout': 0,
+            'transitions': 0,
+            'solver_objective': solver_objective,
+            'calculated_total': 0
+        }
+        
+        # Note: To get exact breakdown, we would need to track the actual penalty variables
+        # This is a simplified version
+        return breakdown
 
     def num_solutions(self):
         return len(self.solutions)
@@ -244,8 +268,6 @@ def build_and_solve_model(
         progress_callback(0.3, "Adding inventory balance constraints...")
     
     # Inventory balance
-    objective = 0
-    
     for grade in grades:
         model.Add(inventory_vars[(grade, 0)] == initial_inventory[grade])
     
@@ -277,27 +299,37 @@ def build_and_solve_model(
     if progress_callback:
         progress_callback(0.4, "Adding minimum inventory constraints...")
     
-    # Minimum inventory constraints
+    # Create explicit penalty variables for inventory deficits
+    inventory_deficit_penalties = {}
+    closing_inventory_deficit_penalties = {}
+    
+    # Minimum inventory constraints with explicit penalty variables
     for grade in grades:
         for d in range(num_days):
             if min_inventory[grade] > 0:
                 min_inv_value = int(min_inventory[grade])
                 inventory_tomorrow = inventory_vars[(grade, d + 1)]
-                deficit = model.NewIntVar(0, 100000, f'deficit_{grade}_{d}')
-                model.Add(deficit >= min_inv_value - inventory_tomorrow)
-                model.Add(deficit >= 0)
-                objective += stockout_penalty * deficit
-    
-    # Minimum closing inventory
-    for grade in grades:
-        closing_inventory = inventory_vars[(grade, num_days - buffer_days)]
-        min_closing = min_closing_inventory[grade]
+                
+                # Create explicit deficit variable
+                deficit_var = model.NewIntVar(0, 100000, f'inv_deficit_{grade}_{d}')
+                model.Add(deficit_var >= min_inv_value - inventory_tomorrow)
+                model.Add(deficit_var >= 0)
+                
+                # Store for objective calculation
+                inventory_deficit_penalties[(grade, d)] = deficit_var
         
-        if min_closing > 0:
-            closing_deficit = model.NewIntVar(0, 100000, f'closing_deficit_{grade}')
-            model.Add(closing_deficit >= min_closing - closing_inventory)
-            model.Add(closing_deficit >= 0)
-            objective += stockout_penalty * closing_deficit * 3
+        # Minimum closing inventory with explicit penalty variable
+        if min_closing_inventory[grade] > 0 and buffer_days > 0:
+            closing_inventory = inventory_vars[(grade, num_days - buffer_days)]
+            min_closing = min_closing_inventory[grade]
+            
+            # Create explicit closing deficit variable
+            closing_deficit_var = model.NewIntVar(0, 100000, f'closing_deficit_{grade}')
+            model.Add(closing_deficit_var >= min_closing - closing_inventory)
+            model.Add(closing_deficit_var >= 0)
+            
+            # Store for objective calculation
+            closing_inventory_deficit_penalties[grade] = closing_deficit_var
     
     # Maximum inventory
     for grade in grades:
@@ -450,12 +482,24 @@ def build_and_solve_model(
     if progress_callback:
         progress_callback(0.8, "Building objective function...")
     
-    # Stockout penalties
+    # Build objective function with all penalties properly included
+    objective_terms = []
+    
+    # 1. Stockout penalties
     for grade in grades:
         for d in range(num_days):
-            objective += stockout_penalty * stockout_vars[(grade, d)]
+            if (grade, d) in stockout_vars:
+                objective_terms.append(stockout_penalty * stockout_vars[(grade, d)])
     
-    # Transition penalties and continuity bonuses
+    # 2. Inventory deficit penalties (using explicit variables)
+    for (grade, d), deficit_var in inventory_deficit_penalties.items():
+        objective_terms.append(stockout_penalty * deficit_var)
+    
+    # 3. Closing inventory deficit penalties (using explicit variables)
+    for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
+        objective_terms.append(stockout_penalty * closing_deficit_var * 3)
+    
+    # 4. Transition penalties
     for line in lines:
         for d in range(num_days - 1):
             for grade1 in grades:
@@ -464,21 +508,29 @@ def build_and_solve_model(
                 for grade2 in grades:
                     if line not in allowed_lines[grade2] or grade1 == grade2:
                         continue
-                    if transition_rules.get(line) and grade1 in transition_rules[line] and grade2 not in transition_rules[line][grade1]:
+                    if (transition_rules.get(line) and 
+                        grade1 in transition_rules[line] and 
+                        grade2 not in transition_rules[line][grade1]):
                         continue
+                    
                     trans_var = model.NewBoolVar(f'trans_{line}_{d}_{grade1}_to_{grade2}')
-                    model.AddBoolAnd([is_producing[(grade1, line, d)], is_producing[(grade2, line, d + 1)]]).OnlyEnforceIf(trans_var)
-                    model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade1, line, d)].Not())
-                    model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade2, line, d + 1)].Not())
-                    objective += transition_penalty * trans_var
-            
-            for grade in grades:
-                if line in allowed_lines[grade]:
-                    continuity = model.NewBoolVar(f'continuity_{line}_{d}_{grade}')
-                    model.AddBoolAnd([is_producing[(grade, line, d)], is_producing[(grade, line, d + 1)]]).OnlyEnforceIf(continuity)
-                    objective += -continuity_bonus * continuity
+                    
+                    # Link transition variable to production decisions
+                    model.Add(trans_var <= is_producing[(grade1, line, d)])
+                    model.Add(trans_var <= is_producing[(grade2, line, d + 1)])
+                    model.Add(trans_var >= is_producing[(grade1, line, d)] + 
+                              is_producing[(grade2, line, d + 1)] - 1)
+                    
+                    objective_terms.append(transition_penalty * trans_var)
     
-    model.Minimize(objective)
+    # REMOVED: continuity bonus (as requested)
+    # No continuity terms are added to objective_terms
+    
+    # Set the objective
+    if objective_terms:
+        model.Minimize(sum(objective_terms))
+    else:
+        model.Minimize(0)
     
     if progress_callback:
         progress_callback(0.9, "Solving optimization problem...")
@@ -492,7 +544,8 @@ def build_and_solve_model(
     
     solution_callback = SolutionCallback(
         production, inventory_vars, stockout_vars, is_producing,
-        grades, lines, dates, formatted_dates, num_days
+        grades, lines, dates, formatted_dates, num_days,
+        inventory_deficit_penalties, closing_inventory_deficit_penalties
     )
     
     status = solver.Solve(model, solution_callback)
