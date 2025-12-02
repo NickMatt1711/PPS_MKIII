@@ -613,8 +613,8 @@ def render_results_stage():
             else:
                 st.plotly_chart(fig, use_container_width=True)
 
-            render_section_divider() 
-
+            render_section_divider()
+            
     # --- Summary tab ---
     with tab3:
         col_summary1, col_summary2 = st.columns([2, 1])
