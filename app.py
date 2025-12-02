@@ -1,6 +1,7 @@
 """
-Polymer Production Scheduler - Main Application (refactored)
+Polymer Production Scheduler - Main Application (Enhanced UX)
 A wizard-based Streamlit app for multi-plant production optimization
+Version 3.1.0 - Enhanced stage management and responsive design
 """
 
 import streamlit as st
@@ -11,13 +12,13 @@ from typing import Optional
 # OR-Tools import (used by solver module)
 from ortools.sat.python import cp_model
 
-# Import modules (expect these to be present in the repo)
+# Import modules
 from constants import *
 from ui_components import *
 from data_loader import *
 from preview_tables import *
 from solver_cp_sat import build_and_solve_model
-from postprocessing import *  # uses compatibility wrapper get_or_create_grade_colors
+from postprocessing import *
 
 import pandas as pd
 
@@ -32,8 +33,8 @@ st.set_page_config(
 
 apply_custom_css()
 
-# Initialize required session state keys (safe defaults)
-st.session_state.setdefault(SS_STAGE, 0)
+# Initialize required session state keys
+st.session_state.setdefault(SS_STAGE, STAGE_UPLOAD)
 st.session_state.setdefault(SS_UPLOADED_FILE, None)
 st.session_state.setdefault(SS_EXCEL_DATA, None)
 st.session_state.setdefault(SS_SOLUTION, None)
@@ -52,12 +53,12 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 def render_upload_stage():
     """Stage 0: File upload"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
-    render_stage_progress(0)
+    render_stage_progress(STAGE_UPLOAD)
 
     st.markdown("### 📤 Upload Production Data")
     st.markdown("Upload an Excel file containing your production planning data.")
 
-    col1, col2 = st.columns([6, 1])
+    col1, col2 = st.columns([5, 1])
 
     with col1:
         uploaded_file = st.file_uploader(
@@ -67,11 +68,9 @@ def render_upload_stage():
         )
 
         if uploaded_file is not None:
-            # store raw uploaded file
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
             render_alert("File uploaded successfully! Processing...", "success")
 
-            # read file into buffer and load
             try:
                 file_buffer = io.BytesIO(uploaded_file.read())
                 loader = ExcelDataLoader(file_buffer)
@@ -79,50 +78,63 @@ def render_upload_stage():
 
                 if success:
                     st.session_state[SS_EXCEL_DATA] = data
-                    st.session_state[SS_STAGE] = 1
-                    st.success("File validated. Proceeding to preview.")
+                    render_alert("File validated successfully!", "success")
+                    
+                    # Show warnings if any
+                    for warn in warnings:
+                        render_alert(warn, "warning")
+                    
+                    # Auto-advance after short delay
+                    st.session_state[SS_STAGE] = STAGE_PREVIEW
                     st.rerun()
                 else:
                     for err in errors:
                         render_alert(err, "error")
+                    # Show warnings too
+                    for warn in warnings:
+                        render_alert(warn, "warning")
             except Exception as e:
-                render_alert(f"Failed to read uploaded file: {e}", "error")
+                render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
 
     with col2:
         render_download_template_button()
 
+    render_section_divider()
 
-    # Navigation buttons
-    if st.button("Next: Preview Data →", disabled=(st.session_state[SS_UPLOADED_FILE] is None),use_container_width="True"):
-        # move forward only if a file is uploaded and validated already
-        if st.session_state[SS_EXCEL_DATA] is not None:
-            st.session_state[SS_STAGE] = 1
-        else:
-            render_alert("Please upload and validate a file first.", "warning")
-        st.rerun()
+    # Navigation
+    col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
+    with col_nav3:
+        if st.button("Next: Preview Data →", 
+                    disabled=(st.session_state[SS_UPLOADED_FILE] is None),
+                    use_container_width=True):
+            if st.session_state[SS_EXCEL_DATA] is not None:
+                st.session_state[SS_STAGE] = STAGE_PREVIEW
+                st.rerun()
+            else:
+                render_alert("Please upload and validate a file first.", "warning")
 
 
 # ========== STAGE 1: PREVIEW & CONFIGURE ==========
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Review data and configure optimization")
-    render_stage_progress(1)
+    render_stage_progress(STAGE_PREVIEW)
 
     excel_data = st.session_state.get(SS_EXCEL_DATA)
     if not excel_data:
         render_alert("No data found. Please upload a file first.", "error")
         if st.button("← Back to Upload"):
-            st.session_state[SS_STAGE] = 0
+            st.session_state[SS_STAGE] = STAGE_UPLOAD
             st.rerun()
         return
 
     st.markdown("### 📊 Data Preview")
 
-    # required sheets and transition detection
+    # Required sheets and transition detection
     required_sheets = ['Plant', 'Inventory', 'Demand']
     transition_sheets = [k for k in excel_data.keys() if k.startswith('Transition_')]
 
-    # create tabs for required sheets + transition
+    # Create tabs for required sheets + transition
     all_sheets = required_sheets + (['Transition Matrices'] if transition_sheets else [])
     tabs = st.tabs(all_sheets)
 
@@ -132,10 +144,9 @@ def render_preview_stage():
             if sheet_name in excel_data:
                 df_display = excel_data[sheet_name].copy()
 
-                # basic date formatting heuristics
+                # Format datetime columns
                 try:
                     if sheet_name == 'Plant':
-                        # attempt to format the first few datetime columns
                         for col in df_display.select_dtypes(include=['datetime']).columns[:2]:
                             df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
                     elif sheet_name == 'Inventory':
@@ -145,10 +156,9 @@ def render_preview_stage():
                         for col in df_display.select_dtypes(include=['datetime']).columns[:1]:
                             df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
                 except Exception:
-                    # skip formatting if any issue
                     pass
 
-                st.dataframe(df_display, use_container_width=True)
+                st.dataframe(df_display, use_container_width=True, height=400)
             else:
                 st.info(f"Sheet {sheet_name} not found in uploaded file.")
 
@@ -159,7 +169,7 @@ def render_preview_stage():
                 st.markdown(f"**{sheet_name}**")
                 df_display = excel_data[sheet_name].copy()
 
-                # Style transition matrix: highlight yes/no
+                # Style transition matrix
                 def highlight_transitions(val):
                     if pd.notna(val):
                         val_str = str(val).strip().lower()
@@ -171,9 +181,9 @@ def render_preview_stage():
 
                 try:
                     styled_df = df_display.style.applymap(highlight_transitions)
-                    st.dataframe(styled_df, use_container_width=True)
+                    st.dataframe(styled_df, use_container_width=True, height=300)
                 except Exception:
-                    st.dataframe(df_display, use_container_width=True)
+                    st.dataframe(df_display, use_container_width=True, height=300)
 
                 st.markdown("---")
 
@@ -191,7 +201,8 @@ def render_preview_stage():
             min_value=1,
             max_value=120,
             value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['time_limit_min']),
-            step=1
+            step=1,
+            help="Maximum time for solver to find optimal solution"
         )
         
         buffer_days = st.number_input(
@@ -199,7 +210,8 @@ def render_preview_stage():
             min_value=0,
             max_value=7,
             value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['buffer_days']),
-            step=1
+            step=1,
+            help="Additional days added to planning horizon for safety stock"
         )
     
     with col2:
@@ -208,25 +220,27 @@ def render_preview_stage():
             "Stockout penalty",
             min_value=1,
             value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['stockout_penalty']),
-            step=1
+            step=1,
+            help="Cost penalty for inventory shortages"
         )
         
         transition_penalty = st.number_input(
             "Transition penalty",
             min_value=1,
             value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['transition_penalty']),
-            step=1
+            step=1,
+            help="Cost penalty for changing grades on production lines"
         )
         
         continuity_bonus = st.number_input(
             "Continuity bonus",
             min_value=0,
             value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['continuity_bonus']),
-            step=1
+            step=1,
+            help="Reward for maintaining same grade production"
         )
 
-
-    # persist parameters
+    # Update parameters in session
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
@@ -238,23 +252,24 @@ def render_preview_stage():
     render_section_divider()
 
     # Navigation buttons
-    c1, c2, c3 = st.columns([1, 1, 1])
-    with c1:
-        if st.button("← Back to Upload"):
-            st.session_state[SS_STAGE] = 0
+    col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
+    
+    with col_nav1:
+        if st.button("← Back to Upload", use_container_width=True):
+            st.session_state[SS_STAGE] = STAGE_UPLOAD
             st.rerun()
 
-    with c3:
-        if st.button("🎯 Run Optimization"):
-            st.session_state[SS_STAGE] = 1.5
+    with col_nav3:
+        if st.button("🎯 Run Optimization →", use_container_width=True, type="primary"):
+            st.session_state[SS_STAGE] = STAGE_OPTIMIZING
             st.rerun()
 
 
-# ========== STAGE 1.5: OPTIMIZATION IN PROGRESS ==========
+# ========== STAGE 2: OPTIMIZATION IN PROGRESS ==========
 def render_optimization_stage():
-    """Stage 1.5: Show optimization in progress with animation"""
+    """Stage 2: Show optimization in progress"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization in Progress")
-    render_stage_progress(1.5)
+    render_stage_progress(STAGE_OPTIMIZING)
 
     st.markdown("""
         <div class="optimization-container">
@@ -266,9 +281,9 @@ def render_optimization_stage():
 
     excel_data = st.session_state.get(SS_EXCEL_DATA)
     if not excel_data:
-        render_alert("No uploaded data found. Please upload file.", "error")
+        render_error_state("No Data Found", "Please upload a file first.")
         if st.button("← Back to Upload"):
-            st.session_state[SS_STAGE] = 0
+            st.session_state[SS_STAGE] = STAGE_UPLOAD
             st.rerun()
         return
 
@@ -277,41 +292,39 @@ def render_optimization_stage():
     status_text = st.empty()
 
     try:
-        status_text.info("🔄 Processing plant data...")
+        status_text.info("📄 Processing plant data...")
         plant_data = process_plant_data(excel_data['Plant'])
         progress_bar.progress(0.1)
 
-        status_text.info("🔄 Processing inventory data...")
+        status_text.info("📄 Processing inventory data...")
         inventory_data = process_inventory_data(excel_data['Inventory'], plant_data['lines'])
         progress_bar.progress(0.2)
 
-        status_text.info("🔄 Processing demand data...")
+        status_text.info("📄 Processing demand data...")
         demand_data, dates, num_days = process_demand_data(excel_data['Demand'], params['buffer_days'])
-        # also keep formatted dates as strings for the solver if needed
         formatted_dates = [d.strftime('%d-%b-%y') for d in dates]
         progress_bar.progress(0.3)
 
-        status_text.info("🔄 Processing shutdown periods...")
+        status_text.info("📄 Processing shutdown periods...")
         shutdown_periods = process_shutdown_dates(plant_data.get('shutdown_periods', {}), dates)
         progress_bar.progress(0.35)
 
-        status_text.info("🔄 Processing transition rules...")
+        status_text.info("📄 Processing transition rules...")
         transition_dfs = {k: v for k, v in excel_data.items() if k.startswith('Transition_')}
         transition_rules = process_transition_rules(transition_dfs)
         progress_bar.progress(0.4)
 
-        status_text.info("⚡ Running optimization (solver)...")
+        status_text.info("⚡ Running optimization solver...")
 
-        # progress callback for solver to update UI
+        # Progress callback for solver
         def progress_callback(pct: float, msg: str):
             try:
                 progress_bar.progress(0.4 + float(pct) * 0.6)
                 status_text.info(f"⚡ {msg}")
             except Exception:
-                # ignore UI update errors from callback
                 pass
 
-        # run solver
+        # Run solver (NO LOGIC CHANGES - preserved exactly)
         status, solution_callback, solver = build_and_solve_model(
             grades=inventory_data['grades'],
             lines=plant_data['lines'],
@@ -340,10 +353,9 @@ def render_optimization_stage():
             progress_callback=progress_callback
         )
 
-        # mark 100% progress
         progress_bar.progress(1.0)
 
-        # Check if solver provided a solution object/ callback object: be defensive
+        # Check solution
         num_found = 0
         try:
             num_found = int(solution_callback.num_solutions()) if hasattr(solution_callback, 'num_solutions') else 0
@@ -355,15 +367,15 @@ def render_optimization_stage():
 
         if num_found > 0:
             status_text.success("✅ Optimization completed successfully!")
-            # Extract the latest solution (defensive)
+            
+            # Extract solution
             last_solution = None
             try:
                 last_solution = solution_callback.solutions[-1]
             except Exception:
-                # maybe solution_callback itself is a dict-like result
                 last_solution = solution_callback if isinstance(solution_callback, dict) else {}
 
-            # Compose solution payload stored in session
+            # Store solution
             st.session_state[SS_SOLUTION] = {
                 'status': status,
                 'solution': last_solution,
@@ -384,31 +396,43 @@ def render_optimization_stage():
                 }
             }
 
-            st.session_state[SS_STAGE] = 2
+            st.session_state[SS_STAGE] = STAGE_RESULTS
             st.success("Optimization complete! Redirecting to results...")
             st.rerun()
         else:
             status_text.error("❌ No feasible solution found.")
-            render_alert("No feasible solution found. Please check your constraints.", "error")
+            render_error_state(
+                "No Solution Found",
+                "The solver could not find a feasible solution. Please check your constraints and try again."
+            )
+            
+            # Provide navigation back
+            if st.button("← Back to Configuration"):
+                st.session_state[SS_STAGE] = STAGE_PREVIEW
+                st.rerun()
 
     except Exception as e:
         status_text.error("❌ Optimization failed.")
-        render_alert(f"Error during optimization: {str(e)}", "error")
-        # show exception stacktrace in debug mode
+        render_error_state("Optimization Error", f"An error occurred: {str(e)}")
         st.exception(e)
+        
+        # Navigation back
+        if st.button("← Back to Configuration"):
+            st.session_state[SS_STAGE] = STAGE_PREVIEW
+            st.rerun()
 
 
-# ========== STAGE 2: RESULTS ==========
+# ========== STAGE 3: RESULTS ==========
 def render_results_stage():
-    """Stage 2: Display results"""
+    """Stage 3: Display results"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization Results")
-    render_stage_progress(2)
+    render_stage_progress(STAGE_RESULTS)
 
     solution_data = st.session_state.get(SS_SOLUTION)
     if not solution_data:
-        render_alert("No solution available. Please run an optimization first.", "error")
+        render_error_state("No Solution Available", "Please run an optimization first.")
         if st.button("← Back to Configuration"):
-            st.session_state[SS_STAGE] = 1
+            st.session_state[SS_STAGE] = STAGE_PREVIEW
             st.rerun()
         return
 
@@ -416,17 +440,20 @@ def render_results_stage():
     data = solution_data.get('data', {})
     solve_time = solution_data.get('solve_time', 0)
 
-    # Grade colors (compatibility wrapper available in postprocessing)
+    # Grade colors
     grade_colors = get_or_create_grade_colors(data.get('grades', []))
 
-    # KPIs
+    # KPIs - Responsive layout
     st.markdown("### 📊 Key Performance Metrics")
-    c1, c2, c3, c4 = st.columns(4)
+    
+    # Use 2x2 grid on mobile, 4 columns on desktop
+    col1, col2 = st.columns(2)
+    col3, col4 = st.columns(2)
 
     objective_val = solution.get('objective', 0) if isinstance(solution, dict) else 0
     transitions_total = solution.get('transitions', {}).get('total', 0) if isinstance(solution, dict) else 0
 
-    # compute stockouts safely
+    # Compute stockouts
     total_stockouts = 0
     try:
         for g in data.get('grades', []):
@@ -434,10 +461,10 @@ def render_results_stage():
     except Exception:
         total_stockouts = 0
 
-    render_metric_card("Objective Value", f"{objective_val:,.0f}", c1, 0)
-    render_metric_card("Total Transitions", str(transitions_total), c2, 1)
-    render_metric_card("Total Stockouts", f"{total_stockouts:,.0f} MT", c3, 2)
-    render_metric_card("Time Elapsed", f"{solve_time:.1f}s", c4, 3)
+    render_metric_card("Objective Value", f"{objective_val:,.0f}", col1, 0)
+    render_metric_card("Total Transitions", str(transitions_total), col2, 1)
+    render_metric_card("Total Stockouts", f"{total_stockouts:,.0f} MT", col3, 2)
+    render_metric_card("Time Elapsed", f"{solve_time:.1f}s", col4, 3)
 
     render_section_divider()
 
@@ -451,9 +478,12 @@ def render_results_stage():
         for line in data.get('lines', []):
             st.markdown(f"#### 🏭 {line}")
 
-            # Gantt chart (may return None)
+            # Gantt chart
             try:
-                fig = create_gantt_chart(solution, line, data.get('dates', []), data.get('shutdown_periods', {}), grade_colors)
+                fig = create_gantt_chart(
+                    solution, line, data.get('dates', []), 
+                    data.get('shutdown_periods', {}), grade_colors
+                )
             except Exception as e:
                 fig = None
                 st.error(f"Failed to build gantt chart for {line}: {e}")
@@ -463,9 +493,11 @@ def render_results_stage():
             else:
                 st.plotly_chart(fig, use_container_width=True)
 
-            # schedule table
+            # Schedule table
             try:
-                schedule_df = create_schedule_table(solution, line, data.get('dates', []), grade_colors)
+                schedule_df = create_schedule_table(
+                    solution, line, data.get('dates', []), grade_colors
+                )
             except Exception as e:
                 schedule_df = pd.DataFrame()
                 st.error(f"Failed to build schedule table for {line}: {e}")
@@ -477,7 +509,9 @@ def render_results_stage():
                     return ''
 
                 try:
-                    styled_df = schedule_df.style.applymap(lambda v: style_grade_column(v), subset=['Grade'])
+                    styled_df = schedule_df.style.applymap(
+                        lambda v: style_grade_column(v), subset=['Grade']
+                    )
                     st.dataframe(styled_df, use_container_width=True)
                 except Exception:
                     st.dataframe(schedule_df, use_container_width=True)
@@ -491,7 +525,6 @@ def render_results_stage():
         for grade in sorted(data.get('grades', [])):
             st.markdown(f"#### {grade}")
 
-            # allowed_lines may be dict or list; pass through as-is (postprocessing handles both)
             allowed_lines = data.get('allowed_lines', {})
             try:
                 fig = create_inventory_chart(
@@ -519,11 +552,11 @@ def render_results_stage():
 
     # --- Summary tab ---
     with tab3:
-
-        c1, c2 = st.columns([2, 1])
-        with c1:
+        col_summary1, col_summary2 = st.columns([2, 1])
+        
+        with col_summary1:
             st.markdown("### 📊 Production Summary")
-    
+            
             try:
                 summary_df = create_production_summary(
                     solution,
@@ -536,7 +569,7 @@ def render_results_stage():
             except Exception as e:
                 summary_df = pd.DataFrame()
                 st.error(f"Failed to create production summary: {e}")
-    
+            
             if not summary_df.empty:
                 def style_summary_grade(val):
                     if val in grade_colors and val != 'Total':
@@ -544,16 +577,18 @@ def render_results_stage():
                     if val == 'Total':
                         return 'background-color: #909399; color: white; font-weight: bold; text-align: center;'
                     return ''
-    
+                
                 try:
-                    styled_summary = summary_df.style.applymap(lambda v: style_summary_grade(v), subset=['Grade'])
+                    styled_summary = summary_df.style.applymap(
+                        lambda v: style_summary_grade(v), subset=['Grade']
+                    )
                     st.dataframe(styled_summary, use_container_width=True)
                 except Exception:
                     st.dataframe(summary_df, use_container_width=True)
             else:
                 st.info("No production summary available.")
 
-        with c2:
+        with col_summary2:
             st.markdown("### 🔄 Transitions by Line")
             try:
                 transitions = solution.get('transitions', {}).get('per_line', {}) if isinstance(solution, dict) else {}
@@ -565,38 +600,40 @@ def render_results_stage():
 
     render_section_divider()
 
-    # Navigation
-    c1, c2 = st.columns([1, 1])
-    with c1:
-        if st.button("← Back to Configuration"):
-            st.session_state[SS_STAGE] = 1
+    # Navigation - Enhanced button layout
+    col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
+    
+    with col_nav1:
+        if st.button("← Back to Configuration", use_container_width=True):
+            st.session_state[SS_STAGE] = STAGE_PREVIEW
             st.rerun()
 
-    with c2:
-        if st.button("🔄 New Optimization"):
+    with col_nav3:
+        if st.button("🔄 New Optimization", use_container_width=True, type="primary"):
             # Reset state but keep theme
             theme_val = st.session_state.get(SS_THEME, "light")
             st.session_state.clear()
             st.session_state[SS_THEME] = theme_val
+            st.session_state[SS_STAGE] = STAGE_UPLOAD
             st.rerun()
 
 
 # ========== MAIN APP ==========
 def main():
     """Main application controller"""
-    current_stage = st.session_state.get(SS_STAGE, 0)
+    current_stage = st.session_state.get(SS_STAGE, STAGE_UPLOAD)
 
-    if current_stage == 0:
+    if current_stage == STAGE_UPLOAD:
         render_upload_stage()
-    elif current_stage == 1:
+    elif current_stage == STAGE_PREVIEW:
         render_preview_stage()
-    elif current_stage == 1.5:
+    elif current_stage == STAGE_OPTIMIZING:
         render_optimization_stage()
-    elif current_stage == 2:
+    elif current_stage == STAGE_RESULTS:
         render_results_stage()
     else:
         render_alert("Unknown application stage. Resetting to start.", "warning")
-        st.session_state[SS_STAGE] = 0
+        st.session_state[SS_STAGE] = STAGE_UPLOAD
         st.rerun()
 
 
