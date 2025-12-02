@@ -425,6 +425,8 @@ def render_results_stage():
         total_stockouts = 0
 
     render_metric_card("Objective Value", f"{objective_val:,.0f}", c1, 0)
+# Optional: Add KPI breakdown for penalties
+# (Future enhancement: compute contributions if solver returns them)
     render_metric_card("Total Transitions", str(transitions_total), c2, 1)
     render_metric_card("Total Stockouts", f"{total_stockouts:,.0f} MT", c3, 2)
     render_metric_card("Time Elapsed", f"{solve_time:.1f}s", c4, 3)
