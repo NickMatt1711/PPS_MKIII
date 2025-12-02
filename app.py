@@ -414,8 +414,9 @@ def render_optimization_stage():
                     'min_inventory': inventory_data['min_inventory'],
                     'max_inventory': inventory_data['max_inventory'],
                     'initial_inventory': inventory_data['initial_inventory'],
-                    'pre_shutdown_grades': plant_data.get('pre_shutdown_grades', {}),  # NEW
-                    'restart_grades': plant_data.get('restart_grades', {}),           # NEW
+                    'pre_shutdown_grades': plant_data.get('pre_shutdown_grades', {}),
+                    'restart_grades': plant_data.get('restart_grades', {}),
+                    'capacities': plant_data.get('capacities', {}),  # ADD THIS LINE
                 }
             }
 
@@ -490,8 +491,8 @@ def render_results_stage():
 
     render_section_divider()
 
-    # Results tabs
-    tab1, tab2, tab3 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables"])
+    # Results tabs - ADDED STOCKOUT TAB
+    tab1, tab2, tab3, tab4 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables", "⚠️ Stockout Details"])
 
     # --- Production Schedule tab ---
     with tab1:
@@ -515,8 +516,8 @@ def render_results_stage():
                 fig = create_gantt_chart(
                     solution, line, data.get('dates', []), 
                     data.get('shutdown_periods', {}), grade_colors,
-                    capacities=plant_data.get('capacities', {}),  # NEW: pass capacities
-                    buffer_days=data.get('buffer_days', 0)        # NEW: pass buffer_days
+                    capacities=plant_data.get('capacities', {}),
+                    buffer_days=data.get('buffer_days', 0)
                 )
             except Exception as e:
                 fig = None
@@ -599,7 +600,7 @@ def render_results_stage():
                     data.get('grades', []),
                     data.get('lines', []),
                     data.get('num_days', 0),
-                    buffer_days=data.get('buffer_days', 0)  # NEW: pass buffer_days
+                    buffer_days=data.get('buffer_days', 0)
                 )
             except Exception as e:
                 summary_df = pd.DataFrame()
@@ -632,6 +633,79 @@ def render_results_stage():
                 st.dataframe(transitions_df, use_container_width=True)
             except Exception as e:
                 st.error(f"Failed to render transitions table: {e}")
+
+    # --- NEW: Stockout Details tab ---
+    with tab4:
+        st.markdown("### ⚠️ Stockout Details")
+        st.markdown("List of all stockout occurrences during the demand period.")
+        
+        # Create stockout details table
+        try:
+            stockout_df = create_stockout_details_table(
+                solution,
+                data.get('grades', []),
+                data.get('dates', []),
+                buffer_days=data.get('buffer_days', 0)
+            )
+        except Exception as e:
+            stockout_df = pd.DataFrame()
+            st.error(f"Failed to create stockout details table: {e}")
+        
+        if not stockout_df.empty:
+            # Summary statistics
+            total_stockout_qty = stockout_df["Stockout Quantity (MT)"].sum()
+            unique_grades = stockout_df["Grade"].nunique()
+            total_days = len(stockout_df)
+            
+            col_stat1, col_stat2, col_stat3 = st.columns(3)
+            with col_stat1:
+                st.metric("Total Stockout Quantity", f"{total_stockout_qty:,.0f} MT")
+            with col_stat2:
+                st.metric("Grades with Stockout", f"{unique_grades}")
+            with col_stat3:
+                st.metric("Days with Stockout", f"{total_days}")
+            
+            st.markdown("---")
+            
+            # Display the table with styling for stockout quantities
+            def highlight_stockout(val):
+                if isinstance(val, (int, float)):
+                    if val > 0:
+                        return 'background-color: #FFE6E6; color: #9C0006; font-weight: bold;'
+                return ''
+            
+            try:
+                styled_stockout = stockout_df.style.applymap(
+                    highlight_stockout, subset=['Stockout Quantity (MT)']
+                )
+                st.dataframe(styled_stockout, use_container_width=True, height=400)
+            except Exception:
+                st.dataframe(stockout_df, use_container_width=True, height=400)
+            
+            # Download button for stockout data
+            csv = stockout_df.to_csv(index=False)
+            st.download_button(
+                label="📥 Download Stockout Data as CSV",
+                data=csv,
+                file_name="stockout_details.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        else:
+            st.success("✅ No stockouts occurred during the demand period!")
+            
+            # Show total stockout from solution if available (should be 0)
+            total_stockouts_from_solution = 0
+            try:
+                for g in data.get('grades', []):
+                    total_stockouts_from_solution += sum(solution.get('stockout', {}).get(g, {}).values())
+            except:
+                pass
+            
+            if total_stockouts_from_solution == 0:
+                st.info("All demand was satisfied with production and inventory.")
+            else:
+                st.warning(f"Note: Total stockout reported in solution: {total_stockouts_from_solution:,.0f} MT")
 
     render_section_divider()
 
