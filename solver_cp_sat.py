@@ -243,7 +243,6 @@ def build_and_solve_model(
         progress_callback(0.3, "Adding inventory balance constraints...")
     
     # Inventory balance
-    objective = 0
     
     for grade in grades:
         model.Add(inventory_vars[(grade, 0)] == initial_inventory[grade])
@@ -285,7 +284,6 @@ def build_and_solve_model(
                 deficit = model.NewIntVar(0, 100000, f'deficit_{grade}_{d}')
                 model.Add(deficit >= min_inv_value - inventory_tomorrow)
                 model.Add(deficit >= 0)
-                objective += stockout_penalty * deficit
     
     # Minimum closing inventory
     for grade in grades:
@@ -296,7 +294,6 @@ def build_and_solve_model(
             closing_deficit = model.NewIntVar(0, 100000, f'closing_deficit_{grade}')
             model.Add(closing_deficit >= min_closing - closing_inventory)
             model.Add(closing_deficit >= 0)
-            objective += stockout_penalty * closing_deficit * 3
     
     # Maximum inventory
     for grade in grades:
@@ -452,9 +449,7 @@ def build_and_solve_model(
     # Stockout penalties
     for grade in grades:
         for d in range(num_days):
-            objective += stockout_penalty * stockout_vars[(grade, d)]
     
-    # Transition penalties and continuity bonuses
     for line in lines:
         for d in range(num_days - 1):
             for grade1 in grades:
@@ -469,9 +464,30 @@ def build_and_solve_model(
                     model.AddBoolAnd([is_producing[(grade1, line, d)], is_producing[(grade2, line, d + 1)]]).OnlyEnforceIf(trans_var)
                     model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade1, line, d)].Not())
                     model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade2, line, d + 1)].Not())
-                    objective += transition_penalty * trans_var
     
-    model.Minimize(objective)
+    # Build proper objective terms
+    objective_terms = []
+    # Stockout penalties
+    for grade in grades:
+        for d in range(num_days):
+            objective_terms.append(stockout_penalty * stockout_vars[(grade, d)])
+    # Transition penalties
+    for line in lines:
+        for d in range(num_days - 1):
+            for grade1 in grades:
+                if line not in allowed_lines[grade1]:
+                    continue
+                for grade2 in grades:
+                    if line not in allowed_lines[grade2] or grade1 == grade2:
+                        continue
+                    if transition_rules.get(line) and grade1 in transition_rules[line] and grade2 not in transition_rules[line][grade1]:
+                        continue
+                    trans_var = model.NewBoolVar(f'trans_{line}_{d}_{grade1}_to_{grade2}')
+                    model.AddBoolAnd([is_producing[(grade1, line, d)], is_producing[(grade2, line, d + 1)]]).OnlyEnforceIf(trans_var)
+                    model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade1, line, d)].Not())
+                    model.Add(trans_var == 0).OnlyEnforceIf(is_producing[(grade2, line, d + 1)].Not())
+                    objective_terms.append(transition_penalty * trans_var)
+    model.Minimize(sum(objective_terms))
     
     if progress_callback:
         progress_callback(0.9, "Solving optimization problem...")
