@@ -44,7 +44,6 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
     'buffer_days': DEFAULT_BUFFER_DAYS,
     'stockout_penalty': DEFAULT_STOCKOUT_PENALTY,
     'transition_penalty': DEFAULT_TRANSITION_PENALTY,
-    'continuity_bonus': DEFAULT_CONTINUITY_BONUS,
 })
 
 
@@ -218,12 +217,6 @@ def render_preview_stage():
             step=1
         )
         
-        continuity_bonus = st.number_input(
-            "Continuity bonus",
-            min_value=0,
-            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['continuity_bonus']),
-            step=1
-        )
 
 
     # persist parameters
@@ -232,7 +225,6 @@ def render_preview_stage():
         'buffer_days': int(buffer_days),
         'stockout_penalty': float(stockout_penalty),
         'transition_penalty': float(transition_penalty),
-        'continuity_bonus': float(continuity_bonus),
     }
 
     render_section_divider()
@@ -335,7 +327,6 @@ def render_optimization_stage():
             buffer_days=params['buffer_days'],
             stockout_penalty=params['stockout_penalty'],
             transition_penalty=params['transition_penalty'],
-            continuity_bonus=params['continuity_bonus'],
             time_limit_min=params['time_limit_min'],
             progress_callback=progress_callback
         )
