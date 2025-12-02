@@ -311,50 +311,61 @@ def build_and_solve_model(
         for d in range(num_days):
             stockout_vars[(grade, d)] = model.NewIntVar(0, 100000, f'stockout_{grade}_{d}')
     
-    # Inventory balance (HARD - must satisfy)
+    # ========== FIXED INVENTORY BALANCE CONSTRAINTS ==========
+    # This fixes the bug where stockouts occur despite available inventory
+    
+    # Initial inventory
     for grade in grades:
-    model.Add(inventory_vars[(grade, 0)] == initial_inventory[grade])
-
+        model.Add(inventory_vars[(grade, 0)] == initial_inventory[grade])
+    
+    # Inventory balance for each day
     for grade in grades:
         for d in range(num_days):
+            # Calculate total production for this grade on day d
             produced_today = sum(
                 get_production_var(grade, line, d) 
                 for line in allowed_lines[grade]
             )
             demand_today = demand_data[grade].get(dates[d], 0)
             
-            supplied = model.NewIntVar(0, 100000, f'supplied_{grade}_{d}')
-            stockout = model.NewIntVar(0, 100000, f'stockout_{grade}_{d}')
-            
-            # Available inventory + production
+            # Available inventory (opening inventory + production)
             available = model.NewIntVar(0, 100000, f'available_{grade}_{d}')
             model.Add(available == inventory_vars[(grade, d)] + produced_today)
             
-            # CRITICAL: Supply must be maximum possible (minimum of available and demand)
-            # This prevents artificial stockouts when inventory exists
+            # Supply variable - what we actually supply today
+            supplied = model.NewIntVar(0, 100000, f'supplied_{grade}_{d}')
+            
+            # Stockout variable
+            stockout = model.NewIntVar(0, 100000, f'stockout_{grade}_{d}')
+            
+            # ========== CRITICAL FIX: FORCE MAXIMUM POSSIBLE SUPPLY ==========
+            # This prevents artificial stockouts when inventory is available
+            
+            # Supply cannot exceed available inventory or demand
             model.Add(supplied <= available)
             model.Add(supplied <= demand_today)
             
-            # Add these constraints to force maximum supply:
-            # If available >= demand, then supplied == demand
-            # If available < demand, then supplied == available
-            
-            # Create indicator for whether we have enough
+            # Create indicator variable: do we have enough inventory to meet demand?
             enough_inventory = model.NewBoolVar(f'enough_{grade}_{d}')
+            
+            # Set the indicator variable
             model.Add(available >= demand_today).OnlyEnforceIf(enough_inventory)
             model.Add(available < demand_today).OnlyEnforceIf(enough_inventory.Not())
             
-            # Force appropriate supply based on availability
+            # Force supply to be maximum possible:
+            # If enough inventory, supply = demand
+            # If not enough, supply = available inventory
             model.Add(supplied == demand_today).OnlyEnforceIf(enough_inventory)
             model.Add(supplied == available).OnlyEnforceIf(enough_inventory.Not())
             
-            # Stockout calculation
+            # Stockout is unmet demand
             model.Add(stockout == demand_today - supplied)
             
-            # Inventory balance
+            # Update inventory for next day
             model.Add(inventory_vars[(grade, d + 1)] == inventory_vars[(grade, d)] + produced_today - supplied)
             model.Add(inventory_vars[(grade, d + 1)] >= 0)
             
+            # Store stockout variable
             stockout_vars[(grade, d)] = stockout
     
     # Maximum inventory (HARD)
