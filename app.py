@@ -525,7 +525,7 @@ def render_results_stage():
     tab1, tab2, tab3 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables"])
 
     # --- Production Schedule tab ---
-     with tab1:
+    with tab1:
         st.markdown("### 📅 Production Schedule")
 
         for line in data.get('lines', []):
@@ -545,9 +545,7 @@ def render_results_stage():
             try:
                 fig = create_gantt_chart(
                     solution, line, data.get('dates', []), 
-                    data.get('shutdown_periods', {}), grade_colors,
-                    capacities=plant_data.get('capacities', {}),  # NEW: pass capacities
-                    buffer_days=data.get('buffer_days', 0)        # NEW: pass buffer_days
+                    data.get('shutdown_periods', {}), grade_colors
                 )
             except Exception as e:
                 fig = None
