@@ -6,14 +6,13 @@ Enhanced UX version with proper stage management
 # Application Configuration
 APP_TITLE = "Polymer Production Scheduler"
 APP_ICON = "🏭"
-VERSION = "3.1.0"
+VERSION = "3.2.0"
 
 # Default Optimization Parameters
 DEFAULT_TIME_LIMIT_MIN = 10
 DEFAULT_BUFFER_DAYS = 3
 DEFAULT_STOCKOUT_PENALTY = 10
 DEFAULT_TRANSITION_PENALTY = 5
-DEFAULT_CONTINUITY_BONUS = 1
 
 # Solver Configuration
 SOLVER_NUM_WORKERS = 8
@@ -48,6 +47,8 @@ PLANT_COLUMNS = {
     'expected_days': 'Expected Run Days',
     'shutdown_start': 'Shutdown Start Date',
     'shutdown_end': 'Shutdown End Date',
+    'pre_shutdown_grade': 'Pre Shutdown Grade',
+    'restart_grade': 'Restart Grade',
 }
 
 INVENTORY_COLUMNS = {
