@@ -56,30 +56,34 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 })
 
 
-# ========== STOCKOUT DETAILS FUNCTION ==========
-def create_stockout_details_table(solution, grades, dates, buffer_days=0):
-    """Create detailed table of stockout occurrences."""
+# ========== STOCKOUT SUMMARY FUNCTION ==========
+def create_stockout_summary_table(solution, grades):
+    """Create summary table of stockout occurrences."""
     rows = []
     
     stockout_dict = solution.get('stockout', {})
     
+    total_stockout = 0
     for grade in sorted(grades):
+        grade_stockout = 0
         if grade in stockout_dict:
-            grade_stockouts = stockout_dict[grade]
-            for date_str, stockout_qty in grade_stockouts.items():
+            for stockout_qty in stockout_dict[grade].values():
                 if stockout_qty > 0:
-                    rows.append({
-                        "Date": date_str,
-                        "Grade": grade,
-                        "Stockout Quantity (MT)": stockout_qty
-                    })
+                    grade_stockout += stockout_qty
+        
+        rows.append({
+            "Grade": grade,
+            "Total Stockout (MT)": grade_stockout
+        })
+        total_stockout += grade_stockout
     
-    if not rows:
-        return pd.DataFrame()
+    # Add total row
+    rows.append({
+        "Grade": "TOTAL",
+        "Total Stockout (MT)": total_stockout
+    })
     
-    df = pd.DataFrame(rows)
-    df = df.sort_values(["Date", "Grade"])
-    return df
+    return pd.DataFrame(rows)
 
 
 # ========== STAGE 0: UPLOAD ==========
@@ -517,8 +521,8 @@ def render_results_stage():
 
     render_section_divider()
 
-    # Results tabs - ADDED STOCKOUT TAB
-    tab1, tab2, tab3, tab4 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables", "⚠️ Stockout Details"])
+    # Results tabs - REMOVED Stockout tab, combined into Summary
+    tab1, tab2, tab3 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables"])
 
     # --- Production Schedule tab ---
     with tab1:
@@ -661,40 +665,18 @@ def render_results_stage():
             except Exception as e:
                 st.error(f"Failed to render transitions table: {e}")
 
-    # --- NEW: Stockout Details tab ---
-    with tab4:
-        st.markdown("### ⚠️ Stockout Details")
-        st.markdown("List of all stockout occurrences during the demand period.")
-        
-        # Create stockout details table using our local function
+        # Add stockout summary table below
+        st.markdown("### ⚠️ Stockout Summary")
         try:
-            stockout_df = create_stockout_details_table(
+            stockout_df = create_stockout_summary_table(
                 solution,
-                data.get('grades', []),
-                data.get('dates', []),
-                buffer_days=data.get('buffer_days', 0)
+                data.get('grades', [])
             )
         except Exception as e:
             stockout_df = pd.DataFrame()
-            st.error(f"Failed to create stockout details table: {e}")
+            st.error(f"Failed to create stockout summary: {e}")
         
         if not stockout_df.empty:
-            # Summary statistics
-            total_stockout_qty = stockout_df["Stockout Quantity (MT)"].sum()
-            unique_grades = stockout_df["Grade"].nunique()
-            total_days = len(stockout_df)
-            
-            col_stat1, col_stat2, col_stat3 = st.columns(3)
-            with col_stat1:
-                st.metric("Total Stockout Quantity", f"{total_stockout_qty:,.0f} MT")
-            with col_stat2:
-                st.metric("Grades with Stockout", f"{unique_grades}")
-            with col_stat3:
-                st.metric("Days with Stockout", f"{total_days}")
-            
-            st.markdown("---")
-            
-            # Display the table with styling for stockout quantities
             def highlight_stockout(val):
                 if isinstance(val, (int, float)):
                     if val > 0:
@@ -703,36 +685,20 @@ def render_results_stage():
             
             try:
                 styled_stockout = stockout_df.style.applymap(
-                    highlight_stockout, subset=['Stockout Quantity (MT)']
+                    highlight_stockout, subset=['Total Stockout (MT)']
                 )
-                st.dataframe(styled_stockout, use_container_width=True, height=400)
+                st.dataframe(styled_stockout, use_container_width=True)
             except Exception:
-                st.dataframe(stockout_df, use_container_width=True, height=400)
+                st.dataframe(stockout_df, use_container_width=True)
             
-            # Download button for stockout data
-            csv = stockout_df.to_csv(index=False)
-            st.download_button(
-                label="📥 Download Stockout Data as CSV",
-                data=csv,
-                file_name="stockout_details.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-        else:
-            st.success("✅ No stockouts occurred during the demand period!")
-            
-            # Show total stockout from solution if available (should be 0)
-            total_stockouts_from_solution = 0
-            try:
-                for g in data.get('grades', []):
-                    total_stockouts_from_solution += sum(solution.get('stockout', {}).get(g, {}).values())
-            except:
-                pass
-            
-            if total_stockouts_from_solution == 0:
-                st.info("All demand was satisfied with production and inventory.")
+            # Show total stockout
+            total_stockout = stockout_df.iloc[-1]['Total Stockout (MT)']
+            if total_stockout > 0:
+                st.warning(f"**Total stockout across all grades: {total_stockout:,.0f} MT**")
             else:
-                st.warning(f"Note: Total stockout reported in solution: {total_stockouts_from_solution:,.0f} MT")
+                st.success("✅ No stockouts occurred during the demand period!")
+        else:
+            st.info("No stockout data available.")
 
     render_section_divider()
 
