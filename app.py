@@ -66,113 +66,153 @@ def render_upload_stage():
 
     # Column 1: Quick Start Guide (Blue card)
     with col1:
-        # Complete card HTML - everything inside
-        st.markdown(
-            """
-            <div class="upload-card card-blue">
-                <h2>🚀 Quick Start Guide</h2>
-                <div class="upload-card-content">
-                    1️⃣ <b>Download Template</b> → Get the Excel structure<br><br>
-                    2️⃣ <b>Fill Data</b> → Complete Plant, Inventory, Demand, and Transition sheets<br><br>
-                    3️⃣ <b>Upload File</b> → Validate your data<br><br>
-                    4️⃣ <b>Preview & Configure</b> → Check sheets and set optimization parameters<br><br>
-                    5️⃣ <b>Run Optimization</b> → Generate schedule and view results
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    # Column 2: Uploader (Green card)
-    with col2:
-        # Start the card HTML
-        st.markdown(
-            """
-            <div class="upload-card card-green">
-                <h2>📤 Upload Production Data</h2>
-                <div class="upload-card-content">
-            """,
-            unsafe_allow_html=True
-        )
-        
-        # Uploader INSIDE the card
-        uploaded_file = st.file_uploader(
-            "Choose an Excel file", 
-            type=ALLOWED_EXTENSIONS, 
-            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
-        )
-        
-        # Drop zone hint (HTML only)
-        if uploaded_file is None:
+        # Create a container that will act as our card
+        with st.container():
+            # Apply card styling using HTML
             st.markdown(
                 """
-                <div style="text-align: center; padding: 1.5rem; margin: 1rem 0; border: 2px dashed #0A74DA; border-radius: 8px; background: rgba(10, 116, 218, 0.05);">
-                    <div style="font-size: 2rem;">📁</div>
-                    <div style="font-weight: 600; color: #0A74DA;">Drag & Drop File Here</div>
-                    <div style="color: #6c757d; font-size: 0.9rem;">Limit 200MB • XLSX Format</div>
-                </div>
+                <div style="
+                    background: linear-gradient(135deg, #F0F8FF, #E6F0FA);
+                    border-left: 4px solid #0A74DA;
+                    border-radius: 12px;
+                    padding: 1.5rem;
+                    margin-bottom: 1.5rem;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    min-height: 300px;
+                ">
                 """,
                 unsafe_allow_html=True
             )
-        
-        # Close the card content and card divs
-        st.markdown("</div></div>", unsafe_allow_html=True)
-        
-        # File processing logic (outside card, but that's fine)
-        if uploaded_file is not None:
-            st.session_state[SS_UPLOADED_FILE] = uploaded_file
-            render_alert("File uploaded successfully! Processing...", "success")
+            
+            # Card content using Streamlit
+            st.markdown("### 🚀 Quick Start Guide")
+            st.markdown("""
+            1️⃣ **Download Template** → Get the Excel structure  
+            2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets  
+            3️⃣ **Upload File** → Validate your data  
+            4️⃣ **Preview & Configure** → Check sheets and set optimization parameters  
+            5️⃣ **Run Optimization** → Generate schedule and view results  
+            """)
+            
+            st.markdown("</div>", unsafe_allow_html=True)
 
-            try:
-                file_buffer = io.BytesIO(uploaded_file.read())
-                loader = ExcelDataLoader(file_buffer)
-                success, data, errors, warnings = loader.load_and_validate()
+    # Column 2: Uploader (Green card)
+    with col2:
+        with st.container():
+            # Start the card
+            st.markdown(
+                """
+                <div style="
+                    background: linear-gradient(135deg, #F0FFF4, #DFF6E3);
+                    border-left: 4px solid #28A745;
+                    border-radius: 12px;
+                    padding: 1.5rem;
+                    margin-bottom: 1.5rem;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    min-height: 300px;
+                ">
+                """,
+                unsafe_allow_html=True
+            )
+            
+            # Card title
+            st.markdown("### 📤 Upload Production Data")
+            
+            # Uploader INSIDE the card
+            uploaded_file = st.file_uploader(
+                "Choose an Excel file", 
+                type=ALLOWED_EXTENSIONS, 
+                help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
+            )
+            
+            # Drop zone hint
+            if uploaded_file is None:
+                st.markdown(
+                    """
+                    <div style="
+                        text-align: center; 
+                        padding: 1.5rem; 
+                        margin: 1rem 0; 
+                        border: 2px dashed #0A74DA; 
+                        border-radius: 8px; 
+                        background: rgba(10, 116, 218, 0.05);
+                    ">
+                        <div style="font-size: 2rem;">📁</div>
+                        <div style="font-weight: 600; color: #0A74DA;">Drag & Drop File Here</div>
+                        <div style="color: #6c757d; font-size: 0.9rem;">Limit 200MB • XLSX Format</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+            
+            # Close the card
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # File processing logic (this will appear below the card, which is fine)
+            if uploaded_file is not None:
+                st.session_state[SS_UPLOADED_FILE] = uploaded_file
+                render_alert("File uploaded successfully! Processing...", "success")
 
-                if success:
-                    st.session_state[SS_EXCEL_DATA] = data
-                    render_alert("File validated successfully!", "success")
-                    for warn in warnings:
-                        render_alert(warn, "warning")
-                    st.session_state[SS_STAGE] = STAGE_PREVIEW
-                    st.rerun()
-                else:
-                    for err in errors:
-                        render_alert(err, "error")
-                    for warn in warnings:
-                        render_alert(warn, "warning")
-            except Exception as e:
-                render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
+                try:
+                    file_buffer = io.BytesIO(uploaded_file.read())
+                    loader = ExcelDataLoader(file_buffer)
+                    success, data, errors, warnings = loader.load_and_validate()
+
+                    if success:
+                        st.session_state[SS_EXCEL_DATA] = data
+                        render_alert("File validated successfully!", "success")
+                        for warn in warnings:
+                            render_alert(warn, "warning")
+                        st.session_state[SS_STAGE] = STAGE_PREVIEW
+                        st.rerun()
+                    else:
+                        for err in errors:
+                            render_alert(err, "error")
+                        for warn in warnings:
+                            render_alert(warn, "warning")
+                except Exception as e:
+                    render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
 
     # Column 3: Download Template (Yellow card)
     with col3:
-        # Start the card HTML
-        st.markdown(
-            """
-            <div class="upload-card card-yellow">
-                <h2>📥 Download Template</h2>
-                <div class="upload-card-content">
-            """,
-            unsafe_allow_html=True
-        )
-        
-        # Download button INSIDE the card
-        render_download_template_button()
-        
-        # Template details INSIDE the card
-        st.markdown("---")
-        st.markdown("**Template includes:**")
-        st.markdown("""
-        - Plant configuration
-        - Inventory management  
-        - Demand forecasting
-        - Transition matrices
-        - Pre-filled examples
-        """)
-        
-        # Close the card
-        st.markdown("</div></div>", unsafe_allow_html=True)
+        with st.container():
+            # Start the card
+            st.markdown(
+                """
+                <div style="
+                    background: linear-gradient(135deg, #FFFCF0, #FFF3CD);
+                    border-left: 4px solid #FFC107;
+                    border-radius: 12px;
+                    padding: 1.5rem;
+                    margin-bottom: 1.5rem;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    min-height: 300px;
+                ">
+                """,
+                unsafe_allow_html=True
+            )
+            
+            # Card title
+            st.markdown("### 📥 Download Template")
+            
+            # Download button INSIDE the card
+            render_download_template_button()
+            
+            # Template details
+            st.markdown("---")
+            st.markdown("**Template includes:**")
+            st.markdown("""
+            - Plant configuration
+            - Inventory management  
+            - Demand forecasting
+            - Transition matrices
+            - Pre-filled examples
+            """)
+            
+            # Close the card
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    # Rest of the content (outside cards but that's fine)
+    # Required sheets info
     st.markdown("---")
     st.markdown("### 📋 Required Excel Sheets")
     
@@ -190,6 +230,7 @@ def render_upload_stage():
         st.markdown("**Transition Sheet**")
         st.markdown("Allowed grade changeovers between products")
 
+    # Variable and Constraint Details
     with st.expander("📄 Variable and Constraint Details", expanded=True):
         tab1, tab2, tab3, tab4 = st.tabs(["Plant Sheet", "Inventory Sheet", "Demand Sheet", "Transition Sheets"])
         
