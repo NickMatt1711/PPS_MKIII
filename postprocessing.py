@@ -446,13 +446,14 @@ def create_production_summary(solution, production_vars, solver, grades, lines, 
 #  STOCKOUT DETAILS TABLE
 # ===============================================================
 
+
 def create_stockout_details_table(
     solution: Dict,
     grades: List[str],
     dates: List[date],
     buffer_days: int = 0
 ) -> pd.DataFrame:
-    """Create detailed table of stockout occurrences."""
+    """Create detailed table of stockout occurrences without unused rows."""
     rows = []
     
     stockout_dict = solution.get('stockout', {})
@@ -468,9 +469,10 @@ def create_stockout_details_table(
                         "Stockout Quantity (MT)": stockout_qty
                     })
     
+    # If no rows, return an empty DataFrame with proper columns
     if not rows:
-        return pd.DataFrame()
+        return pd.DataFrame(columns=["Date", "Grade", "Stockout Quantity (MT)"])
     
     df = pd.DataFrame(rows)
-    df = df.sort_values(["Date", "Grade"])
+    df = df.sort_values(["Date", "Grade"]).reset_index(drop=True)  # ✅ Remove unused rows
     return df
