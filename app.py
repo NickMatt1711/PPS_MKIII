@@ -620,7 +620,7 @@ def render_results_stage():
             
     # --- Summary tab ---
     with tab3:
-        col_summary1, col_summary2, Col_summary3 = st.columns([2, 1, 1])
+        col_summary1, col_summary2, col_summary3 = st.columns([2, 1, 1])
         
         with col_summary1:
             st.markdown("### 📊 Production Summary")
