@@ -257,22 +257,31 @@ def render_preview_stage():
         )
     
     with col2:
-        st.markdown("#### 🎯 Objective Weights")
-        stockout_penalty = st.number_input(
-            "Stockout penalty",
-            min_value=1,
-            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['stockout_penalty']),
-            step=1,
-            help="Cost penalty for inventory shortages"
+        st.markdown("#### 🎯 Objective Priorities")
+        
+        priority = st.select_slider(
+            "Optimization Priority",
+            options=[
+                "Minimize Stockouts Only",
+                "Favor Stockouts",
+                "Balanced",
+                "Favor Fewer Transitions",
+                "Minimize Transitions Only"
+            ],
+            value="Balanced",
+            help="Balance between avoiding stockouts vs. minimizing production changeovers"
         )
         
-        transition_penalty = st.number_input(
-            "Transition penalty",
-            min_value=1,
-            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['transition_penalty']),
-            step=1,
-            help="Cost penalty for changing grades on production lines"
-        )
+        # Map to penalty values
+        priority_map = {
+            "Minimize Stockouts Only": (100, 1),
+            "Favor Stockouts": (10, 1),
+            "Balanced": (10, 5),
+            "Favor Fewer Transitions": (10, 8),
+            "Minimize Transitions Only": (1, 100)
+        }
+        
+        stockout_penalty, transition_penalty = priority_map[priority]
         
 
     # Update parameters in session
@@ -281,6 +290,7 @@ def render_preview_stage():
         'buffer_days': int(buffer_days),
         'stockout_penalty': float(stockout_penalty),
         'transition_penalty': float(transition_penalty),
+        'priority_label': priority  # Store user-friendly label
     }
 
     render_section_divider()
