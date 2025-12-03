@@ -57,12 +57,19 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 
 # ========== STAGE 0: UPLOAD ==========
-
-# ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: File upload with three colored cards in columns"""
+    """Stage 0: File upload with three enhanced colored cards in columns"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
+    
+    # Render progress dots at the top
+    render_progress_dots(current_stage=0, total_stages=5, 
+                         labels=["Upload", "Validate", "Configure", "Optimize", "Results"])
+    
+    # Render the main stage progress
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
+    
+    # Add key information box
+    render_key_info_box()
 
     col1, col2, col3 = st.columns(3)
 
@@ -70,24 +77,48 @@ def render_upload_stage():
     with col1:
         st.markdown('<div class="upload-card card-quickstart"><h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
         st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
-        st.markdown("""
-        1️⃣ **Download Template** → Get the Excel structure  
-        2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets  
-        3️⃣ **Upload File** → Validate your data  
-        4️⃣ **Preview & Configure** → Check sheets and set optimization parameters  
-        5️⃣ **Run Optimization** → Generate schedule and view results  
-        """)
+        
+        # Use enhanced step visualization
+        steps = [
+            "<b>Download Template</b> → Get the Excel structure",
+            "<b>Fill Data</b> → Complete Plant, Inventory, Demand, and Transition sheets",
+            "<b>Upload File</b> → Validate your data",
+            "<b>Preview & Configure</b> → Check sheets and set optimization parameters",
+            "<b>Run Optimization</b> → Generate schedule and view results"
+        ]
+        
+        render_step_visualization(steps)
         st.markdown('</div></div>', unsafe_allow_html=True)
 
     # Column 2: Uploader
     with col2:
         st.markdown('<div class="upload-card card-uploader"><h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
         st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
-        uploaded_file = st.file_uploader("Choose an Excel file", type=ALLOWED_EXTENSIONS, help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets")
+        
+        uploaded_file = st.file_uploader(
+            "Choose an Excel file", 
+            type=ALLOWED_EXTENSIONS, 
+            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
+            key="file_uploader"
+        )
 
+        # Visual drop zone when no file is uploaded
+        if not uploaded_file:
+            st.markdown("""
+            <div class="drop-zone">
+                <div class="drop-zone-icon">📁</div>
+                <div class="drop-zone-title">Drag & Drop File Here</div>
+                <div class="drop-zone-subtitle">Limit 200MB • XLSX Format</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
         if uploaded_file is not None:
-            st.session_state[SS_UPLOADED_FILE] = uploaded_file
+            # Add upload success animation
+            st.markdown('<div class="upload-success">', unsafe_allow_html=True)
             render_alert("File uploaded successfully! Processing...", "success")
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            st.session_state[SS_UPLOADED_FILE] = uploaded_file
 
             try:
                 file_buffer = io.BytesIO(uploaded_file.read())
@@ -95,10 +126,10 @@ def render_upload_stage():
                 success, data, errors, warnings = loader.load_and_validate()
 
                 if success:
-                    st.session_state[SS_EXCEL_DATA] = data
                     render_alert("File validated successfully!", "success")
                     for warn in warnings:
                         render_alert(warn, "warning")
+                    st.session_state[SS_EXCEL_DATA] = data
                     st.session_state[SS_STAGE] = STAGE_PREVIEW
                     st.rerun()
                 else:
@@ -114,9 +145,28 @@ def render_upload_stage():
     with col3:
         st.markdown('<div class="upload-card card-download"><h2>📥 Download Template & Details</h2>', unsafe_allow_html=True)
         st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
-        render_download_template_button()
+        
+        # Center the download button
+        col_download = st.columns([1, 3, 1])[1]
+        with col_download:
+            render_download_template_button()
+        
+        st.markdown('<div style="margin-top: auto; padding-top: 1rem;">', unsafe_allow_html=True)
+        st.markdown("""
+        <div style="font-size: 0.85rem; color: #6C757D;">
+            <b>Template Includes:</b><br>
+            • Plant configuration<br>
+            • Inventory management<br>
+            • Demand forecasting<br>
+            • Transition matrices<br>
+            • Pre-filled examples
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        
         st.markdown('</div></div>', unsafe_allow_html=True)
 
+    # Enhanced Expander Section
     with st.expander("📄 Variable and Constraint Details", expanded=True):
         col1, col2, col3, col4 = st.columns(4)
     
