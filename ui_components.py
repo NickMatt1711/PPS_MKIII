@@ -61,7 +61,7 @@ CORPORATE LIGHT THEME CSS - ENHANCED
 
 /* =============================
 BUTTONS - Enhanced Hierarchy
-============================= */
+============================ */
 /* Primary Button */
 .stButton>button[kind="primary"],
 .stButton>button:not([kind]),
@@ -119,7 +119,7 @@ button[data-testid="stDownloadButton"]:focus-visible {
 
 /* =============================
 Header - Enhanced
-============================= */
+============================ */
 .app-header {
   background: linear-gradient(135deg, #0A74DA, #4BA3F4);
   color: var(--md-sys-color-on-primary) !important;
@@ -145,7 +145,7 @@ Header - Enhanced
 
 /* =============================
 SECTION CARDS (New Full-Section Blocks)
-============================= */
+============================ */
 .section-card {
   border-radius: var(--md-shape-corner-large);
   padding: 1.75rem 1.5rem;
@@ -181,7 +181,7 @@ SECTION CARDS (New Full-Section Blocks)
 
 /* =============================
 Alerts - Enhanced
-============================= */
+============================ */
 div[data-testid="stAlert"] {
   border-radius: var(--md-shape-corner-medium);
   padding: 1rem 1.5rem;
@@ -215,7 +215,7 @@ div[data-testid="stAlert"] {
 
 /* =============================
 Stage Progress - Enhanced (4 stages)
-============================= */
+============================ */
 .stage-container {
   background: var(--md-sys-color-surface);
   border-radius: var(--md-shape-corner-medium);
@@ -299,7 +299,7 @@ Stage Progress - Enhanced (4 stages)
 
 /* =============================
 Tabs - Enhanced with dynamic colors
-============================= */
+============================ */
 .stTabs {
   background: var(--md-sys-color-surface);
   border-radius: var(--md-shape-corner-medium) !important;
@@ -358,7 +358,7 @@ Tabs - Enhanced with dynamic colors
 
 /* =============================
 Metric Cards - Enhanced with hover effects
-============================= */
+============================ */
 .metric-card {
   border-radius: var(--md-shape-corner-medium) !important;
   padding: 1.75rem 1.5rem !important;
@@ -416,7 +416,7 @@ Metric Cards - Enhanced with hover effects
 
 /* =============================
 Loading States - Enhanced
-============================= */
+============================ */
 .spinner {
   width: 48px;
   height: 48px;
@@ -472,7 +472,7 @@ Loading States - Enhanced
 
 /* =============================
 Error States - Enhanced
-============================= */
+============================ */
 .error-container {
   text-align: center;
   padding: 3rem 2rem;
@@ -498,7 +498,7 @@ Error States - Enhanced
 
 /* =============================
 Section Divider
-============================= */
+============================ */
 .section-divider {
   height: 1px;
   background: var(--md-sys-color-outline-variant);
@@ -507,7 +507,7 @@ Section Divider
 
 /* =============================
 Responsive Design
-============================= */
+============================ */
 @media (max-width: 768px) {
   .stage-row {
     flex-direction: column;
@@ -551,7 +551,7 @@ Responsive Design
 
 /* =============================
 Data Tables Enhancement
-============================= */
+============================ */
 .dataframe-container {
   border-radius: var(--md-shape-corner-medium);
   overflow: hidden;
@@ -560,7 +560,7 @@ Data Tables Enhancement
 
 /* =============================
 Accessibility Enhancements
-============================= */
+============================ */
 .skip-to-content {
   position: absolute;
   top: -40px;
@@ -662,6 +662,7 @@ def render_stage_progress(current_stage: int):
 # SECTION CARD (NEW)
 # ===============================
 def render_section_card(title: str, icon: str = "", color: str = "blue"):
+    """Open a section card. Put widgets inside `with st.container():` after calling this."""
     icon_html = f"{icon} " if icon else ""
     st.markdown(
         f"""
@@ -672,11 +673,12 @@ def render_section_card(title: str, icon: str = "", color: str = "blue"):
     )
 
 def close_section_card():
+    """Close the section card opened by render_section_card()."""
     st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ===============================
-# CARD (legacy small cards, still used elsewhere)
+# CARD (legacy small cards)
 # ===============================
 def render_card(title: str, icon: str = ""):
     icon_html = f"{icon} " if icon else ""
