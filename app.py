@@ -620,7 +620,7 @@ def render_results_stage():
             
     # --- Summary tab ---
     with tab3:
-        col_summary1, col_summary2 = st.columns([2, 1])
+        col_summary1, col_summary2, Col_summary3 = st.columns([2, 1, 1])
         
         with col_summary1:
             st.markdown("### 📊 Production Summary")
@@ -668,42 +668,43 @@ def render_results_stage():
                 st.error(f"Failed to render transitions table: {e}")
 
         # Add stockout summary table below
-        st.markdown("### ⚠️ Stockout Summary")
-        try:
-            stockout_df = create_stockout_details_table(
-                solution,
-                data.get('grades', []),
-                data.get('dates', []),
-                buffer_days=data.get('buffer_days', 0)
-            )
-        except Exception as e:
-            stockout_df = pd.DataFrame()
-            st.error(f"Failed to create stockout details table: {e}")
-        
-        if not stockout_df.empty:
+        with col_summary1:
+            st.markdown("### ⚠️ Stockout Summary")
             try:
-                styled_stockout = stockout_df.style.applymap(
-                    highlight_stockout, subset=['Stockout Quantity (MT)']
+                stockout_df = create_stockout_details_table(
+                    solution,
+                    data.get('grades', []),
+                    data.get('dates', []),
+                    buffer_days=data.get('buffer_days', 0)
                 )
-                st.dataframe(styled_stockout, use_container_width=True, height=400)
-            except Exception:
-                st.dataframe(stockout_df, use_container_width=True, height=400)
-           
-        else:
-            st.success("✅ No stockouts occurred during the demand period!")
+            except Exception as e:
+                stockout_df = pd.DataFrame()
+                st.error(f"Failed to create stockout details table: {e}")
             
-            # Show total stockout from solution if available (should be 0)
-            total_stockouts_from_solution = 0
-            try:
-                for g in data.get('grades', []):
-                    total_stockouts_from_solution += sum(solution.get('stockout', {}).get(g, {}).values())
-            except:
-                pass
-            
-            if total_stockouts_from_solution == 0:
-                st.info("All demand was satisfied with production and inventory.")
+            if not stockout_df.empty:
+                try:
+                    styled_stockout = stockout_df.style.applymap(
+                        highlight_stockout, subset=['Stockout Quantity (MT)']
+                    )
+                    st.dataframe(styled_stockout, use_container_width=True, height=400)
+                except Exception:
+                    st.dataframe(stockout_df, use_container_width=True, height=400)
+               
             else:
-                st.warning(f"Note: Total stockout reported in solution: {total_stockouts_from_solution:,.0f} MT")
+                st.success("✅ No stockouts occurred during the demand period!")
+                
+                # Show total stockout from solution if available (should be 0)
+                total_stockouts_from_solution = 0
+                try:
+                    for g in data.get('grades', []):
+                        total_stockouts_from_solution += sum(solution.get('stockout', {}).get(g, {}).values())
+                except:
+                    pass
+                
+                if total_stockouts_from_solution == 0:
+                    st.info("All demand was satisfied with production and inventory.")
+                else:
+                    st.warning(f"Note: Total stockout reported in solution: {total_stockouts_from_solution:,.0f} MT")
 
     render_section_divider()
 
