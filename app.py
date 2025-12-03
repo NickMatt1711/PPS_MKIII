@@ -57,110 +57,162 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 
 # ========== STAGE 0: UPLOAD ==========
-
-# ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: File upload with three colored cards in columns"""
+    """Stage 0: Enhanced file upload with visual feedback and actionable error messages"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
-    render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
+    render_stage_progress(STAGE_MAP.get("UPLOAD", 0))
 
-    col1, col2, col3 = st.columns(3)
+    st.markdown('<div class="upload-section">', unsafe_allow_html=True)
 
-    # Column 1: Quick Start Guide
+    # Hero section
+    col1, col2 = st.columns([3, 2])
     with col1:
-        st.markdown('<div class="upload-card card-quickstart"><h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
         st.markdown("""
-        1️⃣ **Download Template** → Get the Excel structure  
-        2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets  
-        3️⃣ **Upload File** → Validate your data  
-        4️⃣ **Preview & Configure** → Check sheets and set optimization parameters  
-        5️⃣ **Run Optimization** → Generate schedule and view results  
+        ### 🚀 Welcome to Polymer Production Scheduler
+        **Optimize production schedules across multiple plants with shutdown management**
+        
+        Upload your production data to generate optimal schedules that minimize stockouts,
+        reduce changeovers, and respect all production constraints.
         """)
-        st.markdown('</div></div>', unsafe_allow_html=True)
-
-    # Column 2: Uploader
+    
     with col2:
-        st.markdown('<div class="upload-card card-uploader"><h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
-        uploaded_file = st.file_uploader("Choose an Excel file", type=ALLOWED_EXTENSIONS, help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets")
-
-        if uploaded_file is not None:
-            st.session_state[SS_UPLOADED_FILE] = uploaded_file
-            render_alert("File uploaded successfully! Processing...", "success")
-
-            try:
-                file_buffer = io.BytesIO(uploaded_file.read())
-                loader = ExcelDataLoader(file_buffer)
-                success, data, errors, warnings = loader.load_and_validate()
-
-                if success:
-                    st.session_state[SS_EXCEL_DATA] = data
-                    render_alert("File validated successfully!", "success")
-                    for warn in warnings:
-                        render_alert(warn, "warning")
-                    st.session_state[SS_STAGE] = STAGE_PREVIEW
-                    st.rerun()
-                else:
-                    for err in errors:
-                        render_alert(err, "error")
-                    for warn in warnings:
-                        render_alert(warn, "warning")
-            except Exception as e:
-                render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
-        st.markdown('</div></div>', unsafe_allow_html=True)
-
-    # Column 3: Download Template & Details
-    with col3:
-        st.markdown('<div class="upload-card card-download"><h2>📥 Download Template & Details</h2>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        st.markdown("### Get Started")
         render_download_template_button()
-        st.markdown('</div></div>', unsafe_allow_html=True)
 
-    with st.expander("📄 Variable and Constraint Details", expanded=True):
-        col1, col2, col3, col4 = st.columns(4)
+    st.divider()
+
+    # Upload card with improved visual design
+    st.markdown('<div class="upload-card">', unsafe_allow_html=True)
+    st.markdown("### 📤 Upload Your Production Data")
     
-        with col1:
-            st.markdown("""
-            ### **Plant Sheet**
-            - **Plant**: Plant name  
-            - **Capacity per day**: Max production per day  
-            - **Material Running**: Current grade running  
-            - **Expected Run Days**: Minimum run days before changeover  
-            - **Shutdown Start/End Date**: Planned downtime  
-            - **Pre-Shutdown Grade / Restart Grade**: Grade before and after shutdown  
-            """)
+    # Create a more prominent upload area
+    uploaded_file = st.file_uploader(
+        "Drag and drop your Excel file here",
+        type=ALLOWED_EXTENSIONS,
+        help="Supported format: XLSX (max 200MB)",
+        label_visibility="collapsed"
+    )
     
+    # Visual upload zone
+    if not uploaded_file:
+        col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("""
-            ### **Inventory Sheet**
-            - **Grade Name**: Product grade  
-            - **Opening Inventory**: Current stock  
-            - **Min. Closing Inventory**: Minimum stock at horizon end  
-            - **Min./Max Inventory**: Safety stock limits  
-            - **Min./Max Run Days**: Consecutive run constraints  
-            - **Force Start Date**: Mandatory start date for a grade  
-            - **Lines**: Plants where grade can run  
-            - **Rerun Allowed**: Yes/No for repeating grade  
-            """)
+            <div class="upload-zone">
+                <div class="upload-zone-icon">📁</div>
+                <div class="upload-zone-title">Drag & Drop Excel File</div>
+                <div class="upload-zone-subtitle">or click to browse</div>
+                <div class="upload-zone-note">Limit 200MB per file • XLSX format</div>
+            </div>
+            """, unsafe_allow_html=True)
     
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Handle file upload
+    if uploaded_file is not None:
+        st.session_state[SS_UPLOADED_FILE] = uploaded_file
+        
+        # Show file summary
+        render_file_summary(uploaded_file)
+        
+        # Process the file
+        try:
+            file_buffer = io.BytesIO(uploaded_file.read())
+            loader = ExcelDataLoader(file_buffer)
+            
+            # Show processing status
+            with st.spinner("🔍 Validating file structure..."):
+                success, data, errors, warnings = loader.load_and_validate()
+            
+            if success:
+                render_alert("✅ File validated successfully!", "success")
+                
+                # Show warnings if any
+                if warnings:
+                    for warning in warnings:
+                        render_alert(warning, "warning")
+                
+                # Store data and move to next stage
+                st.session_state[SS_EXCEL_DATA] = data
+                
+                # Show success message with next steps
+                st.success("""
+                **✅ Ready to proceed!**
+                
+                Your file has been validated successfully. Click the button below to:
+                1. Preview your data
+                2. Configure optimization parameters
+                3. Run the optimization
+                """)
+                
+                if st.button("👉 Continue to Configuration", type="primary", use_container_width=True):
+                    st.session_state[SS_STAGE] = STAGE_PREVIEW
+                    st.rerun()
+                    
+            else:
+                # Enhanced error handling with actionable steps
+                render_validation_issues(errors, warnings)
+                
+                # Show retry options
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("🔄 Try Different File", use_container_width=True):
+                        st.session_state[SS_UPLOADED_FILE] = None
+                        st.rerun()
+                
+                with col2:
+                    if st.button("📥 Download Template", use_container_width=True):
+                        # This will trigger the download button
+                        pass
+                
+        except Exception as e:
+            # Enhanced error display
+            render_alert(f"❌ Failed to process file: {str(e)}", "error", [
+                "Check if the file is a valid Excel (.xlsx) file",
+                "Ensure the file is not corrupted",
+                "Try downloading the template and using it as a reference",
+                "Check file size (max 200MB)"
+            ])
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Quick Start Guide & Requirements
+    with st.expander("📋 Quick Start Guide & Requirements", expanded=True):
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("""
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; height: 100%;">
+                <h4>📥 1. Get Template</h4>
+                <p>Download our pre-formatted Excel template with all required sheets.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("""
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; height: 100%;">
+                <h4>📝 2. Fill Data</h4>
+                <p>Complete Plant, Inventory, Demand, and Transition sheets.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
         with col3:
             st.markdown("""
-            ### **Demand Sheet**
-            - **Date**: Planning horizon  
-            - **Grade Columns**: Daily demand quantity for each grade  
-            """)
-    
-        with col4:
-            st.markdown("""
-            ### **Transition Sheets**
-            - Allowed grade changes per plant from grade in Row to grade in Column (**Yes/No**)   
-            """)
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; height: 100%;">
+                <h4>⚡ 3. Optimize</h4>
+                <p>Upload and run optimization to get production schedules.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Add requirements section
+        render_requirements_section()
 
+
+# ========== STAGE 1: PREVIEW ==========
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Review data and configure optimization")
-    render_stage_progress(STAGE_MAP.get(STAGE_PREVIEW, 1))
+    render_stage_progress(STAGE_MAP.get("PREVIEW", 1))
 
     excel_data = st.session_state.get(SS_EXCEL_DATA)
     if not excel_data:
@@ -273,7 +325,7 @@ def render_preview_stage():
         # Map to penalty values
         priority_map = {
             "Minimize Stockouts Only": (1000, 1),
-            "Favor Stockouts": (10, 1),
+            "Favor Fewer Stockouts": (10, 1),
             "Balanced": (10, 5),
             "Favor Fewer Transitions": (10, 8),
             "Minimize Transitions Only": (1, 1000)
@@ -311,7 +363,7 @@ def render_preview_stage():
 def render_optimization_stage():
     """Stage 2: Show optimization in progress"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization in Progress")
-    render_stage_progress(STAGE_MAP.get(STAGE_OPTIMIZING, 2))
+    render_stage_progress(STAGE_MAP.get("OPTIMIZING", 2), "Running optimization solver...")
 
     st.markdown("""
         <div class="optimization-container">
@@ -468,10 +520,15 @@ def render_optimization_stage():
             st.rerun()
         else:
             status_text.error("❌ No feasible solution found.")
-            render_error_state(
-                "No Solution Found",
-                "The solver could not find a feasible solution. Please check your constraints and try again."
-            )
+            
+            # Enhanced error messaging with actionable steps
+            render_alert("No feasible solution found.", "error", [
+                "Check your constraints for conflicts",
+                "Verify that demand can be met with available capacity",
+                "Review shutdown periods and pre-shutdown/restart grades",
+                "Check transition rules for possible dead-ends",
+                "Try increasing the time limit for the solver"
+            ])
             
             # Provide navigation back
             if st.button("← Back to Configuration"):
@@ -480,7 +537,16 @@ def render_optimization_stage():
 
     except Exception as e:
         status_text.error("❌ Optimization failed.")
-        render_error_state("Optimization Error", f"An error occurred: {str(e)}")
+        
+        # Enhanced error display with actionable steps
+        render_alert(f"Optimization error: {str(e)}", "error", [
+            "Check your input data for inconsistencies",
+            "Verify all dates are in correct format",
+            "Ensure numeric values are valid numbers",
+            "Check for missing required sheets",
+            "Try reducing the planning horizon"
+        ])
+        
         st.exception(e)
         
         # Navigation back
@@ -493,7 +559,7 @@ def render_optimization_stage():
 def render_results_stage():
     """Stage 3: Display results"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization Results")
-    render_stage_progress(STAGE_MAP.get(STAGE_RESULTS, 3))
+    render_stage_progress(STAGE_MAP.get("RESULTS", 3))
 
     solution_data = st.session_state.get(SS_SOLUTION)
     if not solution_data:
@@ -534,7 +600,7 @@ def render_results_stage():
 
     render_section_divider()
 
-    # Results tabs - REMOVED Stockout tab, combined into Summary
+    # Results tabs
     tab1, tab2, tab3 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables"])
 
     # --- Production Schedule tab ---
@@ -680,6 +746,11 @@ def render_results_stage():
                 st.error(f"Failed to create stockout details table: {e}")
             
             if not stockout_df.empty:
+                def highlight_stockout(val):
+                    if val > 0:
+                        return 'background-color: #F8D7DA; color: #9C0006; font-weight: bold;'
+                    return ''
+                
                 try:
                     styled_stockout = stockout_df.style.applymap(
                         highlight_stockout, subset=['Stockout Quantity (MT)']
