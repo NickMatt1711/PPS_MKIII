@@ -150,17 +150,6 @@ def render_upload_stage():
             """)
         st.markdown('</div></div>', unsafe_allow_html=True)
 
-    render_section_divider()
-
-    # Navigation
-    col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
-    with col_nav3:
-        if st.button("Next: Preview Data →", disabled=(st.session_state[SS_UPLOADED_FILE] is None), use_container_width=True):
-            if st.session_state[SS_EXCEL_DATA] is not None:
-                st.session_state[SS_STAGE] = STAGE_PREVIEW
-                st.rerun()
-            else:
-                render_alert("Please upload and validate a file first.", "warning")
 
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
