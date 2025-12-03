@@ -104,6 +104,23 @@ button[data-testid="stDownloadButton"]:hover {
   box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
 }
 
+/* Template download button enhancement */
+.template-download-btn {
+  background: linear-gradient(135deg, #0A74DA, #4BA3F4) !important;
+  color: white !important;
+  border-radius: var(--md-shape-corner-large) !important;
+  padding: 1rem 2rem !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(10, 116, 218, 0.25) !important;
+}
+
+.template-download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(10, 116, 218, 0.35) !important;
+}
+
 /* Focus states for accessibility */
 .stButton>button:focus-visible,
 button[data-testid="stDownloadButton"]:focus-visible {
@@ -144,6 +161,98 @@ Header - Enhanced
 }
 
 /* =============================
+Upload Page Enhancements
+============================= */
+.upload-section {
+  padding: 1rem 0;
+}
+
+.upload-card {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-large);
+  padding: 2.5rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 2px solid var(--md-sys-color-outline-variant);
+}
+
+.upload-card:hover {
+  border-color: var(--md-sys-color-primary);
+  transition: border-color 0.3s ease;
+}
+
+.file-info-card {
+  background: linear-gradient(135deg, var(--md-sys-color-primary-container) 0%, #E6F0FA 100%);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1.5rem;
+  margin: 1rem 0;
+}
+
+.file-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.file-info-row:last-child {
+  border-bottom: none;
+}
+
+.file-info-label {
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.file-info-value {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.upload-zone {
+  border: 3px dashed var(--md-sys-color-outline);
+  border-radius: var(--md-shape-corner-large);
+  padding: 3rem 2rem;
+  text-align: center;
+  margin: 20px 0;
+  background: var(--md-sys-color-surface-variant);
+  transition: all 0.3s ease;
+}
+
+.upload-zone:hover {
+  border-color: var(--md-sys-color-primary);
+  background: var(--md-sys-color-primary-container);
+}
+
+.upload-zone-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  color: var(--md-sys-color-primary);
+}
+
+.upload-zone-title {
+  color: var(--md-sys-color-on-surface);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.upload-zone-subtitle {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.upload-zone-note {
+  color: #aaa;
+  font-size: 0.8rem;
+  margin-top: 1rem;
+}
+
+/* =============================
 Cards - Enhanced
 ============================= */
 .card, .metric-card, .stTabs {
@@ -168,7 +277,7 @@ Cards - Enhanced
 }
 
 /* =============================
-Alerts - Enhanced
+Alerts - Enhanced with Actionable Steps
 ============================= */
 div[data-testid="stAlert"] {
   border-radius: var(--md-shape-corner-medium);
@@ -199,6 +308,22 @@ div[data-testid="stAlert"] {
   background: var(--md-sys-color-error-container); 
   color: var(--md-sys-color-on-error);
   border-left-color: var(--md-sys-color-error);
+}
+
+.alert-fix-steps {
+  background: var(--md-sys-color-surface-variant) !important;
+  border-left-color: #6c757d !important;
+  margin-top: 1rem;
+  padding: 1rem !important;
+}
+
+.alert-fix-steps ul {
+  margin: 0.5rem 0 0 0;
+  padding-left: 1.5rem;
+}
+
+.alert-fix-steps li {
+  margin-bottom: 0.25rem;
 }
 
 /* =============================
@@ -484,6 +609,14 @@ Error States - Enhanced
   font-size: 1rem;
 }
 
+.validation-issues-container {
+  border: 2px solid var(--md-sys-color-error);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1.5rem;
+  margin: 1rem 0;
+  background: var(--md-sys-color-error-container);
+}
+
 /* =============================
 Section Divider
 ============================= */
@@ -491,6 +624,56 @@ Section Divider
   height: 1px;
   background: var(--md-sys-color-outline-variant);
   margin: 2rem 0;
+}
+
+/* =============================
+Requirements Section
+============================= */
+.requirements-section {
+  background: var(--md-sys-color-surface-variant);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.requirements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.requirement-card {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-small);
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.requirement-card h4 {
+  margin-top: 0;
+  color: var(--md-sys-color-primary);
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.requirement-card ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.requirement-card li {
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.format-requirements {
+  background: var(--md-sys-color-surface);
+  border-left: 4px solid var(--md-sys-color-primary);
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  border-radius: 0 var(--md-shape-corner-small) var(--md-shape-corner-small) 0;
 }
 
 /* =============================
@@ -519,6 +702,18 @@ Responsive Design
   .app-header {
     padding: 1.25rem 1.5rem;
   }
+  
+  .upload-card {
+    padding: 1.5rem;
+  }
+  
+  .upload-zone {
+    padding: 2rem 1rem;
+  }
+  
+  .requirements-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
@@ -534,6 +729,14 @@ Responsive Design
   
   .metric-value {
     font-size: 1.75rem !important;
+  }
+  
+  .upload-zone-icon {
+    font-size: 2.5rem;
+  }
+  
+  .upload-zone-title {
+    font-size: 1.1rem;
   }
 }
 
@@ -609,13 +812,13 @@ def render_header(title: str, subtitle: str = ""):
 # -------------------------------
 # STAGE PROGRESS (4 stages)
 # -------------------------------
-def render_stage_progress(current_stage: int):
-    """Render 4-stage progress indicator with proper numbering."""
+def render_stage_progress(current_stage: int, status_message: str = ""):
+    """Render 4-stage progress indicator with optional status message."""
     stages = [
-        ("📤", "Upload"),
-        ("🛠️", "Configure"),
-        ("⚡", "Optimizing"),
-        ("📊", "Results")
+        ("📤", "Upload", "Upload production data"),
+        ("🛠️", "Configure", "Set optimization parameters"),
+        ("⚡", "Optimizing", "Running production optimization"),
+        ("📊", "Results", "View optimization results")
     ]
     
     total = len(stages)
@@ -623,7 +826,7 @@ def render_stage_progress(current_stage: int):
     
     html = '<div class="stage-row">'
 
-    for idx, (icon, label) in enumerate(stages):
+    for idx, (icon, label, _) in enumerate(stages):
         status = "inactive"
         display_icon = icon
         
@@ -643,6 +846,17 @@ def render_stage_progress(current_stage: int):
             html += f'<div class="stage-connector {connector_class}"></div>'
 
     html += '</div>'
+    
+    # Add status message if provided
+    if status_message:
+        html += f"""
+        <div style="text-align: center; margin-top: 1rem; padding: 1rem; 
+                    background: var(--md-sys-color-surface-variant); 
+                    border-radius: var(--md-shape-corner-small);">
+            <strong>🔄 {status_message}</strong>
+        </div>
+        """
+    
     st.markdown(f'<div class="stage-container">{html}</div>', unsafe_allow_html=True)
 
 
@@ -686,22 +900,38 @@ def render_metric_card(label: str, value: str, col, card_index: int = 0):
 
 
 # -------------------------------
-# ALERT
+# ALERT with Fix Steps
 # -------------------------------
-def render_alert(message: str, alert_type: str = "info"):
-    """Render styled alert with icon."""
+def render_alert(message: str, alert_type: str = "info", fix_steps: list = None):
+    """Render styled alert with optional fix steps."""
     icons = {
         "success": "✓",
         "info": "ℹ",
         "warning": "⚠",
         "error": "✖"
     }
-    st.markdown(
-        f'<div class="alert alert-{alert_type}">'
-        f'<strong>{icons.get(alert_type, "ℹ")}</strong> '
-        f'<span>{message}</span></div>',
-        unsafe_allow_html=True
-    )
+    
+    alert_html = f'''
+    <div class="alert alert-{alert_type}">
+        <strong>{icons.get(alert_type, "ℹ")}</strong> 
+        <span>{message}</span>
+    </div>
+    '''
+    
+    if fix_steps:
+        steps_html = "<ul>"
+        for step in fix_steps:
+            steps_html += f"<li>{step}</li>"
+        steps_html += "</ul>"
+        
+        alert_html += f'''
+        <div class="alert alert-fix-steps">
+            <strong>🔧 How to fix:</strong>
+            {steps_html}
+        </div>
+        '''
+    
+    st.markdown(alert_html, unsafe_allow_html=True)
 
 
 # -------------------------------
@@ -716,6 +946,35 @@ def render_error_state(error_type: str, message: str):
             <p>{message}</p>
         </div>
     """, unsafe_allow_html=True)
+
+
+# -------------------------------
+# VALIDATION ISSUES CONTAINER
+# -------------------------------
+def render_validation_issues(errors: list, warnings: list = None):
+    """Render validation issues with actionable fix steps."""
+    if errors:
+        with st.expander("❌ Validation Issues Found", expanded=True):
+            st.markdown('<div class="validation-issues-container">', unsafe_allow_html=True)
+            
+            for error in errors:
+                st.error(f"**Error:** {error}")
+            
+            st.markdown("""
+            **🔧 How to fix:**
+            1. Download the template again for correct structure
+            2. Check all required sheets are present (Plant, Inventory, Demand)
+            3. Verify column names match exactly
+            4. Ensure no missing values in required fields
+            5. Check date formats are valid Excel dates
+            6. Verify numeric values are valid numbers
+            """)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    if warnings:
+        for warning in warnings:
+            st.warning(warning)
 
 
 # -------------------------------
@@ -739,23 +998,126 @@ def render_section_divider():
 
 
 # -------------------------------
-# DOWNLOAD TEMPLATE
+# DOWNLOAD TEMPLATE BUTTON
 # -------------------------------
 def render_download_template_button():
-    """Render download template button."""
+    """Render download template button with enhanced styling."""
     try:
         template_path = Path(__file__).parent / "polymer_production_template.xlsx"
         if template_path.exists():
             with open(template_path, "rb") as f:
                 template_data = f.read()
+            
             st.download_button(
-                label="📥 Download Template",
+                label="📥 Download Excel Template",
                 data=template_data,
                 file_name="polymer_production_template.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True
+                use_container_width=True,
+                key="download_template"
             )
         else:
-            st.error("Template file not found")
+            st.error("⚠️ Template file not found")
     except Exception as e:
-        st.error(f"Template file not found: {e}")
+        st.error(f"⚠️ Template file not found: {e}")
+
+
+# -------------------------------
+# RENDER FILE SUMMARY
+# -------------------------------
+def render_file_summary(uploaded_file):
+    """Render detailed file information after upload."""
+    if uploaded_file:
+        import os
+        
+        st.markdown("### 📄 File Details")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown(f"""
+            <div class="file-info-card">
+                <div class="file-info-row">
+                    <span class="file-info-label">File Name</span>
+                    <span class="file-info-value">{uploaded_file.name}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            file_size = uploaded_file.size / (1024 * 1024)  # Convert to MB
+            st.markdown(f"""
+            <div class="file-info-card">
+                <div class="file-info-row">
+                    <span class="file-info-label">File Size</span>
+                    <span class="file-info-value">{file_size:.2f} MB</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(f"""
+            <div class="file-info-card">
+                <div class="file-info-row">
+                    <span class="file-info-label">Type</span>
+                    <span class="file-info-value">Excel (.xlsx)</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Add a preview button
+        if st.button("🔍 Preview File Contents", type="secondary", use_container_width=True):
+            st.session_state["wizard_stage"] = 1  # STAGE_PREVIEW
+            st.rerun()
+
+
+# -------------------------------
+# RENDER REQUIREMENTS SECTION
+# -------------------------------
+def render_requirements_section():
+    """Render file requirements section."""
+    st.markdown("### 📋 File Requirements")
+    
+    st.markdown('<div class="requirements-section">', unsafe_allow_html=True)
+    
+    st.markdown('<div class="requirements-grid">', unsafe_allow_html=True)
+    
+    # Required Sheets
+    st.markdown("""
+    <div class="requirement-card">
+        <h4>✅ Required Sheets</h4>
+        <ul>
+            <li><strong>Plant</strong>: Production lines & capacities</li>
+            <li><strong>Inventory</strong>: Product grades & constraints</li>
+            <li><strong>Demand</strong>: Daily demand per grade</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Optional Sheets
+    st.markdown("""
+    <div class="requirement-card">
+        <h4>📊 Optional Sheets</h4>
+        <ul>
+            <li><strong>Transition_PlantName</strong>: Grade transition rules</li>
+            <li>Multiple transition sheets supported</li>
+            <li>One sheet per production line</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Format requirements
+    st.markdown("""
+    <div class="format-requirements">
+        <strong>📝 Format Requirements:</strong><br>
+        • Excel (.xlsx) format only<br>
+        • Maximum file size: 200MB<br>
+        • Dates must be in proper Excel date format<br>
+        • All numeric values must be valid numbers<br>
+        • Column names must match template exactly
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
