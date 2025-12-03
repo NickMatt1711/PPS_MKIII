@@ -60,24 +60,21 @@ def create_gantt_chart(
     shutdown_periods: Dict,
     grade_colors: Dict
 ):
-
     dates = [_ensure_date(d) for d in dates]
 
     schedule = solution.get("is_producing", {}).get(line, {})
-
     gantt_rows = []
 
-    for d in range(len(dates)):
-        ds = dates[d].strftime("%d-%b-%y")
-
-        for grade in grade_colors:
-            if schedule.get(ds) == grade:
-                gantt_rows.append({
-                    "Grade": grade,
-                    "Start": dates[d],
-                    "Finish": dates[d] + timedelta(days=1),
-                    "Line": line
-                })
+    for idx, d in enumerate(dates):
+        ds = d.strftime("%d-%b-%y")
+        grade = schedule.get(ds)
+        if grade in grade_colors:
+            gantt_rows.append({
+                "Grade": grade,
+                "Start": d,
+                "Finish": d + timedelta(days=1),
+                "Line": line
+            })
 
     if not gantt_rows:
         return None
@@ -99,7 +96,6 @@ def create_gantt_chart(
         sd = shutdown_periods[line]
         x0 = dates[sd[0]]
         x1 = dates[sd[-1]] + timedelta(days=1)
-
         fig.add_vrect(
             x0=x0,
             x1=x1,
@@ -112,21 +108,38 @@ def create_gantt_chart(
             annotation_font_color="red"
         )
 
+    # Y-axis
     fig.update_yaxes(
         autorange="reversed",
         showgrid=True,
         gridcolor="lightgray",
-        tickfont=dict(color="gray", size=12)
-    )
-    fig.update_xaxes(
-        tickformat="%d-%b",
-        dtick="D1",
-        showgrid=True,
-        gridcolor="lightgray",
-        tickfont=dict(color="gray", size=12)
+        tickfont=dict(color="gray", size=12),
+        showline=True,             # axis line
+        linewidth=1,
+        linecolor="black"
     )
 
+    # X-axis (improved readability)
+    fig.update_xaxes(
+        tickformat="%d-%b",
+        dtick="D2",                # less crowded
+        tickangle=35,              # tilted for readability
+        showgrid=True,
+        gridcolor="lightgray",
+        tickfont=dict(color="gray", size=12),
+        showline=True,             # axis line
+        linewidth=1,
+        linecolor="black"
+    )
+
+    # Add padding to prevent congestion at edges
     fig.update_layout(
+        xaxis=dict(
+            range=[
+                dates[0] - timedelta(hours=12),
+                dates[-1] + timedelta(days=1)
+            ]
+        ),
         height=350,
         bargap=0.2,
         plot_bgcolor="white",
@@ -146,9 +159,8 @@ def create_gantt_chart(
             font_color="gray"
         )
     )
-    
-    return fig
 
+    return fig
 
 # ===============================================================
 #  INVENTORY CHART
