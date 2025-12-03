@@ -234,10 +234,9 @@ def render_preview_stage():
     # Configuration parameters
     st.markdown("### ⚙️ Optimization Parameters")
     
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns([1,1,2])
     
     with col1:
-        st.markdown("#### ⏱️ Solver Configuration")
         time_limit = st.number_input(
             "Time limit (minutes)",
             min_value=1,
@@ -247,6 +246,7 @@ def render_preview_stage():
             help="Maximum time for solver to find optimal solution"
         )
         
+     with col2:   
         buffer_days = st.number_input(
             "Buffer days",
             min_value=0,
@@ -256,9 +256,7 @@ def render_preview_stage():
             help="Additional days added to planning horizon for safety stock"
         )
     
-    with col2:
-        st.markdown("#### 🎯 Objective Priorities")
-        
+    with col3:        
         priority = st.select_slider(
             "Optimization Priority",
             options=[
