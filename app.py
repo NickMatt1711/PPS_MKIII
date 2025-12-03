@@ -246,7 +246,7 @@ def render_preview_stage():
             help="Maximum time for solver to find optimal solution"
         )
         
-     with col2:
+    with col2:
         buffer_days = st.number_input(
             "Buffer days",
             min_value=0,
