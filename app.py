@@ -261,7 +261,7 @@ def render_preview_stage():
             "Optimization Priority",
             options=[
                 "Minimize Stockouts Only",
-                "Favor Stockouts",
+                "Favor Fewer Stockouts",
                 "Balanced",
                 "Favor Fewer Transitions",
                 "Minimize Transitions Only"
