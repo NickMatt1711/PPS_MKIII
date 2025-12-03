@@ -1,6 +1,7 @@
 """
-Polymer Production Scheduler - Main Application
-Upload page UI rebuilt (Layout 1 + professional polish). Other pages & logic unchanged.
+Polymer Production Scheduler - Main Application (Enhanced UX)
+A wizard-based Streamlit app for multi-plant production optimization
+Version 3.2.0 - Enhanced stage management and responsive design
 """
 
 import streamlit as st
@@ -56,208 +57,105 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 
 # ========== STAGE 0: UPLOAD ==========
+
+# ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Rebuilt Upload page UI: grouped 3-column layout (shared heading) with improved clarity."""
+    """Stage 0: File upload with three colored cards in columns"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    # Scoped wrapper so CSS only affects Upload page
-    st.markdown('<div class="upload-page">', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
 
-    # Shared section heading for the three-card row
-    st.markdown("""
-    <div class="upload-row-header">
-      <h2 style="margin:0 0 6px 0;">📤 Upload your production file</h2>
-      <div style="color:#495057; margin-bottom:12px;">Use the template to prepare Plant, Inventory, Demand and Transition sheets. We'll validate automatically after upload.</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Three-column layout: left help, middle primary upload, right template (middle wider)
-    col_left, col_mid, col_right = st.columns([0.8, 1.6, 0.8], vertical_alignment="top")
-
-    # ---------------- Left: Quick Help / Process Card ----------------
-    with col_left:
-        st.markdown('<div class="upload-grid-card">', unsafe_allow_html=True)
-        # Aligned header
-        st.markdown('<div class="card-header">🚀 Quick Process</div>', unsafe_allow_html=True)
-
-        # Compact visual stepper (icons + short text)
-        steps_md = """
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          <div><strong>1.</strong> Download template</div>
-          <div><strong>2.</strong> Fill Plant & Inventory</div>
-          <div><strong>3.</strong> Fill Demand & Transitions</div>
-          <div><strong>4.</strong> Upload & validate</div>
-          <div><strong>5.</strong> Preview → Configure → Optimize</div>
-        </div>
-        """
-        st.markdown(steps_md, unsafe_allow_html=True)
-
-        st.markdown('<hr style="margin:12px 0 10px 0; border:none; border-top:1px solid #eee" />', unsafe_allow_html=True)
-
-        # Micro thumbnails (stylized) to give users a quick visual expectation
+    # Column 1: Quick Start Guide
+    with col1:
+        st.markdown('<div class="upload-card card-quickstart"><h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
         st.markdown("""
-        <div style="display:flex; gap:8px;">
-          <div style="flex:1; font-size:12px; background:#fbfbfd; border:1px solid #f0f0f0; padding:6px; border-radius:6px; text-align:center;">
-            <div style="font-weight:700;">Plant</div><div style="color:#6c757d;">name • capacity • shutdown</div>
-          </div>
-          <div style="flex:1; font-size:12px; background:#fbfbfd; border:1px solid #f0f0f0; padding:6px; border-radius:6px; text-align:center;">
-            <div style="font-weight:700;">Inventory</div><div style="color:#6c757d;">grade • open • min/max</div>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
+        1️⃣ **Download Template** → Get the Excel structure  
+        2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets  
+        3️⃣ **Upload File** → Validate your data  
+        4️⃣ **Preview & Configure** → Check sheets and set optimization parameters  
+        5️⃣ **Run Optimization** → Generate schedule and view results  
+        """)
+        st.markdown('</div></div>', unsafe_allow_html=True)
 
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # ---------------- Middle: Primary Upload Card ----------------
-    with col_mid:
-        st.markdown('<div class="upload-grid-card upload-primary-card">', unsafe_allow_html=True)
-        st.markdown('<div class="card-header">📥 Upload Production Data</div>', unsafe_allow_html=True)
-
-        # Focused uploader: minimal header, centered dropzone
-        st.markdown('<div style="margin-bottom:8px; font-weight:600">Upload .xlsx — required sheets: Plant, Inventory, Demand</div>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-dropzone">', unsafe_allow_html=True)
-
-        uploaded_file = st.file_uploader("", type=ALLOWED_EXTENSIONS, help="Drag & drop your Excel file here, or click to browse.")
-
-        # Dynamic validation checklist container
-        checklist_placeholder = st.empty()
+    # Column 2: Uploader
+    with col2:
+        st.markdown('<div class="upload-card card-uploader"><h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        uploaded_file = st.file_uploader("Choose an Excel file", type=ALLOWED_EXTENSIONS, help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets")
 
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
-            # Minimal progress feedback
-            progress = st.progress(0)
-            progress.progress(10)
-            render_alert("File received. Validating…", "info")
+            render_alert("File uploaded successfully! Processing...", "success")
 
             try:
                 file_buffer = io.BytesIO(uploaded_file.read())
-                progress.progress(30)
                 loader = ExcelDataLoader(file_buffer)
-
                 success, data, errors, warnings = loader.load_and_validate()
-                progress.progress(70)
-
-                # Build checklist display
-                checklist_lines = []
-                # Check required sheets
-                required = ['Plant', 'Inventory', 'Demand']
-                found = [s for s in data.keys()] if isinstance(data, dict) else []
-                for sheet in required:
-                    if sheet in found:
-                        checklist_lines.append(f"✅ {sheet} sheet detected")
-                    else:
-                        checklist_lines.append(f"❌ {sheet} sheet missing")
-
-                # Small supported summary (optional transition matrices)
-                trans_present = any(k.startswith('Transition_') for k in (data.keys() if isinstance(data, dict) else []))
-                checklist_lines.append("✅ Transition matrices detected" if trans_present else "⚠ Transition matrices not found (optional)")
-
-                # Render the checklist
-                checklist_html = "<div style='margin-top:10px'>"
-                for line in checklist_lines:
-                    checklist_html += f"<div style='margin:4px 0; color:#333'>{line}</div>"
-                checklist_html += "</div>"
-                checklist_placeholder.markdown(checklist_html, unsafe_allow_html=True)
 
                 if success:
-                    progress.progress(100)
+                    st.session_state[SS_EXCEL_DATA] = data
                     render_alert("File validated successfully!", "success")
                     for warn in warnings:
                         render_alert(warn, "warning")
-                    st.session_state[SS_EXCEL_DATA] = data
                     st.session_state[SS_STAGE] = STAGE_PREVIEW
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
-                    progress.progress(100)
-                    # Show user-friendly errors (kept exact error messages from loader)
                     for err in errors:
-                        render_alert(f"{err}", "error")
+                        render_alert(err, "error")
                     for warn in warnings:
                         render_alert(warn, "warning")
             except Exception as e:
-                progress.progress(100)
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
+        st.markdown('</div></div>', unsafe_allow_html=True)
 
-        else:
-            # If nothing uploaded yet, show minimal checklist skeleton
-            checklist_placeholder.markdown("""
-            <div style="margin-top:8px; color:#6c757d;">
-              • Required: Plant, Inventory, Demand  
-              • Optional: Transition matrices per plant  
-              • File format: .xlsx
-            </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)  # close upload-dropzone
-
-        # Helpful micro-actions under uploader
-        st.markdown("""
-        <div style="display:flex; justify-content:space-between; margin-top:12px;">
-          <div style="color:#6c757d; font-size:13px;">Need help? Check the template or docs.</div>
-          <div>
-            <a href="#" style="text-decoration:none; color:#0A74DA; font-weight:600;">See upload tips</a>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)  # close primary card
-
-    # ---------------- Right: Template & Download ----------------
-    with col_right:
-        st.markdown('<div class="upload-grid-card">', unsafe_allow_html=True)
-        st.markdown('<div class="card-header">📦 Template & Resources</div>', unsafe_allow_html=True)
-        # CTA
+    # Column 3: Download Template & Details
+    with col3:
+        st.markdown('<div class="upload-card card-download"><h2>📥 Download Template & Details</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
         render_download_template_button()
-        # micro pills describing sheets
-        st.markdown("""
-        <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
-          <span class="pill">🏭 Plant</span>
-          <span class="pill">📦 Inventory</span>
-          <span class="pill">📈 Demand</span>
-          <span class="pill">🔀 Transition</span>
-        </div>
-        <div style="color:#6c757d; margin-top:8px; font-size:13px;">
-          Open the template to see expected columns and example values.
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div></div>', unsafe_allow_html=True)
 
-    # ---------------- Bottom: Structured Reference Drawer ----------------
-    st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
-    with st.expander("📄 Planner Reference — Sheets, Required Fields, Common Errors", expanded=False):
-        # Use four columns for concise reference
-        rcol1, rcol2, rcol3, rcol4 = st.columns(4)
-        with rcol1:
-            st.markdown("### 🏭 Plant Sheet")
-            st.markdown("- **Required:** Plant, Capacity per day, Material Running")
-            st.markdown("- **Optional:** Expected Run Days, Shutdown Start/End")
-            st.markdown("- **Common errors:** Date format, invalid plant name")
-        with rcol2:
-            st.markdown("### 📦 Inventory Sheet")
-            st.markdown("- **Required:** Grade Name, Opening Inventory, Min/Max Inventory")
-            st.markdown("- **Optional:** Min/Max Run Days, Force Start Date")
-            st.markdown("- **Common errors:** Non-numeric inventory, mis-typed grade")
-        with rcol3:
-            st.markdown("### 📈 Demand Sheet")
-            st.markdown("- **Required:** Date column (daily), Grade demand columns")
-            st.markdown("- **Optional:** Extra demand notes")
-            st.markdown("- **Common errors:** Date column missing or wrong format")
-        with rcol4:
-            st.markdown("### 🔀 Transition Sheets")
-            st.markdown("- **Required:** Matrix with Yes/No per grade pair")
-            st.markdown("- **Optional:** per-plant matrices")
-            st.markdown("- **Common errors:** Mixed values (Y/N vs Yes/No), missing headers")
-
-    # Close scoped wrapper
-    st.markdown('</div>', unsafe_allow_html=True)
-
-
-# ========== OTHER STAGES (unchanged) ==========
-# We keep the rest of the app logic and rendering exactly as the original file.
-# For brevity we call the original functions defined below (same as before).
-# The rest of functions (render_preview_stage, render_optimization_stage, render_results_stage)
-# are unchanged from the original file and follow after this point.
+    with st.expander("📄 Variable and Constraint Details", expanded=True):
+        col1, col2, col3, col4 = st.columns(4)
+    
+        with col1:
+            st.markdown("""
+            ### **Plant Sheet**
+            - **Plant**: Plant name  
+            - **Capacity per day**: Max production per day  
+            - **Material Running**: Current grade running  
+            - **Expected Run Days**: Minimum run days before changeover  
+            - **Shutdown Start/End Date**: Planned downtime  
+            - **Pre-Shutdown Grade / Restart Grade**: Grade before and after shutdown  
+            """)
+    
+        with col2:
+            st.markdown("""
+            ### **Inventory Sheet**
+            - **Grade Name**: Product grade  
+            - **Opening Inventory**: Current stock  
+            - **Min. Closing Inventory**: Minimum stock at horizon end  
+            - **Min./Max Inventory**: Safety stock limits  
+            - **Min./Max Run Days**: Consecutive run constraints  
+            - **Force Start Date**: Mandatory start date for a grade  
+            - **Lines**: Plants where grade can run  
+            - **Rerun Allowed**: Yes/No for repeating grade  
+            """)
+    
+        with col3:
+            st.markdown("""
+            ### **Demand Sheet**
+            - **Date**: Planning horizon  
+            - **Grade Columns**: Daily demand quantity for each grade  
+            """)
+    
+        with col4:
+            st.markdown("""
+            ### **Transition Sheets**
+            - Allowed grade changes per plant from grade in Row to grade in Column (**Yes/No**)   
+            """)
 
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
@@ -673,177 +571,4 @@ def render_results_stage():
             if not schedule_df.empty:
                 def style_grade_column(val):
                     if val in grade_colors:
-                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
-                    return ''
-
-                try:
-                    styled_df = schedule_df.style.applymap(
-                        lambda v: style_grade_column(v), subset=['Grade']
-                    )
-                    st.dataframe(styled_df, use_container_width=True)
-                except Exception:
-                    st.dataframe(schedule_df, use_container_width=True)
-
-            render_section_divider()
-
-    # --- Inventory Analysis tab ---
-    with tab2:
-        st.markdown("### 📦 Inventory Analysis")
-
-        for grade in sorted(data.get('grades', [])):
-            st.markdown(f"#### {grade}")
-
-            allowed_lines = data.get('allowed_lines', {})
-            try:
-                fig = create_inventory_chart(
-                    solution,
-                    grade,
-                    data.get('dates', []),
-                    data.get('min_inventory', {}).get(grade),
-                    data.get('max_inventory', {}).get(grade),
-                    allowed_lines,
-                    data.get('shutdown_periods', {}),
-                    grade_colors,
-                    data.get('initial_inventory', {}).get(grade, 0),
-                    data.get('buffer_days', 0)
-                )
-            except Exception as e:
-                fig = None
-                st.error(f"Failed to build inventory chart for {grade}: {e}")
-
-            if fig is None:
-                st.info(f"No inventory chart available for {grade}.")
-            else:
-                st.plotly_chart(fig, use_container_width=True)
-
-            render_section_divider()
-            
-    # --- Summary tab ---
-    with tab3:
-        col_summary1, col_summary2, col_summary3 = st.columns([2, 1, 1])
-        
-        with col_summary1:
-            st.markdown("### 📊 Production Summary")
-            
-            try:
-                summary_df = create_production_summary(
-                    solution,
-                    solution_data.get('production_vars', {}),
-                    solution_data.get('solver'),
-                    data.get('grades', []),
-                    data.get('lines', []),
-                    data.get('num_days', 0),
-                    buffer_days=data.get('buffer_days', 0)
-                )
-            except Exception as e:
-                summary_df = pd.DataFrame()
-                st.error(f"Failed to create production summary: {e}")
-            
-            if not summary_df.empty:
-                def style_summary_grade(val):
-                    if val in grade_colors and val != 'Total':
-                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
-                    if val == 'Total':
-                        return 'background-color: #909399; color: white; font-weight: bold; text-align: center;'
-                    return ''
-                
-                try:
-                    styled_summary = summary_df.style.applymap(
-                        lambda v: style_summary_grade(v), subset=['Grade']
-                    )
-                    st.dataframe(styled_summary, use_container_width=True)
-                except Exception:
-                    st.dataframe(summary_df, use_container_width=True)
-            else:
-                st.info("No production summary available.")
-
-        with col_summary2:
-            st.markdown("### 🔄 Transitions by Line")
-            try:
-                transitions = solution.get('transitions', {}).get('per_line', {}) if isinstance(solution, dict) else {}
-                transitions_data = [{'Line': l, 'Transitions': c} for l, c in transitions.items()]
-                transitions_df = pd.DataFrame(transitions_data)
-                st.dataframe(transitions_df, use_container_width=True)
-            except Exception as e:
-                st.error(f"Failed to render transitions table: {e}")
-
-        # Add stockout summary table below
-        with col_summary3:
-            st.markdown("### ⚠️ Stockout Summary")
-            try:
-                stockout_df = create_stockout_details_table(
-                    solution,
-                    data.get('grades', []),
-                    data.get('dates', []),
-                    buffer_days=data.get('buffer_days', 0)
-                )
-            except Exception as e:
-                stockout_df = pd.DataFrame()
-                st.error(f"Failed to create stockout details table: {e}")
-            
-            if not stockout_df.empty:
-                try:
-                    styled_stockout = stockout_df.style.applymap(
-                        highlight_stockout, subset=['Stockout Quantity (MT)']
-                    )
-                    st.dataframe(styled_stockout, use_container_width=True, height=400)
-                except Exception:
-                    st.dataframe(stockout_df, use_container_width=True, height=400)
-               
-            else:
-                st.success("✅ No stockouts occurred during the demand period!")
-                
-                # Show total stockout from solution if available (should be 0)
-                total_stockouts_from_solution = 0
-                try:
-                    for g in data.get('grades', []):
-                        total_stockouts_from_solution += sum(solution.get('stockout', {}).get(g, {}).values())
-                except:
-                    pass
-                
-                if total_stockouts_from_solution == 0:
-                    st.info("All demand was satisfied with production and inventory.")
-                else:
-                    st.warning(f"Note: Total stockout reported in solution: {total_stockouts_from_solution:,.0f} MT")
-
-    render_section_divider()
-
-    # Navigation - Enhanced button layout
-    col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
-    
-    with col_nav1:
-        if st.button("← Back to Configuration", use_container_width=True):
-            st.session_state[SS_STAGE] = STAGE_PREVIEW
-            st.rerun()
-
-    with col_nav3:
-        if st.button("🔄 New Optimization", use_container_width=True, type="primary"):
-            # Reset state but keep theme
-            theme_val = st.session_state.get(SS_THEME, "light")
-            st.session_state.clear()
-            st.session_state[SS_THEME] = theme_val
-            st.session_state[SS_STAGE] = STAGE_UPLOAD
-            st.rerun()
-
-
-# ========== MAIN APP ==========
-def main():
-    """Main application controller"""
-    current_stage = st.session_state.get(SS_STAGE, STAGE_UPLOAD)
-
-    if current_stage == STAGE_UPLOAD:
-        render_upload_stage()
-    elif current_stage == STAGE_PREVIEW:
-        render_preview_stage()
-    elif current_stage == STAGE_OPTIMIZING:
-        render_optimization_stage()
-    elif current_stage == STAGE_RESULTS:
-        render_results_stage()
-    else:
-        render_alert("Unknown application stage. Resetting to start.", "warning")
-        st.session_state[SS_STAGE] = STAGE_UPLOAD
-        st.rerun()
-
-
-if __name__ == "__main__":
-    main()
+                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: c
