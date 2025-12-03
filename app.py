@@ -61,14 +61,10 @@ def render_upload_stage():
     """Stage 0: File upload with three enhanced colored cards in columns"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     
-    # Render progress dots at the top
-    render_progress_dots(current_stage=0, total_stages=5, 
-                         labels=["Upload", "Validate", "Configure", "Optimize", "Results"])
-    
-    # Render the main stage progress
+    # Render the main 4-stage progress (ORIGINAL FUNCTIONALITY)
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
     
-    # Add key information box
+    # Add key information box (NEW ENHANCEMENT)
     render_key_info_box()
 
     col1, col2, col3 = st.columns(3)
@@ -78,7 +74,7 @@ def render_upload_stage():
         st.markdown('<div class="upload-card card-quickstart"><h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
         st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
         
-        # Use enhanced step visualization
+        # Use enhanced step visualization (NEW ENHANCEMENT)
         steps = [
             "<b>Download Template</b> → Get the Excel structure",
             "<b>Fill Data</b> → Complete Plant, Inventory, Demand, and Transition sheets",
@@ -102,7 +98,7 @@ def render_upload_stage():
             key="file_uploader"
         )
 
-        # Visual drop zone when no file is uploaded
+        # Visual drop zone when no file is uploaded (NEW ENHANCEMENT)
         if not uploaded_file:
             st.markdown("""
             <div class="drop-zone">
@@ -113,7 +109,7 @@ def render_upload_stage():
             """, unsafe_allow_html=True)
         
         if uploaded_file is not None:
-            # Add upload success animation
+            # Add upload success animation (NEW ENHANCEMENT)
             st.markdown('<div class="upload-success">', unsafe_allow_html=True)
             render_alert("File uploaded successfully! Processing...", "success")
             st.markdown('</div>', unsafe_allow_html=True)
