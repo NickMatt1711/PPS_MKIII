@@ -62,7 +62,7 @@ def render_upload_stage():
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    col1, col2 = st.columns([1, 2])
+    col1, col2, col3 = st.columns([1, 1, 1])
 
     with col1:
         # Upload Card
@@ -114,6 +114,7 @@ def render_upload_stage():
         """)
         close_card()
 
+    with col3:
         # Variables & Constraints Card
         render_card("Variables & Constraints Explained", icon="🔍")
         with st.expander("View Details"):
