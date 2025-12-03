@@ -58,15 +58,15 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: File upload with Quick Start and Template Details"""
+    """Stage 0: File upload with card layout"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    # Two-column layout: narrow for upload/download, wide for guide/details
     col1, col2 = st.columns([1, 2])
 
     with col1:
-        st.subheader("📤 Upload Production Data")
+        # Upload Card
+        render_card("Upload Production Data", icon="📤")
         uploaded_file = st.file_uploader(
             "Choose an Excel file",
             type=ALLOWED_EXTENSIONS,
@@ -96,19 +96,15 @@ def render_upload_stage():
                         render_alert(warn, "warning")
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
+        close_card()
 
-        st.markdown("---")
-        st.subheader("📥 Download Template")
-        st.download_button(
-            label="Download Template",
-            data=open("polymer_production_template.xlsx", "rb").read(),
-            file_name="polymer_production_template.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            help="Download the standard template to prepare your data."
-        )
+        # Download Card
+        render_download_template_button()
+        close_card()
 
     with col2:
-        st.subheader("✅ Quick Start Guide")
+        # Quick Start Guide Card
+        render_card("Quick Start Guide", icon="✅")
         st.markdown("""
         1️⃣ **Download Template** → Get the Excel structure  
         2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets  
@@ -116,8 +112,11 @@ def render_upload_stage():
         4️⃣ **Preview & Configure** → Check sheets and set optimization parameters  
         5️⃣ **Run Optimization** → Generate schedule and view results  
         """)
+        close_card()
 
-        with st.expander("🔍 Variables & Constraints Explained"):
+        # Variables & Constraints Card
+        render_card("Variables & Constraints Explained", icon="🔍")
+        with st.expander("View Details"):
             st.markdown("""
             ### **Plant Sheet**
             - **Plant**: Plant name  
@@ -150,12 +149,13 @@ def render_upload_stage():
             - Shutdown constraints (Pre-/Restart grades must be valid)  
             - Solver Time Limit  
             """)
+        close_card()
 
     render_section_divider()
 
     # Navigation
     col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
-    with col_nav3:
+    with col_nav1:
         if st.button("Next: Preview Data →", disabled=(st.session_state[SS_UPLOADED_FILE] is None), use_container_width=True):
             if st.session_state[SS_EXCEL_DATA] is not None:
                 st.session_state[SS_STAGE] = STAGE_PREVIEW
