@@ -57,6 +57,8 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 
 # ========== STAGE 0: UPLOAD ==========
+
+# ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
     """Stage 0: File upload with three colored cards in columns"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
@@ -64,101 +66,25 @@ def render_upload_stage():
 
     col1, col2, col3 = st.columns(3)
 
-    # Column 1: Quick Start Guide (Blue card) - ALL HTML
+    # Column 1: Quick Start Guide
     with col1:
-        st.markdown(
-            """
-            <div style="
-                background: linear-gradient(135deg, #F0F8FF, #E6F0FA);
-                border-left: 4px solid #0A74DA;
-                border-radius: 12px;
-                padding: 1.5rem;
-                margin-bottom: 1.5rem;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                min-height: 380px;
-            ">
-                <h3 style="margin-top: 0; color: #0A2E5C;">🚀 Quick Start Guide</h3>
-                <div style="color: #495057; line-height: 1.6;">
-                    1️⃣ <strong>Download Template</strong> → Get the Excel structure<br><br>
-                    2️⃣ <strong>Fill Data</strong> → Complete Plant, Inventory, Demand, and Transition sheets<br><br>
-                    3️⃣ <strong>Upload File</strong> → Validate your data<br><br>
-                    4️⃣ <strong>Preview & Configure</strong> → Check sheets and set optimization parameters<br><br>
-                    5️⃣ <strong>Run Optimization</strong> → Generate schedule and view results
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="upload-card card-quickstart"><h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        st.markdown("""
+        1️⃣ **Download Template** → Get the Excel structure  
+        2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets  
+        3️⃣ **Upload File** → Validate your data  
+        4️⃣ **Preview & Configure** → Check sheets and set optimization parameters  
+        5️⃣ **Run Optimization** → Generate schedule and view results  
+        """)
+        st.markdown('</div></div>', unsafe_allow_html=True)
 
-    # Column 2: Uploader (Green card) - Use Streamlit's native file uploader but style it
+    # Column 2: Uploader
     with col2:
-        # Create a custom file uploader using HTML form
-        st.markdown(
-            """
-            <div style="
-                background: linear-gradient(135deg, #F0FFF4, #DFF6E3);
-                border-left: 4px solid #28A745;
-                border-radius: 12px;
-                padding: 1.5rem;
-                margin-bottom: 1.5rem;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                min-height: 380px;
-            ">
-                <h3 style="margin-top: 0; color: #155724;">📤 Upload Production Data</h3>
-            """,
-            unsafe_allow_html=True
-        )
-        
-        # Put the file uploader in a styled container
-        uploaded_file = st.file_uploader(
-            "Choose an Excel file", 
-            type=ALLOWED_EXTENSIONS, 
-            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
-            label_visibility="collapsed"  # Hide the default label
-        )
-        
-        # Show drop zone when no file
-        if uploaded_file is None:
-            st.markdown(
-                """
-                <div style="
-                    text-align: center; 
-                    padding: 2rem; 
-                    margin: 1rem 0; 
-                    border: 2px dashed #28A745; 
-                    border-radius: 8px; 
-                    background: rgba(40, 167, 69, 0.05);
-                    color: #155724;
-                ">
-                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📁</div>
-                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Drag & Drop File Here</div>
-                    <div style="font-size: 0.9rem; opacity: 0.8;">Limit 200MB • XLSX Format</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        else:
-            # Show uploaded file info
-            st.markdown(
-                f"""
-                <div style="
-                    background: rgba(40, 167, 69, 0.1);
-                    border: 1px solid #28A745;
-                    border-radius: 8px;
-                    padding: 1rem;
-                    margin: 1rem 0;
-                    color: #155724;
-                ">
-                    <div style="font-weight: 600;">✅ File Uploaded Successfully!</div>
-                    <div style="font-size: 0.9rem; margin-top: 0.25rem;">{uploaded_file.name}</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-        # Process the uploaded file (outside the card)
+        st.markdown('<div class="upload-card card-uploader"><h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        uploaded_file = st.file_uploader("Choose an Excel file", type=ALLOWED_EXTENSIONS, help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets")
+
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
             render_alert("File uploaded successfully! Processing...", "success")
@@ -182,137 +108,21 @@ def render_upload_stage():
                         render_alert(warn, "warning")
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
+        st.markdown('</div></div>', unsafe_allow_html=True)
 
-    # Column 3: Download Template (Yellow card) - Use HTML button
+    # Column 3: Download Template & Details
     with col3:
-        st.markdown(
-            """
-            <div style="
-                background: linear-gradient(135deg, #FFFCF0, #FFF3CD);
-                border-left: 4px solid #FFC107;
-                border-radius: 12px;
-                padding: 1.5rem;
-                margin-bottom: 1.5rem;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                min-height: 380px;
-            ">
-                <h3 style="margin-top: 0; color: #856404;">📥 Download Template</h3>
-                <div style="margin: 1.5rem 0;">
-            """,
-            unsafe_allow_html=True
-        )
-        
-        # Download button using HTML/JS
-        try:
-            template_path = Path(__file__).parent / "polymer_production_template.xlsx"
-            if template_path.exists():
-                with open(template_path, "rb") as f:
-                    template_data = f.read()
-                import base64
-                b64 = base64.b64encode(template_data).decode()
-                
-                st.markdown(
-                    f"""
-                    <a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" 
-                       download="polymer_production_template.xlsx"
-                       style="
-                           display: inline-block;
-                           width: 100%;
-                           background: linear-gradient(135deg, #0A74DA, #4BA3F4);
-                           color: white;
-                           padding: 0.75rem 1.5rem;
-                           text-align: center;
-                           border-radius: 16px;
-                           text-decoration: none;
-                           font-weight: 500;
-                           font-size: 0.875rem;
-                           box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-                           transition: all 0.2s ease;
-                           border: none;
-                           cursor: pointer;
-                       "
-                       onmouseover="this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'; this.style.transform='translateY(-1px)'"
-                       onmouseout="this.style.boxShadow='0 2px 4px rgba(0,0,0,0.15)'; this.style.transform='translateY(0)'">
-                       📥 Download Template
-                    </a>
-                    """,
-                    unsafe_allow_html=True
-                )
-            else:
-                st.markdown(
-                    """
-                    <div style="
-                        background: rgba(220, 53, 69, 0.1);
-                        border: 1px solid #DC3545;
-                        border-radius: 8px;
-                        padding: 1rem;
-                        color: #721c24;
-                        text-align: center;
-                    ">
-                        Template file not found
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-        except Exception as e:
-            st.markdown(
-                f"""
-                <div style="
-                    background: rgba(220, 53, 69, 0.1);
-                    border: 1px solid #DC3545;
-                    border-radius: 8px;
-                    padding: 1rem;
-                    color: #721c24;
-                    text-align: center;
-                ">
-                    Error: {str(e)}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        
-        # Template details
-        st.markdown("""
-            </div>
-            <hr style="border: none; border-top: 1px solid rgba(0,0,0,0.1); margin: 1rem 0;">
-            <div style="color: #856404;">
-                <strong>Template includes:</strong><br>
-                • Plant configuration<br>
-                • Inventory management<br>
-                • Demand forecasting<br>
-                • Transition matrices<br>
-                • Pre-filled examples
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
-        
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown('<div class="upload-card card-download"><h2>📥 Download Template & Details</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        render_download_template_button()
+        st.markdown('</div></div>', unsafe_allow_html=True)
 
-    # Required sheets info
-    st.markdown("---")
-    st.markdown("### 📋 Required Excel Sheets")
-    
-    cols = st.columns(4)
-    with cols[0]:
-        st.markdown("**Plant Sheet**")
-        st.markdown("Plant configuration, capacities, shutdown schedules")
-    with cols[1]:
-        st.markdown("**Inventory Sheet**")
-        st.markdown("Opening stock, safety stock, run constraints")
-    with cols[2]:
-        st.markdown("**Demand Sheet**")
-        st.markdown("Daily demand for each product grade")
-    with cols[3]:
-        st.markdown("**Transition Sheet**")
-        st.markdown("Allowed grade changeovers between products")
-
-    # Variable and Constraint Details
     with st.expander("📄 Variable and Constraint Details", expanded=True):
-        tab1, tab2, tab3, tab4 = st.tabs(["Plant Sheet", "Inventory Sheet", "Demand Sheet", "Transition Sheets"])
-        
-        with tab1:
+        col1, col2, col3, col4 = st.columns(4)
+    
+        with col1:
             st.markdown("""
+            ### **Plant Sheet**
             - **Plant**: Plant name  
             - **Capacity per day**: Max production per day  
             - **Material Running**: Current grade running  
@@ -320,9 +130,10 @@ def render_upload_stage():
             - **Shutdown Start/End Date**: Planned downtime  
             - **Pre-Shutdown Grade / Restart Grade**: Grade before and after shutdown  
             """)
-        
-        with tab2:
+    
+        with col2:
             st.markdown("""
+            ### **Inventory Sheet**
             - **Grade Name**: Product grade  
             - **Opening Inventory**: Current stock  
             - **Min. Closing Inventory**: Minimum stock at horizon end  
@@ -332,18 +143,19 @@ def render_upload_stage():
             - **Lines**: Plants where grade can run  
             - **Rerun Allowed**: Yes/No for repeating grade  
             """)
-        
-        with tab3:
+    
+        with col3:
             st.markdown("""
+            ### **Demand Sheet**
             - **Date**: Planning horizon  
             - **Grade Columns**: Daily demand quantity for each grade  
             """)
-        
-        with tab4:
+    
+        with col4:
             st.markdown("""
+            ### **Transition Sheets**
             - Allowed grade changes per plant from grade in Row to grade in Column (**Yes/No**)   
             """)
-
 
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
@@ -759,177 +571,4 @@ def render_results_stage():
             if not schedule_df.empty:
                 def style_grade_column(val):
                     if val in grade_colors:
-                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
-                    return ''
-
-                try:
-                    styled_df = schedule_df.style.applymap(
-                        lambda v: style_grade_column(v), subset=['Grade']
-                    )
-                    st.dataframe(styled_df, use_container_width=True)
-                except Exception:
-                    st.dataframe(schedule_df, use_container_width=True)
-
-            render_section_divider()
-
-    # --- Inventory Analysis tab ---
-    with tab2:
-        st.markdown("### 📦 Inventory Analysis")
-
-        for grade in sorted(data.get('grades', [])):
-            st.markdown(f"#### {grade}")
-
-            allowed_lines = data.get('allowed_lines', {})
-            try:
-                fig = create_inventory_chart(
-                    solution,
-                    grade,
-                    data.get('dates', []),
-                    data.get('min_inventory', {}).get(grade),
-                    data.get('max_inventory', {}).get(grade),
-                    allowed_lines,
-                    data.get('shutdown_periods', {}),
-                    grade_colors,
-                    data.get('initial_inventory', {}).get(grade, 0),
-                    data.get('buffer_days', 0)
-                )
-            except Exception as e:
-                fig = None
-                st.error(f"Failed to build inventory chart for {grade}: {e}")
-
-            if fig is None:
-                st.info(f"No inventory chart available for {grade}.")
-            else:
-                st.plotly_chart(fig, use_container_width=True)
-
-            render_section_divider()
-            
-    # --- Summary tab ---
-    with tab3:
-        col_summary1, col_summary2, col_summary3 = st.columns([2, 1, 1])
-        
-        with col_summary1:
-            st.markdown("### 📊 Production Summary")
-            
-            try:
-                summary_df = create_production_summary(
-                    solution,
-                    solution_data.get('production_vars', {}),
-                    solution_data.get('solver'),
-                    data.get('grades', []),
-                    data.get('lines', []),
-                    data.get('num_days', 0),
-                    buffer_days=data.get('buffer_days', 0)
-                )
-            except Exception as e:
-                summary_df = pd.DataFrame()
-                st.error(f"Failed to create production summary: {e}")
-            
-            if not summary_df.empty:
-                def style_summary_grade(val):
-                    if val in grade_colors and val != 'Total':
-                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
-                    if val == 'Total':
-                        return 'background-color: #909399; color: white; font-weight: bold; text-align: center;'
-                    return ''
-                
-                try:
-                    styled_summary = summary_df.style.applymap(
-                        lambda v: style_summary_grade(v), subset=['Grade']
-                    )
-                    st.dataframe(styled_summary, use_container_width=True)
-                except Exception:
-                    st.dataframe(summary_df, use_container_width=True)
-            else:
-                st.info("No production summary available.")
-
-        with col_summary2:
-            st.markdown("### 🔄 Transitions by Line")
-            try:
-                transitions = solution.get('transitions', {}).get('per_line', {}) if isinstance(solution, dict) else {}
-                transitions_data = [{'Line': l, 'Transitions': c} for l, c in transitions.items()]
-                transitions_df = pd.DataFrame(transitions_data)
-                st.dataframe(transitions_df, use_container_width=True)
-            except Exception as e:
-                st.error(f"Failed to render transitions table: {e}")
-
-        # Add stockout summary table below
-        with col_summary3:
-            st.markdown("### ⚠️ Stockout Summary")
-            try:
-                stockout_df = create_stockout_details_table(
-                    solution,
-                    data.get('grades', []),
-                    data.get('dates', []),
-                    buffer_days=data.get('buffer_days', 0)
-                )
-            except Exception as e:
-                stockout_df = pd.DataFrame()
-                st.error(f"Failed to create stockout details table: {e}")
-            
-            if not stockout_df.empty:
-                try:
-                    styled_stockout = stockout_df.style.applymap(
-                        highlight_stockout, subset=['Stockout Quantity (MT)']
-                    )
-                    st.dataframe(styled_stockout, use_container_width=True, height=400)
-                except Exception:
-                    st.dataframe(stockout_df, use_container_width=True, height=400)
-               
-            else:
-                st.success("✅ No stockouts occurred during the demand period!")
-                
-                # Show total stockout from solution if available (should be 0)
-                total_stockouts_from_solution = 0
-                try:
-                    for g in data.get('grades', []):
-                        total_stockouts_from_solution += sum(solution.get('stockout', {}).get(g, {}).values())
-                except:
-                    pass
-                
-                if total_stockouts_from_solution == 0:
-                    st.info("All demand was satisfied with production and inventory.")
-                else:
-                    st.warning(f"Note: Total stockout reported in solution: {total_stockouts_from_solution:,.0f} MT")
-
-    render_section_divider()
-
-    # Navigation - Enhanced button layout
-    col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
-    
-    with col_nav1:
-        if st.button("← Back to Configuration", use_container_width=True):
-            st.session_state[SS_STAGE] = STAGE_PREVIEW
-            st.rerun()
-
-    with col_nav3:
-        if st.button("🔄 New Optimization", use_container_width=True, type="primary"):
-            # Reset state but keep theme
-            theme_val = st.session_state.get(SS_THEME, "light")
-            st.session_state.clear()
-            st.session_state[SS_THEME] = theme_val
-            st.session_state[SS_STAGE] = STAGE_UPLOAD
-            st.rerun()
-
-
-# ========== MAIN APP ==========
-def main():
-    """Main application controller"""
-    current_stage = st.session_state.get(SS_STAGE, STAGE_UPLOAD)
-
-    if current_stage == STAGE_UPLOAD:
-        render_upload_stage()
-    elif current_stage == STAGE_PREVIEW:
-        render_preview_stage()
-    elif current_stage == STAGE_OPTIMIZING:
-        render_optimization_stage()
-    elif current_stage == STAGE_RESULTS:
-        render_results_stage()
-    else:
-        render_alert("Unknown application stage. Resetting to start.", "warning")
-        st.session_state[SS_STAGE] = STAGE_UPLOAD
-        st.rerun()
-
-
-if __name__ == "__main__":
-    main()
+                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: c
