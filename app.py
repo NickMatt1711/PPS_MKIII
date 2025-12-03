@@ -60,99 +60,94 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: File upload with card layout"""
+    """Stage 0: File upload with three card sections"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    col1, col2 = st.columns([1, 2])
+    # Section 1: Quick Start Guide
+    st.markdown('<div class="card-section card-quickstart"><h2>✅ Quick Start Guide</h2>', unsafe_allow_html=True)
+    st.markdown('<div class="card-body">', unsafe_allow_html=True)
+    st.markdown("""
+    1️⃣ **Download Template** → Get the Excel structure  
+    2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets  
+    3️⃣ **Upload File** → Validate your data  
+    4️⃣ **Preview & Configure** → Check sheets and set optimization parameters  
+    5️⃣ **Run Optimization** → Generate schedule and view results  
+    """)
+    st.markdown('</div></div>', unsafe_allow_html=True)
 
-    with col1:
-        # Upload Card
-        render_card("Upload Production Data", icon="📤")
-        uploaded_file = st.file_uploader(
-            "Choose an Excel file",
-            type=ALLOWED_EXTENSIONS,
-            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
-        )
+    # Section 2: Uploader
+    st.markdown('<div class="card-section card-uploader"><h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
+    st.markdown('<div class="card-body">', unsafe_allow_html=True)
+    uploaded_file = st.file_uploader(
+        "Choose an Excel file",
+        type=ALLOWED_EXTENSIONS,
+        help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
+    )
 
-        if uploaded_file is not None:
-            st.session_state[SS_UPLOADED_FILE] = uploaded_file
-            render_alert("File uploaded successfully! Processing...", "success")
+    if uploaded_file is not None:
+        st.session_state[SS_UPLOADED_FILE] = uploaded_file
+        render_alert("File uploaded successfully! Processing...", "success")
 
-            try:
-                file_buffer = io.BytesIO(uploaded_file.read())
-                loader = ExcelDataLoader(file_buffer)
-                success, data, errors, warnings = loader.load_and_validate()
+        try:
+            file_buffer = io.BytesIO(uploaded_file.read())
+            loader = ExcelDataLoader(file_buffer)
+            success, data, errors, warnings = loader.load_and_validate()
 
-                if success:
-                    st.session_state[SS_EXCEL_DATA] = data
-                    render_alert("File validated successfully!", "success")
-                    for warn in warnings:
-                        render_alert(warn, "warning")
-                    st.session_state[SS_STAGE] = STAGE_PREVIEW
-                    st.rerun()
-                else:
-                    for err in errors:
-                        render_alert(err, "error")
-                    for warn in warnings:
-                        render_alert(warn, "warning")
-            except Exception as e:
-                render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
-        close_card()
+            if success:
+                st.session_state[SS_EXCEL_DATA] = data
+                render_alert("File validated successfully!", "success")
+                for warn in warnings:
+                    render_alert(warn, "warning")
+                st.session_state[SS_STAGE] = STAGE_PREVIEW
+                st.rerun()
+            else:
+                for err in errors:
+                    render_alert(err, "error")
+                for warn in warnings:
+                    render_alert(warn, "warning")
+        except Exception as e:
+            render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
+    st.markdown('</div></div>', unsafe_allow_html=True)
 
-        # Download Card
-        render_card("Download Template", icon="📥")
-        render_download_template_button()
-        close_card()
-
-    with col2:
-        # Quick Start Guide Card
-        render_card("Quick Start Guide", icon="✅")
+    # Section 3: Download Template + Details
+    st.markdown('<div class="card-section card-download"><h2>📥 Download Template & Details</h2>', unsafe_allow_html=True)
+    st.markdown('<div class="card-body">', unsafe_allow_html=True)
+    render_download_template_button()
+    with st.expander("🔍 Variables & Constraints Explained"):
         st.markdown("""
-        1️⃣ **Download Template** → Get the Excel structure  
-        2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets  
-        3️⃣ **Upload File** → Validate your data  
-        4️⃣ **Preview & Configure** → Check sheets and set optimization parameters  
-        5️⃣ **Run Optimization** → Generate schedule and view results  
+        ### **Plant Sheet**
+        - **Plant**: Plant name  
+        - **Capacity per day**: Max production per day  
+        - **Material Running**: Current grade running  
+        - **Expected Run Days**: Minimum run days before changeover  
+        - **Shutdown Start/End Date**: Planned downtime  
+        - **Pre-Shutdown Grade / Restart Grade**: Grade before and after shutdown  
+
+        ### **Inventory Sheet**
+        - **Grade Name**: Product grade  
+        - **Opening Inventory**: Current stock  
+        - **Min. Closing Inventory**: Minimum stock at horizon end  
+        - **Min./Max Inventory**: Safety stock limits  
+        - **Min./Max Run Days**: Consecutive run constraints  
+        - **Force Start Date**: Mandatory start date for a grade  
+        - **Lines**: Plants where grade can run  
+        - **Rerun Allowed**: Yes/No for repeating grade  
+
+        ### **Demand Sheet**
+        - **Date**: Planning horizon  
+        - **Grade Columns**: Daily demand quantity for each grade  
+
+        ### **Transition Sheets**
+        - Allowed grade changes per plant (**Yes/No**)  
+
+        ---
+        **Additional Constraints:**  
+        - Buffer Days, Stockout Penalty, Transition Penalty  
+        - Shutdown constraints (Pre-/Restart grades must be valid)  
+        - Solver Time Limit  
         """)
-        close_card()
-
-        # Variables & Constraints Card
-        render_card("Variables & Constraints Explained", icon="🔍")
-        with st.expander("View Details"):
-            st.markdown("""
-            ### **Plant Sheet**
-            - **Plant**: Plant name  
-            - **Capacity per day**: Max production per day  
-            - **Material Running**: Current grade running  
-            - **Expected Run Days**: Minimum run days before changeover  
-            - **Shutdown Start/End Date**: Planned downtime  
-            - **Pre-Shutdown Grade / Restart Grade**: Grade before and after shutdown  
-
-            ### **Inventory Sheet**
-            - **Grade Name**: Product grade  
-            - **Opening Inventory**: Current stock  
-            - **Min. Closing Inventory**: Minimum stock at horizon end  
-            - **Min./Max Inventory**: Safety stock limits  
-            - **Min./Max Run Days**: Consecutive run constraints  
-            - **Force Start Date**: Mandatory start date for a grade  
-            - **Lines**: Plants where grade can run  
-            - **Rerun Allowed**: Yes/No for repeating grade  
-
-            ### **Demand Sheet**
-            - **Date**: Planning horizon  
-            - **Grade Columns**: Daily demand quantity for each grade  
-
-            ### **Transition Sheets**
-            - Allowed grade changes per plant (**Yes/No**)  
-
-            ---
-            **Additional Constraints:**  
-            - Buffer Days, Stockout Penalty, Transition Penalty  
-            - Shutdown constraints (Pre-/Restart grades must be valid)  
-            - Solver Time Limit  
-            """)
-        close_card()
+    st.markdown('</div></div>', unsafe_allow_html=True)
 
     render_section_divider()
 
