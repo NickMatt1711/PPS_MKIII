@@ -60,13 +60,15 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: File upload with three card sections"""
+    """Stage 0: File upload with three colored cards in a row"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    # Section 1: Quick Start Guide
-    st.markdown('<div class="card-section card-quickstart"><h2>✅ Quick Start Guide</h2>', unsafe_allow_html=True)
-    st.markdown('<div class="card-body">', unsafe_allow_html=True)
+    st.markdown('<div class="upload-page-row">', unsafe_allow_html=True)
+
+    # Column 1: Quick Start Guide
+    st.markdown('<div class="upload-card card-quickstart"><h2>✅ Quick Start Guide</h2>', unsafe_allow_html=True)
+    st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
     st.markdown("""
     1️⃣ **Download Template** → Get the Excel structure  
     2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets  
@@ -76,9 +78,9 @@ def render_upload_stage():
     """)
     st.markdown('</div></div>', unsafe_allow_html=True)
 
-    # Section 2: Uploader
-    st.markdown('<div class="card-section card-uploader"><h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
-    st.markdown('<div class="card-body">', unsafe_allow_html=True)
+    # Column 2: Uploader
+    st.markdown('<div class="upload-card card-uploader"><h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
+    st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
     uploaded_file = st.file_uploader(
         "Choose an Excel file",
         type=ALLOWED_EXTENSIONS,
@@ -110,9 +112,9 @@ def render_upload_stage():
             render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
     st.markdown('</div></div>', unsafe_allow_html=True)
 
-    # Section 3: Download Template + Details
-    st.markdown('<div class="card-section card-download"><h2>📥 Download Template & Details</h2>', unsafe_allow_html=True)
-    st.markdown('<div class="card-body">', unsafe_allow_html=True)
+    # Column 3: Download Template & Details
+    st.markdown('<div class="upload-card card-download"><h2>📥 Download Template & Details</h2>', unsafe_allow_html=True)
+    st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
     render_download_template_button()
     with st.expander("🔍 Variables & Constraints Explained"):
         st.markdown("""
@@ -148,6 +150,8 @@ def render_upload_stage():
         - Solver Time Limit  
         """)
     st.markdown('</div></div>', unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
     render_section_divider()
 
