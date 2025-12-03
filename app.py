@@ -66,125 +66,119 @@ def render_upload_stage():
 
     # Column 1: Quick Start Guide (Blue card)
     with col1:
-        # Simple card without complex HTML
-        with st.container():
+        st.markdown(
+            """
+            <div class="upload-card card-blue">
+                <h2>🚀 Quick Start Guide</h2>
+                <div class="upload-card-content">
+                    1️⃣ **Download Template** → Get the Excel structure<br><br>
+                    2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets<br><br>
+                    3️⃣ **Upload File** → Validate your data<br><br>
+                    4️⃣ **Preview & Configure** → Check sheets and set optimization parameters<br><br>
+                    5️⃣ **Run Optimization** → Generate schedule and view results
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    # Column 2: Uploader (Green card)
+    with col2:
+        st.markdown(
+            """
+            <div class="upload-card card-green">
+                <h2>📤 Upload Production Data</h2>
+                <div class="upload-card-content">
+            """,
+            unsafe_allow_html=True
+        )
+        
+        uploaded_file = st.file_uploader(
+            "Choose an Excel file", 
+            type=ALLOWED_EXTENSIONS, 
+            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
+        )
+        
+        if uploaded_file is None:
             st.markdown(
                 """
-                <div class="upload-card card-blue">
-                    <h2>🚀 Quick Start Guide</h2>
-                    <div class="upload-card-content">
-                        1. **Download Template** → Get the Excel structure  
-                        2. **Fill Data** → Complete all required sheets  
-                        3. **Upload File** → Validate your data  
-                        4. **Preview & Configure** → Check and set parameters  
-                        5. **Run Optimization** → Generate schedule and results  
-                    </div>
+                <div class="drop-zone-hint">
+                    <div class="drop-zone-icon">📁</div>
+                    <div class="drop-zone-title">Drag & Drop File Here</div>
+                    <div class="drop-zone-subtitle">Limit 200MB • XLSX Format</div>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
+        
+        st.markdown("</div></div>", unsafe_allow_html=True)
+        
+        if uploaded_file is not None:
+            st.session_state[SS_UPLOADED_FILE] = uploaded_file
+            render_alert("File uploaded successfully! Processing...", "success")
 
-    # Column 2: Uploader (Green card)
-    with col2:
-        with st.container():
-            st.markdown(
-                """
-                <div class="upload-card card-green">
-                    <h2>📤 Upload Production Data</h2>
-                    <div class="upload-card-content">
-                """,
-                unsafe_allow_html=True
-            )
-            
-            uploaded_file = st.file_uploader(
-                "Choose an Excel file", 
-                type=ALLOWED_EXTENSIONS, 
-                help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
-            )
-            
-            if uploaded_file is None:
-                st.markdown(
-                    """
-                    <div style="text-align: center; padding: 1.5rem; margin: 1rem 0; border: 2px dashed #0A74DA; border-radius: 8px; background: rgba(10, 116, 218, 0.05);">
-                        <div style="font-size: 2rem;">📁</div>
-                        <div style="font-weight: 600; color: #0A74DA;">Drag & Drop File Here</div>
-                        <div style="color: #6c757d; font-size: 0.9rem;">Limit 200MB • XLSX Format</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-            
-            st.markdown("</div></div>", unsafe_allow_html=True)
-            
-            if uploaded_file is not None:
-                st.session_state[SS_UPLOADED_FILE] = uploaded_file
-                render_alert("File uploaded successfully! Processing...", "success")
+            try:
+                file_buffer = io.BytesIO(uploaded_file.read())
+                loader = ExcelDataLoader(file_buffer)
+                success, data, errors, warnings = loader.load_and_validate()
 
-                try:
-                    file_buffer = io.BytesIO(uploaded_file.read())
-                    loader = ExcelDataLoader(file_buffer)
-                    success, data, errors, warnings = loader.load_and_validate()
-
-                    if success:
-                        st.session_state[SS_EXCEL_DATA] = data
-                        render_alert("File validated successfully!", "success")
-                        for warn in warnings:
-                            render_alert(warn, "warning")
-                        st.session_state[SS_STAGE] = STAGE_PREVIEW
-                        st.rerun()
-                    else:
-                        for err in errors:
-                            render_alert(err, "error")
-                        for warn in warnings:
-                            render_alert(warn, "warning")
-                except Exception as e:
-                    render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
+                if success:
+                    st.session_state[SS_EXCEL_DATA] = data
+                    render_alert("File validated successfully!", "success")
+                    for warn in warnings:
+                        render_alert(warn, "warning")
+                    st.session_state[SS_STAGE] = STAGE_PREVIEW
+                    st.rerun()
+                else:
+                    for err in errors:
+                        render_alert(err, "error")
+                    for warn in warnings:
+                        render_alert(warn, "warning")
+            except Exception as e:
+                render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
 
     # Column 3: Download Template (Yellow card)
     with col3:
-        with st.container():
-            st.markdown(
-                """
-                <div class="upload-card card-yellow">
-                    <h2>📥 Download Template</h2>
-                    <div class="upload-card-content">
-                """,
-                unsafe_allow_html=True
-            )
-            
-            # Download button
-            render_download_template_button()
-            
-            st.markdown("---")
-            st.markdown("**Template includes:**")
-            st.markdown("""
-            - Plant configuration
-            - Inventory management  
-            - Demand forecasting
-            - Transition matrices
-            - Pre-filled examples
-            """)
-            
-            st.markdown("</div></div>", unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="upload-card card-yellow">
+                <h2>📥 Download Template</h2>
+                <div class="upload-card-content">
+            """,
+            unsafe_allow_html=True
+        )
+        
+        render_download_template_button()
+        
+        st.markdown("---")
+        st.markdown("**Template includes:**")
+        st.markdown("""
+        - Plant configuration
+        - Inventory management  
+        - Demand forecasting
+        - Transition matrices
+        - Pre-filled examples
+        """)
+        
+        st.markdown("</div></div>", unsafe_allow_html=True)
 
     # Required sheets info
-    with st.container():
-        st.markdown("---")
-        st.markdown("### 📋 Required Excel Sheets")
-        
-        cols = st.columns(4)
-        with cols[0]:
-            st.markdown("**Plant Sheet**")
-            st.markdown("Plant configuration, capacities, shutdown schedules")
-        with cols[1]:
-            st.markdown("**Inventory Sheet**")
-            st.markdown("Opening stock, safety stock, run constraints")
-        with cols[2]:
-            st.markdown("**Demand Sheet**")
-            st.markdown("Daily demand for each product grade")
-        with cols[3]:
-            st.markdown("**Transition Sheet**")
-            st.markdown("Allowed grade changeovers between products")
+    st.markdown("---")
+    st.markdown("### 📋 Required Excel Sheets")
+    
+    cols = st.columns(4)
+    with cols[0]:
+        st.markdown("**Plant Sheet**")
+        st.markdown("Plant configuration, capacities, shutdown schedules")
+    with cols[1]:
+        st.markdown("**Inventory Sheet**")
+        st.markdown("Opening stock, safety stock, run constraints")
+    with cols[2]:
+        st.markdown("**Demand Sheet**")
+        st.markdown("Daily demand for each product grade")
+    with cols[3]:
+        st.markdown("**Transition Sheet**")
+        st.markdown("Allowed grade changeovers between products")
 
     # Variable and Constraint Details
     with st.expander("📄 Variable and Constraint Details", expanded=True):
@@ -222,6 +216,7 @@ def render_upload_stage():
             st.markdown("""
             - Allowed grade changes per plant from grade in Row to grade in Column (**Yes/No**)   
             """)
+
 
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
