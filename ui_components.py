@@ -127,7 +127,7 @@ Header - Enhanced
   border-radius: var(--md-shape-corner-large);
   text-align: center;
   box-shadow: 0 4px 12px rgba(10, 116, 218, 0.25);
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .app-header h1 {
@@ -144,81 +144,6 @@ Header - Enhanced
 }
 
 /* =============================
-Upload Cards - Simple and Clean
-============================= */
-.upload-card {
-  background: var(--md-sys-color-surface);
-  border-radius: var(--md-shape-corner-medium);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
-  border-left: 4px solid;
-  min-height: 300px;
-  display: flex;
-  flex-direction: column;
-}
-
-.upload-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transform: translateY(-2px);
-}
-
-.upload-card h2 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: var(--md-sys-color-on-surface);
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.upload-card-content {
-  color: var(--md-sys-color-on-surface-variant);
-  flex-grow: 1;
-}
-
-.card-blue {
-  border-left-color: #0A74DA !important;
-  background: linear-gradient(135deg, #F0F8FF, #E6F0FA) !important;
-}
-
-.card-green {
-  border-left-color: #28A745 !important;
-  background: linear-gradient(135deg, #F0FFF4, #DFF6E3) !important;
-}
-
-.card-yellow {
-  border-left-color: #FFC107 !important;
-  background: linear-gradient(135deg, #FFFCF0, #FFF3CD) !important;
-}
-
-/* Drop zone styling */
-.drop-zone-hint {
-  text-align: center;
-  padding: 1.5rem;
-  margin: 1rem 0;
-  border: 2px dashed #0A74DA;
-  border-radius: 8px;
-  background: rgba(10, 116, 218, 0.05);
-}
-
-.drop-zone-icon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-.drop-zone-title {
-  font-weight: 600;
-  color: #0A74DA;
-  margin-bottom: 0.25rem;
-}
-
-.drop-zone-subtitle {
-  color: #6c757d;
-  font-size: 0.9rem;
-}
-
-/* =============================
 Cards - Enhanced
 ============================= */
 .card, .metric-card, .stTabs {
@@ -227,12 +152,11 @@ Cards - Enhanced
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: box-shadow 0.2s ease;
 }
 
 .card:hover {
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
 .card-header {
@@ -570,21 +494,6 @@ Section Divider
 }
 
 /* =============================
-Expander Styling
-============================= */
-.streamlit-expanderHeader {
-  background: var(--md-sys-color-surface-variant) !important;
-  border-radius: var(--md-shape-corner-small) !important;
-  font-weight: 600 !important;
-  padding: 1rem 1.25rem !important;
-  transition: all 0.2s ease !important;
-}
-
-.streamlit-expanderHeader:hover {
-  background: var(--md-sys-color-primary-container) !important;
-}
-
-/* =============================
 Responsive Design
 ============================= */
 @media (max-width: 768px) {
@@ -609,11 +518,6 @@ Responsive Design
   
   .app-header {
     padding: 1.25rem 1.5rem;
-  }
-  
-  .upload-card {
-    min-height: auto !important;
-    margin-bottom: 1.5rem;
   }
 }
 
@@ -759,6 +663,29 @@ def close_card():
 
 
 # -------------------------------
+# METRIC CARD (Enhanced with hover)
+# -------------------------------
+def render_metric_card(label: str, value: str, col, card_index: int = 0):
+    """Render a metric card with gradient background and hover effect."""
+    gradient_classes = [
+        'metric-card-blue',
+        'metric-card-green', 
+        'metric-card-yellow',
+        'metric-card-red'
+    ]
+    card_class = gradient_classes[card_index % 4]
+    
+    with col:
+        st.markdown(
+            f'''<div class="metric-card {card_class}">
+                <div class="metric-label">{label}</div>
+                <div class="metric-value">{value}</div>
+            </div>''',
+            unsafe_allow_html=True
+        )
+
+
+# -------------------------------
 # ALERT
 # -------------------------------
 def render_alert(message: str, alert_type: str = "info"):
@@ -812,29 +739,6 @@ def render_section_divider():
 
 
 # -------------------------------
-# METRIC CARD (Enhanced with hover)
-# -------------------------------
-def render_metric_card(label: str, value: str, col, card_index: int = 0):
-    """Render a metric card with gradient background and hover effect."""
-    gradient_classes = [
-        'metric-card-blue',
-        'metric-card-green', 
-        'metric-card-yellow',
-        'metric-card-red'
-    ]
-    card_class = gradient_classes[card_index % 4]
-    
-    with col:
-        st.markdown(
-            f'''<div class="metric-card {card_class}">
-                <div class="metric-label">{label}</div>
-                <div class="metric-value">{value}</div>
-            </div>''',
-            unsafe_allow_html=True
-        )
-
-
-# -------------------------------
 # DOWNLOAD TEMPLATE
 # -------------------------------
 def render_download_template_button():
@@ -849,8 +753,7 @@ def render_download_template_button():
                 data=template_data,
                 file_name="polymer_production_template.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True,
-                key="download_template_btn"
+                use_container_width=True
             )
         else:
             st.error("Template file not found")
