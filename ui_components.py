@@ -143,50 +143,6 @@ Header - Enhanced
   margin-top: 0.5rem;
 }
 
-/* Progress Dots Visualization */
-.app-progress {
-  display: flex;
-  justify-content: center;
-  gap: 2.5rem;
-  margin-bottom: 2rem;
-  padding: 1rem 0;
-}
-
-.progress-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #DEE2E6;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.progress-dot.active {
-  background: #0A74DA;
-  transform: scale(1.2);
-  box-shadow: 0 0 0 4px rgba(10, 116, 218, 0.2);
-}
-
-.progress-dot.completed {
-  background: #28A745;
-}
-
-.progress-dot-label {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  font-size: 0.75rem;
-  color: #6C757D;
-  font-weight: 500;
-}
-
-.progress-dot.active .progress-dot-label {
-  color: #0A74DA;
-  font-weight: 600;
-}
-
 /* =============================
 Cards - Enhanced
 ============================= */
@@ -802,10 +758,6 @@ Responsive Design
   .metric-value {
     font-size: 1.75rem !important;
   }
-  
-  .app-progress {
-    gap: 1.5rem;
-  }
 }
 
 /* =============================
@@ -878,32 +830,7 @@ def render_header(title: str, subtitle: str = ""):
 
 
 # -------------------------------
-# PROGRESS DOTS
-# -------------------------------
-def render_progress_dots(current_stage: int, total_stages: int = 5, labels: list = None):
-    """Render progress dots with labels."""
-    if labels is None:
-        labels = ["Upload", "Validate", "Configure", "Optimize", "Results"]
-    
-    html = '<div class="app-progress">'
-    for i in range(total_stages):
-        status = "inactive"
-        if i < current_stage:
-            status = "completed"
-        elif i == current_stage:
-            status = "active"
-        
-        html += f'''
-        <div class="progress-dot {status}">
-            <span class="progress-dot-label">{labels[i]}</span>
-        </div>
-        '''
-    html += '</div>'
-    st.markdown(html, unsafe_allow_html=True)
-
-
-# -------------------------------
-# STAGE PROGRESS (4 stages)
+# STAGE PROGRESS (4 stages) - ORIGINAL FUNCTION KEPT INTACT
 # -------------------------------
 def render_stage_progress(current_stage: int):
     """Render 4-stage progress indicator with proper numbering."""
