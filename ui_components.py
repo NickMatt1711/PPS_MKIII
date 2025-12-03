@@ -659,11 +659,13 @@ def render_stage_progress(current_stage: int):
 
 
 # ===============================
-# SECTION CARD (NEW)
+# SECTION CARD (Fixed: Using Context Manager)
 # ===============================
-def render_section_card(title: str, icon: str = "", color: str = "blue"):
-    """Open a section card. Put widgets inside `with st.container():` after calling this."""
+@contextmanager
+def section_card(title: str, icon: str = "", color: str = "blue"):
+    """Context-managed section card that properly wraps all content."""
     icon_html = f"{icon} " if icon else ""
+    
     st.markdown(
         f"""
         <div class="section-card section-card-{color}">
@@ -671,31 +673,16 @@ def render_section_card(title: str, icon: str = "", color: str = "blue"):
         """,
         unsafe_allow_html=True
     )
-
-def close_section_card():
-    """Close the section card opened by render_section_card()."""
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-# ===============================
-# CARD (legacy small cards)
-# ===============================
-def render_card(title: str, icon: str = ""):
-    icon_html = f"{icon} " if icon else ""
-    st.markdown(
-        f'<div class="card"><div class="card-header">{icon_html}{title}</div>',
-        unsafe_allow_html=True
-    )
-
-def close_card():
+    
+    yield  # content placed here will be inside the card
+    
     st.markdown("</div>", unsafe_allow_html=True)
 
 
 # -------------------------------
-# METRIC CARD (Enhanced with hover)
+# METRIC CARD
 # -------------------------------
 def render_metric_card(label: str, value: str, col, card_index: int = 0):
-    """Render a metric card with gradient background and hover effect."""
     gradient_classes = [
         'metric-card-blue',
         'metric-card-green', 
@@ -718,7 +705,6 @@ def render_metric_card(label: str, value: str, col, card_index: int = 0):
 # ALERT
 # -------------------------------
 def render_alert(message: str, alert_type: str = "info"):
-    """Render styled alert with icon."""
     icons = {
         "success": "✓",
         "info": "ℹ",
@@ -737,7 +723,6 @@ def render_alert(message: str, alert_type: str = "info"):
 # ERROR STATE
 # -------------------------------
 def render_error_state(error_type: str, message: str):
-    """Render enhanced error state with icon."""
     st.markdown(f"""
         <div class="error-container">
             <div class="error-icon">❌</div>
@@ -751,7 +736,6 @@ def render_error_state(error_type: str, message: str):
 # SKELETON LOADER
 # -------------------------------
 def render_skeleton_loader(rows: int = 3):
-    """Render skeleton loader for loading states."""
     skeleton_html = '<div class="skeleton-loader">'
     for _ in range(rows):
         skeleton_html += '<div class="skeleton-row"></div>'
@@ -763,7 +747,6 @@ def render_skeleton_loader(rows: int = 3):
 # SECTION DIVIDER
 # -------------------------------
 def render_section_divider():
-    """Render section divider line."""
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
 
@@ -771,7 +754,6 @@ def render_section_divider():
 # DOWNLOAD TEMPLATE
 # -------------------------------
 def render_download_template_button():
-    """Render download template button."""
     try:
         template_path = Path(__file__).parent / "polymer_production_template.xlsx"
         if template_path.exists():
