@@ -66,16 +66,17 @@ def render_upload_stage():
 
     # Column 1: Quick Start Guide (Blue card)
     with col1:
+        # Complete card HTML - everything inside
         st.markdown(
             """
             <div class="upload-card card-blue">
                 <h2>🚀 Quick Start Guide</h2>
                 <div class="upload-card-content">
-                    1️⃣ **Download Template** → Get the Excel structure<br><br>
-                    2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets<br><br>
-                    3️⃣ **Upload File** → Validate your data<br><br>
-                    4️⃣ **Preview & Configure** → Check sheets and set optimization parameters<br><br>
-                    5️⃣ **Run Optimization** → Generate schedule and view results
+                    1️⃣ <b>Download Template</b> → Get the Excel structure<br><br>
+                    2️⃣ <b>Fill Data</b> → Complete Plant, Inventory, Demand, and Transition sheets<br><br>
+                    3️⃣ <b>Upload File</b> → Validate your data<br><br>
+                    4️⃣ <b>Preview & Configure</b> → Check sheets and set optimization parameters<br><br>
+                    5️⃣ <b>Run Optimization</b> → Generate schedule and view results
                 </div>
             </div>
             """,
@@ -84,6 +85,7 @@ def render_upload_stage():
 
     # Column 2: Uploader (Green card)
     with col2:
+        # Start the card HTML
         st.markdown(
             """
             <div class="upload-card card-green">
@@ -93,26 +95,30 @@ def render_upload_stage():
             unsafe_allow_html=True
         )
         
+        # Uploader INSIDE the card
         uploaded_file = st.file_uploader(
             "Choose an Excel file", 
             type=ALLOWED_EXTENSIONS, 
             help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
         )
         
+        # Drop zone hint (HTML only)
         if uploaded_file is None:
             st.markdown(
                 """
-                <div class="drop-zone-hint">
-                    <div class="drop-zone-icon">📁</div>
-                    <div class="drop-zone-title">Drag & Drop File Here</div>
-                    <div class="drop-zone-subtitle">Limit 200MB • XLSX Format</div>
+                <div style="text-align: center; padding: 1.5rem; margin: 1rem 0; border: 2px dashed #0A74DA; border-radius: 8px; background: rgba(10, 116, 218, 0.05);">
+                    <div style="font-size: 2rem;">📁</div>
+                    <div style="font-weight: 600; color: #0A74DA;">Drag & Drop File Here</div>
+                    <div style="color: #6c757d; font-size: 0.9rem;">Limit 200MB • XLSX Format</div>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
         
+        # Close the card content and card divs
         st.markdown("</div></div>", unsafe_allow_html=True)
         
+        # File processing logic (outside card, but that's fine)
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
             render_alert("File uploaded successfully! Processing...", "success")
@@ -139,6 +145,7 @@ def render_upload_stage():
 
     # Column 3: Download Template (Yellow card)
     with col3:
+        # Start the card HTML
         st.markdown(
             """
             <div class="upload-card card-yellow">
@@ -148,8 +155,10 @@ def render_upload_stage():
             unsafe_allow_html=True
         )
         
+        # Download button INSIDE the card
         render_download_template_button()
         
+        # Template details INSIDE the card
         st.markdown("---")
         st.markdown("**Template includes:**")
         st.markdown("""
@@ -160,9 +169,10 @@ def render_upload_stage():
         - Pre-filled examples
         """)
         
+        # Close the card
         st.markdown("</div></div>", unsafe_allow_html=True)
 
-    # Required sheets info
+    # Rest of the content (outside cards but that's fine)
     st.markdown("---")
     st.markdown("### 📋 Required Excel Sheets")
     
@@ -180,7 +190,6 @@ def render_upload_stage():
         st.markdown("**Transition Sheet**")
         st.markdown("Allowed grade changeovers between products")
 
-    # Variable and Constraint Details
     with st.expander("📄 Variable and Constraint Details", expanded=True):
         tab1, tab2, tab3, tab4 = st.tabs(["Plant Sheet", "Inventory Sheet", "Demand Sheet", "Transition Sheets"])
         
