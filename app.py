@@ -58,20 +58,19 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: File upload"""
+    """Stage 0: File upload with Quick Start and Template Details"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    st.markdown("### 📤 Upload Production Data")
-    st.markdown("Upload an Excel file containing your production planning data.")
-
-    col1, col2 = st.columns([5, 1])
+    # Two-column layout: narrow for upload/download, wide for guide/details
+    col1, col2 = st.columns([1, 2])
 
     with col1:
+        st.subheader("📤 Upload Production Data")
         uploaded_file = st.file_uploader(
             "Choose an Excel file",
             type=ALLOWED_EXTENSIONS,
-            help="Upload an Excel file with Plant, Inventory, and Demand sheets"
+            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
         )
 
         if uploaded_file is not None:
@@ -86,42 +85,84 @@ def render_upload_stage():
                 if success:
                     st.session_state[SS_EXCEL_DATA] = data
                     render_alert("File validated successfully!", "success")
-                    
-                    # Show warnings if any
                     for warn in warnings:
                         render_alert(warn, "warning")
-                    
-                    # Auto-advance after short delay
                     st.session_state[SS_STAGE] = STAGE_PREVIEW
                     st.rerun()
                 else:
                     for err in errors:
                         render_alert(err, "error")
-                    # Show warnings too
                     for warn in warnings:
                         render_alert(warn, "warning")
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
 
+        st.markdown("---")
+        st.subheader("📥 Download Template")
+        st.download_button(
+            label="Download Template",
+            data=open("polymer_production_template.xlsx", "rb").read(),
+            file_name="polymer_production_template.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            help="Download the standard template to prepare your data."
+        )
+
     with col2:
-        render_download_template_button()
+        st.subheader("✅ Quick Start Guide")
+        st.markdown("""
+        1️⃣ **Download Template** → Get the Excel structure  
+        2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets  
+        3️⃣ **Upload File** → Validate your data  
+        4️⃣ **Preview & Configure** → Check sheets and set optimization parameters  
+        5️⃣ **Run Optimization** → Generate schedule and view results  
+        """)
+
+        with st.expander("🔍 Variables & Constraints Explained"):
+            st.markdown("""
+            ### **Plant Sheet**
+            - **Plant**: Plant name  
+            - **Capacity per day**: Max production per day  
+            - **Material Running**: Current grade running  
+            - **Expected Run Days**: Minimum run days before changeover  
+            - **Shutdown Start/End Date**: Planned downtime  
+            - **Pre-Shutdown Grade / Restart Grade**: Grade before and after shutdown  
+
+            ### **Inventory Sheet**
+            - **Grade Name**: Product grade  
+            - **Opening Inventory**: Current stock  
+            - **Min. Closing Inventory**: Minimum stock at horizon end  
+            - **Min./Max Inventory**: Safety stock limits  
+            - **Min./Max Run Days**: Consecutive run constraints  
+            - **Force Start Date**: Mandatory start date for a grade  
+            - **Lines**: Plants where grade can run  
+            - **Rerun Allowed**: Yes/No for repeating grade  
+
+            ### **Demand Sheet**
+            - **Date**: Planning horizon  
+            - **Grade Columns**: Daily demand quantity for each grade  
+
+            ### **Transition Sheets**
+            - Allowed grade changes per plant (**Yes/No**)  
+
+            ---
+            **Additional Constraints:**  
+            - Buffer Days, Stockout Penalty, Transition Penalty  
+            - Shutdown constraints (Pre-/Restart grades must be valid)  
+            - Solver Time Limit  
+            """)
 
     render_section_divider()
 
     # Navigation
     col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
     with col_nav3:
-        if st.button("Next: Preview Data →", 
-                    disabled=(st.session_state[SS_UPLOADED_FILE] is None),
-                    use_container_width=True):
+        if st.button("Next: Preview Data →", disabled=(st.session_state[SS_UPLOADED_FILE] is None), use_container_width=True):
             if st.session_state[SS_EXCEL_DATA] is not None:
                 st.session_state[SS_STAGE] = STAGE_PREVIEW
                 st.rerun()
             else:
                 render_alert("Please upload and validate a file first.", "warning")
 
-
-# ========== STAGE 1: PREVIEW & CONFIGURE ==========
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Review data and configure optimization")
