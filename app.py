@@ -58,52 +58,60 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: File upload with three enhanced colored cards in columns"""
+    """Stage 0: File upload with three colored cards in columns"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
     
-    # Key information using Streamlit callout
-    with st.container():
-        st.info("📋 **Required Excel Sheets**: Plant • Inventory • Demand • Transition", icon="📋")
-    
     col1, col2, col3 = st.columns(3)
 
-    # Column 1: Quick Start Guide - Clean and simple
+    # Card 1: Quick Start Guide (Blue)
     with col1:
-        st.markdown('<div class="upload-card card-quickstart"><h2>🚀 Quick Start Guide</h2></div>', unsafe_allow_html=True)
-        with st.container():
-            steps = [
-                ("1", "**Download Template**", "Get the Excel structure"),
-                ("2", "**Fill Data**", "Complete all required sheets"),
-                ("3", "**Upload File**", "Validate your data"),
-                ("4", "**Preview & Configure**", "Set optimization parameters"),
-                ("5", "**Run Optimization**", "Generate schedule and results")
-            ]
-            
-            for num, title, desc in steps:
-                with st.container():
-                    cols = st.columns([0.1, 0.9])
-                    with cols[0]:
-                        st.markdown(f"<div class='step-number'>{num}</div>", unsafe_allow_html=True)
-                    with cols[1]:
-                        st.markdown(f"**{title}**  \n{desc}")
+        st.markdown("""
+        <div class="metric-card metric-card-blue">
+            <div style="font-size: 1.5rem; margin-bottom: 1rem;">🚀 Quick Start Guide</div>
+        """, unsafe_allow_html=True)
+        
+        steps = [
+            "**1. Download Template** - Get the Excel structure",
+            "**2. Fill Data** - Complete all required sheets",
+            "**3. Upload File** - Validate your data",
+            "**4. Configure** - Set optimization parameters",
+            "**5. Optimize** - Generate schedule and results"
+        ]
+        
+        for step in steps:
+            st.markdown(step)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    # Column 2: Uploader - Streamlit native file uploader
+    # Card 2: Upload Production Data (Green)
     with col2:
-        st.markdown('<div class="upload-card card-uploader"><h2>📤 Upload Production Data</h2></div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="metric-card metric-card-green">
+            <div style="font-size: 1.5rem; margin-bottom: 1rem;">📤 Upload Production Data</div>
+        """, unsafe_allow_html=True)
         
         uploaded_file = st.file_uploader(
-            "Drag & drop or click to upload Excel file",
+            "Drag & drop or click to upload",
             type=ALLOWED_EXTENSIONS,
-            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
+            help="Excel file with Plant, Inventory, Demand, and Transition sheets",
             key="file_uploader"
         )
         
-        if uploaded_file:
+        if uploaded_file is None:
+            st.markdown("""
+            <div style="text-align: center; color: #6c757d; margin: 1rem 0;">
+                <div style="font-size: 3rem;">📁</div>
+                <div style="font-weight: bold; color: #0A74DA;">Drag & Drop File Here</div>
+                <div style="font-size: 0.9rem;">Limit 200MB • XLSX Format</div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
             st.success("✅ File uploaded successfully!")
+        
+        if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
             
-            # Process file (existing logic)
             try:
                 file_buffer = io.BytesIO(uploaded_file.read())
                 loader = ExcelDataLoader(file_buffer)
@@ -123,25 +131,21 @@ def render_upload_stage():
                         st.warning(warn)
             except Exception as e:
                 st.error(f"Upload Failed: {e}")
-        else:
-            st.markdown("""
-            <div style="text-align: center; padding: 2rem; color: #6c757d;">
-                <div style="font-size: 3rem;">📁</div>
-                <div style="font-weight: bold; color: #0A74DA;">Drag & Drop File Here</div>
-                <div>Limit 200MB • XLSX Format</div>
-            </div>
-            """, unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    # Column 3: Download Template
+    # Card 3: Download Template (Yellow)
     with col3:
-        st.markdown('<div class="upload-card card-download"><h2>📥 Download Template</h2></div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="metric-card metric-card-yellow">
+            <div style="font-size: 1.5rem; margin-bottom: 1rem;">📥 Download Template</div>
+        """, unsafe_allow_html=True)
         
         # Download button
         render_download_template_button()
         
-        # Simple template info
         st.markdown("---")
-        st.markdown("**Template Includes:**")
+        st.markdown("**Template includes:**")
         st.markdown("""
         - Plant configuration
         - Inventory management  
@@ -149,6 +153,26 @@ def render_upload_stage():
         - Transition matrices
         - Pre-filled examples
         """)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # Required sheets info below the cards
+    with st.container():
+        st.markdown("---")
+        st.markdown("### 📋 Required Excel Sheets")
+        
+        sheet_cols = st.columns(4)
+        sheets = [
+            ("**Plant Sheet**", "Plant configuration, capacities, shutdown schedules"),
+            ("**Inventory Sheet**", "Opening stock, safety stock, run constraints"),
+            ("**Demand Sheet**", "Daily demand for each product grade"),
+            ("**Transition Sheet**", "Allowed grade changeovers between products")
+        ]
+        
+        for idx, (title, desc) in enumerate(sheets):
+            with sheet_cols[idx]:
+                st.markdown(f"##### {title}")
+                st.markdown(desc)
 
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
