@@ -61,7 +61,7 @@ CORPORATE LIGHT THEME CSS - ENHANCED
 
 /* =============================
 BUTTONS - Enhanced Hierarchy
-============================ */
+============================= */
 /* Primary Button */
 .stButton>button[kind="primary"],
 .stButton>button:not([kind]),
@@ -119,7 +119,7 @@ button[data-testid="stDownloadButton"]:focus-visible {
 
 /* =============================
 Header - Enhanced
-============================ */
+============================= */
 .app-header {
   background: linear-gradient(135deg, #0A74DA, #4BA3F4);
   color: var(--md-sys-color-on-primary) !important;
@@ -144,44 +144,32 @@ Header - Enhanced
 }
 
 /* =============================
-SECTION CARDS (New Full-Section Blocks)
-============================ */
-.section-card {
-  border-radius: var(--md-shape-corner-large);
-  padding: 1.75rem 1.5rem;
+Cards - Enhanced
+============================= */
+.card, .metric-card, .stTabs {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1.5rem;
   margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-  transition: box-shadow 0.25s ease, transform 0.2s ease;
 }
 
-.section-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-}
-
-.section-card-title {
-  text-align: center;
+.card-header {
   font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 1.25rem;
-}
-
-/* Color variants */
-.section-card-blue {
-  background: linear-gradient(135deg, #E6F0FA, #C9DEF5);
-}
-
-.section-card-green {
-  background: linear-gradient(135deg, #DFF6E3, #BCECC7);
-}
-
-.section-card-yellow {
-  background: linear-gradient(135deg, #FFF3CD, #FFE5A3);
+  font-weight: 500;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 /* =============================
 Alerts - Enhanced
-============================ */
+============================= */
 div[data-testid="stAlert"] {
   border-radius: var(--md-shape-corner-medium);
   padding: 1rem 1.5rem;
@@ -215,7 +203,7 @@ div[data-testid="stAlert"] {
 
 /* =============================
 Stage Progress - Enhanced (4 stages)
-============================ */
+============================= */
 .stage-container {
   background: var(--md-sys-color-surface);
   border-radius: var(--md-shape-corner-medium);
@@ -299,7 +287,7 @@ Stage Progress - Enhanced (4 stages)
 
 /* =============================
 Tabs - Enhanced with dynamic colors
-============================ */
+============================= */
 .stTabs {
   background: var(--md-sys-color-surface);
   border-radius: var(--md-shape-corner-medium) !important;
@@ -358,7 +346,7 @@ Tabs - Enhanced with dynamic colors
 
 /* =============================
 Metric Cards - Enhanced with hover effects
-============================ */
+============================= */
 .metric-card {
   border-radius: var(--md-shape-corner-medium) !important;
   padding: 1.75rem 1.5rem !important;
@@ -416,7 +404,7 @@ Metric Cards - Enhanced with hover effects
 
 /* =============================
 Loading States - Enhanced
-============================ */
+============================= */
 .spinner {
   width: 48px;
   height: 48px;
@@ -472,7 +460,7 @@ Loading States - Enhanced
 
 /* =============================
 Error States - Enhanced
-============================ */
+============================= */
 .error-container {
   text-align: center;
   padding: 3rem 2rem;
@@ -498,7 +486,7 @@ Error States - Enhanced
 
 /* =============================
 Section Divider
-============================ */
+============================= */
 .section-divider {
   height: 1px;
   background: var(--md-sys-color-outline-variant);
@@ -507,7 +495,7 @@ Section Divider
 
 /* =============================
 Responsive Design
-============================ */
+============================= */
 @media (max-width: 768px) {
   .stage-row {
     flex-direction: column;
@@ -551,7 +539,7 @@ Responsive Design
 
 /* =============================
 Data Tables Enhancement
-============================ */
+============================= */
 .dataframe-container {
   border-radius: var(--md-shape-corner-medium);
   overflow: hidden;
@@ -560,7 +548,7 @@ Data Tables Enhancement
 
 /* =============================
 Accessibility Enhancements
-============================ */
+============================= */
 .skip-to-content {
   position: absolute;
   top: -40px;
@@ -658,31 +646,27 @@ def render_stage_progress(current_stage: int):
     st.markdown(f'<div class="stage-container">{html}</div>', unsafe_allow_html=True)
 
 
-# ===============================
-# SECTION CARD (Fixed: Using Context Manager)
-# ===============================
-@contextmanager
-def section_card(title: str, icon: str = "", color: str = "blue"):
-    """Context-managed section card that properly wraps all content."""
+# -------------------------------
+# CARD
+# -------------------------------
+def render_card(title: str, icon: str = ""):
+    """Render card container with optional icon."""
     icon_html = f"{icon} " if icon else ""
-    
     st.markdown(
-        f"""
-        <div class="section-card section-card-{color}">
-            <div class="section-card-title">{icon_html}{title}</div>
-        """,
+        f'<div class="card"><div class="card-header">{icon_html}{title}</div>',
         unsafe_allow_html=True
     )
-    
-    yield  # content placed here will be inside the card
-    
-    st.markdown("</div>", unsafe_allow_html=True)
+
+def close_card():
+    """Close card container."""
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 # -------------------------------
-# METRIC CARD
+# METRIC CARD (Enhanced with hover)
 # -------------------------------
 def render_metric_card(label: str, value: str, col, card_index: int = 0):
+    """Render a metric card with gradient background and hover effect."""
     gradient_classes = [
         'metric-card-blue',
         'metric-card-green', 
@@ -705,6 +689,7 @@ def render_metric_card(label: str, value: str, col, card_index: int = 0):
 # ALERT
 # -------------------------------
 def render_alert(message: str, alert_type: str = "info"):
+    """Render styled alert with icon."""
     icons = {
         "success": "✓",
         "info": "ℹ",
@@ -723,6 +708,7 @@ def render_alert(message: str, alert_type: str = "info"):
 # ERROR STATE
 # -------------------------------
 def render_error_state(error_type: str, message: str):
+    """Render enhanced error state with icon."""
     st.markdown(f"""
         <div class="error-container">
             <div class="error-icon">❌</div>
@@ -736,6 +722,7 @@ def render_error_state(error_type: str, message: str):
 # SKELETON LOADER
 # -------------------------------
 def render_skeleton_loader(rows: int = 3):
+    """Render skeleton loader for loading states."""
     skeleton_html = '<div class="skeleton-loader">'
     for _ in range(rows):
         skeleton_html += '<div class="skeleton-row"></div>'
@@ -747,6 +734,7 @@ def render_skeleton_loader(rows: int = 3):
 # SECTION DIVIDER
 # -------------------------------
 def render_section_divider():
+    """Render section divider line."""
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
 
@@ -754,6 +742,7 @@ def render_section_divider():
 # DOWNLOAD TEMPLATE
 # -------------------------------
 def render_download_template_button():
+    """Render download template button."""
     try:
         template_path = Path(__file__).parent / "polymer_production_template.xlsx"
         if template_path.exists():
