@@ -542,7 +542,7 @@ Data Tables Enhancement
 ============================= */
 .dataframe-container {
   border-radius: var(--md-shape-corner-medium);
-  height: auto;
+  height: auto !important;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
