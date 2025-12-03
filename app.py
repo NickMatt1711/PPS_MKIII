@@ -535,16 +535,6 @@ def render_results_stage():
 
         for line in data.get('lines', []):
             st.markdown(f"#### 🏭 {line}")
-            
-            # Display shutdown constraints info if applicable
-            constraints_info = []
-            if line in data.get('pre_shutdown_grades', {}):
-                constraints_info.append(f"**Pre-Shutdown Grade:** {data['pre_shutdown_grades'][line]}")
-            if line in data.get('restart_grades', {}):
-                constraints_info.append(f"**Restart Grade:** {data['restart_grades'][line]}")
-            
-            if constraints_info:
-                st.info(" | ".join(constraints_info))
 
             # Gantt chart
             try:
