@@ -613,7 +613,7 @@ def render_stage_progress(current_stage: int):
     """Render 4-stage progress indicator with proper numbering."""
     stages = [
         ("📤", "Upload"),
-        ("📄", "Configure"),
+        ("🛠️", "Configure"),
         ("⚡", "Optimizing"),
         ("📊", "Results")
     ]
