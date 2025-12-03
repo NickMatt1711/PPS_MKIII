@@ -127,7 +127,7 @@ Header - Enhanced
   border-radius: var(--md-shape-corner-large);
   text-align: center;
   box-shadow: 0 4px 12px rgba(10, 116, 218, 0.25);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .app-header h1 {
@@ -143,6 +143,50 @@ Header - Enhanced
   margin-top: 0.5rem;
 }
 
+/* Progress Dots Visualization */
+.app-progress {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  margin-bottom: 2rem;
+  padding: 1rem 0;
+}
+
+.progress-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #DEE2E6;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.progress-dot.active {
+  background: #0A74DA;
+  transform: scale(1.2);
+  box-shadow: 0 0 0 4px rgba(10, 116, 218, 0.2);
+}
+
+.progress-dot.completed {
+  background: #28A745;
+}
+
+.progress-dot-label {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: #6C757D;
+  font-weight: 500;
+}
+
+.progress-dot.active .progress-dot-label {
+  color: #0A74DA;
+  font-weight: 600;
+}
+
 /* =============================
 Cards - Enhanced
 ============================= */
@@ -152,11 +196,12 @@ Cards - Enhanced
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-  transition: box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  transform: translateY(-4px);
 }
 
 .card-header {
@@ -165,6 +210,203 @@ Cards - Enhanced
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   padding-bottom: 1rem;
   margin-bottom: 1rem;
+}
+
+/* Upload Cards - Enhanced */
+.upload-card {
+  min-height: 380px !important;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  border-left: 5px solid !important;
+}
+
+.upload-card-body {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-quickstart {
+  border-left-color: #28A745 !important;
+  background: linear-gradient(135deg, #FFFFFF 0%, #F8FFF9 100%) !important;
+}
+
+.card-quickstart:hover {
+  border-left-color: #1E7E34 !important;
+}
+
+.card-uploader {
+  border-left-color: #0A74DA !important;
+  background: linear-gradient(135deg, #FFFFFF 0%, #F0F8FF 100%) !important;
+}
+
+.card-uploader:hover {
+  border-left-color: #085BB5 !important;
+}
+
+.card-download {
+  border-left-color: #FFC107 !important;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFFCF0 100%) !important;
+}
+
+.card-download:hover {
+  border-left-color: #D39E00 !important;
+}
+
+/* Step Visualization */
+.step-container {
+  margin-top: 1.25rem;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.step:hover {
+  background-color: rgba(0,0,0,0.02);
+}
+
+.step-number {
+  background: var(--md-sys-color-primary);
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(10, 116, 218, 0.2);
+}
+
+.step-text {
+  line-height: 1.4;
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.9rem;
+}
+
+.step-text b {
+  color: var(--md-sys-color-primary);
+}
+
+/* Upload Zone Enhancement */
+.drop-zone {
+  border: 2px dashed #0A74DA;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  margin: 1rem 0;
+  background: #F8FBFF;
+  transition: all 0.3s ease;
+}
+
+.drop-zone:hover {
+  background: #E8F2FF;
+  border-color: #085BB5;
+}
+
+.drop-zone-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  color: #0A74DA;
+}
+
+.drop-zone-title {
+  font-weight: 600;
+  color: #0A74DA;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.drop-zone-subtitle {
+  color: #6C757D;
+  font-size: 0.875rem;
+}
+
+/* Upload Success Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.upload-success {
+  animation: fadeInUp 0.4s ease-out;
+  border: 2px solid #28A745;
+  background: #F0FFF4;
+  padding: 1rem;
+  border-radius: 12px;
+  margin: 1rem 0;
+}
+
+/* Key Information Box */
+.key-info-box {
+  background: linear-gradient(135deg, #E6F0FA, #BBD7F5);
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  border-left: 4px solid #0A74DA;
+}
+
+.key-info-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.key-info-icon {
+  font-size: 1.5rem;
+  color: #0A2E5C;
+}
+
+.key-info-text h4 {
+  margin: 0 0 0.5rem 0;
+  color: #0A2E5C;
+  font-size: 1.1rem;
+}
+
+.key-info-list {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: #495057;
+  flex-wrap: wrap;
+}
+
+.key-info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+}
+
+/* Column Separators */
+@media (min-width: 768px) {
+  .stColumn:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 10%;
+    height: 80%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, #E9ECEF, transparent);
+  }
 }
 
 /* =============================
@@ -494,6 +736,21 @@ Section Divider
 }
 
 /* =============================
+Expander Styling
+============================= */
+.streamlit-expanderHeader {
+  background: var(--md-sys-color-surface-variant) !important;
+  border-radius: var(--md-shape-corner-small) !important;
+  font-weight: 600 !important;
+  padding: 1rem 1.25rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.streamlit-expanderHeader:hover {
+  background: var(--md-sys-color-primary-container) !important;
+}
+
+/* =============================
 Responsive Design
 ============================= */
 @media (max-width: 768px) {
@@ -519,6 +776,16 @@ Responsive Design
   .app-header {
     padding: 1.25rem 1.5rem;
   }
+  
+  .upload-card {
+    min-height: auto !important;
+    margin-bottom: 1.5rem;
+  }
+  
+  .key-info-list {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -534,6 +801,10 @@ Responsive Design
   
   .metric-value {
     font-size: 1.75rem !important;
+  }
+  
+  .app-progress {
+    gap: 1.5rem;
   }
 }
 
@@ -607,6 +878,31 @@ def render_header(title: str, subtitle: str = ""):
 
 
 # -------------------------------
+# PROGRESS DOTS
+# -------------------------------
+def render_progress_dots(current_stage: int, total_stages: int = 5, labels: list = None):
+    """Render progress dots with labels."""
+    if labels is None:
+        labels = ["Upload", "Validate", "Configure", "Optimize", "Results"]
+    
+    html = '<div class="app-progress">'
+    for i in range(total_stages):
+        status = "inactive"
+        if i < current_stage:
+            status = "completed"
+        elif i == current_stage:
+            status = "active"
+        
+        html += f'''
+        <div class="progress-dot {status}">
+            <span class="progress-dot-label">{labels[i]}</span>
+        </div>
+        '''
+    html += '</div>'
+    st.markdown(html, unsafe_allow_html=True)
+
+
+# -------------------------------
 # STAGE PROGRESS (4 stages)
 # -------------------------------
 def render_stage_progress(current_stage: int):
@@ -660,6 +956,23 @@ def render_card(title: str, icon: str = ""):
 def close_card():
     """Close card container."""
     st.markdown('</div>', unsafe_allow_html=True)
+
+
+# -------------------------------
+# STEP VISUALIZATION
+# -------------------------------
+def render_step_visualization(steps: list):
+    """Render numbered step visualization."""
+    html = '<div class="step-container">'
+    for idx, step_text in enumerate(steps, 1):
+        html += f'''
+        <div class="step">
+            <span class="step-number">{idx}</span>
+            <span class="step-text">{step_text}</span>
+        </div>
+        '''
+    html += '</div>'
+    st.markdown(html, unsafe_allow_html=True)
 
 
 # -------------------------------
@@ -739,6 +1052,29 @@ def render_section_divider():
 
 
 # -------------------------------
+# KEY INFORMATION BOX
+# -------------------------------
+def render_key_info_box():
+    """Render key information box with required sheets."""
+    st.markdown("""
+    <div class="key-info-box">
+        <div class="key-info-content">
+            <div class="key-info-icon">📋</div>
+            <div class="key-info-text">
+                <h4>Required Excel Sheets</h4>
+                <div class="key-info-list">
+                    <span class="key-info-item">✅ <b>Plant</b></span>
+                    <span class="key-info-item">✅ <b>Inventory</b></span>
+                    <span class="key-info-item">✅ <b>Demand</b></span>
+                    <span class="key-info-item">✅ <b>Transition</b></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# -------------------------------
 # DOWNLOAD TEMPLATE
 # -------------------------------
 def render_download_template_button():
@@ -753,7 +1089,8 @@ def render_download_template_button():
                 data=template_data,
                 file_name="polymer_production_template.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True
+                use_container_width=True,
+                key="download_template_btn"
             )
         else:
             st.error("Template file not found")
