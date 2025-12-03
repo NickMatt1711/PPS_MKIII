@@ -58,15 +58,18 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: File upload with card layout"""
+    """Stage 0: File upload with full-section cards."""
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
     col1, col2, col3 = st.columns([1, 1, 1])
 
+    # ==========================
+    # Column 1
+    # ==========================
     with col1:
-        # Upload Card
-        render_card("Upload Production Data", icon="📤")
+        render_section_card("Upload Production Data", "📤", "blue")
+
         uploaded_file = st.file_uploader(
             "Choose an Excel file",
             type=ALLOWED_EXTENSIONS,
@@ -94,17 +97,22 @@ def render_upload_stage():
                         render_alert(err, "error")
                     for warn in warnings:
                         render_alert(warn, "warning")
+
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
-        close_card()
 
-        # Download Card
+        close_section_card()
+
+        # Template Download Section
+        render_section_card("Download Template", "📥", "yellow")
         render_download_template_button()
-        close_card()
+        close_section_card()
 
+    # ==========================
+    # Column 2
+    # ==========================
     with col2:
-        # Quick Start Guide Card
-        render_card("Quick Start Guide", icon="✅")
+        render_section_card("Quick Start Guide", "✅", "green")
         st.markdown("""
         1️⃣ **Download Template** → Get the Excel structure  
         2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets  
@@ -112,11 +120,13 @@ def render_upload_stage():
         4️⃣ **Preview & Configure** → Check sheets and set optimization parameters  
         5️⃣ **Run Optimization** → Generate schedule and view results  
         """)
-        close_card()
+        close_section_card()
 
+    # ==========================
+    # Column 3
+    # ==========================
     with col3:
-        # Variables & Constraints Card
-        render_card("Variables & Constraints Explained", icon="🔍")
+        render_section_card("Variables & Constraints Explained", "🔍", "blue")
         with st.expander("View Details"):
             st.markdown("""
             ### **Plant Sheet**
@@ -143,14 +153,8 @@ def render_upload_stage():
 
             ### **Transition Sheets**
             - Allowed grade changes per plant (**Yes/No**)  
-
-            ---
-            **Additional Constraints:**  
-            - Buffer Days, Stockout Penalty, Transition Penalty  
-            - Shutdown constraints (Pre-/Restart grades must be valid)  
-            - Solver Time Limit  
             """)
-        close_card()
+        close_section_card()
 
     render_section_divider()
 
@@ -158,11 +162,12 @@ def render_upload_stage():
     col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
     with col_nav1:
         if st.button("Next: Preview Data →", disabled=(st.session_state[SS_UPLOADED_FILE] is None), use_container_width=True):
-            if st.session_state[SS_EXCEL_DATA] is not None:
+            if st.session_state.get(SS_EXCEL_DATA):
                 st.session_state[SS_STAGE] = STAGE_PREVIEW
                 st.rerun()
             else:
                 render_alert("Please upload and validate a file first.", "warning")
+
 
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
