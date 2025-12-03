@@ -68,7 +68,7 @@ def render_upload_stage():
 
     # Column 1: Quick Start Guide
     with col1:
-        st.markdown('<div class="upload-card card-quickstart"><h2>✅ Quick Start Guide</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card card-quickstart"><h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
         st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
         st.markdown("""
         1️⃣ **Download Template** → Get the Excel structure  
@@ -115,7 +115,12 @@ def render_upload_stage():
         st.markdown('<div class="upload-card card-download"><h2>📥 Download Template & Details</h2>', unsafe_allow_html=True)
         st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
         render_download_template_button()
-        with st.expander("🔍 Variables & Constraints Explained"):
+        st.markdown('</div></div>', unsafe_allow_html=True)
+
+    with st.expander("📄 Variable and Constraint Details", expanded=True):
+        col1, col2, col3, col4 = st.columns(4)
+    
+        with col1:
             st.markdown("""
             ### **Plant Sheet**
             - **Plant**: Plant name  
@@ -124,7 +129,10 @@ def render_upload_stage():
             - **Expected Run Days**: Minimum run days before changeover  
             - **Shutdown Start/End Date**: Planned downtime  
             - **Pre-Shutdown Grade / Restart Grade**: Grade before and after shutdown  
-
+            """)
+    
+        with col2:
+            st.markdown("""
             ### **Inventory Sheet**
             - **Grade Name**: Product grade  
             - **Opening Inventory**: Current stock  
@@ -134,22 +142,20 @@ def render_upload_stage():
             - **Force Start Date**: Mandatory start date for a grade  
             - **Lines**: Plants where grade can run  
             - **Rerun Allowed**: Yes/No for repeating grade  
-
+            """)
+    
+        with col3:
+            st.markdown("""
             ### **Demand Sheet**
             - **Date**: Planning horizon  
             - **Grade Columns**: Daily demand quantity for each grade  
-
-            ### **Transition Sheets**
-            - Allowed grade changes per plant (**Yes/No**)  
-
-            ---
-            **Additional Constraints:**  
-            - Buffer Days, Stockout Penalty, Transition Penalty  
-            - Shutdown constraints (Pre-/Restart grades must be valid)  
-            - Solver Time Limit  
             """)
-        st.markdown('</div></div>', unsafe_allow_html=True)
-
+    
+        with col4:
+            st.markdown("""
+            ### **Transition Sheets**
+            - Allowed grade changes per plant from grade in Row to grade in Column (**Yes/No**)   
+            """)
 
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
