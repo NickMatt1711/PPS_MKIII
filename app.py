@@ -571,4 +571,177 @@ def render_results_stage():
             if not schedule_df.empty:
                 def style_grade_column(val):
                     if val in grade_colors:
-                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: c
+                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
+                    return ''
+
+                try:
+                    styled_df = schedule_df.style.applymap(
+                        lambda v: style_grade_column(v), subset=['Grade']
+                    )
+                    st.dataframe(styled_df, use_container_width=True)
+                except Exception:
+                    st.dataframe(schedule_df, use_container_width=True)
+
+            render_section_divider()
+
+    # --- Inventory Analysis tab ---
+    with tab2:
+        st.markdown("### 📦 Inventory Analysis")
+
+        for grade in sorted(data.get('grades', [])):
+            st.markdown(f"#### {grade}")
+
+            allowed_lines = data.get('allowed_lines', {})
+            try:
+                fig = create_inventory_chart(
+                    solution,
+                    grade,
+                    data.get('dates', []),
+                    data.get('min_inventory', {}).get(grade),
+                    data.get('max_inventory', {}).get(grade),
+                    allowed_lines,
+                    data.get('shutdown_periods', {}),
+                    grade_colors,
+                    data.get('initial_inventory', {}).get(grade, 0),
+                    data.get('buffer_days', 0)
+                )
+            except Exception as e:
+                fig = None
+                st.error(f"Failed to build inventory chart for {grade}: {e}")
+
+            if fig is None:
+                st.info(f"No inventory chart available for {grade}.")
+            else:
+                st.plotly_chart(fig, use_container_width=True)
+
+            render_section_divider()
+            
+    # --- Summary tab ---
+    with tab3:
+        col_summary1, col_summary2, col_summary3 = st.columns([2, 1, 1])
+        
+        with col_summary1:
+            st.markdown("### 📊 Production Summary")
+            
+            try:
+                summary_df = create_production_summary(
+                    solution,
+                    solution_data.get('production_vars', {}),
+                    solution_data.get('solver'),
+                    data.get('grades', []),
+                    data.get('lines', []),
+                    data.get('num_days', 0),
+                    buffer_days=data.get('buffer_days', 0)
+                )
+            except Exception as e:
+                summary_df = pd.DataFrame()
+                st.error(f"Failed to create production summary: {e}")
+            
+            if not summary_df.empty:
+                def style_summary_grade(val):
+                    if val in grade_colors and val != 'Total':
+                        return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
+                    if val == 'Total':
+                        return 'background-color: #909399; color: white; font-weight: bold; text-align: center;'
+                    return ''
+                
+                try:
+                    styled_summary = summary_df.style.applymap(
+                        lambda v: style_summary_grade(v), subset=['Grade']
+                    )
+                    st.dataframe(styled_summary, use_container_width=True)
+                except Exception:
+                    st.dataframe(summary_df, use_container_width=True)
+            else:
+                st.info("No production summary available.")
+
+        with col_summary2:
+            st.markdown("### 🔄 Transitions by Line")
+            try:
+                transitions = solution.get('transitions', {}).get('per_line', {}) if isinstance(solution, dict) else {}
+                transitions_data = [{'Line': l, 'Transitions': c} for l, c in transitions.items()]
+                transitions_df = pd.DataFrame(transitions_data)
+                st.dataframe(transitions_df, use_container_width=True)
+            except Exception as e:
+                st.error(f"Failed to render transitions table: {e}")
+
+        # Add stockout summary table below
+        with col_summary3:
+            st.markdown("### ⚠️ Stockout Summary")
+            try:
+                stockout_df = create_stockout_details_table(
+                    solution,
+                    data.get('grades', []),
+                    data.get('dates', []),
+                    buffer_days=data.get('buffer_days', 0)
+                )
+            except Exception as e:
+                stockout_df = pd.DataFrame()
+                st.error(f"Failed to create stockout details table: {e}")
+            
+            if not stockout_df.empty:
+                try:
+                    styled_stockout = stockout_df.style.applymap(
+                        highlight_stockout, subset=['Stockout Quantity (MT)']
+                    )
+                    st.dataframe(styled_stockout, use_container_width=True, height=400)
+                except Exception:
+                    st.dataframe(stockout_df, use_container_width=True, height=400)
+               
+            else:
+                st.success("✅ No stockouts occurred during the demand period!")
+                
+                # Show total stockout from solution if available (should be 0)
+                total_stockouts_from_solution = 0
+                try:
+                    for g in data.get('grades', []):
+                        total_stockouts_from_solution += sum(solution.get('stockout', {}).get(g, {}).values())
+                except:
+                    pass
+                
+                if total_stockouts_from_solution == 0:
+                    st.info("All demand was satisfied with production and inventory.")
+                else:
+                    st.warning(f"Note: Total stockout reported in solution: {total_stockouts_from_solution:,.0f} MT")
+
+    render_section_divider()
+
+    # Navigation - Enhanced button layout
+    col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
+    
+    with col_nav1:
+        if st.button("← Back to Configuration", use_container_width=True):
+            st.session_state[SS_STAGE] = STAGE_PREVIEW
+            st.rerun()
+
+    with col_nav3:
+        if st.button("🔄 New Optimization", use_container_width=True, type="primary"):
+            # Reset state but keep theme
+            theme_val = st.session_state.get(SS_THEME, "light")
+            st.session_state.clear()
+            st.session_state[SS_THEME] = theme_val
+            st.session_state[SS_STAGE] = STAGE_UPLOAD
+            st.rerun()
+
+
+# ========== MAIN APP ==========
+def main():
+    """Main application controller"""
+    current_stage = st.session_state.get(SS_STAGE, STAGE_UPLOAD)
+
+    if current_stage == STAGE_UPLOAD:
+        render_upload_stage()
+    elif current_stage == STAGE_PREVIEW:
+        render_preview_stage()
+    elif current_stage == STAGE_OPTIMIZING:
+        render_optimization_stage()
+    elif current_stage == STAGE_RESULTS:
+        render_results_stage()
+    else:
+        render_alert("Unknown application stage. Resetting to start.", "warning")
+        st.session_state[SS_STAGE] = STAGE_UPLOAD
+        st.rerun()
+
+
+if __name__ == "__main__":
+    main()
