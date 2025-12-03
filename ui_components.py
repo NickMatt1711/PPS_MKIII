@@ -1,17 +1,17 @@
 """
 ui_components.py
-Global theme preserved. Added Upload-page-scoped CSS and small UI helpers (pills) for the Upload page.
+Material 3 Light Theme - Enhanced UX with improved responsiveness and accessibility
 """
 
 import streamlit as st
 from pathlib import Path
 
 # -------------------------------
-# CSS - Material 3 Light Theme (original) + upload-page scoped additions
+# CSS - Material 3 Light Theme (Enhanced)
 # -------------------------------
 CUSTOM_CSS = """
 /* =============================
-CORPORATE LIGHT THEME CSS - ENHANCED (original preserved)
+CORPORATE LIGHT THEME CSS - ENHANCED
 ============================= */
 :root {
   --md-sys-color-primary: #0A74DA;
@@ -59,97 +59,530 @@ CORPORATE LIGHT THEME CSS - ENHANCED (original preserved)
   color: var(--md-sys-color-on-background);
 }
 
-/* ... (original global CSS from your file is preserved — omitted here for brevity) ... */
+/* =============================
+BUTTONS - Enhanced Hierarchy
+============================= */
+/* Primary Button */
+.stButton>button[kind="primary"],
+.stButton>button:not([kind]),
+button[data-testid="stDownloadButton"] {
+  background: linear-gradient(135deg, #0A74DA, #4BA3F4) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  border-radius: var(--md-shape-corner-large) !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+  text-transform: none !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
+}
+
+.stButton>button[kind="primary"]:hover,
+.stButton>button:not([kind]):hover,
+button[data-testid="stDownloadButton"]:hover {
+  background: linear-gradient(135deg, #085BB5, #3D8CD9) !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+  transform: translateY(-1px);
+}
+
+/* Secondary Button */
+.stButton>button[kind="secondary"] {
+  background: var(--md-sys-color-surface) !important;
+  color: var(--md-sys-color-primary) !important;
+  border: 2px solid var(--md-sys-color-primary) !important;
+  border-radius: var(--md-shape-corner-large) !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  transition: all 0.2s ease !important;
+}
+
+.stButton>button[kind="secondary"]:hover {
+  background: var(--md-sys-color-primary-container) !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+}
+
+/* Focus states for accessibility */
+.stButton>button:focus-visible,
+button[data-testid="stDownloadButton"]:focus-visible {
+  outline: 3px solid #4BA3F4 !important;
+  outline-offset: 2px !important;
+}
+
+/* Disabled state */
+.stButton>button:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
 
 /* =============================
-UPLOAD PAGE - SCOPED STYLES (only affects the Upload page)
+Header - Enhanced
 ============================= */
-.upload-page {
-  /* small top spacing for the block */
-  padding-bottom: 8px;
+.app-header {
+  background: linear-gradient(135deg, #0A74DA, #4BA3F4);
+  color: var(--md-sys-color-on-primary) !important;
+  padding: 1.5rem 2rem;
+  border-radius: var(--md-shape-corner-large);
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(10, 116, 218, 0.25);
+  margin-bottom: 2rem;
 }
 
-/* Unified small card used only in upload page */
-.upload-page .upload-grid-card {
+.app-header h1 {
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+}
+
+.app-header p {
+  opacity: 0.95;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* =============================
+Cards - Enhanced
+============================= */
+.card, .metric-card, .stTabs {
   background: var(--md-sys-color-surface);
   border-radius: var(--md-shape-corner-medium);
-  padding: 14px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  min-height: 220px;
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-start;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  transition: box-shadow 0.2s ease;
 }
 
-/* Primary (middle) card accent */
-.upload-page .upload-primary-card {
-  border: 2px solid var(--md-sys-color-primary);
-  background: linear-gradient(180deg, rgba(10,116,218,0.03), rgba(10,116,218,0.01));
-  box-shadow: 0 10px 30px rgba(10,116,218,0.05);
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
-/* Dropzone area */
-.upload-page .upload-dropzone {
-  border: 2px dashed var(--md-sys-color-outline);
+.card-header {
+  font-size: 1.25rem;
+  font-weight: 500;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* =============================
+Alerts - Enhanced
+============================= */
+div[data-testid="stAlert"] {
   border-radius: var(--md-shape-corner-medium);
-  padding: 12px;
-  background: rgba(10,116,218,0.01);
-  margin-top: 8px;
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  border-left: 4px solid;
 }
 
-/* Pills used in template card */
-.upload-page .pill {
-  display:inline-block;
-  padding:6px 10px;
-  background:#f1f5f9;
-  border-radius:999px;
-  font-size:13px;
-  color:#213547;
-  border:1px solid #eef2f7;
+.alert-success { 
+  background: var(--md-sys-color-success-container); 
+  color: var(--md-sys-color-on-success);
+  border-left-color: var(--md-sys-color-success);
 }
 
-/* Align card headers across columns */
-.upload-page .card-header {
-  font-size:1.05rem;
-  font-weight:600;
-  margin-bottom:10px;
+.alert-info { 
+  background: var(--md-sys-color-primary-container); 
+  color: var(--md-sys-color-on-primary-container);
+  border-left-color: var(--md-sys-color-primary);
 }
 
-/* Slight visual separator between the three cards (subtle) */
-.upload-page .upload-grid-card:not(.upload-primary-card) {
-  /* keep supporting cards slightly lighter */
-  background: #fff;
+.alert-warning { 
+  background: var(--md-sys-color-warning-container); 
+  color: var(--md-sys-color-on-warning);
+  border-left-color: var(--md-sys-color-warning);
 }
 
-/* Smaller helper text styling */
-.upload-page .small-muted {
-  color:#6c757d;
-  font-size:13px;
+.alert-error { 
+  background: var(--md-sys-color-error-container); 
+  color: var(--md-sys-color-on-error);
+  border-left-color: var(--md-sys-color-error);
 }
 
-/* Reduce top padding for block container scoped to upload page */
-.upload-page .block-container {
-  padding-top: 6px !important;
+/* =============================
+Stage Progress - Enhanced (4 stages)
+============================= */
+.stage-container {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 2rem 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* Ensure the expander content looks like a reference drawer */
-.upload-page details[open] > div {
-  background: #fbfdfe;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #f0f2f5;
+.stage-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
 }
 
-/* small horizontal rule styling inside upload page */
-.upload-page hr { border: none; border-top: 1px solid #eee; margin:10px 0; }
+.stage-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 80px;
+  position: relative;
+  z-index: 2;
+}
 
-/* make sure native uploader doesn't add big borders inside dropzone */
-.upload-page div[data-testid="stFileUploader"] {
-  background: transparent !important;
+.stage-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  border: 3px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stage-circle.active {
+  transform: scale(1.15);
+  background: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  box-shadow: 0 4px 12px rgba(10, 116, 218, 0.4);
+}
+
+.stage-circle.completed {
+  background: var(--md-sys-color-success);
+  border-color: var(--md-sys-color-success);
+  color: var(--md-sys-color-on-success);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.stage-label {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+  text-align: center;
+}
+
+.stage-label.active {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+
+.stage-connector {
+  flex: 1;
+  height: 4px;
+  background: var(--md-sys-color-outline-variant);
+  margin: 0 0.5rem;
+  transition: background-color 0.3s ease;
+  border-radius: 2px;
+}
+
+.stage-connector.completed {
+  background: var(--md-sys-color-success);
+}
+
+/* =============================
+Tabs - Enhanced with dynamic colors
+============================= */
+.stTabs {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium) !important;
+  overflow: hidden;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: var(--md-shape-corner-medium) !important;
+}
+
+.stTabs [role="tab"] {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  padding: 0.875rem 1rem;
+  border-radius: var(--md-shape-corner-small) !important;
+  transition: all 0.2s ease;
   border: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
+}
+
+.stTabs [role="tab"]:nth-child(1)[aria-selected="true"] {
+  background: linear-gradient(135deg, #0A74DA, #4BA3F4) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(10, 116, 218, 0.3);
+}
+
+.stTabs [role="tab"]:nth-child(2)[aria-selected="true"] {
+  background: linear-gradient(135deg, #28A745, #5DDC7A) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.stTabs [role="tab"]:nth-child(3)[aria-selected="true"] {
+  background: linear-gradient(135deg, #FFC107, #FFD76A) !important;
+  color: #212529 !important;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
+.stTabs [role="tab"]:nth-child(4)[aria-selected="true"] {
+  background: linear-gradient(135deg, #DC3545, #F08080) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.stTabs [role="tab"]:not([aria-selected="true"]) {
+  background: var(--md-sys-color-surface) !important;
+  color: var(--md-sys-color-on-surface-variant) !important;
+}
+
+.stTabs [role="tab"]:not([aria-selected="true"]):hover {
+  background: var(--md-sys-color-surface-variant) !important;
+}
+
+/* =============================
+Metric Cards - Enhanced with hover effects
+============================= */
+.metric-card {
+  border-radius: var(--md-shape-corner-medium) !important;
+  padding: 1.75rem 1.5rem !important;
+  text-align: center !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  margin-bottom: 1rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 140px !important;
+  transition: all 0.2s ease !important;
+}
+
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
+}
+
+.metric-card-blue {
+  background: linear-gradient(135deg, #E6F0FA, #BBD7F5) !important;
+}
+
+.metric-card-green {
+  background: linear-gradient(135deg, #DFF6E3, #AEE8C1) !important;
+}
+
+.metric-card-yellow {
+  background: linear-gradient(135deg, #FFF3CD, #FFE29A) !important;
+}
+
+.metric-card-red {
+  background: linear-gradient(135deg, #F8D7DA, #F1A2A9) !important;
+}
+
+.metric-label {
+  font-size: 0.875rem !important;
+  color: #495057 !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.75rem !important;
+  text-align: center !important;
+  width: 100% !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-size: 2.25rem !important;
+  font-weight: 700 !important;
+  color: #212529 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+
+/* =============================
+Loading States - Enhanced
+============================= */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #E0E0E0;
+  border-top: 5px solid #0A74DA;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 1.5rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.optimization-container {
+  text-align: center;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+
+.optimization-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.optimization-subtext {
+  font-size: 1rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 0.5rem;
+}
+
+/* Skeleton Loader */
+.skeleton-loader {
+  padding: 1rem;
+}
+
+.skeleton-row {
+  height: 40px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  margin-bottom: 12px;
+  border-radius: 8px;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* =============================
+Error States - Enhanced
+============================= */
+.error-container {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: var(--md-sys-color-error-container);
+  border-radius: var(--md-shape-corner-medium);
+  margin: 2rem 0;
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.error-container h3 {
+  color: var(--md-sys-color-error);
+  margin-bottom: 0.5rem;
+}
+
+.error-container p {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 1rem;
+}
+
+/* =============================
+Section Divider
+============================= */
+.section-divider {
+  height: 1px;
+  background: var(--md-sys-color-outline-variant);
+  margin: 2rem 0;
+}
+
+/* =============================
+Responsive Design
+============================= */
+@media (max-width: 768px) {
+  .stage-row {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .stage-connector {
+    width: 4px;
+    height: 40px;
+    margin: 0.5rem 0;
+  }
+  
+  .metric-card {
+    margin-bottom: 1rem !important;
+  }
+  
+  .app-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .app-header {
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stage-circle {
+    width: 44px;
+    height: 44px;
+    font-size: 1.1rem;
+  }
+  
+  .stage-label {
+    font-size: 0.75rem;
+  }
+  
+  .metric-value {
+    font-size: 1.75rem !important;
+  }
+}
+
+/* =============================
+Data Tables Enhancement
+============================= */
+.dataframe-container {
+  border-radius: var(--md-shape-corner-medium);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* =============================
+Accessibility Enhancements
+============================= */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+  z-index: 100;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .stage-circle {
+    border-width: 4px;
+  }
+  
+  .stButton>button {
+    border: 2px solid currentColor !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 """
 
@@ -157,7 +590,7 @@ UPLOAD PAGE - SCOPED STYLES (only affects the Upload page)
 # APPLY CSS
 # -------------------------------
 def apply_custom_css():
-    """Inject global CSS + upload-page scoped CSS."""
+    """Inject Material 3 corporate theme with enhanced UX."""
     st.markdown(f"<style>{CUSTOM_CSS}</style>", unsafe_allow_html=True)
 
 
@@ -174,7 +607,7 @@ def render_header(title: str, subtitle: str = ""):
 
 
 # -------------------------------
-# STAGE PROGRESS (unchanged)
+# STAGE PROGRESS (4 stages)
 # -------------------------------
 def render_stage_progress(current_stage: int):
     """Render 4-stage progress indicator with proper numbering."""
@@ -214,9 +647,10 @@ def render_stage_progress(current_stage: int):
 
 
 # -------------------------------
-# Re-use existing component helpers (unchanged)
+# CARD
 # -------------------------------
 def render_card(title: str, icon: str = ""):
+    """Render card container with optional icon."""
     icon_html = f"{icon} " if icon else ""
     st.markdown(
         f'<div class="card"><div class="card-header">{icon_html}{title}</div>',
@@ -224,9 +658,15 @@ def render_card(title: str, icon: str = ""):
     )
 
 def close_card():
+    """Close card container."""
     st.markdown('</div>', unsafe_allow_html=True)
 
+
+# -------------------------------
+# METRIC CARD (Enhanced with hover)
+# -------------------------------
 def render_metric_card(label: str, value: str, col, card_index: int = 0):
+    """Render a metric card with gradient background and hover effect."""
     gradient_classes = [
         'metric-card-blue',
         'metric-card-green', 
@@ -244,7 +684,12 @@ def render_metric_card(label: str, value: str, col, card_index: int = 0):
             unsafe_allow_html=True
         )
 
+
+# -------------------------------
+# ALERT
+# -------------------------------
 def render_alert(message: str, alert_type: str = "info"):
+    """Render styled alert with icon."""
     icons = {
         "success": "✓",
         "info": "ℹ",
@@ -258,7 +703,12 @@ def render_alert(message: str, alert_type: str = "info"):
         unsafe_allow_html=True
     )
 
+
+# -------------------------------
+# ERROR STATE
+# -------------------------------
 def render_error_state(error_type: str, message: str):
+    """Render enhanced error state with icon."""
     st.markdown(f"""
         <div class="error-container">
             <div class="error-icon">❌</div>
@@ -267,17 +717,32 @@ def render_error_state(error_type: str, message: str):
         </div>
     """, unsafe_allow_html=True)
 
+
+# -------------------------------
+# SKELETON LOADER
+# -------------------------------
 def render_skeleton_loader(rows: int = 3):
+    """Render skeleton loader for loading states."""
     skeleton_html = '<div class="skeleton-loader">'
     for _ in range(rows):
         skeleton_html += '<div class="skeleton-row"></div>'
     skeleton_html += '</div>'
     st.markdown(skeleton_html, unsafe_allow_html=True)
 
+
+# -------------------------------
+# SECTION DIVIDER
+# -------------------------------
 def render_section_divider():
+    """Render section divider line."""
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
+
+# -------------------------------
+# DOWNLOAD TEMPLATE
+# -------------------------------
 def render_download_template_button():
+    """Render download template button."""
     try:
         template_path = Path(__file__).parent / "polymer_production_template.xlsx"
         if template_path.exists():
