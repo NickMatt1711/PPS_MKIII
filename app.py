@@ -668,7 +668,7 @@ def render_results_stage():
                 st.error(f"Failed to render transitions table: {e}")
 
         # Add stockout summary table below
-        with col_summary1:
+        with col_summary3:
             st.markdown("### ⚠️ Stockout Summary")
             try:
                 stockout_df = create_stockout_details_table(
