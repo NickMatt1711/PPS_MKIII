@@ -144,27 +144,39 @@ Header - Enhanced
 }
 
 /* =============================
-Cards - Enhanced
+SECTION CARDS (New Full-Section Blocks)
 ============================= */
-.card, .metric-card, .stTabs {
-  background: var(--md-sys-color-surface);
-  border-radius: var(--md-shape-corner-medium);
-  padding: 1.5rem;
+.section-card {
+  border-radius: var(--md-shape-corner-large);
+  padding: 1.75rem 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-  transition: box-shadow 0.2s ease;
-}
-
-.card:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  transition: box-shadow 0.25s ease, transform 0.2s ease;
 }
 
-.card-header {
+.section-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+
+.section-card-title {
+  text-align: center;
   font-size: 1.25rem;
-  font-weight: 500;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+
+/* Color variants */
+.section-card-blue {
+  background: linear-gradient(135deg, #E6F0FA, #C9DEF5);
+}
+
+.section-card-green {
+  background: linear-gradient(135deg, #DFF6E3, #BCECC7);
+}
+
+.section-card-yellow {
+  background: linear-gradient(135deg, #FFF3CD, #FFE5A3);
 }
 
 /* =============================
@@ -646,11 +658,27 @@ def render_stage_progress(current_stage: int):
     st.markdown(f'<div class="stage-container">{html}</div>', unsafe_allow_html=True)
 
 
-# -------------------------------
-# CARD
-# -------------------------------
+# ===============================
+# SECTION CARD (NEW)
+# ===============================
+def render_section_card(title: str, icon: str = "", color: str = "blue"):
+    icon_html = f"{icon} " if icon else ""
+    st.markdown(
+        f"""
+        <div class="section-card section-card-{color}">
+            <div class="section-card-title">{icon_html}{title}</div>
+        """,
+        unsafe_allow_html=True
+    )
+
+def close_section_card():
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+# ===============================
+# CARD (legacy small cards, still used elsewhere)
+# ===============================
 def render_card(title: str, icon: str = ""):
-    """Render card container with optional icon."""
     icon_html = f"{icon} " if icon else ""
     st.markdown(
         f'<div class="card"><div class="card-header">{icon_html}{title}</div>',
@@ -658,8 +686,7 @@ def render_card(title: str, icon: str = ""):
     )
 
 def close_card():
-    """Close card container."""
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # -------------------------------
