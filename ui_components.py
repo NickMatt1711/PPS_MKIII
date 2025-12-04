@@ -584,6 +584,110 @@ Accessibility Enhancements
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* ===== Upload stage specific enhancements ===== */
+
+/* Constrained page width for better readability */
+.page-max {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Section cards used in the upload page */
+.section-card {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.section-card.section-primary {
+  border: 2px solid var(--md-sys-color-primary);
+  box-shadow: 0 4px 14px rgba(10,116,218,0.10);
+}
+.section-card .section-actions {
+  margin-top: 0.5rem;
+}
+
+/* Section header (replace emoji; use clean title) */
+.section-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: var(--md-sys-color-on-surface);
+}
+.section-header h3::after {
+  content: " "; /* no emoji — keep professional tone */
+}
+
+/* File uploader: make dropzone visually primary */
+[data-testid="stFileUploaderDropzone"] {
+  border: 2px dashed var(--md-sys-color-primary) !important;
+  background: var(--md-sys-color-primary-container) !important;
+  border-radius: var(--md-shape-corner-medium) !important;
+  padding: 1rem !important;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+[data-testid="stFileUploaderDropzone"]:hover {
+  background: #d9e8f9 !important; /* subtle hover within the container palette */
+}
+
+/* Make uploader label a tad stronger for affordance */
+[data-testid="stFileUploader"] label {
+  font-weight: 600 !important;
+  color: var(--md-sys-color-on-surface) !important;
+}
+
+/* Numbered stepper for Quick Start */
+.qs-stepper {
+  counter-reset: step;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.qs-stepper .qs-step {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+.qs-stepper .qs-step::before {
+  counter-increment: step;
+  content: counter(step);
+  flex: 0 0 28px;
+  height: 28px;
+  width: 28px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(10,116,218,0.25);
+}
+.qs-stepper .qs-step strong {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+.qs-stepper .qs-step span {
+  color: var(--md-sys-color-on-surface-variant);
+}
+.qs-stepper .qs-step:hover strong {
+  text-decoration: underline;
+}
+
+/* Responsive stack spacing for columns inside .page-max */
+@media (max-width: 768px) {
+  .section-card { margin-bottom: 1rem; }
+}
+
 """
 
 # -------------------------------
