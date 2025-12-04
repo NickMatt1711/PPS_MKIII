@@ -678,20 +678,20 @@ def render_results_stage():
             
         render_section_divider()
 
-        # Navigation - Enhanced button layout (unchanged logic)
-        col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
-        with col_nav1:
-            if st.button("← Back to Configuration", use_container_width=True):
-                st.session_state[SS_STAGE] = STAGE_PREVIEW
-                st.rerun()
-        with col_nav3:
-            if st.button("🔄 New Optimization", use_container_width=True, type="primary"):
-                # Reset state but keep theme
-                theme_val = st.session_state.get(SS_THEME, "light")
-                st.session_state.clear()
-                st.session_state[SS_THEME] = theme_val
-                st.session_state[SS_STAGE] = STAGE_UPLOAD
-                st.rerun()
+    # Navigation - Enhanced button layout (unchanged logic)
+    col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
+    with col_nav1:
+        if st.button("← Back to Configuration", use_container_width=True):
+            st.session_state[SS_STAGE] = STAGE_PREVIEW
+            st.rerun()
+    with col_nav3:
+        if st.button("🔄 New Optimization", use_container_width=True, type="primary"):
+            # Reset state but keep theme
+            theme_val = st.session_state.get(SS_THEME, "light")
+            st.session_state.clear()
+            st.session_state[SS_THEME] = theme_val
+            st.session_state[SS_STAGE] = STAGE_UPLOAD
+            st.rerun()
 
 
 # ========== MAIN APP ==========
