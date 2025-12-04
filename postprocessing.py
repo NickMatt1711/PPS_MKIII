@@ -445,8 +445,6 @@ def create_production_summary(solution, production_vars, solver, grades, lines, 
 # ===============================================================
 #  STOCKOUT DETAILS TABLE
 # ===============================================================
-
-
 def create_stockout_details_table(
     solution: Dict,
     grades: List[str],
@@ -455,24 +453,26 @@ def create_stockout_details_table(
 ) -> pd.DataFrame:
     """Create detailed table of stockout occurrences without unused rows."""
     rows = []
-    
-    stockout_dict = solution.get('stockout', {})
-    
+
+    stockout_dict = solution.get("stockout", {})
+
     for grade in sorted(grades):
-        if grade in stockout_dict:
-            grade_stockouts = stockout_dict[grade]
-            for date_str, stockout_qty in grade_stockouts.items():
-                if stockout_qty > 0:
-                    rows.append({
-                        "Date": date_str,
-                        "Grade": grade,
-                        "Stockout Quantity (MT)": stockout_qty
-                    })
-    
-    # If no rows, return an empty DataFrame with proper columns
+        grade_stockouts = stockout_dict.get(grade, {})
+
+        # Skip if empty dict or None
+        if not isinstance(grade_stockouts, dict) or not grade_stockouts:
+            continue
+
+        for date_str, stockout_qty in grade_stockouts.items():
+            if isinstance(stockout_qty, (int, float)) and stockout_qty > 0:
+                rows.append({
+                    "Date": str(date_str),
+                    "Grade": grade,
+                    "Stockout Quantity (MT)": float(stockout_qty)
+                })
+
     if not rows:
         return pd.DataFrame(columns=["Date", "Grade", "Stockout Quantity (MT)"])
-    
-    df = pd.DataFrame(rows)
-    df = df.sort_values(["Date", "Grade"]).reset_index(drop=True)  # ✅ Remove unused rows
+
+    df = pd.DataFrame(rows).sort_values(["Date", "Grade"]).reset_index(drop=True)
     return df
