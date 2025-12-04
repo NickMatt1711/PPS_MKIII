@@ -53,34 +53,34 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: Enhanced desktop-optimized upload interface"""
+    """Stage 0: Streamlined desktop upload interface"""
     
     # Header and stage progress
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
     
-    # Upload page with enhanced layout
+    # Upload page container
     st.markdown('<div class="upload-page-container">', unsafe_allow_html=True)
     
     # Page header
-    render_upload_header(
-        "📤 Upload Your File", 
-        "Upload your Excel data file to begin production optimization"
-    )
+    render_upload_header()
     
-    # Main content grid
-    st.markdown('<div class="upload-content-grid">', unsafe_allow_html=True)
+    # Main content - two equal columns
+    st.markdown('<div class="upload-main-columns">', unsafe_allow_html=True)
     
-    # Left column - Upload section
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns(2)
     
     with col1:
-        # Enhanced upload card
-        uploaded_file = render_upload_card()
+        # Upload section
+        st.markdown('<div class="upload-section">', unsafe_allow_html=True)
+        
+        # Clean upload zone
+        uploaded_file = render_upload_zone()
         
         # Processing logic (keep your existing logic)
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
+            render_file_info(uploaded_file.name, uploaded_file.size)
             render_status_indicator("success", "File uploaded successfully! Processing...")
             
             try:
@@ -103,18 +103,19 @@ def render_upload_stage():
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
         
-        # Enhanced download template section
-        render_download_template_button()
+        # Download template section
+        render_download_template_section()
+        
+        st.markdown('</div>', unsafe_allow_html=True)  # Close upload section
     
     with col2:
-        # Enhanced quick start guide
-        render_quick_start_guide()
+        # Quick Start Guide
+        render_quick_start_guide_clean()
     
-    st.markdown('</div>', unsafe_allow_html=True)  # Close grid
+    st.markdown('</div>', unsafe_allow_html=True)  # Close main columns
     
     # Variable and constraint details
-    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
-    render_variable_details()
+    render_variable_details_complete()
     
     st.markdown('</div>', unsafe_allow_html=True)  # Close container
 
