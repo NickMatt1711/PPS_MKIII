@@ -108,22 +108,13 @@ def render_upload_stage():
                         render_alert(warn, "warning")
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
-
-        st.markdown('<div class="upload-card card-download">', unsafe_allow_html=True)
-        st.markdown('<h2>📥 Download Template</h2>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
         
         # Download button
         render_download_template_button()
-     
-        st.markdown('</div>', unsafe_allow_html=True)  # close card-body
-        st.markdown('</div>', unsafe_allow_html=True)  # close upload-card
 
     # ========== MIDDLE COLUMN: Quick Start Guide ==========
     with col2:
-        st.markdown('<div class="upload-card card-quickstart">', unsafe_allow_html=True)
-        st.markdown('<h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card card-quickstart"><h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
         
         # Interactive step list
         st.markdown("""
