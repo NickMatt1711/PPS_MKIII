@@ -314,9 +314,9 @@ def render_preview_stage():
 
 # ========== STAGE 2: OPTIMIZATION IN PROGRESS ==========
 def render_optimization_stage():
-    """Stage 1.5: Show optimization in progress with animation"""
+    """Stage 2: Show optimization in progress with animation"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization in Progress")
-    render_stage_progress(1)
+    render_stage_progress(2)
 
     st.markdown("""
         <div class="optimization-container">
