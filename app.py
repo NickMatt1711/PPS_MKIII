@@ -60,15 +60,23 @@ def render_upload_stage():
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
     # Three-column layout with proper visual hierarchy
-    col1, col2 = st.columns([2, 1])
+    col1, col2, col3 = st.columns([1.5, 1, 1])
 
     # ========== LEFT COLUMN: Primary Upload Card ==========
     with col1:
+        st.markdown('<div class="upload-card card-uploader">', unsafe_allow_html=True)
+        st.markdown('<h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        
+        # Visual upload zone indicator
         st.markdown("""
-           <div class="upload-card card-uploader">
-              <h2>📤 Upload Production Data</h2></div>
-           </div>
-        """, unsafe_allow_html=True) 
+        <div class="upload-zone">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Drag & Drop Excel File</div>
+            <div class="upload-subtext">or click to browse</div>
+            <div class="upload-specs">Limit: 200MB per file • Format: .XLSX</div>
+        </div>
+        """, unsafe_allow_html=True)
         
         # File uploader
         uploaded_file = st.file_uploader(
@@ -102,14 +110,15 @@ def render_upload_stage():
                         render_alert(warn, "warning")
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
-        
-         # Download button
-         render_download_template_button()
-                      
+
+        st.markdown('</div>', unsafe_allow_html=True)  # close card-body
+        st.markdown('</div>', unsafe_allow_html=True)  # close upload-card
 
     # ========== MIDDLE COLUMN: Quick Start Guide ==========
     with col2:
-        st.markdown('<div class="upload-card card-quickstart"><h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card card-quickstart">', unsafe_allow_html=True)
+        st.markdown('<h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
         
         # Interactive step list
         st.markdown("""
@@ -145,6 +154,31 @@ def render_upload_stage():
                     <span>Set parameters & optimize</span>
                 </div>
             </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)  # close card-body
+        st.markdown('</div>', unsafe_allow_html=True)  # close upload-card
+
+    # ========== RIGHT COLUMN: Download Template Card ==========
+    with col3:
+        st.markdown('<div class="upload-card card-download">', unsafe_allow_html=True)
+        st.markdown('<h2>📥 Download Template</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        
+        # Download button
+        render_download_template_button()
+        
+        # Required sheets notice
+        st.markdown("""
+        <div class="required-sheets-notice">
+            <strong>⚠️ Required Sheets:</strong>
+            <ul>
+                <li>Plant</li>
+                <li>Inventory</li>
+                <li>Demand</li>
+                <li>Transition_[PlantName]</li>
+            </ul>
         </div>
         """, unsafe_allow_html=True)
         
