@@ -688,6 +688,17 @@ Accessibility Enhancements
   .section-card { margin-bottom: 1rem; }
 }
 
+
+/* Make the Streamlit container behave like your existing .card when it has a card-anchor */
+div[data-testid="stVerticalBlock"]:has(> .card-anchor) {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  border: 1px solid var(--md-sys-color-outline-variant);
+
+
 """
 
 # -------------------------------
