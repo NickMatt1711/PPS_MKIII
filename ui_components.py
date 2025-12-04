@@ -1492,3 +1492,64 @@ def render_file_info(file_name: str, file_size: int):
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+# In ui_components.py, add these functions:
+
+def render_upload_section():
+    """Render a clean, integrated upload section with visual feedback."""
+    st.markdown("""
+    <div class="upload-section-container">
+        <h3 class="upload-title">📤 Upload Your Excel File</h3>
+        <p class="upload-subtitle">Drag & drop your file or click to browse</p>
+    """, unsafe_allow_html=True)
+    
+    # The actual file uploader with custom styling
+    uploaded_file = st.file_uploader(
+        " ",
+        type=["xlsx", "xls"],
+        help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
+        label_visibility="collapsed",
+        key="main_uploader"
+    )
+    
+    st.markdown("""
+        <div class="upload-hint">
+            <span class="file-types">XLSX, XLS • Max 200MB</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    return uploaded_file
+
+
+def render_template_section():
+    """Render a clean template download section."""
+    try:
+        template_path = Path(__file__).parent / "polymer_production_template.xlsx"
+        if template_path.exists():
+            with open(template_path, "rb") as f:
+                template_data = f.read()
+            
+            st.markdown("""
+            <div class="template-section">
+                <h3 class="template-title">📋 Need a Template?</h3>
+                <p class="template-description">Download our pre-formatted Excel template to get started quickly.</p>
+            """, unsafe_allow_html=True)
+            
+            # Center the button
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                st.download_button(
+                    label="📥 Download Template",
+                    data=template_data,
+                    file_name="polymer_production_template.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True,
+                    key="template_download"
+                )
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.error("Template file not found")
+    except Exception as e:
+        st.error(f"Template file not found: {e}")
