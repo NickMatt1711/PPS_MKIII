@@ -164,192 +164,123 @@ Cards - Enhanced
 }
 
 /* =============================
-UPLOAD PAGE - Enhanced Cards
+UPLOAD PAGE - Refined Layout
 ============================= */
-.upload-card {
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
-  height: 100%;
-  min-height: 480px;
-  display: flex;
-  flex-direction: column;
+.upload-section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #212529;
 }
 
-.upload-card:hover {
-  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-  transform: translateY(-4px);
+/* Uploader container - no card */
+.uploader-container {
+    margin-bottom: 2rem;
 }
 
-.card-uploader {
-  background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
-  border: 2px solid rgba(10, 116, 218, 0.2);
+/* Visual upload indicator above native uploader */
+.upload-indicator {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding: 2rem 1rem;
+    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+    border: 2px dashed #0A74DA;
+    border-radius: 16px;
+    transition: all 0.3s ease;
 }
 
-.card-quickstart {
-  background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
-  border: 2px solid rgba(40, 167, 69, 0.2);
+.upload-indicator:hover {
+    background: linear-gradient(135deg, #E0F2FE 0%, #BFDBFE 100%);
+    border-color: #085BB5;
+    transform: scale(1.01);
 }
 
-.card-download {
-  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-  border: 2px solid rgba(255, 193, 7, 0.2);
+/* Download section spacing */
+.download-section {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: var(--md-sys-color-surface);
+    border-radius: var(--md-shape-corner-medium);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
-.upload-card h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #212529;
+.download-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #212529;
 }
 
-.upload-card-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+/* Quick Start - Steps without individual cards */
+.quick-start-steps-clean {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: 1.5rem;
 }
 
-/* =============================
-UPLOAD ZONE - Enhanced
-============================= */
-.upload-zone {
-  border: 3px dashed #0A74DA;
-  border-radius: 16px;
-  padding: 3rem 2rem;
-  text-align: center;
-  background: rgba(10, 116, 218, 0.03);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  margin-bottom: 1.5rem;
+.step-item-clean {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0;
+    transition: all 0.2s ease;
 }
 
-.upload-zone:hover {
-  background: rgba(10, 116, 218, 0.08);
-  border-color: #085BB5;
-  transform: scale(1.02);
+.step-item-clean:hover {
+    transform: translateX(4px);
 }
 
-.upload-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  animation: float 3s ease-in-out infinite;
+.step-item-clean:hover .step-number-clean {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.step-number-clean {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #28A745, #5DDC7A);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+    transition: all 0.2s ease;
 }
 
-.upload-text {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #0A74DA;
-  margin-bottom: 0.5rem;
+.step-content-clean {
+    flex: 1;
+    padding-top: 0.25rem;
 }
 
-.upload-subtext {
-  font-size: 0.875rem;
-  color: #606266;
-  margin-bottom: 1rem;
+.step-content-clean strong {
+    font-size: 1rem;
+    color: #212529;
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
 }
 
-.upload-specs {
-  font-size: 0.75rem;
-  color: #909399;
-  font-weight: 500;
+.step-content-clean span {
+    font-size: 0.875rem;
+    color: #606266;
+    line-height: 1.4;
 }
 
-/* =============================
-QUICK START STEPS - Interactive
-============================= */
-.quick-start-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin-top: 1rem;
-}
-
-.step-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.875rem;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.step-item:hover {
-  background: rgba(255,255,255,0.7);
-  transform: translateX(4px);
-}
-
-.step-number {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #28A745, #5DDC7A);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 1.1rem;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.step-content {
-  flex: 1;
-  line-height: 1.4;
-}
-
-.step-content strong {
-  font-size: 1rem;
-  color: #212529;
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.step-content span {
-  font-size: 0.85rem;
-  color: #606266;
-}
-
-.step-connector {
-  text-align: center;
-  color: #28A745;
-  font-size: 1.5rem;
-  margin: -0.25rem 0;
-  margin-left: 18px;
-}
-
-/* =============================
-REQUIRED SHEETS NOTICE
-============================= */
-.required-sheets-notice {
-  padding: 1rem;
-  background: #FFF3CD;
-  border-radius: 8px;
-  border-left: 4px solid #FFC107;
-  margin-top: 1rem;
-}
-
-.required-sheets-notice strong {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #856404;
-  font-size: 0.95rem;
-}
-
-.required-sheets-notice ul {
-  margin: 0;
-  padding-left: 1.25rem;
-  color: #856404;
-  font-size: 0.875rem;
+.step-divider-clean {
+    width: 2px;
+    height: 16px;
+    background: linear-gradient(180deg, #28A745, rgba(40, 167, 69, 0.3));
+    margin-left: 17px;
+    margin-top: -0.25rem;
+    margin-bottom: -0.25rem;
 }
 
 /* =============================
