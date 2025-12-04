@@ -53,42 +53,49 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: File upload with improved visual hierarchy and section grouping (desktop-only)."""
-
-    # Header and stage progress (unchanged logic)
+    """Stage 0: Enhanced file upload with improved visual hierarchy (desktop-optimized)"""
+    
+    # Header and stage progress
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    # Start a constrained page container for better desktop readability
-    st.markdown('<div class="page-max">', unsafe_allow_html=True)
+    # Three-column layout with proper visual hierarchy
+    col1, col2, col3 = st.columns([1.5, 1, 1])
 
-    # Two-column layout: Left (primary upload), Right (Quick Start + Download)
-    col_left, col_right = st.columns([2, 1])
-
-    # --- LEFT: Upload (primary section card) ---
-    with col_left:
-        st.markdown('<div class="section-card section-primary">', unsafe_allow_html=True)
-
-        # File uploader (unchanged logic)
+    # ========== LEFT COLUMN: Primary Upload Card ==========
+    with col1:
+        st.markdown('<div class="upload-card card-uploader">', unsafe_allow_html=True)
+        st.markdown('<h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        
+        # Visual upload zone indicator
+        st.markdown("""
+        <div class="upload-zone">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Drag & Drop Excel File</div>
+            <div class="upload-subtext">or click to browse</div>
+            <div class="upload-specs">Limit: 200MB per file • Format: .XLSX</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # File uploader
         uploaded_file = st.file_uploader(
             "Upload your input files here",
             type=ALLOWED_EXTENSIONS,
-            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
+            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
+            label_visibility="collapsed"
         )
 
-        # Download Template & Details (keeps existing button/function)
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        render_download_template_button()
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        # Inline alerts and validation remain within this card (unchanged logic)
+        # Processing logic (unchanged)
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
             render_alert("File uploaded successfully! Processing...", "success")
+
             try:
                 file_buffer = io.BytesIO(uploaded_file.read())
                 loader = ExcelDataLoader(file_buffer)
                 success, data, errors, warnings = loader.load_and_validate()
+
                 if success:
                     st.session_state[SS_EXCEL_DATA] = data
                     render_alert("File validated successfully!", "success")
@@ -104,72 +111,153 @@ def render_upload_stage():
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
 
-        st.markdown('</div>', unsafe_allow_html=True)  # close section-card
+        st.markdown('</div>', unsafe_allow_html=True)  # close card-body
+        st.markdown('</div>', unsafe_allow_html=True)  # close upload-card
 
-    # --- RIGHT: Quick Start (secondary) + Download template (secondary) ---
-    with col_right:
-        # Quick Start Guide (visual grouping only; content unchanged)
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.markdown(
-            '<div class="section-header">'
-            '<h3>🚀Quick Start Guide</h3></div>',
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            """
-            <ul class="qs-list">
-              <li><strong>Download Template</strong> → Get the Excel structure</li>
-              <li><strong>Fill Data</strong> → Complete Plant, Inventory, Demand, and Transition sheets</li>
-              <li><strong>Upload File</strong> → Validate your data</li>
-              <li><strong>Preview & Configure</strong> → Check sheets and set optimization parameters</li>
-              <li><strong>Run Optimization</strong> → Generate schedule and view results</li>
-            </ul>
-            """,
-            unsafe_allow_html=True
-        )
-    #   st.markdown('</div>', unsafe_allow_html=True)
-
+    # ========== MIDDLE COLUMN: Quick Start Guide ==========
+    with col2:
+        st.markdown('<div class="upload-card card-quickstart">', unsafe_allow_html=True)
+        st.markdown('<h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
         
+        # Interactive step list
+        st.markdown("""
+        <div class="quick-start-steps">
+            <div class="step-item">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <strong>Download Template</strong>
+                    <span>Get the Excel structure</span>
+                </div>
+            </div>
+            <div class="step-connector">↓</div>
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <strong>Fill Data</strong>
+                    <span>Complete all sheets</span>
+                </div>
+            </div>
+            <div class="step-connector">↓</div>
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <strong>Upload File</strong>
+                    <span>Validate your data</span>
+                </div>
+            </div>
+            <div class="step-connector">↓</div>
+            <div class="step-item">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <strong>Configure & Run</strong>
+                    <span>Set parameters & optimize</span>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)  # close card-body
+        st.markdown('</div>', unsafe_allow_html=True)  # close upload-card
 
-    # Close constrained container
-    st.markdown('</div>', unsafe_allow_html=True)
+    # ========== RIGHT COLUMN: Download Template Card ==========
+    with col3:
+        st.markdown('<div class="upload-card card-download">', unsafe_allow_html=True)
+        st.markdown('<h2>📥 Download Template</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        
+        # Download button
+        render_download_template_button()
+        
+        # Required sheets notice
+        st.markdown("""
+        <div class="required-sheets-notice">
+            <strong>⚠️ Required Sheets:</strong>
+            <ul>
+                <li>Plant</li>
+                <li>Inventory</li>
+                <li>Demand</li>
+                <li>Transition_[PlantName]</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)  # close card-body
+        st.markdown('</div>', unsafe_allow_html=True)  # close upload-card
 
-    # Variable & Constraint Details (full-width expander; unchanged content)
+    # ========== FULL-WIDTH: Variable & Constraint Details ==========
+    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
+    
     with st.expander("📄 Variable and Constraint Details", expanded=False):
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.markdown(""" 
-### **Plant Sheet**
-- **Plant**: Plant name
-- **Capacity per day**: Max production per day
-- **Material Running**: Current grade running
-- **Expected Run Days**: Minimum run days before changeover
-- **Shutdown Start/End Date**: Planned downtime
-- **Pre-Shutdown Grade / Restart Grade**: Grade before and after shutdown
-""")
-        with col2:
-            st.markdown(""" 
-### **Inventory Sheet**
-- **Grade Name**: Product grade
-- **Opening Inventory**: Current stock
-- **Min. Closing Inventory**: Minimum stock at horizon end
-- **Min./Max Inventory**: Safety stock limits
-- **Min./Max Run Days**: Consecutive run constraints
-- **Force Start Date**: Mandatory start date for a grade
-- **Lines**: Plants where grade can run
-- **Rerun Allowed**: Yes/No for repeating grade
-""")
-        with col3:
-            st.markdown(""" 
-### **Demand Sheet**
-- **Date**: Planning horizon
-- **Grade Columns**: Daily demand quantity for each grade
-""")
-        with col4:
-            st.markdown(""" 
-### **Transition Sheets**
-- Allowed grade changes per plant from grade in Row to grade in Column (**Yes/No**)
-""")
+        # Create tabs for better organization
+        detail_tabs = st.tabs(["🏭 Plant Sheet", "📦 Inventory Sheet", "📈 Demand Sheet", "🔄 Transition Sheets"])
+        
+        with detail_tabs[0]:
+            st.markdown("""
+            ### Plant Sheet Configuration
+            
+            | Column | Description | Example |
+            |--------|-------------|---------|
+            | **Plant** | Plant identifier | Line_A |
+            | **Capacity per day** | Maximum daily output (MT) | 500 |
+            | **Material Running** | Currently producing grade | Grade_X |
+            | **Expected Run Days** | Days before changeover | 3 |
+            | **Shutdown Start Date** | Start of planned downtime | 15-Jan-25 |
+            | **Shutdown End Date** | End of planned downtime | 17-Jan-25 |
+            | **Pre-Shutdown Grade** | Grade before shutdown | Grade_A |
+            | **Restart Grade** | Grade after shutdown | Grade_B |
+            """)
+        
+        with detail_tabs[1]:
+            st.markdown("""
+            ### Inventory Sheet Configuration
+            
+            | Column | Description | Constraint Type |
+            |--------|-------------|-----------------|
+            | **Grade Name** | Product identifier | - |
+            | **Opening Inventory** | Starting stock (MT) | Hard |
+            | **Min. Inventory** | Safety stock level | Soft (penalty) |
+            | **Max. Inventory** | Maximum storage capacity | Hard |
+            | **Min. Closing Inventory** | End-period target | Soft (3x penalty) |
+            | **Min. Run Days** | Minimum consecutive days | Hard |
+            | **Max. Run Days** | Maximum consecutive days | Hard |
+            | **Force Start Date** | Mandatory start date | Hard |
+            | **Lines** | Plants where grade can run | Hard |
+            | **Rerun Allowed** | Can repeat grade (Yes/No) | Hard |
+            """)
+        
+        with detail_tabs[2]:
+            st.markdown("""
+            ### Demand Sheet Configuration
+            
+            | Column | Description |
+            |--------|-------------|
+            | **Date** | Planning horizon (daily) |
+            | **Grade Columns** | Daily demand quantity (MT) for each grade |
+            
+            **Note:** Each grade should have its own column with daily demand values.
+            """)
+        
+        with detail_tabs[3]:
+            st.markdown("""
+            ### Transition Sheets Configuration
+            
+            **Sheet Naming:** `Transition_[PlantName]`  
+            **Example:** `Transition_Line_A`, `Transition_Line_B`
+            
+            **Matrix Structure:**
+            - **Rows:** Previous grade (Grade running on day D)
+            - **Columns:** Next grade (Grade to run on day D+1)
+            - **Values:** `Yes` (allowed) or `No` (forbidden)
+            
+            | From → To | Grade_A | Grade_B | Grade_C |
+            |-----------|---------|---------|---------|
+            | **Grade_A** | Yes | Yes | No |
+            | **Grade_B** | No | Yes | Yes |
+            | **Grade_C** | Yes | No | Yes |
+            
+            **Constraint Type:** Hard (forbidden transitions are blocked)
+            """)
 
 
 # ========== STAGE 1: PREVIEW ==========
