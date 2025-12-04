@@ -1,17 +1,17 @@
 """
 ui_components.py
-Material 3 Light Theme - Enhanced UX with improved responsiveness and accessibility
+Material 3 Light Theme - Enhanced Desktop UX with Upload Page Improvements
 """
 
 import streamlit as st
 from pathlib import Path
 
 # -------------------------------
-# CSS - Material 3 Light Theme (Enhanced)
+# CSS - Material 3 Light Theme (Enhanced for Desktop)
 # -------------------------------
 CUSTOM_CSS = """
 /* =============================
-CORPORATE LIGHT THEME CSS - ENHANCED
+CORPORATE LIGHT THEME CSS - ENHANCED DESKTOP
 ============================= */
 :root {
   --md-sys-color-primary: #0A74DA;
@@ -62,7 +62,6 @@ CORPORATE LIGHT THEME CSS - ENHANCED
 /* =============================
 BUTTONS - Enhanced Hierarchy
 ============================= */
-/* Primary Button */
 .stButton>button[kind="primary"],
 .stButton>button:not([kind]),
 button[data-testid="stDownloadButton"] {
@@ -86,7 +85,6 @@ button[data-testid="stDownloadButton"]:hover {
   transform: translateY(-1px);
 }
 
-/* Secondary Button */
 .stButton>button[kind="secondary"] {
   background: var(--md-sys-color-surface) !important;
   color: var(--md-sys-color-primary) !important;
@@ -104,14 +102,12 @@ button[data-testid="stDownloadButton"]:hover {
   box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
 }
 
-/* Focus states for accessibility */
 .stButton>button:focus-visible,
 button[data-testid="stDownloadButton"]:focus-visible {
   outline: 3px solid #4BA3F4 !important;
   outline-offset: 2px !important;
 }
 
-/* Disabled state */
 .stButton>button:disabled {
   opacity: 0.5 !important;
   cursor: not-allowed !important;
@@ -168,10 +164,199 @@ Cards - Enhanced
 }
 
 /* =============================
+UPLOAD PAGE - Enhanced Cards
+============================= */
+.upload-card {
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  height: 100%;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-card:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  transform: translateY(-4px);
+}
+
+.card-uploader {
+  background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+  border: 2px solid rgba(10, 116, 218, 0.2);
+}
+
+.card-quickstart {
+  background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+  border: 2px solid rgba(40, 167, 69, 0.2);
+}
+
+.card-download {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  border: 2px solid rgba(255, 193, 7, 0.2);
+}
+
+.upload-card h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #212529;
+}
+
+.upload-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =============================
+UPLOAD ZONE - Enhanced
+============================= */
+.upload-zone {
+  border: 3px dashed #0A74DA;
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: rgba(10, 116, 218, 0.03);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+}
+
+.upload-zone:hover {
+  background: rgba(10, 116, 218, 0.08);
+  border-color: #085BB5;
+  transform: scale(1.02);
+}
+
+.upload-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.upload-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0A74DA;
+  margin-bottom: 0.5rem;
+}
+
+.upload-subtext {
+  font-size: 0.875rem;
+  color: #606266;
+  margin-bottom: 1rem;
+}
+
+.upload-specs {
+  font-size: 0.75rem;
+  color: #909399;
+  font-weight: 500;
+}
+
+/* =============================
+QUICK START STEPS - Interactive
+============================= */
+.quick-start-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 1rem;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.step-item:hover {
+  background: rgba(255,255,255,0.7);
+  transform: translateX(4px);
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #28A745, #5DDC7A);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.step-content {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.step-content strong {
+  font-size: 1rem;
+  color: #212529;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.step-content span {
+  font-size: 0.85rem;
+  color: #606266;
+}
+
+.step-connector {
+  text-align: center;
+  color: #28A745;
+  font-size: 1.5rem;
+  margin: -0.25rem 0;
+  margin-left: 18px;
+}
+
+/* =============================
+REQUIRED SHEETS NOTICE
+============================= */
+.required-sheets-notice {
+  padding: 1rem;
+  background: #FFF3CD;
+  border-radius: 8px;
+  border-left: 4px solid #FFC107;
+  margin-top: 1rem;
+}
+
+.required-sheets-notice strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #856404;
+  font-size: 0.95rem;
+}
+
+.required-sheets-notice ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #856404;
+  font-size: 0.875rem;
+}
+
+/* =============================
 Alerts - Enhanced
 ============================= */
 div[data-testid="stAlert"] {
-  border-radius: var(--md-shape-corner-medium);
+  border-radius: var(--md-sys-color-medium);
   padding: 1rem 1.5rem;
   margin: 1rem 0;
   border-left: 4px solid;
@@ -202,11 +387,11 @@ div[data-testid="stAlert"] {
 }
 
 /* =============================
-Stage Progress - Enhanced (4 stages)
+Stage Progress - Enhanced with Animation
 ============================= */
 .stage-container {
   background: var(--md-sys-color-surface);
-  border-radius: var(--md-shape-corner-medium);
+  border-radius: var(--md-sys-color-medium);
   padding: 2rem 1.5rem;
   margin-bottom: 2rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -244,12 +429,29 @@ Stage Progress - Enhanced (4 stages)
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.stage-circle:not(.active):not(.completed) {
+  opacity: 0.4;
+  border-color: var(--md-sys-color-outline);
+}
+
 .stage-circle.active {
   transform: scale(1.15);
   background: var(--md-sys-color-primary);
   border-color: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
-  box-shadow: 0 4px 12px rgba(10, 116, 218, 0.4);
+  box-shadow: 0 4px 12px rgba(10, 116, 218, 0.4), 0 0 0 4px rgba(10, 116, 218, 0.1);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(10, 116, 218, 0.4), 0 0 0 4px rgba(10, 116, 218, 0.1);
+  }
+  50% { 
+    transform: scale(1.2);
+    box-shadow: 0 6px 16px rgba(10, 116, 218, 0.5), 0 0 0 6px rgba(10, 116, 218, 0.15);
+  }
 }
 
 .stage-circle.completed {
@@ -286,7 +488,7 @@ Stage Progress - Enhanced (4 stages)
 }
 
 /* =============================
-Tabs - Enhanced with dynamic colors
+Tabs - Enhanced
 ============================= */
 .stTabs {
   background: var(--md-sys-color-surface);
@@ -345,7 +547,7 @@ Tabs - Enhanced with dynamic colors
 }
 
 /* =============================
-Metric Cards - Enhanced with hover effects
+Metric Cards - Enhanced
 ============================= */
 .metric-card {
   border-radius: var(--md-shape-corner-medium) !important;
@@ -439,25 +641,6 @@ Loading States - Enhanced
   margin-top: 0.5rem;
 }
 
-/* Skeleton Loader */
-.skeleton-loader {
-  padding: 1rem;
-}
-
-.skeleton-row {
-  height: 40px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-  margin-bottom: 12px;
-  border-radius: 8px;
-}
-
-@keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
 /* =============================
 Error States - Enhanced
 ============================= */
@@ -494,50 +677,6 @@ Section Divider
 }
 
 /* =============================
-Responsive Design
-============================= */
-@media (max-width: 768px) {
-  .stage-row {
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-  
-  .stage-connector {
-    width: 4px;
-    height: 40px;
-    margin: 0.5rem 0;
-  }
-  
-  .metric-card {
-    margin-bottom: 1rem !important;
-  }
-  
-  .app-header h1 {
-    font-size: 1.5rem;
-  }
-  
-  .app-header {
-    padding: 1.25rem 1.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .stage-circle {
-    width: 44px;
-    height: 44px;
-    font-size: 1.1rem;
-  }
-  
-  .stage-label {
-    font-size: 0.75rem;
-  }
-  
-  .metric-value {
-    font-size: 1.75rem !important;
-  }
-}
-
-/* =============================
 Data Tables Enhancement
 ============================= */
 .dataframe-container {
@@ -547,57 +686,50 @@ Data Tables Enhancement
 }
 
 /* =============================
-Accessibility Enhancements
+Constraint Details Table
 ============================= */
-.skip-to-content {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  padding: 8px 16px;
-  text-decoration: none;
-  border-radius: 0 0 4px 0;
-  z-index: 100;
+.constraint-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
 }
 
-.skip-to-content:focus {
-  top: 0;
+.constraint-table th {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .stage-circle {
-    border-width: 4px;
-  }
-  
-  .stButton>button {
-    border: 2px solid currentColor !important;
-  }
+.constraint-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  font-size: 0.875rem;
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+.constraint-table tr:hover {
+  background: var(--md-sys-color-surface-variant);
 }
 
-/* File uploader: make dropzone visually primary */
-[data-testid="stFileUploaderDropzone"] {
-  border: 2px dashed var(--md-sys-color-primary) !important;
-  background: var(--md-sys-color-primary-container) !important;
-  border-radius: var(--md-shape-corner-medium) !important;
-  padding: 1rem !important;
-  transition: background 0.2s ease, border-color 0.2s ease;
-}
-[data-testid="stFileUploaderDropzone"]:hover {
-  background: #d9e8f9 !important; /* subtle hover within the container palette */
+.constraint-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
+.constraint-badge.hard {
+  background: #F8D7DA;
+  color: #721C24;
+}
 
+.constraint-badge.soft {
+  background: #FFF3CD;
+  color: #856404;
+}
 """
 
 # -------------------------------
@@ -730,18 +862,6 @@ def render_error_state(error_type: str, message: str):
             <p>{message}</p>
         </div>
     """, unsafe_allow_html=True)
-
-
-# -------------------------------
-# SKELETON LOADER
-# -------------------------------
-def render_skeleton_loader(rows: int = 3):
-    """Render skeleton loader for loading states."""
-    skeleton_html = '<div class="skeleton-loader">'
-    for _ in range(rows):
-        skeleton_html += '<div class="skeleton-row"></div>'
-    skeleton_html += '</div>'
-    st.markdown(skeleton_html, unsafe_allow_html=True)
 
 
 # -------------------------------
