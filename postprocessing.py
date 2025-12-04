@@ -468,7 +468,7 @@ def create_stockout_details_table(
                 rows.append({
                     "Date": str(date_str),
                     "Grade": grade,
-                    "Stockout Quantity (MT)": float(stockout_qty)
+                    "Stockout Quantity (MT)": int(stockout_qty)
                 })
 
     if not rows:
