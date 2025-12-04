@@ -52,38 +52,36 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 
 # ========== STAGE 0: UPLOAD ==========
-
 def render_upload_stage():
-    """Stage 0: File upload with improved desktop layout and section cards (visual-only changes)."""
+    """Stage 0: File upload with improved visual hierarchy and section grouping (desktop-only)."""
+
+    # Header and stage progress (unchanged logic)
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    # Constrain page width and create a two-column layout: Left = Upload (primary), Right = Quick Start + Download
+    # Start a constrained page container for better desktop readability
     st.markdown('<div class="page-max">', unsafe_allow_html=True)
+
+    # Two-column layout: Left (primary upload), Right (Quick Start + Download)
     col_left, col_right = st.columns([2, 1])
 
-    # ---------------- LEFT: Upload (primary card) ----------------
+    # --- LEFT: Upload (primary section card) ---
     with col_left:
         st.markdown('<div class="section-card section-primary">', unsafe_allow_html=True)
-        st.markdown('<div class="section-header"><span class="section-icon">📤</span><h3>Upload Production Data</h3></div>', unsafe_allow_html=True)
 
-        # (Original uploader and logic preserved)
-        st.markdown('\n', unsafe_allow_html=True)
+        # File uploader (unchanged logic)
         uploaded_file = st.file_uploader(
-            "Choose an Excel file",
+            "Upload your input files here",
             type=ALLOWED_EXTENSIONS,
             help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
         )
 
-        # Helper microcopy (visual-only)
-        st.markdown("""
-        <div class="helper-text">
-            Required: <strong>Plant</strong>, <strong>Inventory</strong>, <strong>Demand</strong>. Optional: <code>Transition_*</code>.
-            Max file size 200MB • Format: XLSX
-        </div>
-        """, unsafe_allow_html=True)
+        # Download Template & Details (keeps existing button/function)
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        render_download_template_button()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        # Keep all existing upload handling logic exactly as-is
+        # Inline alerts and validation remain within this card (unchanged logic)
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
             render_alert("File uploaded successfully! Processing...", "success")
@@ -108,32 +106,36 @@ def render_upload_stage():
 
         st.markdown('</div>', unsafe_allow_html=True)  # close section-card
 
-    # ---------------- RIGHT: Quick Start + Download (stacked cards) ----------------
+    # --- RIGHT: Quick Start (secondary) + Download template (secondary) ---
     with col_right:
-        # Quick Start (secondary card)
+        # Quick Start Guide (visual grouping only; content unchanged)
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.markdown('<div class="section-header"><span class="section-icon">🚀</span><h3>Quick Start Guide</h3></div>', unsafe_allow_html=True)
-        st.markdown('\n', unsafe_allow_html=True)
-        st.markdown(""" 
-        <ul class="qs-list">
-          <li><strong>Download Template</strong> → Get the Excel structure</li>
-          <li><strong>Fill Data</strong> → Complete Plant, Inventory, Demand, and Transition sheets</li>
-          <li><strong>Upload File</strong> → Validate your data</li>
-          <li><strong>Preview & Configure</strong> → Check sheets and set optimization parameters</li>
-          <li><strong>Run Optimization</strong> → Generate schedule and view results</li>
-        </ul>
-        """, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="section-header">'
+            '<h3>🚀Quick Start Guide</h3></div>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            """
+            <ul class="qs-list">
+              <li><strong>Download Template</strong> → Get the Excel structure</li>
+              <li><strong>Fill Data</strong> → Complete Plant, Inventory, Demand, and Transition sheets</li>
+              <li><strong>Upload File</strong> → Validate your data</li>
+              <li><strong>Preview & Configure</strong> → Check sheets and set optimization parameters</li>
+              <li><strong>Run Optimization</strong> → Generate schedule and view results</li>
+            </ul>
+            """,
+            unsafe_allow_html=True
+        )
+    #   st.markdown('</div>', unsafe_allow_html=True)
 
-        # Download Template (secondary card)
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.markdown('<div class="section-header"><span class="section-icon">📥</span><h3>Download Template & Details</h3></div>', unsafe_allow_html=True)
-        st.markdown('\n', unsafe_allow_html=True)
-        render_download_template_button()
-        st.markdown('</div>', unsafe_allow_html=True)
+        
 
-    # Variable & Constraint Details (full width, under columns)
-    with st.expander("📄 Variable and Constraint Details", expanded=True):
+    # Close constrained container
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Variable & Constraint Details (full-width expander; unchanged content)
+    with st.expander("📄 Variable and Constraint Details", expanded=False):
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.markdown(""" 
@@ -144,7 +146,7 @@ def render_upload_stage():
 - **Expected Run Days**: Minimum run days before changeover
 - **Shutdown Start/End Date**: Planned downtime
 - **Pre-Shutdown Grade / Restart Grade**: Grade before and after shutdown
-            """)
+""")
         with col2:
             st.markdown(""" 
 ### **Inventory Sheet**
@@ -156,20 +158,18 @@ def render_upload_stage():
 - **Force Start Date**: Mandatory start date for a grade
 - **Lines**: Plants where grade can run
 - **Rerun Allowed**: Yes/No for repeating grade
-            """)
+""")
         with col3:
             st.markdown(""" 
 ### **Demand Sheet**
 - **Date**: Planning horizon
 - **Grade Columns**: Daily demand quantity for each grade
-            """)
+""")
         with col4:
             st.markdown(""" 
 ### **Transition Sheets**
 - Allowed grade changes per plant from grade in Row to grade in Column (**Yes/No**)
-            """)
-
-    st.markdown('</div>', unsafe_allow_html=True)  # close page-max
+""")
 
 
 # ========== STAGE 1: PREVIEW ==========
