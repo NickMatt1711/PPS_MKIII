@@ -52,7 +52,6 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 
 # ========== STAGE 0: UPLOAD ==========
-
 def render_upload_stage():
     """Stage 0: File upload with improved visual hierarchy and section grouping (desktop-only)."""
 
@@ -70,35 +69,15 @@ def render_upload_stage():
     with col_left:
         st.markdown('<div class="section-card section-primary">', unsafe_allow_html=True)
 
-        # HEADER (visual-only)
-        st.markdown(
-            '<div class="section-header"><span class="section-icon">📤</span><h3>Upload Production Data</h3></div>',
-            unsafe_allow_html=True
-        )
-
-        # Uploader wrapper (visual-only; actual logic is unchanged)
-        st.markdown('<div class="uploader-shell">', unsafe_allow_html=True)
-
+        # File uploader (unchanged logic)
         uploaded_file = st.file_uploader(
-            "Choose an Excel file",
+            "Upload your input files here",
             type=ALLOWED_EXTENSIONS,
             help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
         )
 
-        # Helper microcopy under uploader (visual-only)
-        st.markdown("""
-            <div class="uploader-meta">
-                <div class="meta-item">Required: <strong>Plant</strong>, <strong>Inventory</strong>, <strong>Demand</strong></div>
-                <div class="meta-item">Optional: <code>Transition_*</code></div>
-                <div class="meta-item">Max 200MB • Format: .xlsx</div>
-            </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)  # close uploader-shell
-
-        # Download Template & Details (keeps existing button/function; moved below for clearer flow)
+        # Download Template & Details (keeps existing button/function)
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.markdown('<div class="section-header"><span class="section-icon">📥</span><h3>Download Template</h3></div>', unsafe_allow_html=True)
         render_download_template_button()
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -125,13 +104,15 @@ def render_upload_stage():
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
 
-        st.markdown('</div>', unsafe_allow_html=True)  # close primary section-card
+        st.markdown('</div>', unsafe_allow_html=True)  # close section-card
 
-    # --- RIGHT: Quick Start (secondary) ---
+    # --- RIGHT: Quick Start (secondary) + Download template (secondary) ---
     with col_right:
+        # Quick Start Guide (visual grouping only; content unchanged)
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
         st.markdown(
-            '<div class="section-header"><span class="section-icon">🚀</span><h3>Quick Start Guide</h3></div>',
+            '<div class="section-header">'
+            '<h3>🚀Quick Start Guide</h3></div>',
             unsafe_allow_html=True
         )
         st.markdown(
@@ -146,7 +127,9 @@ def render_upload_stage():
             """,
             unsafe_allow_html=True
         )
-        st.markdown('</div>', unsafe_allow_html=True)
+    #   st.markdown('</div>', unsafe_allow_html=True)
+
+        
 
     # Close constrained container
     st.markdown('</div>', unsafe_allow_html=True)
@@ -187,7 +170,6 @@ def render_upload_stage():
 ### **Transition Sheets**
 - Allowed grade changes per plant from grade in Row to grade in Column (**Yes/No**)
 """)
-
 
 
 # ========== STAGE 1: PREVIEW ==========
