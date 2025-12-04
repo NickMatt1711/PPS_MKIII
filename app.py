@@ -135,7 +135,7 @@ def render_upload_stage():
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Variable & Constraint Details (full-width expander; unchanged content)
-    with st.expander("📄 Variable and Constraint Details", expanded=True):
+    with st.expander("📄 Variable and Constraint Details", expanded=False):
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.markdown(""" 
