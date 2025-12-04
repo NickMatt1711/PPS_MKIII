@@ -666,12 +666,13 @@ def render_results_stage():
             if not stockout_df.empty:
                 try:
                     styled_stockout = stockout_df.style.applymap(
-                        lambda v: style_stockout_grade(v, grade_colors), subset=['Grade']
+                        lambda v: f'background-color: {grade_colors.get(v, "#ccc")}; color: white; font-weight: bold; text-align: center;' if v in grade_colors else '',
+                        subset=['Grade']
                     ).applymap(
                         highlight_stockout, subset=['Stockout Quantity (MT)']
                     )
                     st.dataframe(styled_stockout, use_container_width=True, hide_index=True)
-                except Exception:
+                except Exception as e:
                     st.dataframe(stockout_df, use_container_width=True, hide_index=True)
             
         render_section_divider()
