@@ -556,7 +556,11 @@ def render_results_stage():
             # Schedule table
             try:
                 schedule_df = create_schedule_table(
-                    solution, line, data.get('dates', []), grade_colors
+                    solution, 
+                    line, 
+                    data.get('dates', []), 
+                    grade_colors,
+                    shutdown_periods=data.get('shutdown_periods', {})  # ADD THIS
                 )
             except Exception as e:
                 schedule_df = pd.DataFrame()
