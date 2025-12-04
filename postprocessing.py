@@ -344,41 +344,66 @@ def create_schedule_table(
     solution: Dict,
     line: str,
     dates: List[date],
-    grade_colors: Dict
+    grade_colors: Dict,
+    shutdown_periods: Dict = None
 ):
-    """Tabular schedule structure for Streamlit."""
+    """Tabular schedule structure for Streamlit with shutdown periods."""
     dates = [_ensure_date(d) for d in dates]
     schedule = solution.get("is_producing", {}).get(line, {})
-
+    shutdown_days = shutdown_periods.get(line, []) if shutdown_periods else []
+    
+    # Create a set of shutdown dates for quick lookup
+    shutdown_date_set = set()
+    if shutdown_days:
+        for day_idx in shutdown_days:
+            if day_idx < len(dates):
+                shutdown_date_set.add(dates[day_idx])
+    
     rows = []
     current_grade = None
     start_idx = None
-
+    in_shutdown = False
+    
     for i, d in enumerate(dates):
         ds = d.strftime("%d-%b-%y")
         grade_today = schedule.get(ds)
-
-        if grade_today != current_grade:
-            if current_grade is not None:
+        is_shutdown_today = d in shutdown_date_set
+        
+        # Determine current state
+        if is_shutdown_today:
+            current_state = "Shutdown"
+        else:
+            current_state = grade_today
+        
+        # Check if state changed
+        if current_state != (current_grade if not in_shutdown else "Shutdown"):
+            # Save previous block
+            if current_grade is not None or in_shutdown:
                 end_date = dates[i - 1]
                 rows.append({
-                    "Grade": current_grade,
+                    "Grade": "Shutdown" if in_shutdown else current_grade,
                     "Start Date": dates[start_idx].strftime("%d-%b-%y"),
                     "End Date": end_date.strftime("%d-%b-%y"),
-                    "Days": (end_date - dates[start_idx]).days + 1
+                    "Days": (end_date - dates[start_idx]).days + 1,
+                    "Quantity (MT)": 0 if in_shutdown else ""  # Zero for shutdown
                 })
+            
+            # Start new block
             current_grade = grade_today
+            in_shutdown = is_shutdown_today
             start_idx = i
-
-    if current_grade is not None:
+    
+    # Save final block
+    if current_grade is not None or in_shutdown:
         end_date = dates[-1]
         rows.append({
-            "Grade": current_grade,
+            "Grade": "Shutdown" if in_shutdown else current_grade,
             "Start Date": dates[start_idx].strftime("%d-%b-%y"),
             "End Date": end_date.strftime("%d-%b-%y"),
-            "Days": (end_date - dates[start_idx]).days + 1
+            "Days": (end_date - dates[start_idx]).days + 1,
+            "Quantity (MT)": 0 if in_shutdown else ""
         })
-
+    
     return pd.DataFrame(rows)
 
 
