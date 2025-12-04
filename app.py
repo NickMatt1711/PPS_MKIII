@@ -53,35 +53,26 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: Streamlined desktop upload interface"""
+    """Stage 0: Clean, functional upload interface"""
     
     # Header and stage progress
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
     
-    # Upload page container
-    st.markdown('<div class="upload-page-container">', unsafe_allow_html=True)
-    
-    # Page header
-    render_upload_header()
-    
-    # Main content - two equal columns
-    st.markdown('<div class="upload-main-columns">', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
+    # Main content - two columns
+    col1, col2 = st.columns([2, 1])
     
     with col1:
         # Upload section
-        st.markdown('<div class="upload-section">', unsafe_allow_html=True)
+        uploaded_file = render_upload_section()
         
-        # Clean upload zone
-        uploaded_file = render_upload_zone()
-        
-        # Processing logic (keep your existing logic)
+        # Processing logic
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
-            render_file_info(uploaded_file.name, uploaded_file.size)
-            render_status_indicator("success", "File uploaded successfully! Processing...")
+            
+            # Show file info
+            st.success(f"✅ **{uploaded_file.name}** uploaded successfully!")
+            st.info(f"File size: {uploaded_file.size / 1024:.1f} KB")
             
             try:
                 file_buffer = io.BytesIO(uploaded_file.read())
@@ -90,34 +81,133 @@ def render_upload_stage():
                 
                 if success:
                     st.session_state[SS_EXCEL_DATA] = data
-                    render_status_indicator("success", "File validated successfully!")
+                    st.success("File validated successfully! Processing...")
                     for warn in warnings:
-                        render_alert(warn, "warning")
+                        st.warning(warn)
                     st.session_state[SS_STAGE] = STAGE_PREVIEW
                     st.rerun()
                 else:
                     for err in errors:
-                        render_status_indicator("error", err)
+                        st.error(err)
                     for warn in warnings:
-                        render_alert(warn, "warning")
+                        st.warning(warn)
             except Exception as e:
-                render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
+                st.error(f"Upload failed: {str(e)}")
         
-        # Download template section
-        render_download_template_section()
-        
-        st.markdown('</div>', unsafe_allow_html=True)  # Close upload section
+        # Template section
+        render_template_section()
     
     with col2:
         # Quick Start Guide
-        render_quick_start_guide_clean()
+        st.markdown("""
+        <div class="quick-start-guide-clean">
+            <div class="guide-title-clean">🚀 Quick Start Guide</div>
+            <div class="step-list-clean">
+                <div class="step-item-clean">
+                    <div class="step-number-clean">1</div>
+                    <div class="step-content-clean">
+                        <div class="step-title-clean">Download Template</div>
+                        <div class="step-description-clean">Get the pre-formatted Excel structure with all required sheets</div>
+                    </div>
+                </div>
+                <div class="step-item-clean">
+                    <div class="step-number-clean">2</div>
+                    <div class="step-content-clean">
+                        <div class="step-title-clean">Fill Data</div>
+                        <div class="step-description-clean">Complete Plant, Inventory, Demand, and Transition sheets</div>
+                    </div>
+                </div>
+                <div class="step-item-clean">
+                    <div class="step-number-clean">3</div>
+                    <div class="step-content-clean">
+                        <div class="step-title-clean">Upload File</div>
+                        <div class="step-description-clean">Drag & drop or browse to upload your completed file</div>
+                    </div>
+                </div>
+                <div class="step-item-clean">
+                    <div class="step-number-clean">4</div>
+                    <div class="step-content-clean">
+                        <div class="step-title-clean">Configure & Run</div>
+                        <div class="step-description-clean">Set optimization parameters and generate schedule</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    st.markdown('</div>', unsafe_allow_html=True)  # Close main columns
-    
-    # Variable and constraint details
-    render_variable_details_complete()
-    
-    st.markdown('</div>', unsafe_allow_html=True)  # Close container
+    # Variable details
+    st.markdown("---")
+    with st.expander("📋 Variable and Constraint Details", expanded=False):
+        detail_tabs = st.tabs(["🏭 Plant", "📦 Inventory", "📈 Demand", "🔄 Transitions"])
+        
+        with detail_tabs[0]:
+            st.markdown("### Plant Sheet Configuration")
+            st.dataframe(
+                pd.DataFrame({
+                    "Column": ["Plant", "Capacity per day", "Material Running", "Expected Run Days", 
+                              "Shutdown Start Date", "Shutdown End Date", "Pre-Shutdown Grade", "Restart Grade"],
+                    "Description": ["Plant identifier", "Maximum daily output (MT)", "Currently producing grade", 
+                                   "Days before changeover", "Start of planned downtime", "End of planned downtime", 
+                                   "Grade before shutdown", "Grade after shutdown"],
+                    "Example": ["Line_A", "500", "Grade_X", "3", "15-Jan-25", "17-Jan-25", "Grade_A", "Grade_B"]
+                }),
+                use_container_width=True,
+                hide_index=True
+            )
+        
+        with detail_tabs[1]:
+            st.markdown("### Inventory Sheet Configuration")
+            st.dataframe(
+                pd.DataFrame({
+                    "Column": ["Grade Name", "Opening Inventory", "Min. Inventory", "Max. Inventory", 
+                              "Min. Closing Inventory", "Min. Run Days", "Max. Run Days", "Force Start Date", "Lines", "Rerun Allowed"],
+                    "Description": ["Product identifier", "Starting stock (MT)", "Safety stock level", 
+                                   "Maximum storage capacity", "End-period target", "Minimum consecutive days", 
+                                   "Maximum consecutive days", "Mandatory start date", "Plants where grade can run", 
+                                   "Can repeat grade (Yes/No)"],
+                    "Constraint Type": ["-", "Hard", "Soft (penalty)", "Hard", "Soft (3x penalty)", 
+                                       "Hard", "Hard", "Hard", "Hard", "Hard"]
+                }),
+                use_container_width=True,
+                hide_index=True
+            )
+        
+        with detail_tabs[2]:
+            st.markdown("### Demand Sheet Configuration")
+            st.markdown("""
+            **Structure:**
+            - **Date column:** Planning horizon (daily)
+            - **Grade columns:** Each grade has its own column with daily demand values in MT
+            
+            **Example:**
+            ```
+            Date, Grade_A, Grade_B, Grade_C
+            2025-01-01, 100, 150, 200
+            2025-01-02, 120, 130, 180
+            2025-01-03, 110, 140, 190
+            ```
+            """)
+        
+        with detail_tabs[3]:
+            st.markdown("### Transition Sheets")
+            st.markdown("""
+            **Sheet Naming:** `Transition_[PlantName]` (e.g., `Transition_Line_A`)
+            
+            **Matrix Structure:**
+            - **Rows:** Previous grade (running on day D)
+            - **Columns:** Next grade (to run on day D+1)
+            - **Values:** `Yes` (allowed) or `No` (forbidden)
+            
+            **Example:**
+            ```
+            From→To, Grade_A, Grade_B, Grade_C
+            Grade_A, Yes, Yes, No
+            Grade_B, No, Yes, Yes
+            Grade_C, Yes, No, Yes
+            ```
+            
+            **Constraint Type:** Hard (forbidden transitions are blocked)
+            """)
  
 
 # ========== STAGE 1: PREVIEW ==========
