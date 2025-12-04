@@ -163,10 +163,8 @@ Cards - Enhanced
   margin-bottom: 1rem;
 }
 
-# Add/Update these styles in CUSTOM_CSS
-
 /* =============================
-UPLOAD PAGE - Refined Layout
+UPLOAD PAGE - Enhanced Visual Design
 ============================= */
 .upload-section-title {
     font-size: 1.5rem;
@@ -216,32 +214,44 @@ UPLOAD PAGE - Refined Layout
     color: #212529;
 }
 
-/* Quick Start - Steps without individual cards */
-.quick-start-steps-clean {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    margin-top: 1.5rem;
+/* Vertical connecting line */
+.quick-start-steps-connected::before {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 40px;
+    bottom: 40px;
+    width: 3px;
+    background: linear-gradient(180deg, 
+        #28A745 0%, 
+        #28A745 25%, 
+        #5DDC7A 50%, 
+        #28A745 75%, 
+        #28A745 100%);
+    border-radius: 2px;
+    z-index: 0;
 }
 
-.step-item-clean {
+.step-item-connected {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
-    padding: 0;
+    padding: 0.75rem 0;
+    position: relative;
+    z-index: 1;
     transition: all 0.2s ease;
 }
 
-.step-item-clean:hover {
+.step-item-connected:hover {
     transform: translateX(4px);
 }
 
-.step-item-clean:hover .step-number-clean {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+.step-item-connected:hover .step-number-connected {
+    transform: scale(1.15);
+    box-shadow: 0 4px 16px rgba(40, 167, 69, 0.5);
 }
 
-.step-number-clean {
+.step-number-connected {
     width: 36px;
     height: 36px;
     min-width: 36px;
@@ -253,36 +263,31 @@ UPLOAD PAGE - Refined Layout
     justify-content: center;
     font-weight: 700;
     font-size: 1rem;
-    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
-    transition: all 0.2s ease;
+    box-shadow: 0 3px 8px rgba(40, 167, 69, 0.35);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+    border: 3px solid #F0FDF4;
 }
 
-.step-content-clean {
+.step-content-connected {
     flex: 1;
     padding-top: 0.25rem;
 }
 
-.step-content-clean strong {
+.step-content-connected strong {
     font-size: 1rem;
     color: #212529;
     display: block;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.35rem;
     font-weight: 600;
 }
 
-.step-content-clean span {
+.step-content-connected span {
     font-size: 0.875rem;
     color: #606266;
-    line-height: 1.4;
-}
-
-.step-divider-clean {
-    width: 2px;
-    height: 16px;
-    background: linear-gradient(180deg, #28A745, rgba(40, 167, 69, 0.3));
-    margin-left: 17px;
-    margin-top: -0.25rem;
-    margin-bottom: -0.25rem;
+    line-height: 1.5;
+    display: block;
 }
 
 /* =============================
