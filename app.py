@@ -671,8 +671,6 @@ def render_results_stage():
                 try:
                     styled_stockout = stockout_df.style.applymap(
                         lambda v: style_summary_grade(v), subset=['Grade']
-                    ).applymap(
-                        highlight_stockout, subset=['Stockout Quantity (MT)']
                     )
                     st.dataframe(styled_stockout, use_container_width=True, hide_index=True)
                 except Exception as e:
