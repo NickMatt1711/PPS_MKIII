@@ -81,13 +81,15 @@ def render_upload_stage():
             help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
         )
 
-        # Helper microcopy under uploader (visual only)
-        st.markdown("""
-        <div class="helper-text">
-            Required sheets: <strong>Plant</strong>, <strong>Inventory</strong>, <strong>Demand</strong>.
-            Optional: <code>Transition_*</code>. Max size 200MB • Format: .xlsx
-        </div>
-        """, unsafe_allow_html=True)
+        # Download Template & Details (keeps existing button/function)
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="section-header"><span class="section-icon">📥</span>'
+            '<h3>Download Template & Details</h3></div>',
+            unsafe_allow_html=True
+        )
+        render_download_template_button()
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # Inline alerts and validation remain within this card (unchanged logic)
         if uploaded_file is not None:
@@ -135,17 +137,9 @@ def render_upload_stage():
             """,
             unsafe_allow_html=True
         )
-        st.markdown('</div>', unsafe_allow_html=True)
+    #   st.markdown('</div>', unsafe_allow_html=True)
 
-        # Download Template & Details (keeps existing button/function)
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.markdown(
-            '<div class="section-header"><span class="section-icon">📥</span>'
-            '<h3>Download Template & Details</h3></div>',
-            unsafe_allow_html=True
-        )
-        render_download_template_button()
-        st.markdown('</div>', unsafe_allow_html=True)
+        
 
     # Close constrained container
     st.markdown('</div>', unsafe_allow_html=True)
