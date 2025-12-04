@@ -52,6 +52,7 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 
 # ========== STAGE 0: UPLOAD ==========
+
 def render_upload_stage():
     """Stage 0: File upload with improved visual hierarchy and section grouping (desktop-only)."""
 
@@ -69,26 +70,42 @@ def render_upload_stage():
     with col_left:
         st.markdown('<div class="section-card section-primary">', unsafe_allow_html=True)
 
-        # File uploader (unchanged logic)
+        # File uploader (unchanged API; clarified affordance via CSS)
         uploaded_file = st.file_uploader(
             "Upload your input files here",
             type=ALLOWED_EXTENSIONS,
             help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
         )
 
-        # Download Template & Details (keeps existing button/function)
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        # Subtle helper text (keeps info visible near the control)
+        st.caption("Limit 200MB per file · XLSX only")
+
+        # Download Template (keeps existing button/function; now visually distinct)
+        st.markdown('<div class="section-actions">', unsafe_allow_html=True)
         render_download_template_button()
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Inline alerts and validation remain within this card (unchanged logic)
+        # Inline alerts, progress, and validation (existing logic + progressive feedback)
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
-            render_alert("File uploaded successfully! Processing...", "success")
+
+            # Show selected file details & start progress
+            size_bytes = getattr(uploaded_file, "size", None)
+            size_str = f"{(size_bytes or 0)/1024/1024:.2f} MB" if size_bytes else "—"
+            render_alert(f"Selected: {uploaded_file.name} ({size_str}). Validating…", "info")
+
+            progress_ph = st.progress(0)
             try:
+                progress_ph.progress(10)  # read started
                 file_buffer = io.BytesIO(uploaded_file.read())
+                progress_ph.progress(40)  # read complete
+
                 loader = ExcelDataLoader(file_buffer)
+                progress_ph.progress(70)  # validation started
                 success, data, errors, warnings = loader.load_and_validate()
+                progress_ph.progress(100)  # done
+                progress_ph.empty()
+
                 if success:
                     st.session_state[SS_EXCEL_DATA] = data
                     render_alert("File validated successfully!", "success")
@@ -102,34 +119,33 @@ def render_upload_stage():
                     for warn in warnings:
                         render_alert(warn, "warning")
             except Exception as e:
+                progress_ph.empty()
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
 
         st.markdown('</div>', unsafe_allow_html=True)  # close section-card
 
-    # --- RIGHT: Quick Start (secondary) + Download template (secondary) ---
+    # --- RIGHT: Quick Start (secondary) ---
     with col_right:
-        # Quick Start Guide (visual grouping only; content unchanged)
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
         st.markdown(
-            '<div class="section-header">'
-            '<h3>🚀Quick Start Guide</h3></div>',
+            '<div class="section-header"><h3>Quick Start Guide</h3></div>',
             unsafe_allow_html=True
         )
+
+        # Turn the list into a numbered stepper for scannability (content unchanged)
         st.markdown(
             """
-            <ul class="qs-list">
-              <li><strong>Download Template</strong> → Get the Excel structure</li>
-              <li><strong>Fill Data</strong> → Complete Plant, Inventory, Demand, and Transition sheets</li>
-              <li><strong>Upload File</strong> → Validate your data</li>
-              <li><strong>Preview & Configure</strong> → Check sheets and set optimization parameters</li>
-              <li><strong>Run Optimization</strong> → Generate schedule and view results</li>
-            </ul>
+            <ol class="qs-stepper">
+              <li class="qs-step"><strong>Download Template</strong><span>Get the Excel structure</span></li>
+              <li class="qs-step"><strong>Fill Data</strong><span>Complete Plant, Inventory, Demand, and Transition sheets</span></li>
+              <li class="qs-step"><strong>Upload File</strong><span>Validate your data</span></li>
+              <li class="qs-step"><strong>Preview & Configure</strong><span>Check sheets and set optimization parameters</span></li>
+              <li class="qs-step"><strong>Run Optimization</strong><span>Generate schedule and view results</span></li>
+            </ol>
             """,
             unsafe_allow_html=True
         )
-    #   st.markdown('</div>', unsafe_allow_html=True)
-
-        
+        st.markdown('</div>', unsafe_allow_html=True)  # close section-card
 
     # Close constrained container
     st.markdown('</div>', unsafe_allow_html=True)
@@ -170,6 +186,7 @@ def render_upload_stage():
 ### **Transition Sheets**
 - Allowed grade changes per plant from grade in Row to grade in Column (**Yes/No**)
 """)
+
 
 
 # ========== STAGE 1: PREVIEW ==========
