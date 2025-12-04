@@ -70,15 +70,6 @@ def render_upload_stage():
         # Uploader container
         st.markdown('<div class="uploader-container">', unsafe_allow_html=True)
         
-        '''# Visual upload indicator
-        st.markdown("""
-        <div class="upload-indicator">
-            <div class="upload-icon">📁</div>
-            <div class="upload-text">Drag & Drop Excel File</div>
-            <div class="upload-subtext">or click to browse</div>
-            <div class="upload-specs">Limit: 200MB per file • Format: .XLSX</div>
-        </div>
-        """, unsafe_allow_html=True)'''
         
         # File uploader
         uploaded_file = st.file_uploader(
