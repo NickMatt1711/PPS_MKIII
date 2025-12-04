@@ -1,9 +1,8 @@
 """
-Polymer Production Scheduler - Main Application (Enhanced UX)
-A wizard-based Streamlit app for multi-plant production optimization
-Version 3.2.0 - Enhanced stage management and responsive design
+ Polymer Production Scheduler - Main Application (Enhanced UX)
+ A wizard-based Streamlit app for multi-plant production optimization
+ Version 3.2.0 - Enhanced stage management and responsive design
 """
-
 import streamlit as st
 import io
 from datetime import timedelta
@@ -19,7 +18,6 @@ from data_loader import *
 from preview_tables import *
 from solver_cp_sat import build_and_solve_model
 from postprocessing import *
-
 import pandas as pd
 
 
@@ -30,7 +28,6 @@ STAGE_MAP = {
     "RESULTS": 3
 }
 
-
 # Page configuration
 st.set_page_config(
     page_title=APP_TITLE,
@@ -38,7 +35,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-
 apply_custom_css()
 
 # Initialize required session state keys
@@ -47,7 +43,6 @@ st.session_state.setdefault(SS_UPLOADED_FILE, None)
 st.session_state.setdefault(SS_EXCEL_DATA, None)
 st.session_state.setdefault(SS_SOLUTION, None)
 st.session_state.setdefault(SS_GRADE_COLORS, {})
-
 st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
     'time_limit_min': DEFAULT_TIME_LIMIT_MIN,
     'buffer_days': DEFAULT_BUFFER_DAYS,
@@ -57,43 +52,51 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 
 # ========== STAGE 0: UPLOAD ==========
-
-# ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: File upload with three colored cards in columns"""
+    """Stage 0: File upload with improved visual hierarchy and section grouping (desktop-only)."""
+
+    # Header and stage progress (unchanged logic)
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    col1, col2, col3 = st.columns(3)
+    # Start a constrained page container for better desktop readability
+    st.markdown('<div class="page-max">', unsafe_allow_html=True)
 
-    # Column 1: Quick Start Guide
-    with col1:
-        st.markdown('<div class="upload-card card-quickstart"><h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+    # Two-column layout: Left (primary upload), Right (Quick Start + Download)
+    col_left, col_right = st.columns([2, 1])
+
+    # --- LEFT: Upload (primary section card) ---
+    with col_left:
+        st.markdown('<div class="section-card section-primary">', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="section-header"><span class="section-icon">📤</span>'
+            '<h3>Upload Production Data</h3></div>',
+            unsafe_allow_html=True
+        )
+
+        # File uploader (unchanged logic)
+        uploaded_file = st.file_uploader(
+            "Choose an Excel file",
+            type=ALLOWED_EXTENSIONS,
+            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
+        )
+
+        # Helper microcopy under uploader (visual only)
         st.markdown("""
-        1️⃣ **Download Template** → Get the Excel structure  
-        2️⃣ **Fill Data** → Complete Plant, Inventory, Demand, and Transition sheets  
-        3️⃣ **Upload File** → Validate your data  
-        4️⃣ **Preview & Configure** → Check sheets and set optimization parameters  
-        5️⃣ **Run Optimization** → Generate schedule and view results  
-        """)
-        st.markdown('</div></div>', unsafe_allow_html=True)
+        <div class="helper-text">
+            Required sheets: <strong>Plant</strong>, <strong>Inventory</strong>, <strong>Demand</strong>.
+            Optional: <code>Transition_*</code>. Max size 200MB • Format: .xlsx
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Column 2: Uploader
-    with col2:
-        st.markdown('<div class="upload-card card-uploader"><h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
-        uploaded_file = st.file_uploader("Choose an Excel file", type=ALLOWED_EXTENSIONS, help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets")
-
+        # Inline alerts and validation remain within this card (unchanged logic)
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
             render_alert("File uploaded successfully! Processing...", "success")
-
             try:
                 file_buffer = io.BytesIO(uploaded_file.read())
                 loader = ExcelDataLoader(file_buffer)
                 success, data, errors, warnings = loader.load_and_validate()
-
                 if success:
                     st.session_state[SS_EXCEL_DATA] = data
                     render_alert("File validated successfully!", "success")
@@ -108,55 +111,84 @@ def render_upload_stage():
                         render_alert(warn, "warning")
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
-        st.markdown('</div></div>', unsafe_allow_html=True)
 
-    # Column 3: Download Template & Details
-    with col3:
-        st.markdown('<div class="upload-card card-download"><h2>📥 Download Template & Details</h2>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)  # close section-card
+
+    # --- RIGHT: Quick Start (secondary) + Download template (secondary) ---
+    with col_right:
+        # Quick Start Guide (visual grouping only; content unchanged)
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="section-header"><span class="section-icon">🚀</span>'
+            '<h3>Quick Start Guide</h3></div>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            """
+            <ul class="qs-list">
+              <li><strong>Download Template</strong> → Get the Excel structure</li>
+              <li><strong>Fill Data</strong> → Complete Plant, Inventory, Demand, and Transition sheets</li>
+              <li><strong>Upload File</strong> → Validate your data</li>
+              <li><strong>Preview & Configure</strong> → Check sheets and set optimization parameters</li>
+              <li><strong>Run Optimization</strong> → Generate schedule and view results</li>
+            </ul>
+            """,
+            unsafe_allow_html=True
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Download Template & Details (keeps existing button/function)
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="section-header"><span class="section-icon">📥</span>'
+            '<h3>Download Template & Details</h3></div>',
+            unsafe_allow_html=True
+        )
         render_download_template_button()
-        st.markdown('</div></div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
+    # Close constrained container
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Variable & Constraint Details (full-width expander; unchanged content)
     with st.expander("📄 Variable and Constraint Details", expanded=True):
         col1, col2, col3, col4 = st.columns(4)
-    
         with col1:
-            st.markdown("""
-            ### **Plant Sheet**
-            - **Plant**: Plant name  
-            - **Capacity per day**: Max production per day  
-            - **Material Running**: Current grade running  
-            - **Expected Run Days**: Minimum run days before changeover  
-            - **Shutdown Start/End Date**: Planned downtime  
-            - **Pre-Shutdown Grade / Restart Grade**: Grade before and after shutdown  
-            """)
-    
+            st.markdown(""" 
+### **Plant Sheet**
+- **Plant**: Plant name
+- **Capacity per day**: Max production per day
+- **Material Running**: Current grade running
+- **Expected Run Days**: Minimum run days before changeover
+- **Shutdown Start/End Date**: Planned downtime
+- **Pre-Shutdown Grade / Restart Grade**: Grade before and after shutdown
+""")
         with col2:
-            st.markdown("""
-            ### **Inventory Sheet**
-            - **Grade Name**: Product grade  
-            - **Opening Inventory**: Current stock  
-            - **Min. Closing Inventory**: Minimum stock at horizon end  
-            - **Min./Max Inventory**: Safety stock limits  
-            - **Min./Max Run Days**: Consecutive run constraints  
-            - **Force Start Date**: Mandatory start date for a grade  
-            - **Lines**: Plants where grade can run  
-            - **Rerun Allowed**: Yes/No for repeating grade  
-            """)
-    
+            st.markdown(""" 
+### **Inventory Sheet**
+- **Grade Name**: Product grade
+- **Opening Inventory**: Current stock
+- **Min. Closing Inventory**: Minimum stock at horizon end
+- **Min./Max Inventory**: Safety stock limits
+- **Min./Max Run Days**: Consecutive run constraints
+- **Force Start Date**: Mandatory start date for a grade
+- **Lines**: Plants where grade can run
+- **Rerun Allowed**: Yes/No for repeating grade
+""")
         with col3:
-            st.markdown("""
-            ### **Demand Sheet**
-            - **Date**: Planning horizon  
-            - **Grade Columns**: Daily demand quantity for each grade  
-            """)
-    
+            st.markdown(""" 
+### **Demand Sheet**
+- **Date**: Planning horizon
+- **Grade Columns**: Daily demand quantity for each grade
+""")
         with col4:
-            st.markdown("""
-            ### **Transition Sheets**
-            - Allowed grade changes per plant from grade in Row to grade in Column (**Yes/No**)   
-            """)
+            st.markdown(""" 
+### **Transition Sheets**
+- Allowed grade changes per plant from grade in Row to grade in Column (**Yes/No**)
+""")
 
+
+# ========== STAGE 1: PREVIEW ==========
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Review data and configure optimization")
@@ -185,7 +217,6 @@ def render_preview_stage():
         with tabs[idx]:
             if sheet_name in excel_data:
                 df_display = excel_data[sheet_name].copy()
-
                 # Format datetime columns
                 try:
                     if sheet_name == 'Plant':
@@ -199,12 +230,11 @@ def render_preview_stage():
                             df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
                 except Exception:
                     pass
-
                 st.dataframe(df_display, use_container_width=True, height=400)
             else:
                 st.info(f"Sheet {sheet_name} not found in uploaded file.")
 
-    # Render transition matrices in last tab if present
+    # Render transition matrices
     if transition_sheets:
         with tabs[-1]:
             for sheet_name in transition_sheets:
@@ -227,15 +257,12 @@ def render_preview_stage():
                 except Exception:
                     st.dataframe(df_display, use_container_width=True, height=300)
 
-                st.markdown("---")
-
+    st.markdown("---")
     render_section_divider()
 
-    # Configuration parameters
+    # Configuration parameters (unchanged logic)
     st.markdown("### ⚙️ Optimization Parameters")
-    
-    col1, col2, col3 = st.columns([1,1,2])
-    
+    col1, col2, col3 = st.columns([1, 1, 2])
     with col1:
         time_limit = st.number_input(
             "Time limit (minutes)",
@@ -245,7 +272,6 @@ def render_preview_stage():
             step=1,
             help="Maximum time for solver to find optimal solution"
         )
-        
     with col2:
         buffer_days = st.number_input(
             "Buffer days",
@@ -255,8 +281,7 @@ def render_preview_stage():
             step=1,
             help="Additional days added to planning horizon for safety stock"
         )
-    
-    with col3:        
+    with col3:
         priority = st.select_slider(
             "Optimization Priority",
             options=[
@@ -269,20 +294,18 @@ def render_preview_stage():
             value="Balanced",
             help="Balance between avoiding stockouts vs. minimizing production changeovers"
         )
-        
-        # Map to penalty values
-        priority_map = {
-            "Minimize Stockouts Only": (1000, 1),
-            "Favor Stockouts": (10, 1),
-            "Balanced": (10, 5),
-            "Favor Fewer Transitions": (10, 8),
-            "Minimize Transitions Only": (1, 1000)
-        }
-        
-        stockout_penalty, transition_penalty = priority_map[priority]
-        
 
-    # Update parameters in session
+    # Map to penalty values (existing map retained)
+    priority_map = {
+        "Minimize Stockouts Only": (1000, 1),
+        "Favor Stockouts": (10, 1),
+        "Balanced": (10, 5),
+        "Favor Fewer Transitions": (10, 8),
+        "Minimize Transitions Only": (1, 1000)
+    }
+    stockout_penalty, transition_penalty = priority_map[priority]
+
+    # Update parameters in session (unchanged)
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
@@ -293,14 +316,12 @@ def render_preview_stage():
 
     render_section_divider()
 
-    # Navigation buttons
+    # Navigation buttons (unchanged)
     col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
-    
     with col_nav1:
         if st.button("← Back to Upload", use_container_width=True):
             st.session_state[SS_STAGE] = STAGE_UPLOAD
             st.rerun()
-
     with col_nav3:
         if st.button("🎯 Run Optimization →", use_container_width=True, type="primary"):
             st.session_state[SS_STAGE] = STAGE_OPTIMIZING
@@ -314,12 +335,9 @@ def render_optimization_stage():
     render_stage_progress(STAGE_MAP.get(STAGE_OPTIMIZING, 2))
 
     st.markdown("""
-        <div class="optimization-container">
-            <div class="spinner"></div>
-            <div class="optimization-text">⚡ Optimizing Production Schedule...</div>
-            <div class="optimization-subtext">Running solver — progress will be shown below.</div>
-        </div>
-    """, unsafe_allow_html=True)
+⚡ Optimizing Production Schedule...
+Running solver — progress will be shown below.
+""", unsafe_allow_html=True)
 
     excel_data = st.session_state.get(SS_EXCEL_DATA)
     if not excel_data:
@@ -348,7 +366,6 @@ def render_optimization_stage():
         progress_bar.progress(0.3)
 
         status_text.info("📄 Validating shutdown constraints...")
-        
         # Validate pre-shutdown and restart grades
         invalid_grades_warning = []
         for line, grade in plant_data.get('pre_shutdown_grades', {}).items():
@@ -356,13 +373,11 @@ def render_optimization_stage():
                 invalid_grades_warning.append(f"Pre-shutdown grade '{grade}' for line '{line}' is not a valid grade.")
             elif line not in inventory_data['allowed_lines'][grade]:
                 invalid_grades_warning.append(f"Pre-shutdown grade '{grade}' for line '{line}' is not allowed on that line.")
-
         for line, grade in plant_data.get('restart_grades', {}).items():
             if grade not in inventory_data['grades']:
                 invalid_grades_warning.append(f"Restart grade '{grade}' for line '{line}' is not a valid grade.")
             elif line not in inventory_data['allowed_lines'][grade]:
                 invalid_grades_warning.append(f"Restart grade '{grade}' for line '{line}' is not allowed on that line.")
-
         if invalid_grades_warning:
             for warning in invalid_grades_warning:
                 render_alert(warning, "warning")
@@ -387,7 +402,7 @@ def render_optimization_stage():
             except Exception:
                 pass
 
-        # Run solver with NEW parameters
+        # Run solver (unchanged parameters/logic)
         status, solution_callback, solver = build_and_solve_model(
             grades=inventory_data['grades'],
             lines=plant_data['lines'],
@@ -407,8 +422,9 @@ def render_optimization_stage():
             rerun_allowed=inventory_data.get('rerun_allowed', {}),
             material_running_info=plant_data.get('material_running', {}),
             shutdown_periods=shutdown_periods,
-            pre_shutdown_grades=plant_data.get('pre_shutdown_grades', {}),  # NEW
-            restart_grades=plant_data.get('restart_grades', {}),           # NEW
+            pre_shutdown_grades=plant_data.get('pre_shutdown_grades', {}),
+            # NEW restart grades already in original logic (left untouched)
+            restart_grades=plant_data.get('restart_grades', {}),
             transition_rules=transition_rules,
             buffer_days=params['buffer_days'],
             stockout_penalty=params['stockout_penalty'],
@@ -431,7 +447,6 @@ def render_optimization_stage():
 
         if num_found > 0:
             status_text.success("✅ Optimization completed successfully!")
-            
             # Extract solution
             last_solution = None
             try:
@@ -439,7 +454,7 @@ def render_optimization_stage():
             except Exception:
                 last_solution = solution_callback if isinstance(solution_callback, dict) else {}
 
-            # Store solution
+            # Store solution (unchanged structure)
             st.session_state[SS_SOLUTION] = {
                 'status': status,
                 'solution': last_solution,
@@ -472,7 +487,6 @@ def render_optimization_stage():
                 "No Solution Found",
                 "The solver could not find a feasible solution. Please check your constraints and try again."
             )
-            
             # Provide navigation back
             if st.button("← Back to Configuration"):
                 st.session_state[SS_STAGE] = STAGE_PREVIEW
@@ -482,7 +496,6 @@ def render_optimization_stage():
         status_text.error("❌ Optimization failed.")
         render_error_state("Optimization Error", f"An error occurred: {str(e)}")
         st.exception(e)
-        
         # Navigation back
         if st.button("← Back to Configuration"):
             st.session_state[SS_STAGE] = STAGE_PREVIEW
@@ -512,10 +525,8 @@ def render_results_stage():
 
     # KPIs - Responsive layout
     st.markdown("### 📊 Key Performance Metrics")
-    
-    # Use 2x2 grid on mobile, 4 columns on desktop
-    col1, col2, col3, col4 = st.columns([1,1,1,1])
 
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     objective_val = solution.get('objective', 0) if isinstance(solution, dict) else 0
     transitions_total = solution.get('transitions', {}).get('total', 0) if isinstance(solution, dict) else 0
 
@@ -534,21 +545,20 @@ def render_results_stage():
 
     render_section_divider()
 
-    # Results tabs - REMOVED Stockout tab, combined into Summary
+    # Results tabs - Combined into Summary
     tab1, tab2, tab3 = st.tabs(["📅 Production Schedule", "📦 Inventory Analysis", "📊 Summary Tables"])
 
     # --- Production Schedule tab ---
     with tab1:
         st.markdown("### 📅 Production Schedule")
-
         for line in data.get('lines', []):
             st.markdown(f"#### 🏭 {line}")
-
             # Gantt chart
             try:
                 fig = create_gantt_chart(
-                    solution, line, data.get('dates', []), 
-                    data.get('shutdown_periods', {}), grade_colors
+                    solution, line, data.get('dates', []),
+                    data.get('shutdown_periods', {}),
+                    grade_colors
                 )
             except Exception as e:
                 fig = None
@@ -573,7 +583,6 @@ def render_results_stage():
                     if val in grade_colors:
                         return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
                     return ''
-
                 try:
                     styled_df = schedule_df.style.applymap(
                         lambda v: style_grade_column(v), subset=['Grade']
@@ -582,21 +591,17 @@ def render_results_stage():
                 except Exception:
                     st.dataframe(schedule_df, use_container_width=True)
 
-            render_section_divider()
+        render_section_divider()
 
     # --- Inventory Analysis tab ---
     with tab2:
         st.markdown("### 📦 Inventory Analysis")
-
         for grade in sorted(data.get('grades', [])):
             st.markdown(f"#### {grade}")
-
             allowed_lines = data.get('allowed_lines', {})
             try:
                 fig = create_inventory_chart(
-                    solution,
-                    grade,
-                    data.get('dates', []),
+                    solution, grade, data.get('dates', []),
                     data.get('min_inventory', {}).get(grade),
                     data.get('max_inventory', {}).get(grade),
                     allowed_lines,
@@ -614,15 +619,14 @@ def render_results_stage():
             else:
                 st.plotly_chart(fig, use_container_width=True)
 
-            render_section_divider()
-            
+        render_section_divider()
+
     # --- Summary tab ---
     with tab3:
         col_summary1, col_summary2, col_summary3 = st.columns([2, 1, 1])
-        
+
         with col_summary1:
             st.markdown("### 📊 Production Summary")
-            
             try:
                 summary_df = create_production_summary(
                     solution,
@@ -636,7 +640,7 @@ def render_results_stage():
             except Exception as e:
                 summary_df = pd.DataFrame()
                 st.error(f"Failed to create production summary: {e}")
-            
+
             if not summary_df.empty:
                 def style_summary_grade(val):
                     if val in grade_colors and val != 'Total':
@@ -644,7 +648,6 @@ def render_results_stage():
                     if val == 'Total':
                         return 'background-color: #909399; color: white; font-weight: bold; text-align: center;'
                     return ''
-                
                 try:
                     styled_summary = summary_df.style.applymap(
                         lambda v: style_summary_grade(v), subset=['Grade']
@@ -665,20 +668,17 @@ def render_results_stage():
             except Exception as e:
                 st.error(f"Failed to render transitions table: {e}")
 
-        # Add stockout summary table below
         with col_summary3:
             st.markdown("### ⚠️ Stockout Summary")
             try:
                 stockout_df = create_stockout_details_table(
-                    solution,
-                    data.get('grades', []),
-                    data.get('dates', []),
+                    solution, data.get('grades', []), data.get('dates', []),
                     buffer_days=data.get('buffer_days', 0)
                 )
             except Exception as e:
                 stockout_df = pd.DataFrame()
                 st.error(f"Failed to create stockout details table: {e}")
-            
+
             if not stockout_df.empty:
                 try:
                     styled_stockout = stockout_df.style.applymap(
@@ -687,41 +687,36 @@ def render_results_stage():
                     st.dataframe(styled_stockout, use_container_width=True, height=400)
                 except Exception:
                     st.dataframe(stockout_df, use_container_width=True, height=400)
-               
             else:
                 st.success("✅ No stockouts occurred during the demand period!")
-                
-                # Show total stockout from solution if available (should be 0)
-                total_stockouts_from_solution = 0
-                try:
-                    for g in data.get('grades', []):
-                        total_stockouts_from_solution += sum(solution.get('stockout', {}).get(g, {}).values())
-                except:
-                    pass
-                
-                if total_stockouts_from_solution == 0:
-                    st.info("All demand was satisfied with production and inventory.")
-                else:
-                    st.warning(f"Note: Total stockout reported in solution: {total_stockouts_from_solution:,.0f} MT")
+            # Show total stockout from solution if available
+            total_stockouts_from_solution = 0
+            try:
+                for g in data.get('grades', []):
+                    total_stockouts_from_solution += sum(solution.get('stockout', {}).get(g, {}).values())
+            except:
+                pass
+            if total_stockouts_from_solution == 0:
+                st.info("All demand was satisfied with production and inventory.")
+            else:
+                st.warning(f"Note: Total stockout reported in solution: {total_stockouts_from_solution:,.0f} MT")
 
-    render_section_divider()
+        render_section_divider()
 
-    # Navigation - Enhanced button layout
-    col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
-    
-    with col_nav1:
-        if st.button("← Back to Configuration", use_container_width=True):
-            st.session_state[SS_STAGE] = STAGE_PREVIEW
-            st.rerun()
-
-    with col_nav3:
-        if st.button("🔄 New Optimization", use_container_width=True, type="primary"):
-            # Reset state but keep theme
-            theme_val = st.session_state.get(SS_THEME, "light")
-            st.session_state.clear()
-            st.session_state[SS_THEME] = theme_val
-            st.session_state[SS_STAGE] = STAGE_UPLOAD
-            st.rerun()
+        # Navigation - Enhanced button layout (unchanged logic)
+        col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
+        with col_nav1:
+            if st.button("← Back to Configuration", use_container_width=True):
+                st.session_state[SS_STAGE] = STAGE_PREVIEW
+                st.rerun()
+        with col_nav3:
+            if st.button("🔄 New Optimization", use_container_width=True, type="primary"):
+                # Reset state but keep theme
+                theme_val = st.session_state.get(SS_THEME, "light")
+                st.session_state.clear()
+                st.session_state[SS_THEME] = theme_val
+                st.session_state[SS_STAGE] = STAGE_UPLOAD
+                st.rerun()
 
 
 # ========== MAIN APP ==========
