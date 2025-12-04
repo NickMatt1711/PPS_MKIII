@@ -1,3 +1,9 @@
+"""
+Polymer Production Scheduler - Main Application (Enhanced UX)
+A wizard-based Streamlit app for multi-plant production optimization
+Version 3.2.0 - Enhanced stage management and responsive design
+"""
+
 import streamlit as st
 import io
 from datetime import timedelta
@@ -15,6 +21,15 @@ from solver_cp_sat import build_and_solve_model
 from postprocessing import *
 
 import pandas as pd
+
+
+# --- FIX: DEFINITIONS FOR MISSING CONSTANTS ---
+# These constants were used in SS_OPTIMIZATION_PARAMS but are missing from constants.py.
+# Adding reasonable defaults here to resolve the NameError.
+DEFAULT_SWITCH_COST = 5.0
+DEFAULT_CAPACITY_PENALTY = 0.1
+SS_THEME = 'app_theme'
+# --- END FIX ---
 
 
 STAGE_MAP = {
@@ -332,9 +347,6 @@ def render_results_stage():
 def main():
     """Main application controller"""
     current_stage = st.session_state.get(SS_STAGE, STAGE_UPLOAD)
-
-    # st.sidebar.header("Navigation") # Optionally show navigation in sidebar
-    # st.sidebar.markdown(f"**Current Stage:** {list(STAGE_MAP.keys())[current_stage]}")
 
     if current_stage == STAGE_UPLOAD:
         render_upload_stage()
