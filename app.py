@@ -65,10 +65,7 @@ def render_upload_stage():
     # ========== LEFT COLUMN: Upload Section (No Card) ==========
     with col1:
         # Section title
-        st.markdown('<div class="upload-section-title">📤 Upload Production Data</div>', unsafe_allow_html=True)
-        
-        # Uploader container
-        st.markdown('<div class="uploader-container">', unsafe_allow_html=True)
+        st.markdown('<h1>📤 Upload Production Data</h1>', unsafe_allow_html=True)
         
         
         # File uploader
@@ -113,7 +110,7 @@ def render_upload_stage():
 
     # ========== RIGHT COLUMN: Quick Start Guide (In Card) ==========
     with col2:
-        st.markdown('<h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
+        st.markdown('<h3>🚀 Quick Start Guide</h3>', unsafe_allow_html=True)
         # Clean step list without individual cards
         st.markdown("""
         <div class="quick-start-steps-clean">
