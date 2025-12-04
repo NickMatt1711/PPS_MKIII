@@ -286,7 +286,7 @@ def render_upload_stage():
         col_left, col_center, col_right = st.columns([1, 2, 1])
         with col_center:
             # Use your existing download button function
-            render_download_template_button()
+            #render_download_template_button()
         
         st.markdown("</div>", unsafe_allow_html=True)
     
