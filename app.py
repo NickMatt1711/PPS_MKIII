@@ -68,15 +68,10 @@ def render_upload_stage():
     # --- LEFT: Upload (primary section card) ---
     with col_left:
         st.markdown('<div class="section-card section-primary">', unsafe_allow_html=True)
-        st.markdown(
-            '<div class="section-header"><span class="section-icon">📤</span>'
-            '<h3>Upload Production Data</h3></div>',
-            unsafe_allow_html=True
-        )
 
         # File uploader (unchanged logic)
         uploaded_file = st.file_uploader(
-            "Choose an Excel file",
+            "Upload your input files here",
             type=ALLOWED_EXTENSIONS,
             help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
         )
@@ -116,8 +111,8 @@ def render_upload_stage():
         # Quick Start Guide (visual grouping only; content unchanged)
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
         st.markdown(
-            '<div class="section-header"><span class="section-icon">🚀</span>'
-            '<h3>Quick Start Guide</h3></div>',
+            '<div class="section-header">'
+            '<h3>🚀Quick Start Guide</h3></div>',
             unsafe_allow_html=True
         )
         st.markdown(
