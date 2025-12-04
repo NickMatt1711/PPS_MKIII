@@ -53,207 +53,35 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: Clean, functional upload interface"""
+    """Stage 0: Streamlined desktop upload interface"""
     
     # Header and stage progress
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
     
-    # Custom CSS for upload page
-    st.markdown("""
-    <style>
-    /* Upload page styling */
-    .upload-page-container {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
+    # Upload page container
+    st.markdown('<div class="upload-page-container">', unsafe_allow_html=True)
     
-    .upload-section {
-        background: white;
-        border-radius: 12px;
-        padding: 2rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid #E5E7EB;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
+    # Page header
+    render_upload_header()
     
-    .upload-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #212529;
-        margin-bottom: 0.5rem;
-    }
+    # Main content - two equal columns
+    st.markdown('<div class="upload-main-columns">', unsafe_allow_html=True)
     
-    .upload-subtitle {
-        color: #6B7280;
-        margin-bottom: 1.5rem;
-        font-size: 0.95rem;
-    }
-    
-    .template-section {
-        background: linear-gradient(135deg, #F0F9FF 0%, #E6F2FF 100%);
-        border-radius: 12px;
-        padding: 2rem;
-        border: 1px solid #B8D4FE;
-        text-align: center;
-        margin-top: 1.5rem;
-    }
-    
-    .template-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #0A2E5C;
-        margin-bottom: 0.75rem;
-    }
-    
-    .template-description {
-        color: #5A6F8E;
-        margin-bottom: 1.5rem;
-        font-size: 0.95rem;
-        line-height: 1.5;
-    }
-    
-    .quick-start-guide {
-        background: white;
-        border-radius: 12px;
-        padding: 2rem;
-        border: 1px solid #E5E7EB;
-        height: 100%;
-    }
-    
-    .guide-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #212529;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .step-list {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-    
-    .step-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-    
-    .step-number {
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #0A74DA, #4BA3F4);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.875rem;
-    }
-    
-    .step-content {
-        flex: 1;
-    }
-    
-    .step-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #212529;
-        margin-bottom: 0.25rem;
-    }
-    
-    .step-description {
-        font-size: 0.875rem;
-        color: #6B7280;
-        line-height: 1.5;
-    }
-    
-    /* Style the file uploader */
-    .stFileUploader > div {
-        border: 2px dashed #0A74DA !important;
-        background: rgba(10, 116, 218, 0.03) !important;
-        border-radius: 12px !important;
-        padding: 3rem 2rem !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    .stFileUploader > div:hover {
-        border-color: #4BA3F4 !important;
-        background: rgba(10, 116, 218, 0.08) !important;
-    }
-    
-    .stFileUploader > div[data-testid="stFileUploaderDropzone"] {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        text-align: center !important;
-    }
-    
-    .stFileUploader > div[data-testid="stFileUploaderDropzone"]::before {
-        content: "📁" !important;
-        font-size: 3rem !important;
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .stFileUploader > div[data-testid="stFileUploaderDropzone"]::after {
-        content: "Drop your Excel file here" !important;
-        font-size: 1.1rem !important;
-        font-weight: 500 !important;
-        color: #212529 !important;
-    }
-    
-    .stFileUploader > div[data-testid="stFileUploaderDropzoneInstructions"],
-    .stFileUploader > div[data-testid="stFileUploaderDropzoneInstructions"] + div {
-        display: none !important;
-    }
-    
-    .file-types-hint {
-        text-align: center;
-        margin-top: 1rem;
-        color: #6B7280;
-        font-size: 0.875rem;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # Main content - two columns
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns(2)
     
     with col1:
         # Upload section
-        st.markdown("""
-        <div class="upload-section">
-            <div class="upload-title">📤 Upload Your Excel File</div>
-            <div class="upload-subtitle">Drag & drop your file or click to browse</div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="upload-section">', unsafe_allow_html=True)
         
-        # The actual file uploader
-        uploaded_file = st.file_uploader(
-            "Upload Excel file",
-            type=["xlsx", "xls"],
-            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
-            label_visibility="collapsed",
-            key="main_uploader"
-        )
-        
-        st.markdown("""
-            <div class="file-types-hint">XLSX, XLS • Max 200MB</div>
-        </div>
-        """, unsafe_allow_html=True)
+        # Clean upload zone
+        uploaded_file = render_upload_zone()
         
         # Processing logic (keep your existing logic)
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
-            
-            # Show file info
-            render_alert(f"✅ **{uploaded_file.name}** uploaded successfully! ({uploaded_file.size / 1024:.1f} KB)", "success")
+            render_file_info(uploaded_file.name, uploaded_file.size)
+            render_status_indicator("success", "File uploaded successfully! Processing...")
             
             try:
                 file_buffer = io.BytesIO(uploaded_file.read())
@@ -262,202 +90,35 @@ def render_upload_stage():
                 
                 if success:
                     st.session_state[SS_EXCEL_DATA] = data
-                    render_alert("File validated successfully! Processing...", "success")
+                    render_status_indicator("success", "File validated successfully!")
                     for warn in warnings:
                         render_alert(warn, "warning")
                     st.session_state[SS_STAGE] = STAGE_PREVIEW
                     st.rerun()
                 else:
                     for err in errors:
-                        render_alert(err, "error")
+                        render_status_indicator("error", err)
                     for warn in warnings:
                         render_alert(warn, "warning")
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
         
-        # Template section
-        st.markdown("""
-        <div class="template-section">
-            <div class="template-title">📋 Need a Template?</div>
-            <div class="template-description">Download our pre-formatted Excel template with all required sheets and example data.</div>
-        """, unsafe_allow_html=True)
+        # Download template section
+        render_download_template_section()
         
-        # Center the button
-        col_left, col_center, col_right = st.columns([1, 2, 1])
-        with col_center:
-            render_download_template_section()
-        
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)  # Close upload section
     
     with col2:
         # Quick Start Guide
-        st.markdown("""
-        <div class="quick-start-guide">
-            <div class="guide-title">🚀 Quick Start Guide</div>
-            <div class="step-list">
-                <div class="step-item">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <div class="step-title">Download Template</div>
-                        <div class="step-description">Get the pre-formatted Excel structure with all required sheets</div>
-                    </div>
-                </div>
-                <div class="step-item">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <div class="step-title">Fill Data</div>
-                        <div class="step-description">Complete Plant, Inventory, Demand, and Transition sheets</div>
-                    </div>
-                </div>
-                <div class="step-item">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <div class="step-title">Upload File</div>
-                        <div class="step-description">Drag & drop or browse to upload your completed file</div>
-                    </div>
-                </div>
-                <div class="step-item">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <div class="step-title">Configure & Run</div>
-                        <div class="step-description">Set optimization parameters and generate schedule</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        render_quick_start_guide_clean()
+    
+    st.markdown('</div>', unsafe_allow_html=True)  # Close main columns
     
     # Variable and constraint details
-    st.markdown("---")
-    with st.expander("📋 Variable and Constraint Details", expanded=False):
-        detail_tabs = st.tabs(["🏭 Plant Sheet", "📦 Inventory Sheet", "📈 Demand Sheet", "🔄 Transition Sheets"])
-        
-        with detail_tabs[0]:
-            st.markdown("### Plant Sheet Configuration")
-            st.markdown("*Required for all plants*")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.markdown("**Column**")
-                st.markdown("""
-                Plant  
-                Capacity per day  
-                Material Running  
-                Expected Run Days  
-                Shutdown Start Date  
-                Shutdown End Date  
-                Pre-Shutdown Grade  
-                Restart Grade
-                """)
-            with col2:
-                st.markdown("**Description**")
-                st.markdown("""
-                Plant identifier  
-                Maximum daily output (MT)  
-                Currently producing grade  
-                Days before changeover  
-                Start of planned downtime  
-                End of planned downtime  
-                Grade before shutdown  
-                Grade after shutdown
-                """)
-            with col3:
-                st.markdown("**Example**")
-                st.markdown("""
-                Line_A  
-                500  
-                Grade_X  
-                3  
-                15-Jan-25  
-                17-Jan-25  
-                Grade_A  
-                Grade_B
-                """)
-        
-        with detail_tabs[1]:
-            st.markdown("### Inventory Sheet Configuration")
-            st.markdown("*Grade-level constraints*")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.markdown("**Column**")
-                st.markdown("""
-                Grade Name  
-                Opening Inventory  
-                Min. Inventory  
-                Max. Inventory  
-                Min. Closing Inventory  
-                Min. Run Days  
-                Max. Run Days  
-                Force Start Date  
-                Lines  
-                Rerun Allowed
-                """)
-            with col2:
-                st.markdown("**Description**")
-                st.markdown("""
-                Product identifier  
-                Starting stock (MT)  
-                Safety stock level  
-                Maximum storage capacity  
-                End-period target  
-                Minimum consecutive days  
-                Maximum consecutive days  
-                Mandatory start date  
-                Plants where grade can run  
-                Can repeat grade (Yes/No)
-                """)
-            with col3:
-                st.markdown("**Constraint Type**")
-                st.markdown("""
-                -  
-                Hard  
-                Soft (penalty)  
-                Hard  
-                Soft (3x penalty)  
-                Hard  
-                Hard  
-                Hard  
-                Hard  
-                Hard
-                """)
-        
-        with detail_tabs[2]:
-            st.markdown("### Demand Sheet Configuration")
-            st.markdown("*Daily planning horizon*")
-            st.markdown("""
-            **Structure:**
-            - **Date column:** Planning horizon (daily)
-            - **Grade columns:** Each grade has its own column with daily demand values in MT
-            
-            **Example:**
-            ```
-            Date, Grade_A, Grade_B, Grade_C
-            2025-01-01, 100, 150, 200
-            2025-01-02, 120, 130, 180
-            2025-01-03, 110, 140, 190
-            ```
-            """)
-        
-        with detail_tabs[3]:
-            st.markdown("### Transition Sheets")
-            st.markdown("*Plant-specific transition rules*")
-            st.markdown("""
-            **Sheet Naming:** `Transition_[PlantName]` (e.g., `Transition_Line_A`)
-            
-            **Matrix Structure:**
-            - **Rows:** Previous grade (running on day D)
-            - **Columns:** Next grade (to run on day D+1)
-            - **Values:** `Yes` (allowed) or `No` (forbidden)
-            
-            **Example:**
-            ```
-            From→To, Grade_A, Grade_B, Grade_C
-            Grade_A, Yes, Yes, No
-            Grade_B, No, Yes, Yes
-            Grade_C, Yes, No, Yes
-            ```
-            
-            **Constraint Type:** Hard (forbidden transitions are blocked)
-            """)
+    render_variable_details_complete()
+    
+    st.markdown('</div>', unsafe_allow_html=True)  # Close container
+ 
 
 # ========== STAGE 1: PREVIEW ==========
 def render_preview_stage():
