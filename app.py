@@ -665,10 +665,8 @@ def render_results_stage():
 
             if not stockout_df.empty:
                 try:
-                    # Apply both grade colors AND stockout highlighting
-                    styled_stockout = stockout_df.style.apply(
-                        lambda x: [style_stockout_grade(v, grade_colors) if x.name == 'Grade' else '' for v in x],
-                        axis=0
+                    styled_stockout = stockout_df.style.applymap(
+                        lambda v: style_stockout_grade(v, grade_colors), subset=['Grade']
                     ).applymap(
                         highlight_stockout, subset=['Stockout Quantity (MT)']
                     )
