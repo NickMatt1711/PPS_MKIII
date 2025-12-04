@@ -648,7 +648,7 @@ def render_results_stage():
                 transitions = solution.get('transitions', {}).get('per_line', {}) if isinstance(solution, dict) else {}
                 transitions_data = [{'Line': l, 'Transitions': c} for l, c in transitions.items()]
                 transitions_df = pd.DataFrame(transitions_data)
-                st.dataframe(transitions_df, use_container_width=True,hide_index=True, hide_index=True)
+                st.dataframe(transitions_df, use_container_width=True, hide_index=True)
             except Exception as e:
                 st.error(f"Failed to render transitions table: {e}")
 
