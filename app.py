@@ -53,24 +53,26 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: Enhanced file upload with improved visual hierarchy (desktop-optimized)"""
+    """Stage 0: Enhanced file upload with clean layout (desktop-optimized)"""
     
     # Header and stage progress
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    # Two-column layout: Upload card (wider) + Quick Start (narrower)
+    # Two-column layout: Upload section (wider) + Quick Start Card (narrower)
     col1, col2 = st.columns([2, 1])
 
-    # ========== LEFT COLUMN: Upload Card with integrated download ==========
+    # ========== LEFT COLUMN: Upload Section (No Card) ==========
     with col1:
-        st.markdown('<div class="upload-card card-uploader">', unsafe_allow_html=True)
-        st.markdown('<h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        # Section title
+        st.markdown('<div class="upload-section-title">📤 Upload Production Data</div>', unsafe_allow_html=True)
         
-        # Visual upload zone with icon and text
+        # Uploader container
+        st.markdown('<div class="uploader-container">', unsafe_allow_html=True)
+        
+        # Visual upload indicator
         st.markdown("""
-        <div style="text-align: center; margin-bottom: 1rem;">
+        <div class="upload-indicator">
             <div class="upload-icon">📁</div>
             <div class="upload-text">Drag & Drop Excel File</div>
             <div class="upload-subtext">or click to browse</div>
@@ -78,7 +80,7 @@ def render_upload_stage():
         </div>
         """, unsafe_allow_html=True)
         
-        # File uploader (Streamlit native)
+        # File uploader
         uploaded_file = st.file_uploader(
             "Upload your input files here",
             type=ALLOWED_EXTENSIONS,
@@ -110,17 +112,19 @@ def render_upload_stage():
                         render_alert(warn, "warning")
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
+        
+        st.markdown('</div>', unsafe_allow_html=True)  # close uploader-container
 
-        # Download template section (integrated in same card)
+        # Download template section (in a subtle card)
         st.markdown('<div class="download-section">', unsafe_allow_html=True)
-        st.markdown("**📥 Don't have the template?**")
+        st.markdown('<h3>📥 Don\'t have the template?</h3>', unsafe_allow_html=True)
         render_download_template_button()
         
         # Required sheets notice
         st.markdown("""
-        <div class="required-sheets-notice" style="margin-top: 1rem;">
+        <div class="required-sheets-notice" style="margin-top: 1rem; background: transparent; padding: 1rem 0; border: none;">
             <strong>⚠️ Required Sheets:</strong>
-            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.25rem;">
+            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.25rem; color: #856404;">
                 <li>Plant</li>
                 <li>Inventory</li>
                 <li>Demand</li>
@@ -129,48 +133,48 @@ def render_upload_stage():
         </div>
         """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)  # close download-section
-        
-        st.markdown('</div>', unsafe_allow_html=True)  # close card-body
-        st.markdown('</div>', unsafe_allow_html=True)  # close upload-card
 
-    # ========== RIGHT COLUMN: Quick Start Guide ==========
+    # ========== RIGHT COLUMN: Quick Start Guide (In Card) ==========
     with col2:
         st.markdown('<div class="upload-card card-quickstart">', unsafe_allow_html=True)
         st.markdown('<h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
         st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
         
-        # Interactive step list
+        # Clean step list without individual cards
         st.markdown("""
-        <div class="quick-start-steps">
-            <div class="step-item">
-                <div class="step-number">1</div>
-                <div class="step-content">
+        <div class="quick-start-steps-clean">
+            <div class="step-item-clean">
+                <div class="step-number-clean">1</div>
+                <div class="step-content-clean">
                     <strong>Download Template</strong>
-                    <span>Get the Excel structure</span>
+                    <span>Get the pre-formatted Excel structure with all required sheets</span>
                 </div>
             </div>
-            <div class="step-connector">↓</div>
-            <div class="step-item">
-                <div class="step-number">2</div>
-                <div class="step-content">
+            <div class="step-divider-clean"></div>
+            
+            <div class="step-item-clean">
+                <div class="step-number-clean">2</div>
+                <div class="step-content-clean">
                     <strong>Fill Data</strong>
-                    <span>Complete all sheets</span>
+                    <span>Complete Plant, Inventory, Demand, and Transition sheets with your data</span>
                 </div>
             </div>
-            <div class="step-connector">↓</div>
-            <div class="step-item">
-                <div class="step-number">3</div>
-                <div class="step-content">
+            <div class="step-divider-clean"></div>
+            
+            <div class="step-item-clean">
+                <div class="step-number-clean">3</div>
+                <div class="step-content-clean">
                     <strong>Upload File</strong>
-                    <span>Validate your data</span>
+                    <span>Drag & drop or browse to upload your completed Excel file</span>
                 </div>
             </div>
-            <div class="step-connector">↓</div>
-            <div class="step-item">
-                <div class="step-number">4</div>
-                <div class="step-content">
+            <div class="step-divider-clean"></div>
+            
+            <div class="step-item-clean">
+                <div class="step-number-clean">4</div>
+                <div class="step-content-clean">
                     <strong>Configure & Run</strong>
-                    <span>Set parameters & optimize</span>
+                    <span>Set optimization parameters and generate your production schedule</span>
                 </div>
             </div>
         </div>
@@ -183,7 +187,6 @@ def render_upload_stage():
     st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
     
     with st.expander("📄 Variable and Constraint Details", expanded=False):
-        # Create tabs for better organization
         detail_tabs = st.tabs(["🏭 Plant Sheet", "📦 Inventory Sheet", "📈 Demand Sheet", "🔄 Transition Sheets"])
         
         with detail_tabs[0]:
