@@ -664,10 +664,13 @@ def render_results_stage():
                 st.error(f"Failed to create stockout details table: {e}")
 
             if not stockout_df.empty:
+                def style_summary_grade(val):
+                       if val in grade_colors:
+                           return f'background-color: {grade_colors[val]}; color: white; font-weight: bold; text-align: center;'
+                       return ''
                 try:
                     styled_stockout = stockout_df.style.applymap(
-                        lambda v: f'background-color: {grade_colors.get(v, "#ccc")}; color: white; font-weight: bold; text-align: center;' if v in grade_colors else '',
-                        subset=['Grade']
+                        lambda v: style_summary_grade(v), subset=['Grade']
                     ).applymap(
                         highlight_stockout, subset=['Stockout Quantity (MT)']
                     )
