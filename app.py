@@ -328,9 +328,9 @@ def render_optimization_stage():
 
     excel_data = st.session_state.get(SS_EXCEL_DATA)
     if not excel_data:
-        render_alert("No uploaded data found. Please upload file.", "error")
+        render_error_state("No Data Found", "Please upload a file first.")
         if st.button("← Back to Upload"):
-            st.session_state[SS_STAGE] = 0
+            st.session_state[SS_STAGE] = STAGE_UPLOAD
             st.rerun()
         return
 
@@ -339,41 +339,57 @@ def render_optimization_stage():
     status_text = st.empty()
 
     try:
-        status_text.info("🔄 Processing plant data...")
+        status_text.info("📄 Processing plant data...")
         plant_data = process_plant_data(excel_data['Plant'])
         progress_bar.progress(0.1)
 
-        status_text.info("🔄 Processing inventory data...")
+        status_text.info("📄 Processing inventory data...")
         inventory_data = process_inventory_data(excel_data['Inventory'], plant_data['lines'])
         progress_bar.progress(0.2)
 
-        status_text.info("🔄 Processing demand data...")
+        status_text.info("📄 Processing demand data...")
         demand_data, dates, num_days = process_demand_data(excel_data['Demand'], params['buffer_days'])
-        # also keep formatted dates as strings for the solver if needed
         formatted_dates = [d.strftime('%d-%b-%y') for d in dates]
         progress_bar.progress(0.3)
 
-        status_text.info("🔄 Processing shutdown periods...")
+        status_text.info("📄 Validating shutdown constraints...")
+        # Validate pre-shutdown and restart grades
+        invalid_grades_warning = []
+        for line, grade in plant_data.get('pre_shutdown_grades', {}).items():
+            if grade not in inventory_data['grades']:
+                invalid_grades_warning.append(f"Pre-shutdown grade '{grade}' for line '{line}' is not a valid grade.")
+            elif line not in inventory_data['allowed_lines'][grade]:
+                invalid_grades_warning.append(f"Pre-shutdown grade '{grade}' for line '{line}' is not allowed on that line.")
+        for line, grade in plant_data.get('restart_grades', {}).items():
+            if grade not in inventory_data['grades']:
+                invalid_grades_warning.append(f"Restart grade '{grade}' for line '{line}' is not a valid grade.")
+            elif line not in inventory_data['allowed_lines'][grade]:
+                invalid_grades_warning.append(f"Restart grade '{grade}' for line '{line}' is not allowed on that line.")
+        if invalid_grades_warning:
+            for warning in invalid_grades_warning:
+                render_alert(warning, "warning")
+            st.warning("⚠️ Invalid shutdown/restart grades may cause infeasible solutions.")
+
+        status_text.info("📄 Processing shutdown periods...")
         shutdown_periods = process_shutdown_dates(plant_data.get('shutdown_periods', {}), dates)
         progress_bar.progress(0.35)
 
-        status_text.info("🔄 Processing transition rules...")
+        status_text.info("📄 Processing transition rules...")
         transition_dfs = {k: v for k, v in excel_data.items() if k.startswith('Transition_')}
         transition_rules = process_transition_rules(transition_dfs)
         progress_bar.progress(0.4)
 
-        status_text.info("⚡ Running optimization (solver)...")
+        status_text.info("⚡ Running optimization solver...")
 
-        # progress callback for solver to update UI
+        # Progress callback for solver
         def progress_callback(pct: float, msg: str):
             try:
                 progress_bar.progress(0.4 + float(pct) * 0.6)
                 status_text.info(f"⚡ {msg}")
             except Exception:
-                # ignore UI update errors from callback
                 pass
 
-        # run solver
+        # Run solver (unchanged parameters/logic)
         status, solution_callback, solver = build_and_solve_model(
             grades=inventory_data['grades'],
             lines=plant_data['lines'],
@@ -393,6 +409,9 @@ def render_optimization_stage():
             rerun_allowed=inventory_data.get('rerun_allowed', {}),
             material_running_info=plant_data.get('material_running', {}),
             shutdown_periods=shutdown_periods,
+            pre_shutdown_grades=plant_data.get('pre_shutdown_grades', {}),
+            # NEW restart grades already in original logic (left untouched)
+            restart_grades=plant_data.get('restart_grades', {}),
             transition_rules=transition_rules,
             buffer_days=params['buffer_days'],
             stockout_penalty=params['stockout_penalty'],
@@ -401,10 +420,9 @@ def render_optimization_stage():
             progress_callback=progress_callback
         )
 
-        # mark 100% progress
         progress_bar.progress(1.0)
 
-        # Check if solver provided a solution object/ callback object: be defensive
+        # Check solution
         num_found = 0
         try:
             num_found = int(solution_callback.num_solutions()) if hasattr(solution_callback, 'num_solutions') else 0
@@ -416,15 +434,14 @@ def render_optimization_stage():
 
         if num_found > 0:
             status_text.success("✅ Optimization completed successfully!")
-            # Extract the latest solution (defensive)
+            # Extract solution
             last_solution = None
             try:
                 last_solution = solution_callback.solutions[-1]
             except Exception:
-                # maybe solution_callback itself is a dict-like result
                 last_solution = solution_callback if isinstance(solution_callback, dict) else {}
 
-            # Compose solution payload stored in session
+            # Store solution (unchanged structure)
             st.session_state[SS_SOLUTION] = {
                 'status': status,
                 'solution': last_solution,
@@ -442,21 +459,34 @@ def render_optimization_stage():
                     'min_inventory': inventory_data['min_inventory'],
                     'max_inventory': inventory_data['max_inventory'],
                     'initial_inventory': inventory_data['initial_inventory'],
+                    'pre_shutdown_grades': plant_data.get('pre_shutdown_grades', {}),
+                    'restart_grades': plant_data.get('restart_grades', {}),
+                    'capacities': plant_data.get('capacities', {}),
                 }
             }
 
-            st.session_state[SS_STAGE] = 2
+            st.session_state[SS_STAGE] = STAGE_RESULTS
             st.success("Optimization complete! Redirecting to results...")
             st.rerun()
         else:
             status_text.error("❌ No feasible solution found.")
-            render_alert("No feasible solution found. Please check your constraints.", "error")
+            render_error_state(
+                "No Solution Found",
+                "The solver could not find a feasible solution. Please check your constraints and try again."
+            )
+            # Provide navigation back
+            if st.button("← Back to Configuration"):
+                st.session_state[SS_STAGE] = STAGE_PREVIEW
+                st.rerun()
 
     except Exception as e:
         status_text.error("❌ Optimization failed.")
-        render_alert(f"Error during optimization: {str(e)}", "error")
-        # show exception stacktrace in debug mode
+        render_error_state("Optimization Error", f"An error occurred: {str(e)}")
         st.exception(e)
+        # Navigation back
+        if st.button("← Back to Configuration"):
+            st.session_state[SS_STAGE] = STAGE_PREVIEW
+            st.rerun()
 
 
 # ========== STAGE 3: RESULTS ==========
