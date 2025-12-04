@@ -164,123 +164,386 @@ Cards - Enhanced
 }
 
 /* =============================
-UPLOAD PAGE - Refined Layout
+UPLOAD PAGE - ENHANCED DESKTOP LAYOUT
 ============================= */
-.upload-section-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
+/* Main container for upload page */
+.upload-page-container {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #212529;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
 }
 
-/* Uploader container - no card */
-.uploader-container {
+/* Upload section header */
+.upload-section-header {
+    margin-bottom: 1.5rem;
+}
+
+.upload-section-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--md-sys-color-on-surface);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.upload-section-subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Main content grid */
+.upload-content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
     margin-bottom: 2rem;
 }
 
-/* Visual upload indicator above native uploader */
-.upload-indicator {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    padding: 2rem 1rem;
-    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
-    border: 2px dashed #0A74DA;
-    border-radius: 16px;
-    transition: all 0.3s ease;
-}
-
-.upload-indicator:hover {
-    background: linear-gradient(135deg, #E0F2FE 0%, #BFDBFE 100%);
-    border-color: #085BB5;
-    transform: scale(1.01);
-}
-
-/* Download section spacing */
-.download-section {
-    margin-top: 1.5rem;
-    padding: 1.5rem;
-    background: var(--md-sys-color-surface);
-    border-radius: var(--md-shape-corner-medium);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-}
-
-.download-section h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: #212529;
-}
-
-/* Quick Start - Steps without individual cards */
-.quick-start-steps-clean {
+/* Left panel - Upload zone */
+.upload-left-panel {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    margin-top: 1.5rem;
+    gap: 1.5rem;
 }
 
-.step-item-clean {
+/* Enhanced upload card */
+.upload-card-enhanced {
+    background: var(--md-sys-color-surface);
+    border-radius: var(--md-shape-corner-medium);
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.upload-card-enhanced:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-color: var(--md-sys-color-primary);
+}
+
+.upload-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.upload-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0;
+}
+
+.upload-card-icon {
+    font-size: 1.5rem;
+    color: var(--md-sys-color-primary);
+}
+
+/* Download section in card */
+.download-section-enhanced {
+    background: linear-gradient(135deg, #F0F9FF 0%, #E6F2FF 100%);
+    border-radius: var(--md-shape-corner-medium);
+    padding: 2rem;
+    border: 1px solid #B8D4FE;
+}
+
+.download-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.download-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-primary-container);
+    margin: 0;
+}
+
+.download-icon {
+    font-size: 1.5rem;
+    color: var(--md-sys-color-primary);
+}
+
+.download-description {
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+/* Right panel - Quick Start Guide */
+.quick-start-card {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+    border-radius: var(--md-shape-corner-medium);
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    height: 100%;
+}
+
+.quick-start-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.quick-start-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0;
+}
+
+.quick-start-icon {
+    font-size: 1.5rem;
+    color: #28A745;
+}
+
+/* Enhanced step design */
+.quick-start-steps-enhanced {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.step-item-enhanced {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
-    padding: 0;
-    transition: all 0.2s ease;
+    position: relative;
 }
 
-.step-item-clean:hover {
-    transform: translateX(4px);
+.step-item-enhanced:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 38px;
+    bottom: -1.75rem;
+    width: 2px;
+    background: linear-gradient(180deg, #E2E8F0 0%, rgba(226, 232, 240, 0.3) 100%);
 }
 
-.step-item-clean:hover .step-number-clean {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
-}
-
-.step-number-clean {
+.step-number-enhanced {
     width: 36px;
     height: 36px;
     min-width: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #28A745, #5DDC7A);
+    background: linear-gradient(135deg, #0A74DA, #4BA3F4);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 1rem;
-    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
-    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 6px rgba(10, 116, 218, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
 }
 
-.step-content-clean {
+.step-item-enhanced:hover .step-number-enhanced {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(10, 116, 218, 0.4);
+}
+
+.step-content-enhanced {
     flex: 1;
     padding-top: 0.25rem;
 }
 
-.step-content-clean strong {
+.step-title-enhanced {
     font-size: 1rem;
-    color: #212529;
-    display: block;
-    margin-bottom: 0.25rem;
     font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    display: block;
+    margin-bottom: 0.375rem;
 }
 
-.step-content-clean span {
+.step-description-enhanced {
     font-size: 0.875rem;
-    color: #606266;
-    line-height: 1.4;
+    color: var(--md-sys-color-on-surface-variant);
+    line-height: 1.5;
 }
 
-.step-divider-clean {
-    width: 2px;
-    height: 16px;
-    background: linear-gradient(180deg, #28A745, rgba(40, 167, 69, 0.3));
-    margin-left: 17px;
-    margin-top: -0.25rem;
-    margin-bottom: -0.25rem;
+/* Variable Details Section */
+.details-section {
+    background: var(--md-sys-color-surface);
+    border-radius: var(--md-shape-corner-medium);
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.details-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.details-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.details-hint {
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface-variant);
+    font-style: italic;
+}
+
+/* Enhanced table styling */
+.details-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 1rem;
+}
+
+.details-table th {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    padding: 0.875rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-bottom: 1px solid var(--md-sys-color-outline);
+}
+
+.details-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    font-size: 0.875rem;
+    vertical-align: top;
+}
+
+.details-table tr:last-child td {
+    border-bottom: none;
+}
+
+.details-table tr:hover td {
+    background: var(--md-sys-color-surface-variant);
+}
+
+/* Badge styles */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.badge-hard {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.badge-soft {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.badge-info {
+    background: #DBEAFE;
+    color: #1E40AF;
+}
+
+/* Enhanced file uploader styling */
+.stFileUploader > div {
+    border: 3px dashed #0A74DA !important;
+    background: rgba(10, 116, 218, 0.02) !important;
+    border-radius: 16px !important;
+    padding: 3rem 2rem !important;
+    transition: all 0.3s ease !important;
+    min-height: 180px !important;
+}
+
+.stFileUploader > div:hover {
+    background: rgba(10, 116, 218, 0.05) !important;
+    border-color: #4BA3F4 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(10, 116, 218, 0.15) !important;
+}
+
+.stFileUploader > div[data-testid="stFileUploaderDropzone"] {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 1rem !important;
+}
+
+.stFileUploader > div[data-testid="stFileUploaderDropzone"] svg {
+    width: 48px !important;
+    height: 48px !important;
+    color: #0A74DA !important;
+}
+
+.stFileUploader > div[data-testid="stFileUploaderDropzone"]::before {
+    content: "📁" !important;
+    font-size: 3rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.stFileUploader > div[data-testid="stFileUploaderDropzone"]::after {
+    content: "Drag & drop your Excel file here" !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+}
+
+.stFileUploader > div[data-testid="stFileUploaderDropzone"] small {
+    color: #6B7280 !important;
+    font-size: 0.875rem !important;
+    margin-top: 0.5rem !important;
+}
+
+/* Status indicators */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-success {
+    background: #D1FAE5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+}
+
+.status-warning {
+    background: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #FDE68A;
+}
+
+.status-error {
+    background: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
 }
 
 /* =============================
@@ -662,46 +925,19 @@ Constraint Details Table
   color: #856404;
 }
 
-/* =============================
-FILE UPLOADER STYLING - Override Streamlit defaults
-============================= */
-/* Hide the default file uploader label */
-[data-testid="stFileUploader"] label {
-    display: none !important;
+/* Enhanced download button */
+.download-button-enhanced {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    padding: 1rem 2rem !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
 }
 
-/* Style the dropzone */
-[data-testid="stFileUploaderDropzone"] {
-    border: 3px dashed #0A74DA !important;
-    background: rgba(10, 116, 218, 0.03) !important;
-    border-radius: 16px !important;
-    padding: 3rem 2rem !important;
-    transition: all 0.3s ease !important;
-    min-height: 200px !important;
-}
-
-[data-testid="stFileUploaderDropzone"]:hover {
-    background: rgba(10, 116, 218, 0.08) !important;
-    border-color: #085BB5 !important;
-    transform: scale(1.01) !important;
-}
-
-/* Style the upload icon and text */
-[data-testid="stFileUploaderDropzone"] svg {
-    width: 4rem !important;
-    height: 4rem !important;
-    color: #0A74DA !important;
-}
-
-[data-testid="stFileUploaderDropzoneInstructions"] {
-    display: none !important;
-}
-
-/* Download button spacing */
-.download-section {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--md-sys-color-outline-variant);
+.download-button-enhanced::before {
+    content: "📥";
+    font-size: 1.25rem;
 }
 
 """
@@ -847,23 +1083,248 @@ def render_section_divider():
 
 
 # -------------------------------
-# DOWNLOAD TEMPLATE
+# DOWNLOAD TEMPLATE (Enhanced Version)
 # -------------------------------
 def render_download_template_button():
-    """Render download template button."""
+    """Render download template button with enhanced styling."""
     try:
         template_path = Path(__file__).parent / "polymer_production_template.xlsx"
         if template_path.exists():
             with open(template_path, "rb") as f:
                 template_data = f.read()
+            
+            # Enhanced button with custom styling
+            st.markdown("""
+            <div class="download-section-enhanced">
+                <div class="download-section-header">
+                    <span class="download-icon">📋</span>
+                    <h3 class="download-section-title">Get Started with Template</h3>
+                </div>
+                <p class="download-description">
+                    Download our pre-formatted Excel template with all required sheets 
+                    and example data to get started quickly.
+                </p>
+            """, unsafe_allow_html=True)
+            
+            # The actual download button
             st.download_button(
                 label="📥 Download Template",
                 data=template_data,
                 file_name="polymer_production_template.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True
+                use_container_width=True,
+                key="enhanced_download"
             )
+            
+            st.markdown("</div>", unsafe_allow_html=True)
         else:
             st.error("Template file not found")
     except Exception as e:
         st.error(f"Template file not found: {e}")
+
+
+# -------------------------------
+# NEW: UPLOAD PAGE COMPONENTS
+# -------------------------------
+
+def render_upload_header(title: str = "📤 Upload Your File", subtitle: str = ""):
+    """Render enhanced upload page header."""
+    subtitle_html = f'<p class="upload-section-subtitle">{subtitle}</p>' if subtitle else ''
+    st.markdown(f"""
+    <div class="upload-section-header">
+        <h1 class="upload-section-title">{title}</h1>
+        {subtitle_html}
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_upload_card():
+    """Render enhanced upload card with visual feedback."""
+    st.markdown("""
+    <div class="upload-card-enhanced">
+        <div class="upload-card-header">
+            <span class="upload-card-icon">📁</span>
+            <h2 class="upload-card-title">Upload Excel File</h2>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    uploaded_file = st.file_uploader(
+        "Drag & drop your Excel file here or click to browse",
+        type=["xlsx", "xls"],
+        help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
+        label_visibility="collapsed"
+    )
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    return uploaded_file
+
+
+def render_quick_start_guide():
+    """Render enhanced quick start guide with timeline design."""
+    st.markdown("""
+    <div class="quick-start-card">
+        <div class="quick-start-header">
+            <span class="quick-start-icon">🚀</span>
+            <h2 class="quick-start-title">Quick Start Guide</h2>
+        </div>
+        <div class="quick-start-steps-enhanced">
+            <div class="step-item-enhanced">
+                <div class="step-number-enhanced">1</div>
+                <div class="step-content-enhanced">
+                    <span class="step-title-enhanced">Download Template</span>
+                    <span class="step-description-enhanced">Get the pre-formatted Excel structure with all required sheets</span>
+                </div>
+            </div>
+            <div class="step-item-enhanced">
+                <div class="step-number-enhanced">2</div>
+                <div class="step-content-enhanced">
+                    <span class="step-title-enhanced">Fill Data</span>
+                    <span class="step-description-enhanced">Complete Plant, Inventory, Demand, and Transition sheets with your data</span>
+                </div>
+            </div>
+            <div class="step-item-enhanced">
+                <div class="step-number-enhanced">3</div>
+                <div class="step-content-enhanced">
+                    <span class="step-title-enhanced">Upload File</span>
+                    <span class="step-description-enhanced">Drag & drop or browse to upload your completed Excel file</span>
+                </div>
+            </div>
+            <div class="step-item-enhanced">
+                <div class="step-number-enhanced">4</div>
+                <div class="step-content-enhanced">
+                    <span class="step-title-enhanced">Configure & Run</span>
+                    <span class="step-description-enhanced">Set optimization parameters and generate your production schedule</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_variable_details():
+    """Render enhanced variable and constraint details section."""
+    with st.expander("📋 Variable and Constraint Details", expanded=False):
+        detail_tabs = st.tabs(["🏭 Plant Sheet", "📦 Inventory", "📈 Demand", "🔄 Transitions"])
+        
+        with detail_tabs[0]:
+            st.markdown("""
+            <div class="details-section">
+                <div class="details-header">
+                    <h3 class="details-title">🏭 Plant Sheet Configuration</h3>
+                    <span class="details-hint">Required for all plants</span>
+                </div>
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Plant</strong></td>
+                            <td>Plant identifier</td>
+                            <td>Line_A</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Capacity per day</strong></td>
+                            <td>Maximum daily output (MT)</td>
+                            <td>500</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Material Running</strong></td>
+                            <td>Currently producing grade</td>
+                            <td>Grade_X</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with detail_tabs[1]:
+            st.markdown("""
+            <div class="details-section">
+                <div class="details-header">
+                    <h3 class="details-title">📦 Inventory Sheet Configuration</h3>
+                    <span class="details-hint">Grade-level constraints</span>
+                </div>
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Description</th>
+                            <th>Constraint Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Grade Name</strong></td>
+                            <td>Product identifier</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Opening Inventory</strong></td>
+                            <td>Starting stock (MT)</td>
+                            <td><span class="badge badge-hard">Hard</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Min. Inventory</strong></td>
+                            <td>Safety stock level</td>
+                            <td><span class="badge badge-soft">Soft</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with detail_tabs[2]:
+            st.markdown("""
+            <div class="details-section">
+                <div class="details-header">
+                    <h3 class="details-title">📈 Demand Sheet Configuration</h3>
+                    <span class="details-hint">Daily planning horizon</span>
+                </div>
+                <p><strong>Structure:</strong> Each grade should have its own column with daily demand values.</p>
+                <p><strong>Note:</strong> Dates should be in chronological order for the planning horizon.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with detail_tabs[3]:
+            st.markdown("""
+            <div class="details-section">
+                <div class="details-header">
+                    <h3 class="details-title">🔄 Transition Sheets</h3>
+                    <span class="details-hint">Plant-specific constraints</span>
+                </div>
+                <p><strong>Sheet Naming:</strong> <code>Transition_[PlantName]</code></p>
+                <p><strong>Example:</strong> <code>Transition_Line_A</code>, <code>Transition_Line_B</code></p>
+                <p><strong>Values:</strong> <code>Yes</code> (allowed) or <code>No</code> (forbidden)</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+
+# -------------------------------
+# NEW: STATUS INDICATORS
+# -------------------------------
+
+def render_status_indicator(status: str, message: str):
+    """Render enhanced status indicator."""
+    status_classes = {
+        "success": "status-success",
+        "warning": "status-warning",
+        "error": "status-error"
+    }
+    
+    status_icons = {
+        "success": "✅",
+        "warning": "⚠️",
+        "error": "❌"
+    }
+    
+    st.markdown(f"""
+    <div class="status-indicator {status_classes.get(status, '')}">
+        <span>{status_icons.get(status, 'ℹ️')}</span>
+        <span>{message}</span>
+    </div>
+    """, unsafe_allow_html=True)
