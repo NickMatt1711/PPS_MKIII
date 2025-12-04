@@ -67,50 +67,46 @@ def render_upload_stage():
         st.markdown("""
            <div class="upload-card card-uploader">
               <h2>📤 Upload Production Data</h2></div>
-              <div class="upload-zone">
-                  <div class="upload-icon">📁</div>
-                  <div class="upload-text">Drag & Drop Excel File</div>
-                  <div class="upload-subtext">or click to browse</div>
-                  <div class="upload-specs">Limit: 200MB per file • Format: .XLSX</div>
-              </div>
+
+        
+           # File uploader
+           uploaded_file = st.file_uploader(
+               "Upload your input files here",
+               type=ALLOWED_EXTENSIONS,
+               help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
+               label_visibility="collapsed"
+           )
+   
+           # Processing logic (unchanged)
+           if uploaded_file is not None:
+               st.session_state[SS_UPLOADED_FILE] = uploaded_file
+               render_alert("File uploaded successfully! Processing...", "success")
+   
+               try:
+                   file_buffer = io.BytesIO(uploaded_file.read())
+                   loader = ExcelDataLoader(file_buffer)
+                   success, data, errors, warnings = loader.load_and_validate()
+   
+                   if success:
+                       st.session_state[SS_EXCEL_DATA] = data
+                       render_alert("File validated successfully!", "success")
+                       for warn in warnings:
+                           render_alert(warn, "warning")
+                       st.session_state[SS_STAGE] = STAGE_PREVIEW
+                       st.rerun()
+                   else:
+                       for err in errors:
+                           render_alert(err, "error")
+                       for warn in warnings:
+                           render_alert(warn, "warning")
+               except Exception as e:
+                   render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
+           
+               # Download button
+               render_download_template_button()
+               
            </div>
-        """, unsafe_allow_html=True)
-        
-        # File uploader
-        uploaded_file = st.file_uploader(
-            "Upload your input files here",
-            type=ALLOWED_EXTENSIONS,
-            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
-            label_visibility="collapsed"
-        )
-
-        # Processing logic (unchanged)
-        if uploaded_file is not None:
-            st.session_state[SS_UPLOADED_FILE] = uploaded_file
-            render_alert("File uploaded successfully! Processing...", "success")
-
-            try:
-                file_buffer = io.BytesIO(uploaded_file.read())
-                loader = ExcelDataLoader(file_buffer)
-                success, data, errors, warnings = loader.load_and_validate()
-
-                if success:
-                    st.session_state[SS_EXCEL_DATA] = data
-                    render_alert("File validated successfully!", "success")
-                    for warn in warnings:
-                        render_alert(warn, "warning")
-                    st.session_state[SS_STAGE] = STAGE_PREVIEW
-                    st.rerun()
-                else:
-                    for err in errors:
-                        render_alert(err, "error")
-                    for warn in warnings:
-                        render_alert(warn, "warning")
-            except Exception as e:
-                render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
-        
-        # Download button
-        render_download_template_button()
+        """, unsafe_allow_html=True)        
 
     # ========== MIDDLE COLUMN: Quick Start Guide ==========
     with col2:
