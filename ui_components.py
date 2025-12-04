@@ -956,6 +956,184 @@ Constraint Details Table
   background: #FFF3CD;
   color: #856404;
 }
+
+/* =============================
+CLEAN UPLOAD & DOWNLOAD SECTIONS
+============================= */
+
+/* Upload section container */
+.upload-section-container {
+    background: var(--md-sys-color-surface);
+    border-radius: var(--md-shape-corner-medium);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.upload-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 0.5rem;
+}
+
+.upload-subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+/* Style the actual file uploader */
+[data-testid="stFileUploader"] {
+    margin-bottom: 1rem !important;
+}
+
+[data-testid="stFileUploader"] > div {
+    border: 2px dashed var(--md-sys-color-outline) !important;
+    background: var(--md-sys-color-surface) !important;
+    border-radius: var(--md-shape-corner-medium) !important;
+    padding: 3rem 2rem !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+[data-testid="stFileUploader"] > div:hover {
+    border-color: var(--md-sys-color-primary) !important;
+    background: var(--md-sys-color-primary-container) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(10, 116, 218, 0.1);
+}
+
+/* Center the uploader content */
+[data-testid="stFileUploaderDropzone"] {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 0.75rem !important;
+}
+
+/* Upload icon and text */
+[data-testid="stFileUploaderDropzone"]::before {
+    content: "📁" !important;
+    font-size: 3rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+[data-testid="stFileUploaderDropzone"]::after {
+    content: "Drop your Excel file here" !important;
+    font-size: 1.1rem !important;
+    font-weight: 500 !important;
+    color: var(--md-sys-color-on-surface) !important;
+}
+
+/* Hide the default text */
+[data-testid="stFileUploaderDropzoneInstructions"],
+[data-testid="stFileUploaderDropzoneInstructions"] + div {
+    display: none !important;
+}
+
+.upload-hint {
+    text-align: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.file-types {
+    display: inline-block;
+    background: var(--md-sys-color-surface-variant);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Template section */
+.template-section {
+    background: linear-gradient(135deg, #F0F9FF 0%, #E6F2FF 100%);
+    border-radius: var(--md-shape-corner-medium);
+    padding: 2rem;
+    border: 1px solid #B8D4FE;
+    text-align: center;
+}
+
+.template-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-primary-container);
+    margin-bottom: 0.75rem;
+}
+
+.template-description {
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Quick Start Guide - Keep it clean */
+.quick-start-guide-clean {
+    background: var(--md-sys-color-surface);
+    border-radius: var(--md-shape-corner-medium);
+    padding: 2rem;
+    border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.guide-title-clean {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.step-list-clean {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.step-item-clean {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.step-number-clean {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+    background: var(--md-sys-color-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.step-content-clean {
+    flex: 1;
+}
+
+.step-title-clean {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 0.25rem;
+}
+
+.step-description-clean {
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface-variant);
+    line-height: 1.5;
+}
 """
 
 # -------------------------------
