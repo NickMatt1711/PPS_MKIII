@@ -156,24 +156,21 @@ def render_upload_stage():
                     <strong>Download Template</strong>
                     <span>Get the pre-formatted Excel structure with all required sheets</span>
                 </div>
-            </div>
-            
+            </div>            
             <div class="step-item-connected">
                 <div class="step-number-connected">2</div>
                 <div class="step-content-connected">
                     <strong>Fill Data</strong>
                     <span>Complete Plant, Inventory, Demand, and Transition sheets with your data</span>
                 </div>
-            </div>
-            
+            </div>            
             <div class="step-item-connected">
                 <div class="step-number-connected">3</div>
                 <div class="step-content-connected">
                     <strong>Upload File</strong>
                     <span>Drag & drop or browse to upload your completed Excel file</span>
                 </div>
-            </div>
-            
+            </div>            
             <div class="step-item-connected">
                 <div class="step-number-connected">4</div>
                 <div class="step-content-connected">
