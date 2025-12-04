@@ -664,17 +664,17 @@ def render_results_stage():
                 st.error(f"Failed to create stockout details table: {e}")
 
             if not stockout_df.empty:
-               try:
-                   # Apply both grade colors AND stockout highlighting
-                   styled_stockout = stockout_df.style.apply(
-                       lambda x: [style_stockout_grade(v, grade_colors) if x.name == 'Grade' else '' for v in x],
-                       axis=0
-                   ).applymap(
-                       highlight_stockout, subset=['Stockout Quantity (MT)']
-                   )
-                   st.dataframe(styled_stockout, use_container_width=True, hide_index=True)
-               except Exception:
-                   st.dataframe(stockout_df, use_container_width=True, hide_index=True)
+                try:
+                    # Apply both grade colors AND stockout highlighting
+                    styled_stockout = stockout_df.style.apply(
+                        lambda x: [style_stockout_grade(v, grade_colors) if x.name == 'Grade' else '' for v in x],
+                        axis=0
+                    ).applymap(
+                        highlight_stockout, subset=['Stockout Quantity (MT)']
+                    )
+                    st.dataframe(styled_stockout, use_container_width=True, hide_index=True)
+                except Exception:
+                    st.dataframe(stockout_df, use_container_width=True, hide_index=True)
             
         render_section_divider()
 
