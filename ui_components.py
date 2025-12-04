@@ -778,45 +778,92 @@ Constraint Details Table
 }
 
 /* =============================
-FILE UPLOADER STYLING - Override Streamlit defaults
+FILE UPLOADER - Enhanced Native Styling
 ============================= */
-/* Hide the default file uploader label */
-[data-testid="stFileUploader"] label {
-    display: none !important;
-}
 
-/* Style the dropzone */
+/* Style the dropzone to look like our design */
 [data-testid="stFileUploaderDropzone"] {
     border: 3px dashed #0A74DA !important;
-    background: rgba(10, 116, 218, 0.03) !important;
+    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%) !important;
     border-radius: 16px !important;
     padding: 3rem 2rem !important;
     transition: all 0.3s ease !important;
-    min-height: 200px !important;
+    min-height: 240px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 [data-testid="stFileUploaderDropzone"]:hover {
-    background: rgba(10, 116, 218, 0.08) !important;
+    background: linear-gradient(135deg, #E0F2FE 0%, #BFDBFE 100%) !important;
     border-color: #085BB5 !important;
-    transform: scale(1.01) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(10, 116, 218, 0.15) !important;
 }
 
-/* Style the upload icon and text */
+/* Style the icon */
 [data-testid="stFileUploaderDropzone"] svg {
     width: 4rem !important;
     height: 4rem !important;
     color: #0A74DA !important;
+    animation: float 3s ease-in-out infinite !important;
 }
 
-[data-testid="stFileUploaderDropzoneInstructions"] {
-    display: none !important;
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
 }
 
-/* Download button spacing */
-.download-section {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--md-sys-color-outline-variant);
+/* Hide/restyle the default text */
+[data-testid="stFileUploaderDropzoneInstructions"] > div {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+[data-testid="stFileUploaderDropzoneInstructions"] > div > span:first-child {
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    color: #0A74DA !important;
+}
+
+[data-testid="stFileUploaderDropzoneInstructions"] > div > span:last-child {
+    font-size: 0.95rem !important;
+    color: #606266 !important;
+}
+
+/* Style the browse button */
+[data-testid="stFileUploaderDropzone"] button {
+    margin-top: 1rem !important;
+    background: linear-gradient(135deg, #0A74DA, #4BA3F4) !important;
+    color: white !important;
+    border: none !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 12px !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    box-shadow: 0 2px 8px rgba(10, 116, 218, 0.3) !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stFileUploaderDropzone"] button:hover {
+    background: linear-gradient(135deg, #085BB5, #3D8CD9) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(10, 116, 218, 0.4) !important;
+}
+
+/* Add file specs below uploader */
+[data-testid="stFileUploader"]::after {
+    content: "📌 Supported Format: .XLSX • Maximum Size: 200MB per file";
+    display: block;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #909399;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(10, 116, 218, 0.1);
 }
 
 """
