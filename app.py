@@ -64,9 +64,7 @@ def render_upload_stage():
 
     # ========== LEFT COLUMN: Primary Upload Card ==========
     with col1:
-        st.markdown('<div class="upload-card card-uploader">', unsafe_allow_html=True)
-        st.markdown('<h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card card-uploader"><h2>📤 Upload Production Data</h2><div class="upload-card-body">', unsafe_allow_html=True)
         
         # Visual upload zone indicator
         st.markdown("""
