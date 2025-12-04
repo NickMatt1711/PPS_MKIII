@@ -118,6 +118,7 @@ def render_upload_stage():
     render_variable_details_complete()
     
     st.markdown('</div>', unsafe_allow_html=True)  # Close container
+ 
 
 # ========== STAGE 1: PREVIEW ==========
 def render_preview_stage():
