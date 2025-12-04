@@ -74,6 +74,7 @@ def render_upload_stage():
             help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
             label_visibility="collapsed"
         )
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # Processing logic
         if uploaded_file is not None:
