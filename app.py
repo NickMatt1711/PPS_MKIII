@@ -66,13 +66,14 @@ def render_upload_stage():
     with col1:
         st.markdown("""
            <div class="upload-card card-uploader">
-               <h2>📤 Upload Production Data</h2></div>
-							        <div class="upload-zone">
-							            <div class="upload-icon">📁</div>
-							            <div class="upload-text">Drag & Drop Excel File</div>
-							            <div class="upload-subtext">or click to browse</div>
-							            <div class="upload-specs">Limit: 200MB per file • Format: .XLSX</div>
-							        </div>
+              <h2>📤 Upload Production Data</h2></div>
+              <div class="upload-zone">
+                  <div class="upload-icon">📁</div>
+                  <div class="upload-text">Drag & Drop Excel File</div>
+                  <div class="upload-subtext">or click to browse</div>
+                  <div class="upload-specs">Limit: 200MB per file • Format: .XLSX</div>
+              </div>
+           </div>
         """, unsafe_allow_html=True)
         
         # File uploader
