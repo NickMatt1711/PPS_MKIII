@@ -52,7 +52,6 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 
 # ========== STAGE 0: UPLOAD ==========
-
 def render_upload_stage():
     """Stage 0: File upload with improved visual hierarchy and section grouping (desktop-only)."""
 
@@ -60,92 +59,82 @@ def render_upload_stage():
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    # Constrained page container
+    # Start a constrained page container for better desktop readability
     st.markdown('<div class="page-max">', unsafe_allow_html=True)
 
-    # Two-column layout
+    # Two-column layout: Left (primary upload), Right (Quick Start + Download)
     col_left, col_right = st.columns([2, 1])
 
-    # --- LEFT CARD: Upload & Template ---
+    # --- LEFT: Upload (primary section card) ---
     with col_left:
-        left_card = st.container()
-        with left_card:
-            # Invisible marker so CSS can style this container as a card
-            st.markdown('<span class="card-anchor"></span>', unsafe_allow_html=True)
-            st.markdown('<div class="card-header">Upload & Template</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-card section-primary">', unsafe_allow_html=True)
 
-            # File uploader (unchanged API)
-            uploaded_file = st.file_uploader(
-                "Upload your input files here",
-                type=ALLOWED_EXTENSIONS,
-                help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
-            )
+        # File uploader (unchanged logic)
+        uploaded_file = st.file_uploader(
+            "Upload your input files here",
+            type=ALLOWED_EXTENSIONS,
+            help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
+        )
 
-            # Helper caption
-            st.caption("Limit 200MB per file · XLSX only")
+        # Download Template & Details (keeps existing button/function)
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        render_download_template_button()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-            # Download Template (existing button/function)
-            render_download_template_button()
+        # Inline alerts and validation remain within this card (unchanged logic)
+        if uploaded_file is not None:
+            st.session_state[SS_UPLOADED_FILE] = uploaded_file
+            render_alert("File uploaded successfully! Processing...", "success")
+            try:
+                file_buffer = io.BytesIO(uploaded_file.read())
+                loader = ExcelDataLoader(file_buffer)
+                success, data, errors, warnings = loader.load_and_validate()
+                if success:
+                    st.session_state[SS_EXCEL_DATA] = data
+                    render_alert("File validated successfully!", "success")
+                    for warn in warnings:
+                        render_alert(warn, "warning")
+                    st.session_state[SS_STAGE] = STAGE_PREVIEW
+                    st.rerun()
+                else:
+                    for err in errors:
+                        render_alert(err, "error")
+                    for warn in warnings:
+                        render_alert(warn, "warning")
+            except Exception as e:
+                render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
 
-            # Validation with progress (unchanged)
-            if uploaded_file is not None:
-                st.session_state[SS_UPLOADED_FILE] = uploaded_file
-                size_bytes = getattr(uploaded_file, "size", None)
-                size_str = f"{(size_bytes or 0)/1024/1024:.2f} MB" if size_bytes else "—"
-                render_alert(f"Selected: {uploaded_file.name} ({size_str}). Validating…", "info")
+        st.markdown('</div>', unsafe_allow_html=True)  # close section-card
 
-                progress_ph = st.progress(0)
-                try:
-                    progress_ph.progress(10)
-                    file_buffer = io.BytesIO(uploaded_file.read())
-                    progress_ph.progress(40)
-
-                    loader = ExcelDataLoader(file_buffer)
-                    progress_ph.progress(70)
-                    success, data, errors, warnings = loader.load_and_validate()
-                    progress_ph.progress(100)
-                    progress_ph.empty()
-
-                    if success:
-                        st.session_state[SS_EXCEL_DATA] = data
-                        render_alert("File validated successfully!", "success")
-                        for warn in warnings:
-                            render_alert(warn, "warning")
-                        st.session_state[SS_STAGE] = STAGE_PREVIEW
-                        st.rerun()
-                    else:
-                        for err in errors:
-                            render_alert(err, "error")
-                        for warn in warnings:
-                            render_alert(warn, "warning")
-                except Exception as e:
-                    progress_ph.empty()
-                    render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
-
-    # --- RIGHT CARD: Quick Start Guide ---
+    # --- RIGHT: Quick Start (secondary) + Download template (secondary) ---
     with col_right:
-        right_card = st.container()
-        with right_card:
-            st.markdown('<span class="card-anchor"></span>', unsafe_allow_html=True)
-            st.markdown('<div class="card-header">Quick Start Guide</div>', unsafe_allow_html=True)
+        # Quick Start Guide (visual grouping only; content unchanged)
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="section-header">'
+            '<h3>🚀Quick Start Guide</h3></div>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            """
+            <ul class="qs-list">
+              <li><strong>Download Template</strong> → Get the Excel structure</li>
+              <li><strong>Fill Data</strong> → Complete Plant, Inventory, Demand, and Transition sheets</li>
+              <li><strong>Upload File</strong> → Validate your data</li>
+              <li><strong>Preview & Configure</strong> → Check sheets and set optimization parameters</li>
+              <li><strong>Run Optimization</strong> → Generate schedule and view results</li>
+            </ul>
+            """,
+            unsafe_allow_html=True
+        )
+    #   st.markdown('</div>', unsafe_allow_html=True)
 
-            st.markdown(
-                """
-                <ol class="qs-stepper">
-                  <li class="qs-step"><strong>Download Template</strong><span>Get the Excel structure</span></li>
-                  <li class="qs-step"><strong>Fill Data</strong><span>Complete Plant, Inventory, Demand, and Transition sheets</span></li>
-                  <li class="qs-step"><strong>Upload File</strong><span>Validate your data</span></li>
-                  <li class="qs-step"><strong>Preview & Configure</strong><span>Check sheets and set optimization parameters</span></li>
-                  <li class="qs-step"><strong>Run Optimization</strong><span>Generate schedule and view results</span></li>
-                </ol>
-                """,
-                unsafe_allow_html=True
-            )
+        
 
     # Close constrained container
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Variable & Constraint Details (unchanged)
+    # Variable & Constraint Details (full-width expander; unchanged content)
     with st.expander("📄 Variable and Constraint Details", expanded=False):
         col1, col2, col3, col4 = st.columns(4)
         with col1:
