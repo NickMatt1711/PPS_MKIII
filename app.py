@@ -65,7 +65,7 @@ def render_upload_stage():
     # ========== LEFT COLUMN: Upload Section ==========
     with col1:
         # Section title
-       st.markdown('<div class="upload-section-title">📤 Upload Production Data</div>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-section-title">📤 Upload Production Data</div>', unsafe_allow_html=True)
         
                 
         # File uploader
