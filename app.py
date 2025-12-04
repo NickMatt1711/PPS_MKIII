@@ -214,7 +214,7 @@ def render_preview_stage():
                             df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
                 except Exception:
                     pass
-                st.dataframe(df_display, use_container_width=True, height=400)
+                st.dataframe(df_display, use_container_width=True, hide_index=True)
             else:
                 st.info(f"Sheet {sheet_name} not found in uploaded file.")
 
@@ -237,9 +237,9 @@ def render_preview_stage():
 
                 try:
                     styled_df = df_display.style.applymap(highlight_transitions)
-                    st.dataframe(styled_df, use_container_width=True, height=300)
+                    st.dataframe(styled_df, use_container_width=True, hide_index=True)
                 except Exception:
-                    st.dataframe(df_display, use_container_width=True, height=300)
+                    st.dataframe(df_display, use_container_width=True, hide_index=True)
 
     st.markdown("---")
     render_section_divider()
@@ -571,9 +571,9 @@ def render_results_stage():
                     styled_df = schedule_df.style.applymap(
                         lambda v: style_grade_column(v), subset=['Grade']
                     )
-                    st.dataframe(styled_df, use_container_width=True)
+                    st.dataframe(styled_df, use_container_width=True, hide_index=True)
                 except Exception:
-                    st.dataframe(schedule_df, use_container_width=True)
+                    st.dataframe(schedule_df, use_container_width=True, hide_index=True)
 
         render_section_divider()
 
@@ -636,9 +636,9 @@ def render_results_stage():
                     styled_summary = summary_df.style.applymap(
                         lambda v: style_summary_grade(v), subset=['Grade']
                     )
-                    st.dataframe(styled_summary, use_container_width=True)
+                    st.dataframe(styled_summary, use_container_width=True, hide_index=True)
                 except Exception:
-                    st.dataframe(summary_df, use_container_width=True)
+                    st.dataframe(summary_df, use_container_width=True, hide_index=True)
             else:
                 st.info("No production summary available.")
 
@@ -648,7 +648,7 @@ def render_results_stage():
                 transitions = solution.get('transitions', {}).get('per_line', {}) if isinstance(solution, dict) else {}
                 transitions_data = [{'Line': l, 'Transitions': c} for l, c in transitions.items()]
                 transitions_df = pd.DataFrame(transitions_data)
-                st.dataframe(transitions_df, use_container_width=True)
+                st.dataframe(transitions_df, use_container_width=True,hide_index=True, hide_index=True)
             except Exception as e:
                 st.error(f"Failed to render transitions table: {e}")
 
@@ -664,13 +664,15 @@ def render_results_stage():
                 st.error(f"Failed to create stockout details table: {e}")
 
             if not stockout_df.empty:
-                try:
-                    styled_stockout = stockout_df.style.applymap(
-                        highlight_stockout, subset=['Stockout Quantity (MT)']
-                    )
-                    st.dataframe(styled_stockout, use_container_width=True)
-                except Exception:
-                    st.dataframe(stockout_df, use_container_width=True)
+               try:
+                   styled_stockout = stockout_df.style.applymap(
+                       lambda v: style_stockout_grade(v, grade_colors), subset=['Grade']
+                   ).applymap(
+                       highlight_stockout, subset=['Stockout Quantity (MT)']
+                   )
+                   st.dataframe(styled_stockout, use_container_width=True, hide_index=True)
+               except Exception:
+                   st.dataframe(stockout_df, use_container_width=True, hide_index=True)
             else:
                 st.success("✅ No stockouts occurred during the demand period!")
             
