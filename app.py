@@ -136,10 +136,7 @@ def render_upload_stage():
 
     # ========== RIGHT COLUMN: Quick Start Guide (In Card) ==========
     with col2:
-        st.markdown('<div class="upload-card card-quickstart">', unsafe_allow_html=True)
         st.markdown('<h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
-        
         # Clean step list without individual cards
         st.markdown("""
         <div class="quick-start-steps-clean">
@@ -151,7 +148,6 @@ def render_upload_stage():
                 </div>
             </div>
             <div class="step-divider-clean"></div>
-            
             <div class="step-item-clean">
                 <div class="step-number-clean">2</div>
                 <div class="step-content-clean">
@@ -160,7 +156,6 @@ def render_upload_stage():
                 </div>
             </div>
             <div class="step-divider-clean"></div>
-            
             <div class="step-item-clean">
                 <div class="step-number-clean">3</div>
                 <div class="step-content-clean">
@@ -169,7 +164,6 @@ def render_upload_stage():
                 </div>
             </div>
             <div class="step-divider-clean"></div>
-            
             <div class="step-item-clean">
                 <div class="step-number-clean">4</div>
                 <div class="step-content-clean">
