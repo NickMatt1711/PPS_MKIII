@@ -285,7 +285,7 @@ def render_upload_stage():
         # Center the button
         col_left, col_center, col_right = st.columns([1, 2, 1])
         with col_center:
-            render_download_template_button()
+            render_download_template_section()
         
         st.markdown("</div>", unsafe_allow_html=True)
     
