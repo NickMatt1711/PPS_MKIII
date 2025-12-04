@@ -59,18 +59,18 @@ def render_upload_stage():
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    # Three-column layout with proper visual hierarchy
-    col1, col2, col3 = st.columns([1.5, 1, 1])
+    # Two-column layout: Upload card (wider) + Quick Start (narrower)
+    col1, col2 = st.columns([2, 1])
 
-    # ========== LEFT COLUMN: Primary Upload Card ==========
+    # ========== LEFT COLUMN: Upload Card with integrated download ==========
     with col1:
         st.markdown('<div class="upload-card card-uploader">', unsafe_allow_html=True)
         st.markdown('<h2>📤 Upload Production Data</h2>', unsafe_allow_html=True)
         st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
         
-        # Visual upload zone indicator
+        # Visual upload zone with icon and text
         st.markdown("""
-        <div class="upload-zone">
+        <div style="text-align: center; margin-bottom: 1rem;">
             <div class="upload-icon">📁</div>
             <div class="upload-text">Drag & Drop Excel File</div>
             <div class="upload-subtext">or click to browse</div>
@@ -78,7 +78,7 @@ def render_upload_stage():
         </div>
         """, unsafe_allow_html=True)
         
-        # File uploader
+        # File uploader (Streamlit native)
         uploaded_file = st.file_uploader(
             "Upload your input files here",
             type=ALLOWED_EXTENSIONS,
@@ -86,7 +86,7 @@ def render_upload_stage():
             label_visibility="collapsed"
         )
 
-        # Processing logic (unchanged)
+        # Processing logic
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
             render_alert("File uploaded successfully! Processing...", "success")
@@ -111,10 +111,29 @@ def render_upload_stage():
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
 
+        # Download template section (integrated in same card)
+        st.markdown('<div class="download-section">', unsafe_allow_html=True)
+        st.markdown("**📥 Don't have the template?**")
+        render_download_template_button()
+        
+        # Required sheets notice
+        st.markdown("""
+        <div class="required-sheets-notice" style="margin-top: 1rem;">
+            <strong>⚠️ Required Sheets:</strong>
+            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.25rem;">
+                <li>Plant</li>
+                <li>Inventory</li>
+                <li>Demand</li>
+                <li>Transition_[PlantName]</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)  # close download-section
+        
         st.markdown('</div>', unsafe_allow_html=True)  # close card-body
         st.markdown('</div>', unsafe_allow_html=True)  # close upload-card
 
-    # ========== MIDDLE COLUMN: Quick Start Guide ==========
+    # ========== RIGHT COLUMN: Quick Start Guide ==========
     with col2:
         st.markdown('<div class="upload-card card-quickstart">', unsafe_allow_html=True)
         st.markdown('<h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
@@ -154,31 +173,6 @@ def render_upload_stage():
                     <span>Set parameters & optimize</span>
                 </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)  # close card-body
-        st.markdown('</div>', unsafe_allow_html=True)  # close upload-card
-
-    # ========== RIGHT COLUMN: Download Template Card ==========
-    with col3:
-        st.markdown('<div class="upload-card card-download">', unsafe_allow_html=True)
-        st.markdown('<h2>📥 Download Template</h2>', unsafe_allow_html=True)
-        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
-        
-        # Download button
-        render_download_template_button()
-        
-        # Required sheets notice
-        st.markdown("""
-        <div class="required-sheets-notice">
-            <strong>⚠️ Required Sheets:</strong>
-            <ul>
-                <li>Plant</li>
-                <li>Inventory</li>
-                <li>Demand</li>
-                <li>Transition_[PlantName]</li>
-            </ul>
         </div>
         """, unsafe_allow_html=True)
         
