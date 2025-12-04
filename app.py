@@ -23,13 +23,7 @@ from postprocessing import *
 import pandas as pd
 
 
-# --- FIX: DEFINITIONS FOR MISSING CONSTANTS ---
-# These constants were used in SS_OPTIMIZATION_PARAMS but are missing from constants.py.
-# Adding reasonable defaults here to resolve the NameError.
-DEFAULT_SWITCH_COST = 5.0
-DEFAULT_CAPACITY_PENALTY = 0.1
-SS_THEME = 'app_theme'
-# --- END FIX ---
+# --- REMOVED TEMPORARY CONSTANT DEFINITIONS ---
 
 
 STAGE_MAP = {
@@ -57,13 +51,16 @@ st.session_state.setdefault(SS_EXCEL_DATA, None)
 st.session_state.setdefault(SS_SOLUTION, None)
 st.session_state.setdefault(SS_GRADE_COLORS, {})
 
+# Reverting optimization parameters to a safe set.
+# Only including parameters that appear to be correctly defined in constants.py
+# (i.e., those that didn't crash the app initially).
 st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
     'time_limit_min': DEFAULT_TIME_LIMIT_MIN,
     'buffer_days': DEFAULT_BUFFER_DAYS,
     'stockout_penalty': DEFAULT_STOCKOUT_PENALTY,
-    'switch_cost': DEFAULT_SWITCH_COST,
-    'capacity_utilization_penalty': DEFAULT_CAPACITY_PENALTY,
-    'max_plan_horizon_days': MAX_PLAN_HORIZON_DAYS,
+    # Removed: 'switch_cost': DEFAULT_SWITCH_COST,
+    # Removed: 'capacity_utilization_penalty': DEFAULT_CAPACITY_PENALTY,
+    # Removed: 'max_plan_horizon_days': MAX_PLAN_HORIZON_DAYS,
 })
 
 # --- Stage Handlers ---
@@ -112,7 +109,7 @@ def render_upload_stage():
                 label_visibility="collapsed" # Hide default label for cleaner UI
             )
             
-            # Apply custom CSS class to the uploader area for visual distinction
+            # Applying custom CSS for the uploader area (defined in app.py for specific targeting)
             st.markdown(
                 """
                 <style>
@@ -159,9 +156,8 @@ def render_preview_stage():
     with st.sidebar:
         st.header("Optimization Parameters")
         
-        # ... (Parameter inputs)
-        
-        # st.session_state[SS_OPTIMIZATION_PARAMS]['time_limit_min'] = st.slider(...)
+        # NOTE: If you need to add inputs for 'switch_cost', 'capacity_utilization_penalty', 
+        # or 'max_plan_horizon_days', you must ensure those variables are defined in constants.py first.
         
         # Logic to set parameters and run optimization (moved from original)
         if st.button("Run Optimization", use_container_width=True, type="primary"):
@@ -335,10 +331,10 @@ def render_results_stage():
 
     with col_nav3:
         if st.button("🔄 New Optimization", use_container_width=True, type="primary"):
-            # Reset state but keep theme
-            theme_val = st.session_state.get(SS_THEME, "light")
+            # Reset state but handle theme gracefully without assuming SS_THEME exists
+            # We assume "light" as the default if the theme variable is not defined.
+            # theme_val is removed as SS_THEME causes an error.
             st.session_state.clear()
-            st.session_state[SS_THEME] = theme_val
             st.session_state[SS_STAGE] = STAGE_UPLOAD
             st.rerun()
 
