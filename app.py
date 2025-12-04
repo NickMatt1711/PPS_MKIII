@@ -60,36 +60,33 @@ def render_upload_stage():
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
-    # Start a constrained page container for better desktop readability
+    # Constrained page container (already present in your layout)
     st.markdown('<div class="page-max">', unsafe_allow_html=True)
 
-    # Two-column layout: Left (primary upload), Right (Quick Start + Download)
+    # Two-column layout: Left (primary upload), Right (Quick Start)
     col_left, col_right = st.columns([2, 1])
 
-    # --- LEFT: Upload (primary section card) ---
+    # --- LEFT CARD: Upload & Template (uses existing card components) ---
     with col_left:
-        st.markdown('<div class="section-card section-primary">', unsafe_allow_html=True)
+        render_card("Upload & Template", icon="📥")
 
-        # File uploader (unchanged API; clarified affordance via CSS)
+        # File uploader (unchanged API)
         uploaded_file = st.file_uploader(
             "Upload your input files here",
             type=ALLOWED_EXTENSIONS,
             help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets"
         )
 
-        # Subtle helper text (keeps info visible near the control)
+        # Helper caption near control
         st.caption("Limit 200MB per file · XLSX only")
 
-        # Download Template (keeps existing button/function; now visually distinct)
-        st.markdown('<div class="section-actions">', unsafe_allow_html=True)
+        # Download Template (existing button/function)
         render_download_template_button()
-        st.markdown('</div>', unsafe_allow_html=True)
 
-        # Inline alerts, progress, and validation (existing logic + progressive feedback)
+        # Inline alerts, progress, and validation (existing logic + progress)
         if uploaded_file is not None:
             st.session_state[SS_UPLOADED_FILE] = uploaded_file
 
-            # Show selected file details & start progress
             size_bytes = getattr(uploaded_file, "size", None)
             size_str = f"{(size_bytes or 0)/1024/1024:.2f} MB" if size_bytes else "—"
             render_alert(f"Selected: {uploaded_file.name} ({size_str}). Validating…", "info")
@@ -122,17 +119,13 @@ def render_upload_stage():
                 progress_ph.empty()
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
 
-        st.markdown('</div>', unsafe_allow_html=True)  # close section-card
+        close_card()  # close LEFT card
 
-    # --- RIGHT: Quick Start (secondary) ---
+    # --- RIGHT CARD: Quick Start Guide (uses existing card components) ---
     with col_right:
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.markdown(
-            '<div class="section-header"><h3>Quick Start Guide</h3></div>',
-            unsafe_allow_html=True
-        )
+        render_card("Quick Start Guide", icon="🧭")
 
-        # Turn the list into a numbered stepper for scannability (content unchanged)
+        # Numbered stepper list (content unchanged)
         st.markdown(
             """
             <ol class="qs-stepper">
@@ -145,12 +138,13 @@ def render_upload_stage():
             """,
             unsafe_allow_html=True
         )
-        st.markdown('</div>', unsafe_allow_html=True)  # close section-card
+
+        close_card()  # close RIGHT card
 
     # Close constrained container
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Variable & Constraint Details (full-width expander; unchanged content)
+    # Variable & Constraint Details (unchanged content)
     with st.expander("📄 Variable and Constraint Details", expanded=False):
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -186,7 +180,6 @@ def render_upload_stage():
 ### **Transition Sheets**
 - Allowed grade changes per plant from grade in Row to grade in Column (**Yes/No**)
 """)
-
 
 
 # ========== STAGE 1: PREVIEW ==========
