@@ -397,7 +397,6 @@ def render_optimization_stage():
             buffer_days=params['buffer_days'],
             stockout_penalty=params['stockout_penalty'],
             transition_penalty=params['transition_penalty'],
-            continuity_bonus=params['continuity_bonus'],
             time_limit_min=params['time_limit_min'],
             progress_callback=progress_callback
         )
