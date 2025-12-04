@@ -83,11 +83,6 @@ def render_upload_stage():
 
         # Download Template & Details (keeps existing button/function)
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.markdown(
-            '<div class="section-header"><span class="section-icon">📥</span>'
-            '<h3>Download Template & Details</h3></div>',
-            unsafe_allow_html=True
-        )
         render_download_template_button()
         st.markdown('</div>', unsafe_allow_html=True)
 
