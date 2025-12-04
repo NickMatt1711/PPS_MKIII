@@ -315,42 +315,213 @@ def render_preview_stage():
 # ========== STAGE 2: OPTIMIZATION IN PROGRESS ==========
 
 def render_optimization_stage():
-    """Stage 2: Show optimization in progress"""
+    """Stage 2: Show optimization in progress (with spinner card and auto-advance)"""
+    # Header + stage indicator
     render_header(f"{APP_ICON} {APP_TITLE}", "Optimization in Progress")
     render_stage_progress(STAGE_MAP.get(STAGE_OPTIMIZING, 2))
 
-    # >>> NEW: Spinner card block (visible while solver is running) <<<
-    render_card("Optimization Running", icon="⚡")
-    st.markdown(
-        """
-        <div class="optimization-container">
-            <div class="spinner"></div>
-            <div class="optimization-text">Running optimization…</div>
-            <div class="optimization-subtext">
-                This may take a few minutes depending on constraints and time limit.
+    # --- VIEW-ONLY: Spinner card in a temporary placeholder (auto-hide later) ---
+    spinner_holder = st.empty()
+    with spinner_holder.container():
+        render_card("Optimization Running", icon="⚡")
+        st.markdown(
+            """
+            <div class="optimization-container">
+                <div class="spinner"></div>
+                <div class="optimization-text">Running optimization…</div>
+                <div class="optimization-subtext">
+                    This may take a few minutes depending on constraints and time limit.
+                </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    close_card()
-    # ---------------------------------------------------------------
+            """,
+            unsafe_allow_html=True
+        )
+        close_card()
+    # ---------------------------------------------------------------------------
 
     st.markdown(
         """⚡ Optimizing Production Schedule... Running solver — progress will be shown below.""",
         unsafe_allow_html=True
     )
+
+    # Ensure data is available
     excel_data = st.session_state.get(SS_EXCEL_DATA)
     if not excel_data:
+        spinner_holder.empty()  # hide spinner if we can't proceed
         render_error_state("No Data Found", "Please upload a file first.")
         if st.button("← Back to Upload"):
             st.session_state[SS_STAGE] = STAGE_UPLOAD
             st.rerun()
         return
 
+    # Progress scaffolding (unchanged)
     params = st.session_state[SS_OPTIMIZATION_PARAMS]
     progress_bar = st.progress(0.0)
     status_text = st.empty()
+
+    try:
+        # --- Preprocessing pipeline (unchanged) ---
+        status_text.info("📄 Processing plant data...")
+        plant_data = process_plant_data(excel_data['Plant'])
+        progress_bar.progress(0.10)
+
+        status_text.info("📄 Processing inventory data...")
+        inventory_data = process_inventory_data(excel_data['Inventory'], plant_data['lines'])
+        progress_bar.progress(0.20)
+
+        status_text.info("📄 Processing demand data...")
+        demand_data, dates, num_days = process_demand_data(excel_data['Demand'], params['buffer_days'])
+        formatted_dates = [d.strftime('%d-%b-%y') for d in dates]
+        progress_bar.progress(0.30)
+
+        status_text.info("📄 Validating shutdown constraints...")
+        invalid_grades_warning = []
+        for line, grade in plant_data.get('pre_shutdown_grades', {}).items():
+            if grade not in inventory_data['grades']:
+                invalid_grades_warning.append(
+                    f"Pre-shutdown grade '{grade}' for line '{line}' is not a valid grade.")
+            elif line not in inventory_data['allowed_lines'][grade]:
+                invalid_grades_warning.append(
+                    f"Pre-shutdown grade '{grade}' for line '{line}' is not allowed on that line.")
+        for line, grade in plant_data.get('restart_grades', {}).items():
+            if grade not in inventory_data['grades']:
+                invalid_grades_warning.append(
+                    f"Restart grade '{grade}' for line '{line}' is not a valid grade.")
+            elif line not in inventory_data['allowed_lines'][grade]:
+                invalid_grades_warning.append(
+                    f"Restart grade '{grade}' for line '{line}' is not allowed on that line.")
+        if invalid_grades_warning:
+            for w in invalid_grades_warning:
+                render_alert(w, "warning")
+            st.warning("⚠️ Invalid shutdown/restart grades may cause infeasible solutions.")
+
+        status_text.info("📄 Processing shutdown periods...")
+        shutdown_periods = process_shutdown_dates(plant_data.get('shutdown_periods', {}), dates)
+        progress_bar.progress(0.35)
+
+        status_text.info("📄 Processing transition rules...")
+        transition_dfs = {k: v for k, v in excel_data.items() if k.startswith('Transition_')}
+        transition_rules = process_transition_rules(transition_dfs)
+        progress_bar.progress(0.40)
+
+        # --- Solver run (unchanged) ---
+        status_text.info("⚡ Running optimization solver...")
+        def progress_callback(pct: float, msg: str):
+            try:
+                progress_bar.progress(0.40 + float(pct) * 0.60)
+                status_text.info(f"⚡ {msg}")
+            except Exception:
+                pass
+
+        status, solution_callback, solver = build_and_solve_model(
+            grades=inventory_data['grades'],
+            lines=plant_data['lines'],
+            dates=dates,
+            formatted_dates=formatted_dates,
+            num_days=num_days,
+            capacities=plant_data['capacities'],
+            initial_inventory=inventory_data['initial_inventory'],
+            min_inventory=inventory_data['min_inventory'],
+            max_inventory=inventory_data['max_inventory'],
+            min_closing_inventory=inventory_data['min_closing_inventory'],
+            demand_data=demand_data,
+            allowed_lines=inventory_data['allowed_lines'],
+            min_run_days=inventory_data['min_run_days'],
+            max_run_days=inventory_data['max_run_days'],
+            force_start_date=inventory_data.get('force_start_date', {}),
+            rerun_allowed=inventory_data.get('rerun_allowed', {}),
+            material_running_info=plant_data.get('material_running', {}),
+            shutdown_periods=shutdown_periods,
+            pre_shutdown_grades=plant_data.get('pre_shutdown_grades', {}),
+            restart_grades=plant_data.get('restart_grades', {}),
+            transition_rules=transition_rules,
+            buffer_days=params['buffer_days'],
+            stockout_penalty=params['stockout_penalty'],
+            transition_penalty=params['transition_penalty'],
+            time_limit_min=params['time_limit_min'],
+            progress_callback=progress_callback
+        )
+
+        progress_bar.progress(1.0)
+
+        # --- Determine if we have a solution (unchanged, with a tiny guard) ---
+        num_found = 0
+        try:
+            num_found = int(solution_callback.num_solutions()) if hasattr(solution_callback, 'num_solutions') else 0
+        except Exception:
+            try:
+                num_found = len(getattr(solution_callback, 'solutions', []))
+            except Exception:
+                num_found = 0
+
+        # Normalize solver status text (view/control only, no modeling change)
+        status_str = str(status).lower() if status is not None else ""
+        is_optimal = ("optimal" in status_str)
+        is_feasible = ("feasible" in status_str) or ("sat" in status_str)
+
+        if num_found > 0 or is_optimal or is_feasible:
+            # Success UI feedback
+            status_text.success("✅ Optimization completed successfully!")
+            spinner_holder.empty()  # hide spinner card
+
+            # Extract the last solution (unchanged)
+            try:
+                last_solution = solution_callback.solutions[-1]
+            except Exception:
+                last_solution = solution_callback if isinstance(solution_callback, dict) else {}
+
+            # Persist solution to session (unchanged structure)
+            st.session_state[SS_SOLUTION] = {
+                'status': status,
+                'solution': last_solution,
+                'solver': solver,
+                'solve_time': getattr(last_solution, 'get', lambda k, d=None: d)('time', 0)
+                              if isinstance(last_solution, dict) else 0,
+                'production_vars': getattr(solution_callback, 'production', {})
+                                   if hasattr(solution_callback, 'production') else {},
+                'data': {
+                    'grades': inventory_data['grades'],
+                    'lines': plant_data['lines'],
+                    'dates': dates,
+                    'num_days': num_days,
+                    'buffer_days': params['buffer_days'],
+                    'shutdown_periods': shutdown_periods,
+                    'allowed_lines': inventory_data['allowed_lines'],
+                    'min_inventory': inventory_data['min_inventory'],
+                    'max_inventory': inventory_data['max_inventory'],
+                    'initial_inventory': inventory_data['initial_inventory'],
+                    'pre_shutdown_grades': plant_data.get('pre_shutdown_grades', {}),
+                    'restart_grades': plant_data.get('restart_grades', {}),
+                    'capacities': plant_data.get('capacities', {}),
+                }
+            }
+
+            # --- Auto-advance to Results stage (view/control only) ---
+            st.session_state[SS_STAGE] = STAGE_RESULTS
+            st.success("Optimization complete! Redirecting to results...")
+            st.rerun()
+        else:
+            # No solution found — show error UI
+            spinner_holder.empty()  # hide spinner card
+            status_text.error("❌ No feasible solution found.")
+            render_error_state(
+                "No Solution Found",
+                "The solver could not find a feasible solution. Please check your constraints and try again."
+            )
+            # Navigation back (unchanged)
+            if st.button("← Back to Configuration"):
+                st.session_state[SS_STAGE] = STAGE_PREVIEW
+                st.rerun()
+
+    except Exception as e:
+        # Failure UI
+        spinner_holder.empty()  # hide spinner card
+        status_text.error("❌ Optimization failed.")
+        render_error_state("Optimization Error", f"An error occurred: {str(e)}")
+        st.exception(e)
+        # Navigation back (unchanged)
+        if st.button("← Back to Configuration"):
+            st.session_state[SS_STAGE] = STAGE_PREVIEW
 
 
 # ========== STAGE 3: RESULTS ==========
