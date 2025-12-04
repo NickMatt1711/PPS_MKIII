@@ -699,6 +699,34 @@ div[data-testid="stVerticalBlock"]:has(> .card-anchor) {
   border: 1px solid var(--md-sys-color-outline-variant);
 
 
+/* Map the first content block in each column to the existing .card look */
+[data-testid="column"]:nth-of-type(1)
+  > div[data-testid="stVerticalBlock"]:first-child,
+[data-testid="column"]:nth-of-type(2)
+  > div[data-testid="stVerticalBlock"]:first-child {
+  /* reuse your card styling */
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* Make the card header inside those blocks look like your .card-header */
+[data-testid="column"]:nth-of-type(1)
+  > div[data-testid="stVerticalBlock"]:first-child .card-header,
+[data-testid="column"]:nth-of-type(2)
+  > div[data-testid="stVerticalBlock"]:first-child .card-header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+
 """
 
 # -------------------------------
