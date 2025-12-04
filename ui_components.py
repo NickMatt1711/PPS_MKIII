@@ -102,6 +102,73 @@ button[data-testid="stDownloadButton"]:hover {
   box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
 }
 
+
+/* ==== Uploader Look & Feel (Desktop) ==== */
+.uploader-shell {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 0.75rem 0.75rem 1rem;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Make Streamlit dropzone look like a modern drag area */
+div[data-testid="stFileUploadDropzone"] {
+  border: 2px dashed var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  transition: all 0.2s ease;
+  padding: 0.75rem;
+}
+div[data-testid="stFileUploadDropzone"]:hover {
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 6px 16px rgba(10,116,218,0.18);
+  transform: translateY(-1px);
+}
+
+/* Hide the tall default label gap and tighten spacing */
+div[data-testid="stFileUploadLabel"] label {
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Improve the small 'Browse files' button spacing & look */
+div[data-testid="stFileUploader"] button {
+  border-radius: var(--md-shape-corner-large) !important;
+  padding: 0.5rem 0.9rem !important;
+  font-weight: 600 !important;
+}
+
+/* Microcopy under uploader */
+.uploader-meta {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 0.5rem 1rem;
+  margin-top: 0.6rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.85rem;
+}
+.uploader-meta .meta-item code {
+  background: var(--md-sys-color-surface-variant);
+  padding: 0.05rem 0.35rem;
+  border-radius: 6px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* Tighter alert spacing inside upload card */
+.section-card.section-primary .alert {
+  margin-top: 0.75rem;
+}
+
+/* Optional: subtle drag hint icon inside dropzone label (emoji fallback) */
+div[data-testid="stFileUploadDropzone"]::before {
+  content: "⬇️ Drag & drop your file";
+  display: block;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 0.35rem;
+}
+
 /* Focus states for accessibility */
 .stButton>button:focus-visible,
 button[data-testid="stDownloadButton"]:focus-visible {
