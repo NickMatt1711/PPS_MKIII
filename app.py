@@ -70,7 +70,7 @@ def render_upload_stage():
         # Uploader container
         st.markdown('<div class="uploader-container">', unsafe_allow_html=True)
         
-        # Visual upload indicator
+        '''# Visual upload indicator
         st.markdown("""
         <div class="upload-indicator">
             <div class="upload-icon">📁</div>
@@ -78,7 +78,7 @@ def render_upload_stage():
             <div class="upload-subtext">or click to browse</div>
             <div class="upload-specs">Limit: 200MB per file • Format: .XLSX</div>
         </div>
-        """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)'''
         
         # File uploader
         uploaded_file = st.file_uploader(
@@ -115,23 +115,9 @@ def render_upload_stage():
         
         st.markdown('</div>', unsafe_allow_html=True)  # close uploader-container
 
-        # Download template section (in a subtle card)
-        st.markdown('<div class="download-section">', unsafe_allow_html=True)
-        st.markdown('<h3>📥 Don\'t have the template?</h3>', unsafe_allow_html=True)
+        st.markdown('<h3>📥 Download the template to get started!</h3>', unsafe_allow_html=True)
         render_download_template_button()
         
-        # Required sheets notice
-        st.markdown("""
-        <div class="required-sheets-notice" style="margin-top: 1rem; background: transparent; padding: 1rem 0; border: none;">
-            <strong>⚠️ Required Sheets:</strong>
-            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.25rem; color: #856404;">
-                <li>Plant</li>
-                <li>Inventory</li>
-                <li>Demand</li>
-                <li>Transition_[PlantName]</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)  # close download-section
 
     # ========== RIGHT COLUMN: Quick Start Guide (In Card) ==========
