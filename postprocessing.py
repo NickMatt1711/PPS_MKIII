@@ -405,6 +405,7 @@ def create_schedule_table(
         })
     
     return pd.DataFrame(rows)
+    
 
 
 # ===============================================================
