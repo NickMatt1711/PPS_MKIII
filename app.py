@@ -60,7 +60,7 @@ def render_upload_stage():
     render_stage_progress(STAGE_MAP.get(STAGE_UPLOAD, 0))
 
     # Three-column layout with proper visual hierarchy
-    col1, col2, col3 = st.columns([2, 1])
+    col1, col2 = st.columns([2, 1])
 
     # ========== LEFT COLUMN: Primary Upload Card ==========
     with col1:
