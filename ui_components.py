@@ -164,7 +164,7 @@ Cards - Enhanced
 }
 
 /* =============================
-UPLOAD PAGE - Refined Layout
+UPLOAD PAGE - Enhanced Visual Design
 ============================= */
 .upload-section-title {
     font-size: 1.5rem;
@@ -176,35 +176,131 @@ UPLOAD PAGE - Refined Layout
     color: #212529;
 }
 
-/* Uploader container - no card */
-.uploader-container {
-    margin-bottom: 2rem;
-}
-
-/* Visual upload indicator above native uploader */
-.upload-indicator {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    padding: 2rem 1rem;
-    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
-    border: 2px dashed #0A74DA;
+/* Enhanced upload zone */
+.upload-zone-enhanced {
+    border: 3px dashed #0A74DA;
     border-radius: 16px;
+    padding: 3rem 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
     transition: all 0.3s ease;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
 }
 
-.upload-indicator:hover {
+.upload-zone-enhanced::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(10, 116, 218, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.upload-zone-enhanced:hover {
     background: linear-gradient(135deg, #E0F2FE 0%, #BFDBFE 100%);
     border-color: #085BB5;
-    transform: scale(1.01);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(10, 116, 218, 0.15);
 }
 
-/* Download section spacing */
+.upload-zone-enhanced:hover::before {
+    opacity: 1;
+}
+
+.upload-icon-large {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: float 3s ease-in-out infinite;
+    display: inline-block;
+}
+
+.upload-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0A74DA;
+    margin-bottom: 0.5rem;
+}
+
+.upload-subtitle {
+    font-size: 0.95rem;
+    color: #606266;
+    margin-bottom: 1.25rem;
+}
+
+.upload-or-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.upload-or-divider::before,
+.upload-or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #CED4DA, transparent);
+}
+
+.upload-or-text {
+    color: #909399;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.upload-specs {
+    font-size: 0.75rem;
+    color: #909399;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(10, 116, 218, 0.1);
+}
+
+.browse-button-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #0A74DA, #4BA3F4);
+    color: white;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    box-shadow: 0 2px 8px rgba(10, 116, 218, 0.3);
+}
+
+.browse-button-custom:hover {
+    background: linear-gradient(135deg, #085BB5, #3D8CD9);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(10, 116, 218, 0.4);
+}
+
+/* Hide default Streamlit uploader styling */
+[data-testid="stFileUploader"] {
+    display: none;
+}
+
+.custom-file-uploader-wrapper [data-testid="stFileUploader"] {
+    display: block;
+}
+
+/* Download section */
 .download-section {
-    margin-top: 1.5rem;
+    margin-top: 2rem;
     padding: 1.5rem;
     background: var(--md-sys-color-surface);
     border-radius: var(--md-shape-corner-medium);
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .download-section h3 {
@@ -212,34 +308,58 @@ UPLOAD PAGE - Refined Layout
     font-weight: 600;
     margin-bottom: 1rem;
     color: #212529;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-/* Quick Start - Steps without individual cards */
-.quick-start-steps-clean {
+/* Quick Start - Connected Steps */
+.quick-start-steps-connected {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 0;
     margin-top: 1.5rem;
+    position: relative;
 }
 
-.step-item-clean {
+/* Vertical connecting line */
+.quick-start-steps-connected::before {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 40px;
+    bottom: 40px;
+    width: 3px;
+    background: linear-gradient(180deg, 
+        #28A745 0%, 
+        #28A745 25%, 
+        #5DDC7A 50%, 
+        #28A745 75%, 
+        #28A745 100%);
+    border-radius: 2px;
+    z-index: 0;
+}
+
+.step-item-connected {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
-    padding: 0;
+    padding: 0.75rem 0;
+    position: relative;
+    z-index: 1;
     transition: all 0.2s ease;
 }
 
-.step-item-clean:hover {
+.step-item-connected:hover {
     transform: translateX(4px);
 }
 
-.step-item-clean:hover .step-number-clean {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+.step-item-connected:hover .step-number-connected {
+    transform: scale(1.15);
+    box-shadow: 0 4px 16px rgba(40, 167, 69, 0.5);
 }
 
-.step-number-clean {
+.step-number-connected {
     width: 36px;
     height: 36px;
     min-width: 36px;
@@ -251,36 +371,31 @@ UPLOAD PAGE - Refined Layout
     justify-content: center;
     font-weight: 700;
     font-size: 1rem;
-    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
-    transition: all 0.2s ease;
+    box-shadow: 0 3px 8px rgba(40, 167, 69, 0.35);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+    border: 3px solid #F0FDF4;
 }
 
-.step-content-clean {
+.step-content-connected {
     flex: 1;
     padding-top: 0.25rem;
 }
 
-.step-content-clean strong {
+.step-content-connected strong {
     font-size: 1rem;
     color: #212529;
     display: block;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.35rem;
     font-weight: 600;
 }
 
-.step-content-clean span {
+.step-content-connected span {
     font-size: 0.875rem;
     color: #606266;
-    line-height: 1.4;
-}
-
-.step-divider-clean {
-    width: 2px;
-    height: 16px;
-    background: linear-gradient(180deg, #28A745, rgba(40, 167, 69, 0.3));
-    margin-left: 17px;
-    margin-top: -0.25rem;
-    margin-bottom: -0.25rem;
+    line-height: 1.5;
+    display: block;
 }
 
 /* =============================
