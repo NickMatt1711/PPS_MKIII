@@ -101,28 +101,14 @@ def render_upload_stage():
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
 
         # Download template section
-        st.markdown('<div class="download-section">', unsafe_allow_html=True)
         st.markdown('<h3>📥 Download the template to get started!</h3>', unsafe_allow_html=True)
         render_download_template_button()
         
-        # Required sheets notice
-        st.markdown("""
-        <div style="margin-top: 1rem; padding: 0.75rem; background: #FFF3CD; border-radius: 8px; border-left: 4px solid #FFC107;">
-            <strong style="color: #856404; font-size: 0.875rem;">⚠️ Required Sheets:</strong>
-            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.25rem; color: #856404; font-size: 0.85rem;">
-                <li>Plant</li>
-                <li>Inventory</li>
-                <li>Demand</li>
-                <li>Transition_[PlantName]</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
 
     # ========== RIGHT COLUMN: Quick Start Guide (In Card) ==========
     with col2:
         st.markdown('<div class="upload-card card-quickstart">', unsafe_allow_html=True)
-        st.markdown('<h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
+        st.markdown('<h3>🚀 Quick Start Guide</h3>', unsafe_allow_html=True)
         st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
         
         # Connected step list with visual line - FIXED: Removed extra closing tags
@@ -134,24 +120,21 @@ def render_upload_stage():
                     <strong>Download Template</strong>
                     <span>Get the pre-formatted Excel structure with all required sheets</span>
                 </div>
-            </div>
-            
+            </div>            
             <div class="step-item-connected">
                 <div class="step-number-connected">2</div>
                 <div class="step-content-connected">
                     <strong>Fill Data</strong>
                     <span>Complete Plant, Inventory, Demand, and Transition sheets with your data</span>
                 </div>
-            </div>
-            
+            </div>            
             <div class="step-item-connected">
                 <div class="step-number-connected">3</div>
                 <div class="step-content-connected">
                     <strong>Upload File</strong>
                     <span>Drag & drop or browse to upload your completed Excel file</span>
                 </div>
-            </div>
-            
+            </div>            
             <div class="step-item-connected">
                 <div class="step-number-connected">4</div>
                 <div class="step-content-connected">
