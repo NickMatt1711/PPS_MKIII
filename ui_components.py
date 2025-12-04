@@ -1,14 +1,14 @@
-"""
-ui_components.py
-Material 3 Light Theme - Enhanced UX with improved responsiveness and accessibility
-"""
 
+"""
+ ui_components.py
+ Material 3 Light Theme - Enhanced UX with improved responsiveness and accessibility
+"""
 import streamlit as st
 from pathlib import Path
 
-# -------------------------------
+# ---------------------------------------------
 # CSS - Material 3 Light Theme (Enhanced)
-# -------------------------------
+# ---------------------------------------------
 CUSTOM_CSS = """
 /* =============================
 CORPORATE LIGHT THEME CSS - ENHANCED
@@ -77,7 +77,6 @@ button[data-testid="stDownloadButton"] {
   transition: all 0.2s ease !important;
   border: none !important;
 }
-
 .stButton>button[kind="primary"]:hover,
 .stButton>button:not([kind]):hover,
 button[data-testid="stDownloadButton"]:hover {
@@ -98,7 +97,6 @@ button[data-testid="stDownloadButton"]:hover {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
   transition: all 0.2s ease !important;
 }
-
 .stButton>button[kind="secondary"]:hover {
   background: var(--md-sys-color-primary-container) !important;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
@@ -129,14 +127,12 @@ Header - Enhanced
   box-shadow: 0 4px 12px rgba(10, 116, 218, 0.25);
   margin-bottom: 2rem;
 }
-
 .app-header h1 {
   margin: 0;
   font-size: 1.875rem;
   font-weight: 500;
   letter-spacing: -0.5px;
 }
-
 .app-header p {
   opacity: 0.95;
   font-size: 1rem;
@@ -154,11 +150,9 @@ Cards - Enhanced
   box-shadow: 0 2px 4px rgba(0,0,0,0.08);
   transition: box-shadow 0.2s ease;
 }
-
 .card:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
-
 .card-header {
   font-size: 1.25rem;
   font-weight: 500;
@@ -176,27 +170,23 @@ div[data-testid="stAlert"] {
   margin: 1rem 0;
   border-left: 4px solid;
 }
-
-.alert-success { 
-  background: var(--md-sys-color-success-container); 
+.alert-success {
+  background: var(--md-sys-color-success-container);
   color: var(--md-sys-color-on-success);
   border-left-color: var(--md-sys-color-success);
 }
-
-.alert-info { 
-  background: var(--md-sys-color-primary-container); 
+.alert-info {
+  background: var(--md-sys-color-primary-container);
   color: var(--md-sys-color-on-primary-container);
   border-left-color: var(--md-sys-color-primary);
 }
-
-.alert-warning { 
-  background: var(--md-sys-color-warning-container); 
+.alert-warning {
+  background: var(--md-sys-color-warning-container);
   color: var(--md-sys-color-on-warning);
   border-left-color: var(--md-sys-color-warning);
 }
-
-.alert-error { 
-  background: var(--md-sys-color-error-container); 
+.alert-error {
+  background: var(--md-sys-color-error-container);
   color: var(--md-sys-color-on-error);
   border-left-color: var(--md-sys-color-error);
 }
@@ -211,7 +201,6 @@ Stage Progress - Enhanced (4 stages)
   margin-bottom: 2rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-
 .stage-row {
   display: flex;
   justify-content: space-between;
@@ -219,7 +208,6 @@ Stage Progress - Enhanced (4 stages)
   width: 100%;
   gap: 1rem;
 }
-
 .stage-step {
   display: flex;
   flex-direction: column;
@@ -229,7 +217,6 @@ Stage Progress - Enhanced (4 stages)
   position: relative;
   z-index: 2;
 }
-
 .stage-circle {
   width: 52px;
   height: 52px;
@@ -243,7 +230,6 @@ Stage Progress - Enhanced (4 stages)
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
 .stage-circle.active {
   transform: scale(1.15);
   background: var(--md-sys-color-primary);
@@ -251,14 +237,12 @@ Stage Progress - Enhanced (4 stages)
   color: var(--md-sys-color-on-primary);
   box-shadow: 0 4px 12px rgba(10, 116, 218, 0.4);
 }
-
 .stage-circle.completed {
   background: var(--md-sys-color-success);
   border-color: var(--md-sys-color-success);
   color: var(--md-sys-color-on-success);
   box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
 }
-
 .stage-label {
   margin-top: 0.75rem;
   font-size: 0.875rem;
@@ -266,12 +250,10 @@ Stage Progress - Enhanced (4 stages)
   color: var(--md-sys-color-on-surface-variant);
   text-align: center;
 }
-
 .stage-label.active {
   color: var(--md-sys-color-on-surface);
   font-weight: 600;
 }
-
 .stage-connector {
   flex: 1;
   height: 4px;
@@ -280,7 +262,6 @@ Stage Progress - Enhanced (4 stages)
   transition: background-color 0.3s ease;
   border-radius: 2px;
 }
-
 .stage-connector.completed {
   background: var(--md-sys-color-success);
 }
@@ -293,14 +274,12 @@ Tabs - Enhanced with dynamic colors
   border-radius: var(--md-shape-corner-medium) !important;
   overflow: hidden;
 }
-
 .stTabs [data-baseweb="tab-list"] {
   gap: 0.5rem;
   padding: 0.75rem;
   background: var(--md-sys-color-surface-variant);
   border-radius: var(--md-shape-corner-medium) !important;
 }
-
 .stTabs [role="tab"] {
   flex: 1;
   text-align: center;
@@ -310,36 +289,30 @@ Tabs - Enhanced with dynamic colors
   transition: all 0.2s ease;
   border: none !important;
 }
-
 .stTabs [role="tab"]:nth-child(1)[aria-selected="true"] {
   background: linear-gradient(135deg, #0A74DA, #4BA3F4) !important;
   color: #FFFFFF !important;
   box-shadow: 0 2px 8px rgba(10, 116, 218, 0.3);
 }
-
 .stTabs [role="tab"]:nth-child(2)[aria-selected="true"] {
   background: linear-gradient(135deg, #28A745, #5DDC7A) !important;
   color: #FFFFFF !important;
   box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
 }
-
 .stTabs [role="tab"]:nth-child(3)[aria-selected="true"] {
   background: linear-gradient(135deg, #FFC107, #FFD76A) !important;
   color: #212529 !important;
   box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
 }
-
 .stTabs [role="tab"]:nth-child(4)[aria-selected="true"] {
   background: linear-gradient(135deg, #DC3545, #F08080) !important;
   color: #FFFFFF !important;
   box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
-
 .stTabs [role="tab"]:not([aria-selected="true"]) {
   background: var(--md-sys-color-surface) !important;
   color: var(--md-sys-color-on-surface-variant) !important;
 }
-
 .stTabs [role="tab"]:not([aria-selected="true"]):hover {
   background: var(--md-sys-color-surface-variant) !important;
 }
@@ -360,27 +333,14 @@ Metric Cards - Enhanced with hover effects
   min-height: 140px !important;
   transition: all 0.2s ease !important;
 }
-
 .metric-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
 }
-
-.metric-card-blue {
-  background: linear-gradient(135deg, #E6F0FA, #BBD7F5) !important;
-}
-
-.metric-card-green {
-  background: linear-gradient(135deg, #DFF6E3, #AEE8C1) !important;
-}
-
-.metric-card-yellow {
-  background: linear-gradient(135deg, #FFF3CD, #FFE29A) !important;
-}
-
-.metric-card-red {
-  background: linear-gradient(135deg, #F8D7DA, #F1A2A9) !important;
-}
+.metric-card-blue { background: linear-gradient(135deg, #E6F0FA, #BBD7F5) !important; }
+.metric-card-green { background: linear-gradient(135deg, #DFF6E3, #AEE8C1) !important; }
+.metric-card-yellow { background: linear-gradient(135deg, #FFF3CD, #FFE29A) !important; }
+.metric-card-red { background: linear-gradient(135deg, #F8D7DA, #F1A2A9) !important; }
 
 .metric-label {
   font-size: 0.875rem !important;
@@ -392,7 +352,6 @@ Metric Cards - Enhanced with hover effects
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-
 .metric-value {
   font-size: 2.25rem !important;
   font-weight: 700 !important;
@@ -414,36 +373,13 @@ Loading States - Enhanced
   animation: spin 1s linear infinite;
   margin: 1.5rem auto;
 }
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.optimization-container {
-  text-align: center;
-  margin: 2rem auto;
-  padding: 2rem;
-}
-
-.optimization-text {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-top: 1rem;
-  color: var(--md-sys-color-on-surface);
-}
-
-.optimization-subtext {
-  font-size: 1rem;
-  color: var(--md-sys-color-on-surface-variant);
-  margin-top: 0.5rem;
-}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.optimization-container { text-align: center; margin: 2rem auto; padding: 2rem; }
+.optimization-text { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; color: var(--md-sys-color-on-surface); }
+.optimization-subtext { font-size: 1rem; color: var(--md-sys-color-on-surface-variant); margin-top: 0.5rem; }
 
 /* Skeleton Loader */
-.skeleton-loader {
-  padding: 1rem;
-}
-
+.skeleton-loader { padding: 1rem; }
 .skeleton-row {
   height: 40px;
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
@@ -452,11 +388,7 @@ Loading States - Enhanced
   margin-bottom: 12px;
   border-radius: 8px;
 }
-
-@keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
+@keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 /* =============================
 Error States - Enhanced
@@ -468,73 +400,29 @@ Error States - Enhanced
   border-radius: var(--md-shape-corner-medium);
   margin: 2rem 0;
 }
-
-.error-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-}
-
-.error-container h3 {
-  color: var(--md-sys-color-error);
-  margin-bottom: 0.5rem;
-}
-
-.error-container p {
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 1rem;
-}
+.error-icon { font-size: 4rem; margin-bottom: 1rem; }
+.error-container h3 { color: var(--md-sys-color-error); margin-bottom: 0.5rem; }
+.error-container p { color: var(--md-sys-color-on-surface-variant); font-size: 1rem; }
 
 /* =============================
 Section Divider
 ============================= */
-.section-divider {
-  height: 1px;
-  background: var(--md-sys-color-outline-variant);
-  margin: 2rem 0;
-}
+.section-divider { height: 1px; background: var(--md-sys-color-outline-variant); margin: 2rem 0; }
 
 /* =============================
 Responsive Design
 ============================= */
 @media (max-width: 768px) {
-  .stage-row {
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-  
-  .stage-connector {
-    width: 4px;
-    height: 40px;
-    margin: 0.5rem 0;
-  }
-  
-  .metric-card {
-    margin-bottom: 1rem !important;
-  }
-  
-  .app-header h1 {
-    font-size: 1.5rem;
-  }
-  
-  .app-header {
-    padding: 1.25rem 1.5rem;
-  }
+  .stage-row { flex-direction: column; gap: 1.5rem; }
+  .stage-connector { width: 4px; height: 40px; margin: 0.5rem 0; }
+  .metric-card { margin-bottom: 1rem !important; }
+  .app-header h1 { font-size: 1.5rem; }
+  .app-header { padding: 1.25rem 1.5rem; }
 }
-
 @media (max-width: 480px) {
-  .stage-circle {
-    width: 44px;
-    height: 44px;
-    font-size: 1.1rem;
-  }
-  
-  .stage-label {
-    font-size: 0.75rem;
-  }
-  
-  .metric-value {
-    font-size: 1.75rem !important;
-  }
+  .stage-circle { width: 44px; height: 44px; font-size: 1.1rem; }
+  .stage-label { font-size: 0.75rem; }
+  .metric-value { font-size: 1.75rem !important; }
 }
 
 /* =============================
@@ -560,20 +448,12 @@ Accessibility Enhancements
   border-radius: 0 0 4px 0;
   z-index: 100;
 }
-
-.skip-to-content:focus {
-  top: 0;
-}
+.skip-to-content:focus { top: 0; }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-  .stage-circle {
-    border-width: 4px;
-  }
-  
-  .stButton>button {
-    border: 2px solid currentColor !important;
-  }
+  .stage-circle { border-width: 4px; }
+  .stButton>button { border: 2px solid currentColor !important; }
 }
 
 /* Reduced motion support */
@@ -584,19 +464,104 @@ Accessibility Enhancements
     transition-duration: 0.01ms !important;
   }
 }
+
+/* =============================
+Upload Page Enhancements (Desktop-only visual)
+============================= */
+
+/* Constrain page width for better readability on large screens */
+.page-max {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+/* Section cards for clear grouping */
+.section-card {
+  background: var(--md-sys-color-surface-variant);
+  border-radius: var(--md-shape-corner-medium);
+  padding: 1.25rem 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+.section-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+/* Primary section (Upload) – stronger elevation & accent top border */
+.section-card.section-primary {
+  background: var(--md-sys-color-surface);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  border-top: 4px solid var(--md-sys-color-primary);
+}
+
+/* Section header row */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .75rem;
+}
+.section-header h3 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.125rem; /* title-medium */
+  letter-spacing: -0.2px;
+}
+.section-icon { font-size: 1.25rem; }
+
+/* Quick Start list */
+.qs-list {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+.qs-list li strong { font-weight: 600; }
+
+/* Uploader dropzone styling */
+div[data-testid="stFileUploadDropzone"] {
+  border: 2px dashed var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-shape-corner-medium);
+  transition: all 0.2s ease;
+}
+div[data-testid="stFileUploadDropzone"]:hover {
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 4px 12px rgba(10,116,218,0.18);
+  transform: translateY(-1px);
+}
+
+/* Helper microcopy under uploader */
+.helper-text {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.85rem; /* body-small */
+  margin-top: 0.5rem;
+}
+
+/* Make alerts inside primary card tighter */
+.section-card .alert { margin-top: 0.75rem; }
+
+/* Expander styled as card */
+details[data-testid="stExpander"] {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-shape-corner-medium);
+  background: var(--md-sys-color-surface);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+/* Improve page rhythm */
+.stApp p, .stApp li { line-height: 1.6; }
 """
 
-# -------------------------------
+# ---------------------------------------------
 # APPLY CSS
-# -------------------------------
+# ---------------------------------------------
 def apply_custom_css():
     """Inject Material 3 corporate theme with enhanced UX."""
     st.markdown(f"<style>{CUSTOM_CSS}</style>", unsafe_allow_html=True)
 
-
-# -------------------------------
+# ---------------------------------------------
 # HEADER
-# -------------------------------
+# ---------------------------------------------
 def render_header(title: str, subtitle: str = ""):
     """Render corporate app header with enhanced styling."""
     subtitle_html = f"<p>{subtitle}</p>" if subtitle else ""
@@ -605,10 +570,9 @@ def render_header(title: str, subtitle: str = ""):
         unsafe_allow_html=True,
     )
 
-
-# -------------------------------
+# ---------------------------------------------
 # STAGE PROGRESS (4 stages)
-# -------------------------------
+# ---------------------------------------------
 def render_stage_progress(current_stage: int):
     """Render 4-stage progress indicator with proper numbering."""
     stages = [
@@ -617,38 +581,30 @@ def render_stage_progress(current_stage: int):
         ("⚡", "Optimizing"),
         ("📊", "Results")
     ]
-    
     total = len(stages)
     current_stage = max(0, min(current_stage, total - 1))
-    
     html = '<div class="stage-row">'
-
     for idx, (icon, label) in enumerate(stages):
         status = "inactive"
         display_icon = icon
-        
         if idx < current_stage:
             status = "completed"
             display_icon = "✓"
         elif idx == current_stage:
             status = "active"
-
         html += f'<div class="stage-step">'
         html += f'<div class="stage-circle {status}">{display_icon}</div>'
         html += f'<div class="stage-label {"active" if idx == current_stage else ""}">{label}</div>'
         html += '</div>'
-
         if idx < total - 1:
             connector_class = "completed" if idx < current_stage else ""
             html += f'<div class="stage-connector {connector_class}"></div>'
-
     html += '</div>'
     st.markdown(f'<div class="stage-container">{html}</div>', unsafe_allow_html=True)
 
-
-# -------------------------------
+# ---------------------------------------------
 # CARD
-# -------------------------------
+# ---------------------------------------------
 def render_card(title: str, icon: str = ""):
     """Render card container with optional icon."""
     icon_html = f"{icon} " if icon else ""
@@ -661,20 +617,18 @@ def close_card():
     """Close card container."""
     st.markdown('</div>', unsafe_allow_html=True)
 
-
-# -------------------------------
+# ---------------------------------------------
 # METRIC CARD (Enhanced with hover)
-# -------------------------------
+# ---------------------------------------------
 def render_metric_card(label: str, value: str, col, card_index: int = 0):
     """Render a metric card with gradient background and hover effect."""
     gradient_classes = [
         'metric-card-blue',
-        'metric-card-green', 
+        'metric-card-green',
         'metric-card-yellow',
         'metric-card-red'
     ]
     card_class = gradient_classes[card_index % 4]
-    
     with col:
         st.markdown(
             f'''<div class="metric-card {card_class}">
@@ -684,10 +638,9 @@ def render_metric_card(label: str, value: str, col, card_index: int = 0):
             unsafe_allow_html=True
         )
 
-
-# -------------------------------
+# ---------------------------------------------
 # ALERT
-# -------------------------------
+# ---------------------------------------------
 def render_alert(message: str, alert_type: str = "info"):
     """Render styled alert with icon."""
     icons = {
@@ -703,24 +656,22 @@ def render_alert(message: str, alert_type: str = "info"):
         unsafe_allow_html=True
     )
 
-
-# -------------------------------
+# ---------------------------------------------
 # ERROR STATE
-# -------------------------------
+# ---------------------------------------------
 def render_error_state(error_type: str, message: str):
     """Render enhanced error state with icon."""
     st.markdown(f"""
         <div class="error-container">
-            <div class="error-icon">❌</div>
-            <h3>{error_type}</h3>
-            <p>{message}</p>
+          <div class="error-icon">❌</div>
+          <h3>{error_type}</h3>
+          <p>{message}</p>
         </div>
     """, unsafe_allow_html=True)
 
-
-# -------------------------------
+# ---------------------------------------------
 # SKELETON LOADER
-# -------------------------------
+# ---------------------------------------------
 def render_skeleton_loader(rows: int = 3):
     """Render skeleton loader for loading states."""
     skeleton_html = '<div class="skeleton-loader">'
@@ -729,18 +680,16 @@ def render_skeleton_loader(rows: int = 3):
     skeleton_html += '</div>'
     st.markdown(skeleton_html, unsafe_allow_html=True)
 
-
-# -------------------------------
+# ---------------------------------------------
 # SECTION DIVIDER
-# -------------------------------
+# ---------------------------------------------
 def render_section_divider():
     """Render section divider line."""
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
-
-# -------------------------------
+# ---------------------------------------------
 # DOWNLOAD TEMPLATE
-# -------------------------------
+# ---------------------------------------------
 def render_download_template_button():
     """Render download template button."""
     try:
