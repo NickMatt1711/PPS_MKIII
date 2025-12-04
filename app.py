@@ -53,7 +53,7 @@ st.session_state.setdefault(SS_OPTIMIZATION_PARAMS, {
 
 # ========== STAGE 0: UPLOAD ==========
 def render_upload_stage():
-    """Stage 0: Enhanced file upload with clean layout (desktop-optimized)"""
+    """Stage 0: Enhanced file upload with improved visual design (desktop-optimized)"""
     
     # Header and stage progress
     render_header(f"{APP_ICON} {APP_TITLE}", "Multi-Plant Optimization with Shutdown Management")
@@ -62,19 +62,40 @@ def render_upload_stage():
     # Two-column layout: Upload section (wider) + Quick Start Card (narrower)
     col1, col2 = st.columns([2, 1])
 
-    # ========== LEFT COLUMN: Upload Section (No Card) ==========
+    # ========== LEFT COLUMN: Upload Section ==========
     with col1:
         # Section title
-        st.markdown('<h2>📤 Upload Your File</h1>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-section-title">📤 Upload Your File</div>', unsafe_allow_html=True)
         
+        # Enhanced upload zone
+        st.markdown("""
+        <div class="upload-zone-enhanced">
+            <div class="upload-icon-large">📁</div>
+            <div class="upload-title">Drag & Drop Your Excel File Here</div>
+            <div class="upload-subtitle">Your file will be automatically validated upon upload</div>
+            <div class="upload-or-divider">
+                <span class="upload-or-text">OR</span>
+            </div>
+            <div style="margin-top: 1rem;">
+                <span class="browse-button-custom">
+                    📂 Browse Files
+                </span>
+            </div>
+            <div class="upload-specs">
+                📌 Supported Format: .XLSX • Maximum Size: 200MB per file
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # File uploader
+        # File uploader (positioned to overlay the browse button visually)
+        st.markdown('<div class="custom-file-uploader-wrapper">', unsafe_allow_html=True)
         uploaded_file = st.file_uploader(
             "Upload your input files here",
             type=ALLOWED_EXTENSIONS,
             help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
             label_visibility="collapsed"
         )
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # Processing logic
         if uploaded_file is not None:
@@ -100,47 +121,62 @@ def render_upload_stage():
                         render_alert(warn, "warning")
             except Exception as e:
                 render_error_state("Upload Failed", f"Failed to read uploaded file: {e}")
-        
-        st.markdown('</div>', unsafe_allow_html=True)  # close uploader-container
 
+        # Download template section
+        st.markdown('<div class="download-section">', unsafe_allow_html=True)
         st.markdown('<h3>📥 Download the template to get started!</h3>', unsafe_allow_html=True)
         render_download_template_button()
         
-        st.markdown('</div>', unsafe_allow_html=True)  # close download-section
+        # Required sheets notice
+        st.markdown("""
+        <div style="margin-top: 1rem; padding: 0.75rem; background: #FFF3CD; border-radius: 8px; border-left: 4px solid #FFC107;">
+            <strong style="color: #856404; font-size: 0.875rem;">⚠️ Required Sheets:</strong>
+            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.25rem; color: #856404; font-size: 0.85rem;">
+                <li>Plant</li>
+                <li>Inventory</li>
+                <li>Demand</li>
+                <li>Transition_[PlantName]</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # ========== RIGHT COLUMN: Quick Start Guide (In Card) ==========
     with col2:
-        st.markdown('<h3>🚀 Quick Start Guide</h3>', unsafe_allow_html=True)
-        # Clean step list without individual cards
+        st.markdown('<div class="upload-card card-quickstart">', unsafe_allow_html=True)
+        st.markdown('<h2>🚀 Quick Start Guide</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-card-body">', unsafe_allow_html=True)
+        
+        # Connected step list with visual line
         st.markdown("""
-        <div class="quick-start-steps-clean">
-            <div class="step-item-clean">
-                <div class="step-number-clean">1</div>
-                <div class="step-content-clean">
+        <div class="quick-start-steps-connected">
+            <div class="step-item-connected">
+                <div class="step-number-connected">1</div>
+                <div class="step-content-connected">
                     <strong>Download Template</strong>
                     <span>Get the pre-formatted Excel structure with all required sheets</span>
                 </div>
             </div>
-            <div class="step-divider-clean"></div>
-            <div class="step-item-clean">
-                <div class="step-number-clean">2</div>
-                <div class="step-content-clean">
+            
+            <div class="step-item-connected">
+                <div class="step-number-connected">2</div>
+                <div class="step-content-connected">
                     <strong>Fill Data</strong>
                     <span>Complete Plant, Inventory, Demand, and Transition sheets with your data</span>
                 </div>
             </div>
-            <div class="step-divider-clean"></div>
-            <div class="step-item-clean">
-                <div class="step-number-clean">3</div>
-                <div class="step-content-clean">
+            
+            <div class="step-item-connected">
+                <div class="step-number-connected">3</div>
+                <div class="step-content-connected">
                     <strong>Upload File</strong>
                     <span>Drag & drop or browse to upload your completed Excel file</span>
                 </div>
             </div>
-            <div class="step-divider-clean"></div>
-            <div class="step-item-clean">
-                <div class="step-number-clean">4</div>
-                <div class="step-content-clean">
+            
+            <div class="step-item-connected">
+                <div class="step-number-connected">4</div>
+                <div class="step-content-connected">
                     <strong>Configure & Run</strong>
                     <span>Set optimization parameters and generate your production schedule</span>
                 </div>
@@ -148,8 +184,8 @@ def render_upload_stage():
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown('</div>', unsafe_allow_html=True)  # close card-body
-        st.markdown('</div>', unsafe_allow_html=True)  # close upload-card
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # ========== FULL-WIDTH: Variable & Constraint Details ==========
     st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
