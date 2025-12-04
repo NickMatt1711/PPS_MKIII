@@ -673,18 +673,7 @@ def render_results_stage():
                     st.dataframe(stockout_df, use_container_width=True, height=400)
             else:
                 st.success("✅ No stockouts occurred during the demand period!")
-            # Show total stockout from solution if available
-            total_stockouts_from_solution = 0
-            try:
-                for g in data.get('grades', []):
-                    total_stockouts_from_solution += sum(solution.get('stockout', {}).get(g, {}).values())
-            except:
-                pass
-            if total_stockouts_from_solution == 0:
-                st.info("All demand was satisfied with production and inventory.")
-            else:
-                st.warning(f"Note: Total stockout reported in solution: {total_stockouts_from_solution:,.0f} MT")
-
+            
         render_section_divider()
 
         # Navigation - Enhanced button layout (unchanged logic)
