@@ -164,115 +164,123 @@ Cards - Enhanced
 }
 
 /* =============================
-UPLOAD PAGE - ENHANCED DESKTOP LAYOUT
+UPLOAD PAGE - STREAMLINED LAYOUT
 ============================= */
-/* Main container for upload page */
+/* Main container */
 .upload-page-container {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem;
 }
 
-/* Upload section header */
-.upload-section-header {
-    margin-bottom: 1.5rem;
+/* Page header */
+.upload-page-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
 }
 
-.upload-section-title {
-    font-size: 1.75rem;
+.upload-main-title {
+    font-size: 2rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
     color: var(--md-sys-color-on-surface);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
-.upload-section-subtitle {
+.upload-subtitle {
     color: var(--md-sys-color-on-surface-variant);
-    font-size: 1rem;
+    font-size: 1.125rem;
     line-height: 1.5;
 }
 
-/* Main content grid */
-.upload-content-grid {
+/* Main content columns */
+.upload-main-columns {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
-    margin-bottom: 2rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    margin-bottom: 2.5rem;
 }
 
-/* Left panel - Upload zone */
-.upload-left-panel {
+/* Left column - Upload section */
+.upload-section {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
 }
 
-/* Enhanced upload card */
-.upload-card-enhanced {
-    background: var(--md-sys-color-surface);
+/* Upload zone - Clean and simple */
+.upload-zone-clean {
+    border: 2px dashed var(--md-sys-color-outline);
     border-radius: var(--md-shape-corner-medium);
-    padding: 2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    border: 1px solid var(--md-sys-color-outline-variant);
+    padding: 2.5rem 2rem;
+    text-align: center;
+    background: var(--md-sys-color-surface);
+    transition: all 0.2s ease;
+    cursor: pointer;
 }
 
-.upload-card-enhanced:hover {
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+.upload-zone-clean:hover {
     border-color: var(--md-sys-color-primary);
+    background: var(--md-sys-color-primary-container);
 }
 
-.upload-card-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+.upload-zone-clean.dragover {
+    border-color: var(--md-sys-color-success);
+    background: var(--md-sys-color-success-container);
 }
 
-.upload-card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--md-sys-color-on-surface);
-    margin: 0;
-}
-
-.upload-card-icon {
-    font-size: 1.5rem;
+.upload-icon-large {
+    font-size: 3rem;
+    margin-bottom: 1rem;
     color: var(--md-sys-color-primary);
 }
 
-/* Download section in card */
-.download-section-enhanced {
-    background: linear-gradient(135deg, #F0F9FF 0%, #E6F2FF 100%);
-    border-radius: var(--md-shape-corner-medium);
-    padding: 2rem;
-    border: 1px solid #B8D4FE;
+.upload-zone-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 0.5rem;
 }
 
-.download-section-header {
+.upload-zone-subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.upload-file-types {
+    background: var(--md-sys-color-surface-variant);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface-variant);
+    display: inline-block;
+}
+
+/* Download section - Simple and clean */
+.download-section-clean {
+    background: var(--md-sys-color-surface);
+    border-radius: var(--md-shape-corner-medium);
+    padding: 2rem;
+    border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.download-header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-bottom: 1.5rem;
-}
-
-.download-section-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--md-sys-color-on-primary-container);
-    margin: 0;
+    margin-bottom: 1rem;
 }
 
 .download-icon {
     font-size: 1.5rem;
     color: var(--md-sys-color-primary);
+}
+
+.download-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0;
 }
 
 .download-description {
@@ -281,17 +289,16 @@ UPLOAD PAGE - ENHANCED DESKTOP LAYOUT
     line-height: 1.5;
 }
 
-/* Right panel - Quick Start Guide */
-.quick-start-card {
+/* Right column - Quick Start Guide */
+.quick-start-guide {
     background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
     border-radius: var(--md-shape-corner-medium);
     padding: 2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     border: 1px solid var(--md-sys-color-outline-variant);
     height: 100%;
 }
 
-.quick-start-header {
+.guide-header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -300,121 +307,98 @@ UPLOAD PAGE - ENHANCED DESKTOP LAYOUT
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
-.quick-start-title {
+.guide-title {
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--md-sys-color-on-surface);
     margin: 0;
 }
 
-.quick-start-icon {
+.guide-icon {
     font-size: 1.5rem;
-    color: #28A745;
+    color: var(--md-sys-color-success);
 }
 
-/* Enhanced step design */
-.quick-start-steps-enhanced {
+/* Clean step design */
+.guide-steps-clean {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.75rem;
 }
 
-.step-item-enhanced {
+.step-item-clean {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
     position: relative;
 }
 
-.step-item-enhanced:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    left: 17px;
-    top: 38px;
-    bottom: -1.75rem;
-    width: 2px;
-    background: linear-gradient(180deg, #E2E8F0 0%, rgba(226, 232, 240, 0.3) 100%);
-}
-
-.step-number-enhanced {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
+.step-number-clean {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #0A74DA, #4BA3F4);
-    color: white;
+    background: var(--md-sys-color-surface);
+    border: 2px solid var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
     font-size: 0.875rem;
-    box-shadow: 0 2px 6px rgba(10, 116, 218, 0.3);
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 1;
+    transition: all 0.2s ease;
 }
 
-.step-item-enhanced:hover .step-number-enhanced {
+.step-item-clean:hover .step-number-clean {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
     transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(10, 116, 218, 0.4);
 }
 
-.step-content-enhanced {
+.step-content-clean {
     flex: 1;
     padding-top: 0.25rem;
 }
 
-.step-title-enhanced {
+.step-title-clean {
     font-size: 1rem;
     font-weight: 600;
     color: var(--md-sys-color-on-surface);
     display: block;
-    margin-bottom: 0.375rem;
+    margin-bottom: 0.25rem;
 }
 
-.step-description-enhanced {
+.step-description-clean {
     font-size: 0.875rem;
     color: var(--md-sys-color-on-surface-variant);
     line-height: 1.5;
 }
 
-/* Variable Details Section */
-.details-section {
-    background: var(--md-sys-color-surface);
-    border-radius: var(--md-shape-corner-medium);
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    border: 1px solid var(--md-sys-color-outline-variant);
+/* Connector lines */
+.step-item-clean:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 34px;
+    bottom: -1.75rem;
+    width: 2px;
+    background: var(--md-sys-color-outline-variant);
 }
 
-.details-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1rem;
+/* Details expander - Enhanced */
+.details-expander {
+    margin-top: 2.5rem;
 }
 
-.details-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--md-sys-color-on-surface);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+.details-table-container {
+    overflow-x: auto;
+    margin: 1rem 0;
 }
 
-.details-hint {
-    font-size: 0.875rem;
-    color: var(--md-sys-color-on-surface-variant);
-    font-style: italic;
-}
-
-/* Enhanced table styling */
 .details-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin-top: 1rem;
+    border-collapse: collapse;
+    font-size: 0.875rem;
 }
 
 .details-table th {
@@ -423,14 +407,13 @@ UPLOAD PAGE - ENHANCED DESKTOP LAYOUT
     padding: 0.875rem 1rem;
     text-align: left;
     font-weight: 600;
-    font-size: 0.875rem;
     border-bottom: 1px solid var(--md-sys-color-outline);
+    white-space: nowrap;
 }
 
 .details-table td {
     padding: 0.75rem 1rem;
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
-    font-size: 0.875rem;
     vertical-align: top;
 }
 
@@ -442,8 +425,8 @@ UPLOAD PAGE - ENHANCED DESKTOP LAYOUT
     background: var(--md-sys-color-surface-variant);
 }
 
-/* Badge styles */
-.badge {
+/* Constraint badges */
+.constraint-badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
     border-radius: 12px;
@@ -462,26 +445,34 @@ UPLOAD PAGE - ENHANCED DESKTOP LAYOUT
     color: #92400E;
 }
 
-.badge-info {
-    background: #DBEAFE;
-    color: #1E40AF;
+.badge-none {
+    background: #E5E7EB;
+    color: #374151;
 }
 
-/* Enhanced file uploader styling */
+/* Sheet examples */
+.sheet-example {
+    background: var(--md-sys-color-surface-variant);
+    border-radius: var(--md-shape-corner-small);
+    padding: 1rem;
+    margin-top: 1rem;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+/* File uploader styling */
 .stFileUploader > div {
-    border: 3px dashed #0A74DA !important;
-    background: rgba(10, 116, 218, 0.02) !important;
-    border-radius: 16px !important;
-    padding: 3rem 2rem !important;
-    transition: all 0.3s ease !important;
-    min-height: 180px !important;
+    border: 2px dashed var(--md-sys-color-outline) !important;
+    background: var(--md-sys-color-surface) !important;
+    border-radius: var(--md-shape-corner-medium) !important;
+    padding: 2rem !important;
+    transition: all 0.2s ease !important;
 }
 
 .stFileUploader > div:hover {
-    background: rgba(10, 116, 218, 0.05) !important;
-    border-color: #4BA3F4 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(10, 116, 218, 0.15) !important;
+    border-color: var(--md-sys-color-primary) !important;
+    background: var(--md-sys-color-primary-container) !important;
 }
 
 .stFileUploader > div[data-testid="stFileUploaderDropzone"] {
@@ -495,7 +486,7 @@ UPLOAD PAGE - ENHANCED DESKTOP LAYOUT
 .stFileUploader > div[data-testid="stFileUploaderDropzone"] svg {
     width: 48px !important;
     height: 48px !important;
-    color: #0A74DA !important;
+    color: var(--md-sys-color-primary) !important;
 }
 
 .stFileUploader > div[data-testid="stFileUploaderDropzone"]::before {
@@ -508,11 +499,11 @@ UPLOAD PAGE - ENHANCED DESKTOP LAYOUT
     content: "Drag & drop your Excel file here" !important;
     font-size: 1rem !important;
     font-weight: 500 !important;
-    color: #374151 !important;
+    color: var(--md-sys-color-on-surface) !important;
 }
 
 .stFileUploader > div[data-testid="stFileUploaderDropzone"] small {
-    color: #6B7280 !important;
+    color: var(--md-sys-color-on-surface-variant) !important;
     font-size: 0.875rem !important;
     margin-top: 0.5rem !important;
 }
@@ -522,10 +513,11 @@ UPLOAD PAGE - ENHANCED DESKTOP LAYOUT
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
+    padding: 0.75rem 1rem;
+    border-radius: var(--md-shape-corner-small);
     font-size: 0.875rem;
     font-weight: 500;
+    margin: 0.5rem 0;
 }
 
 .status-success {
@@ -544,6 +536,46 @@ UPLOAD PAGE - ENHANCED DESKTOP LAYOUT
     background: #FEE2E2;
     color: #991B1B;
     border: 1px solid #FECACA;
+}
+
+/* File info display */
+.file-info-display {
+    background: var(--md-sys-color-surface);
+    border-radius: var(--md-shape-corner-medium);
+    padding: 1.5rem;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    margin-top: 1rem;
+}
+
+.file-info-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.file-info-icon {
+    font-size: 1.5rem;
+    color: var(--md-sys-color-success);
+}
+
+.file-info-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0;
+}
+
+.file-info-details {
+    display: flex;
+    gap: 1.5rem;
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.875rem;
+}
+
+.file-info-detail span {
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
 }
 
 /* =============================
@@ -924,22 +956,6 @@ Constraint Details Table
   background: #FFF3CD;
   color: #856404;
 }
-
-/* Enhanced download button */
-.download-button-enhanced {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 0.75rem !important;
-    padding: 1rem 2rem !important;
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-}
-
-.download-button-enhanced::before {
-    content: "📥";
-    font-size: 1.25rem;
-}
-
 """
 
 # -------------------------------
@@ -1083,22 +1099,54 @@ def render_section_divider():
 
 
 # -------------------------------
-# DOWNLOAD TEMPLATE (Enhanced Version)
+# UPLOAD PAGE COMPONENTS - STREAMLINED
 # -------------------------------
-def render_download_template_button():
-    """Render download template button with enhanced styling."""
+
+def render_upload_header():
+    """Render clean upload page header."""
+    st.markdown("""
+    <div class="upload-page-header">
+        <h1 class="upload-main-title">📤 Upload Your File</h1>
+        <p class="upload-subtitle">Upload your Excel data file to begin production optimization</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_upload_zone():
+    """Render clean upload zone without unnecessary cards."""
+    st.markdown("""
+    <div class="upload-zone-clean" id="uploadZone">
+        <div class="upload-icon-large">📁</div>
+        <div class="upload-zone-title">Drag & drop your Excel file here</div>
+        <div class="upload-zone-subtitle">or click to browse your files</div>
+        <div class="upload-file-types">XLSX, XLS • Max 200MB</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # The actual file uploader (hidden behind the visual zone)
+    uploaded_file = st.file_uploader(
+        "Upload Excel file",
+        type=["xlsx", "xls"],
+        help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
+        label_visibility="collapsed"
+    )
+    
+    return uploaded_file
+
+
+def render_download_template_section():
+    """Render clean download template section."""
     try:
         template_path = Path(__file__).parent / "polymer_production_template.xlsx"
         if template_path.exists():
             with open(template_path, "rb") as f:
                 template_data = f.read()
             
-            # Enhanced button with custom styling
             st.markdown("""
-            <div class="download-section-enhanced">
-                <div class="download-section-header">
+            <div class="download-section-clean">
+                <div class="download-header">
                     <span class="download-icon">📋</span>
-                    <h3 class="download-section-title">Get Started with Template</h3>
+                    <h3 class="download-title">Get Started with Template</h3>
                 </div>
                 <p class="download-description">
                     Download our pre-formatted Excel template with all required sheets 
@@ -1106,14 +1154,14 @@ def render_download_template_button():
                 </p>
             """, unsafe_allow_html=True)
             
-            # The actual download button
+            # Download button
             st.download_button(
                 label="📥 Download Template",
                 data=template_data,
                 file_name="polymer_production_template.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
-                key="enhanced_download"
+                key="streamlined_download"
             )
             
             st.markdown("</div>", unsafe_allow_html=True)
@@ -1123,77 +1171,41 @@ def render_download_template_button():
         st.error(f"Template file not found: {e}")
 
 
-# -------------------------------
-# NEW: UPLOAD PAGE COMPONENTS
-# -------------------------------
-
-def render_upload_header(title: str = "📤 Upload Your File", subtitle: str = ""):
-    """Render enhanced upload page header."""
-    subtitle_html = f'<p class="upload-section-subtitle">{subtitle}</p>' if subtitle else ''
-    st.markdown(f"""
-    <div class="upload-section-header">
-        <h1 class="upload-section-title">{title}</h1>
-        {subtitle_html}
-    </div>
-    """, unsafe_allow_html=True)
-
-
-def render_upload_card():
-    """Render enhanced upload card with visual feedback."""
+def render_quick_start_guide_clean():
+    """Render clean quick start guide."""
     st.markdown("""
-    <div class="upload-card-enhanced">
-        <div class="upload-card-header">
-            <span class="upload-card-icon">📁</span>
-            <h2 class="upload-card-title">Upload Excel File</h2>
+    <div class="quick-start-guide">
+        <div class="guide-header">
+            <span class="guide-icon">🚀</span>
+            <h2 class="guide-title">Quick Start Guide</h2>
         </div>
-    """, unsafe_allow_html=True)
-    
-    uploaded_file = st.file_uploader(
-        "Drag & drop your Excel file here or click to browse",
-        type=["xlsx", "xls"],
-        help="Upload an Excel file with Plant, Inventory, Demand, and Transition sheets",
-        label_visibility="collapsed"
-    )
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-    return uploaded_file
-
-
-def render_quick_start_guide():
-    """Render enhanced quick start guide with timeline design."""
-    st.markdown("""
-    <div class="quick-start-card">
-        <div class="quick-start-header">
-            <span class="quick-start-icon">🚀</span>
-            <h2 class="quick-start-title">Quick Start Guide</h2>
-        </div>
-        <div class="quick-start-steps-enhanced">
-            <div class="step-item-enhanced">
-                <div class="step-number-enhanced">1</div>
-                <div class="step-content-enhanced">
-                    <span class="step-title-enhanced">Download Template</span>
-                    <span class="step-description-enhanced">Get the pre-formatted Excel structure with all required sheets</span>
+        <div class="guide-steps-clean">
+            <div class="step-item-clean">
+                <div class="step-number-clean">1</div>
+                <div class="step-content-clean">
+                    <span class="step-title-clean">Download Template</span>
+                    <span class="step-description-clean">Get the pre-formatted Excel structure with all required sheets</span>
                 </div>
             </div>
-            <div class="step-item-enhanced">
-                <div class="step-number-enhanced">2</div>
-                <div class="step-content-enhanced">
-                    <span class="step-title-enhanced">Fill Data</span>
-                    <span class="step-description-enhanced">Complete Plant, Inventory, Demand, and Transition sheets with your data</span>
+            <div class="step-item-clean">
+                <div class="step-number-clean">2</div>
+                <div class="step-content-clean">
+                    <span class="step-title-clean">Fill Data</span>
+                    <span class="step-description-clean">Complete Plant, Inventory, Demand, and Transition sheets with your data</span>
                 </div>
             </div>
-            <div class="step-item-enhanced">
-                <div class="step-number-enhanced">3</div>
-                <div class="step-content-enhanced">
-                    <span class="step-title-enhanced">Upload File</span>
-                    <span class="step-description-enhanced">Drag & drop or browse to upload your completed Excel file</span>
+            <div class="step-item-clean">
+                <div class="step-number-clean">3</div>
+                <div class="step-content-clean">
+                    <span class="step-title-clean">Upload File</span>
+                    <span class="step-description-clean">Drag & drop or browse to upload your completed Excel file</span>
                 </div>
             </div>
-            <div class="step-item-enhanced">
-                <div class="step-number-enhanced">4</div>
-                <div class="step-content-enhanced">
-                    <span class="step-title-enhanced">Configure & Run</span>
-                    <span class="step-description-enhanced">Set optimization parameters and generate your production schedule</span>
+            <div class="step-item-clean">
+                <div class="step-number-clean">4</div>
+                <div class="step-content-clean">
+                    <span class="step-title-clean">Configure & Run</span>
+                    <span class="step-description-clean">Set optimization parameters and generate your production schedule</span>
                 </div>
             </div>
         </div>
@@ -1201,18 +1213,18 @@ def render_quick_start_guide():
     """, unsafe_allow_html=True)
 
 
-def render_variable_details():
-    """Render enhanced variable and constraint details section."""
+def render_variable_details_complete():
+    """Render complete variable and constraint details with all data."""
     with st.expander("📋 Variable and Constraint Details", expanded=False):
-        detail_tabs = st.tabs(["🏭 Plant Sheet", "📦 Inventory", "📈 Demand", "🔄 Transitions"])
+        detail_tabs = st.tabs(["🏭 Plant Sheet", "📦 Inventory Sheet", "📈 Demand Sheet", "🔄 Transition Sheets"])
         
+        # Plant Sheet Tab
         with detail_tabs[0]:
+            st.markdown("### Plant Sheet Configuration")
+            st.markdown("*Required for all plants*")
+            
             st.markdown("""
-            <div class="details-section">
-                <div class="details-header">
-                    <h3 class="details-title">🏭 Plant Sheet Configuration</h3>
-                    <span class="details-hint">Required for all plants</span>
-                </div>
+            <div class="details-table-container">
                 <table class="details-table">
                     <thead>
                         <tr>
@@ -1237,18 +1249,43 @@ def render_variable_details():
                             <td>Currently producing grade</td>
                             <td>Grade_X</td>
                         </tr>
+                        <tr>
+                            <td><strong>Expected Run Days</strong></td>
+                            <td>Days before changeover</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Shutdown Start Date</strong></td>
+                            <td>Start of planned downtime</td>
+                            <td>15-Jan-25</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Shutdown End Date</strong></td>
+                            <td>End of planned downtime</td>
+                            <td>17-Jan-25</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pre-Shutdown Grade</strong></td>
+                            <td>Grade before shutdown</td>
+                            <td>Grade_A</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Restart Grade</strong></td>
+                            <td>Grade after shutdown</td>
+                            <td>Grade_B</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
             """, unsafe_allow_html=True)
         
+        # Inventory Sheet Tab
         with detail_tabs[1]:
+            st.markdown("### Inventory Sheet Configuration")
+            st.markdown("*Grade-level constraints*")
+            
             st.markdown("""
-            <div class="details-section">
-                <div class="details-header">
-                    <h3 class="details-title">📦 Inventory Sheet Configuration</h3>
-                    <span class="details-hint">Grade-level constraints</span>
-                </div>
+            <div class="details-table-container">
                 <table class="details-table">
                     <thead>
                         <tr>
@@ -1261,51 +1298,158 @@ def render_variable_details():
                         <tr>
                             <td><strong>Grade Name</strong></td>
                             <td>Product identifier</td>
-                            <td>-</td>
+                            <td><span class="constraint-badge badge-none">-</span></td>
                         </tr>
                         <tr>
                             <td><strong>Opening Inventory</strong></td>
                             <td>Starting stock (MT)</td>
-                            <td><span class="badge badge-hard">Hard</span></td>
+                            <td><span class="constraint-badge badge-hard">Hard</span></td>
                         </tr>
                         <tr>
                             <td><strong>Min. Inventory</strong></td>
                             <td>Safety stock level</td>
-                            <td><span class="badge badge-soft">Soft</span></td>
+                            <td><span class="constraint-badge badge-soft">Soft (penalty)</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Max. Inventory</strong></td>
+                            <td>Maximum storage capacity</td>
+                            <td><span class="constraint-badge badge-hard">Hard</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Min. Closing Inventory</strong></td>
+                            <td>End-period target</td>
+                            <td><span class="constraint-badge badge-soft">Soft (3x penalty)</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Min. Run Days</strong></td>
+                            <td>Minimum consecutive days</td>
+                            <td><span class="constraint-badge badge-hard">Hard</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Max. Run Days</strong></td>
+                            <td>Maximum consecutive days</td>
+                            <td><span class="constraint-badge badge-hard">Hard</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Force Start Date</strong></td>
+                            <td>Mandatory start date</td>
+                            <td><span class="constraint-badge badge-hard">Hard</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Lines</strong></td>
+                            <td>Plants where grade can run</td>
+                            <td><span class="constraint-badge badge-hard">Hard</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rerun Allowed</strong></td>
+                            <td>Can repeat grade (Yes/No)</td>
+                            <td><span class="constraint-badge badge-hard">Hard</span></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
             """, unsafe_allow_html=True)
         
+        # Demand Sheet Tab
         with detail_tabs[2]:
+            st.markdown("### Demand Sheet Configuration")
+            st.markdown("*Daily planning horizon*")
+            
             st.markdown("""
-            <div class="details-section">
-                <div class="details-header">
-                    <h3 class="details-title">📈 Demand Sheet Configuration</h3>
-                    <span class="details-hint">Daily planning horizon</span>
-                </div>
-                <p><strong>Structure:</strong> Each grade should have its own column with daily demand values.</p>
-                <p><strong>Note:</strong> Dates should be in chronological order for the planning horizon.</p>
+            <div class="details-table-container">
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Date</strong></td>
+                            <td>Planning horizon (daily)</td>
+                            <td>01-Jan-25</td>
+                        </tr>
+                        <tr>
+                            <td><strong>[Grade Name] columns</strong></td>
+                            <td>Daily demand quantity (MT) for each grade</td>
+                            <td>Grade_A, Grade_B, etc.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+            
+            <div class="sheet-example">
+                <strong>Example Structure:</strong><br>
+                Date, Grade_A, Grade_B, Grade_C<br>
+                2025-01-01, 100, 150, 200<br>
+                2025-01-02, 120, 130, 180<br>
+                2025-01-03, 110, 140, 190
+            </div>
+            
+            <p><strong>Note:</strong> Each grade should have its own column with daily demand values. Dates should be in chronological order.</p>
             """, unsafe_allow_html=True)
         
+        # Transition Sheets Tab
         with detail_tabs[3]:
+            st.markdown("### Transition Sheets Configuration")
+            st.markdown("*Plant-specific transition rules*")
+            
             st.markdown("""
-            <div class="details-section">
-                <div class="details-header">
-                    <h3 class="details-title">🔄 Transition Sheets</h3>
-                    <span class="details-hint">Plant-specific constraints</span>
-                </div>
-                <p><strong>Sheet Naming:</strong> <code>Transition_[PlantName]</code></p>
-                <p><strong>Example:</strong> <code>Transition_Line_A</code>, <code>Transition_Line_B</code></p>
-                <p><strong>Values:</strong> <code>Yes</code> (allowed) or <code>No</code> (forbidden)</p>
+            <div class="details-table-container">
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>Element</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Sheet Naming</strong></td>
+                            <td>Transition_[PlantName]</td>
+                            <td>Transition_Line_A</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rows</strong></td>
+                            <td>Previous grade (running on day D)</td>
+                            <td>Grade_A, Grade_B, Grade_C</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Columns</strong></td>
+                            <td>Next grade (to run on day D+1)</td>
+                            <td>Grade_A, Grade_B, Grade_C</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Values</strong></td>
+                            <td>Yes (allowed) or No (forbidden)</td>
+                            <td>Yes, No</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Constraint Type</strong></td>
+                            <td>Transition rules</td>
+                            <td><span class="constraint-badge badge-hard">Hard</span></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+            
+            <div class="sheet-example">
+                <strong>Example Matrix:</strong><br>
+                From → To, Grade_A, Grade_B, Grade_C<br>
+                Grade_A, Yes, Yes, No<br>
+                Grade_B, No, Yes, Yes<br>
+                Grade_C, Yes, No, Yes
+            </div>
+            
+            <p><strong>Note:</strong> Create one sheet per plant following the naming convention. Forbidden transitions (No) are blocked in optimization.</p>
             """, unsafe_allow_html=True)
 
 
 # -------------------------------
-# NEW: STATUS INDICATORS
+# STATUS INDICATORS
 # -------------------------------
 
 def render_status_indicator(status: str, message: str):
@@ -1326,5 +1470,25 @@ def render_status_indicator(status: str, message: str):
     <div class="status-indicator {status_classes.get(status, '')}">
         <span>{status_icons.get(status, 'ℹ️')}</span>
         <span>{message}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_file_info(file_name: str, file_size: int):
+    """Render file information after upload."""
+    st.markdown(f"""
+    <div class="file-info-display">
+        <div class="file-info-header">
+            <span class="file-info-icon">📊</span>
+            <h3 class="file-info-title">File Uploaded Successfully</h3>
+        </div>
+        <div class="file-info-details">
+            <div class="file-info-detail">
+                <span>File:</span> {file_name}
+            </div>
+            <div class="file-info-detail">
+                <span>Size:</span> {file_size / 1024:.1f} KB
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
