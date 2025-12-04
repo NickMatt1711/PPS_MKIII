@@ -385,7 +385,6 @@ def create_schedule_table(
                     "Start Date": dates[start_idx].strftime("%d-%b-%y"),
                     "End Date": end_date.strftime("%d-%b-%y"),
                     "Days": (end_date - dates[start_idx]).days + 1,
-                    "Quantity (MT)": 0 if in_shutdown else ""  # Zero for shutdown
                 })
             
             # Start new block
@@ -401,7 +400,6 @@ def create_schedule_table(
             "Start Date": dates[start_idx].strftime("%d-%b-%y"),
             "End Date": end_date.strftime("%d-%b-%y"),
             "Days": (end_date - dates[start_idx]).days + 1,
-            "Quantity (MT)": 0 if in_shutdown else ""
         })
     
     return pd.DataFrame(rows)
