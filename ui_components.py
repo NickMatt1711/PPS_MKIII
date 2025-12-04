@@ -730,6 +730,49 @@ Constraint Details Table
   background: #FFF3CD;
   color: #856404;
 }
+
+/* =============================
+FILE UPLOADER STYLING - Override Streamlit defaults
+============================= */
+/* Hide the default file uploader label */
+[data-testid="stFileUploader"] label {
+    display: none !important;
+}
+
+/* Style the dropzone */
+[data-testid="stFileUploaderDropzone"] {
+    border: 3px dashed #0A74DA !important;
+    background: rgba(10, 116, 218, 0.03) !important;
+    border-radius: 16px !important;
+    padding: 3rem 2rem !important;
+    transition: all 0.3s ease !important;
+    min-height: 200px !important;
+}
+
+[data-testid="stFileUploaderDropzone"]:hover {
+    background: rgba(10, 116, 218, 0.08) !important;
+    border-color: #085BB5 !important;
+    transform: scale(1.01) !important;
+}
+
+/* Style the upload icon and text */
+[data-testid="stFileUploaderDropzone"] svg {
+    width: 4rem !important;
+    height: 4rem !important;
+    color: #0A74DA !important;
+}
+
+[data-testid="stFileUploaderDropzoneInstructions"] {
+    display: none !important;
+}
+
+/* Download button spacing */
+.download-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
 """
 
 # -------------------------------
