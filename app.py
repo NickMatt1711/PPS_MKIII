@@ -668,9 +668,9 @@ def render_results_stage():
                     styled_stockout = stockout_df.style.applymap(
                         highlight_stockout, subset=['Stockout Quantity (MT)']
                     )
-                    st.dataframe(styled_stockout, use_container_width=True, height=400)
+                    st.dataframe(styled_stockout, use_container_width=True)
                 except Exception:
-                    st.dataframe(stockout_df, use_container_width=True, height=400)
+                    st.dataframe(stockout_df, use_container_width=True)
             else:
                 st.success("✅ No stockouts occurred during the demand period!")
             
