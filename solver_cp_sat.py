@@ -666,7 +666,7 @@ def build_and_solve_model(
     objective_terms = []
     
     # 1. Stockout penalties (SOFT)
-    '''# Old Logic for penalty
+    # Old Logic for penalty
     for grade in grades:
         for d in range(num_days):
             if (grade, d) in stockout_vars:
@@ -693,7 +693,7 @@ def build_and_solve_model(
                 else:
                     # If no demand, no stockout penalty
                     pass
-    
+    '''
     
     # 2. Inventory deficit penalties (SOFT)
     for (grade, d), deficit_var in inventory_deficit_penalties.items():
