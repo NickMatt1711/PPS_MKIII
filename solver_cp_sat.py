@@ -666,18 +666,16 @@ def build_and_solve_model(
     objective_terms = []
     
     # 1. Stockout penalties (SOFT)
-    total_demand = {g: sum(demand_data[g].values()) for g in grades}
-
     for grade in grades:
-        # Prevent divide-by-zero → if total demand = 0, weight = large constant
-        denom = math.sqrt(total_demand[grade]) if total_demand[grade] > 0 else 1.0
-        
         for d in range(num_days):
             if (grade, d) in stockout_vars:
+    
+                daily_demand = demand_data[grade].get(dates[d], 0)
                 stockout_var = stockout_vars[(grade, d)]
-                
-                # Scaled penalty
-                weight = stockout_penalty / denom
+    
+                # Weight is proportional to actual demand that day
+                weight = stockout_penalty * daily_demand
+    
                 objective_terms.append(weight * stockout_var)
 
     # 2. Inventory deficit penalties (SOFT)
