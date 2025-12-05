@@ -297,11 +297,8 @@ def render_preview_stage():
 
     # Configuration parameters (unchanged logic)
     st.markdown("### ⚙️ Optimization Parameters")
-    left_col, right_col = st.columns(2)
-    
-    # Left column: Row 1 & Row 2
-    with left_col:
-        # Row 1: Time limit
+    col1, col2, col3 = st.columns([1, 1, 2])
+    with col1:
         time_limit = st.number_input(
             "Time limit (minutes)",
             min_value=1,
@@ -310,48 +307,47 @@ def render_preview_stage():
             step=1,
             help="Maximum time for solver to find optimal solution"
         )
-    
-        # Row 2: Buffer days
+    with col2:
         buffer_days = st.number_input(
             "Buffer days",
             min_value=0,
-            max_value=30,  # broadened range; set to 7 if you prefer stricter bounds
+            max_value=7,
             value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['buffer_days']),
             step=1,
             help="Additional days added to planning horizon for safety stock"
         )
-    
-    # Right column: Row 1 & Row 2
-    with right_col:
-        # Row 1: Stockout penalty (user-entered)
-        stockout_penalty = st.number_input(
-            "Stockout Penalty",
-            min_value=0,
-            max_value=1000,
-            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['stockout_penalty']),
-            step=1,
-            help="Higher values penalize stockouts more heavily"
+    with col3:
+        priority = st.select_slider(
+            "Optimization Priority",
+            options=[
+                "Minimize Stockouts Only",
+                "Favor Fewer Stockouts",
+                "Balanced",
+                "Favor Fewer Transitions",
+                "Minimize Transitions Only"
+            ],
+            value="Balanced",
+            help="Balance between avoiding stockouts vs. minimizing production changeovers"
         )
-    
-        # Row 2: Transition penalty (user-entered)
-        transition_penalty = st.number_input(
-            "Transition Penalty",
-            min_value=0,
-            max_value=1000,
-            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['transition_penalty']),
-            step=1,
-            help="Higher values penalize production changeovers more heavily"
-        )
-    
-    # --- Update session state ---
+
+    # Map to penalty values (existing map retained)
+    priority_map = {
+        "Minimize Stockouts Only": (100, 1),
+        "Favor Stockouts": (10, 1),
+        "Balanced": (10, 5),
+        "Favor Fewer Transitions": (10, 8),
+        "Minimize Transitions Only": (1, 100)
+    }
+    stockout_penalty, transition_penalty = priority_map[priority]
+
+    # Update parameters in session (unchanged)
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
-        'stockout_penalty': int(stockout_penalty),
-        'transition_penalty': int(transition_penalty),
-        # 'priority_label' removed since we no longer use a slider
+        'stockout_penalty': float(stockout_penalty),
+        'transition_penalty': float(transition_penalty),
+        'priority_label': priority  # Store user-friendly label
     }
-
 
     render_section_divider()
 
