@@ -60,15 +60,20 @@ def create_gantt_chart(
     shutdown_periods: Dict,
     grade_colors: Dict
 ):
+    # Ensure dates are date objects
+    def _ensure_date(d):
+        return d if isinstance(d, date) else pd.to_datetime(d).date()
+
     dates = [_ensure_date(d) for d in dates]
 
     schedule = solution.get("is_producing", {}).get(line, {})
     gantt_rows = []
 
-    for idx, d in enumerate(dates):
+    # Build rows only for produced grades that have a color
+    for d in dates:
         ds = d.strftime("%d-%b-%y")
         grade = schedule.get(ds)
-        if grade in grade_colors:
+        if grade in grade_colors:  # filters out non-mapped grades
             gantt_rows.append({
                 "Grade": grade,
                 "Start": d,
@@ -81,32 +86,39 @@ def create_gantt_chart(
 
     df = pd.DataFrame(gantt_rows)
 
+    # Determine only the grades present in the data for ordering
+    present_grades = sorted(df["Grade"].unique())
+
     fig = px.timeline(
         df,
         x_start="Start",
         x_end="Finish",
         y="Grade",
         color="Grade",
-        color_discrete_map=grade_colors,
-        category_orders={"Grade": sorted(grade_colors.keys())},
+        color_discrete_map={g: grade_colors[g] for g in present_grades if g in grade_colors},
+        # Use only present grades to avoid showing unused categories
+        category_orders={"Grade": present_grades},
     )
 
-    # Shutdown shading
+    # Shutdown shading (expects indices into the 'dates' list)
     if line in shutdown_periods and shutdown_periods[line]:
-        sd = shutdown_periods[line]
-        x0 = dates[sd[0]]
-        x1 = dates[sd[-1]] + timedelta(days=1)
-        fig.add_vrect(
-            x0=x0,
-            x1=x1,
-            fillcolor="red",
-            opacity=0.12,
-            layer="below",
-            line_width=0,
-            annotation_text="Shutdown",
-            annotation_position="top left",
-            annotation_font_color="red"
-        )
+        sd_indices = shutdown_periods[line]
+        # Defensive checks to avoid index errors
+        sd_indices = [i for i in sd_indices if 0 <= i < len(dates)]
+        if sd_indices:
+            x0 = dates[min(sd_indices)]
+            x1 = dates[max(sd_indices)] + timedelta(days=1)
+            fig.add_vrect(
+                x0=x0,
+                x1=x1,
+                fillcolor="red",
+                opacity=0.12,
+                layer="below",
+                line_width=0,
+                annotation_text="Shutdown",
+                annotation_position="top left",
+                annotation_font_color="red"
+            )
 
     # Y-axis
     fig.update_yaxes(
@@ -114,7 +126,7 @@ def create_gantt_chart(
         showgrid=True,
         gridcolor="lightgray",
         tickfont=dict(color="gray", size=12),
-        showline=True,             # axis line
+        showline=True,
         linewidth=1,
         linecolor="black"
     )
@@ -127,7 +139,7 @@ def create_gantt_chart(
         showgrid=True,
         gridcolor="lightgray",
         tickfont=dict(color="gray", size=12),
-        showline=True,             # axis line
+        showline=True,
         linewidth=1,
         linecolor="black"
     )
@@ -136,8 +148,8 @@ def create_gantt_chart(
     fig.update_layout(
         xaxis=dict(
             range=[
-                dates[0] - timedelta(hours=12),
-                dates[-1] + timedelta(days=1)
+                pd.Timestamp(dates[0]) - pd.Timedelta(hours=12),
+                pd.Timestamp(dates[-1]) + pd.Timedelta(days=1)
             ]
         ),
         height=350,
@@ -161,6 +173,7 @@ def create_gantt_chart(
     )
 
     return fig
+
 
 # ===============================================================
 #  INVENTORY CHART
