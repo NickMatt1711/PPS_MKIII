@@ -326,20 +326,20 @@ def render_preview_stage():
         # Row 1: Stockout penalty (user-entered)
         stockout_penalty = st.number_input(
             "Stockout Penalty",
-            min_value=0.0,
-            max_value=1_000.0,
-            value=float(st.session_state[SS_OPTIMIZATION_PARAMS]['stockout_penalty']),
-            step=1.0,
+            min_value=0,
+            max_value=1000,
+            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['stockout_penalty']),
+            step=1,
             help="Higher values penalize stockouts more heavily"
         )
     
         # Row 2: Transition penalty (user-entered)
         transition_penalty = st.number_input(
             "Transition Penalty",
-            min_value=0.0,
-            max_value=1_000.0,
-            value=float(st.session_state[SS_OPTIMIZATION_PARAMS]['transition_penalty']),
-            step=1.0,
+            min_value=0,
+            max_value=1000,
+            value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['transition_penalty']),
+            step=1,
             help="Higher values penalize production changeovers more heavily"
         )
     
@@ -347,8 +347,8 @@ def render_preview_stage():
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
-        'stockout_penalty': float(stockout_penalty),
-        'transition_penalty': float(transition_penalty),
+        'stockout_penalty': int(stockout_penalty),
+        'transition_penalty': int(transition_penalty),
         # 'priority_label' removed since we no longer use a slider
     }
 
