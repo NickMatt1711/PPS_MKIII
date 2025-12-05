@@ -60,66 +60,56 @@ def create_gantt_chart(
     shutdown_periods: Dict,
     grade_colors: Dict
 ):
-    # Ensure dates are date objects
-    def _ensure_date(d):
-        return d if isinstance(d, date) else pd.to_datetime(d).date()
-
     dates = [_ensure_date(d) for d in dates]
-
     schedule = solution.get("is_producing", {}).get(line, {})
+    
     gantt_rows = []
-
-    # Build rows only for produced grades that have a color
+    
     for d in dates:
         ds = d.strftime("%d-%b-%y")
         grade = schedule.get(ds)
-        if grade in grade_colors:  # filters out non-mapped grades
+        
+        # Only add row if this grade is actually being produced on this day
+        if grade and grade in grade_colors:
             gantt_rows.append({
                 "Grade": grade,
                 "Start": d,
                 "Finish": d + timedelta(days=1),
                 "Line": line
             })
-
+    
     if not gantt_rows:
         return None
-
+    
     df = pd.DataFrame(gantt_rows)
-
-    # Determine only the grades present in the data for ordering
-    present_grades = sorted(df["Grade"].unique())
-
+    
+    # Get only grades that are actually produced on this line
+    produced_grades = df["Grade"].unique().tolist()
+    
     fig = px.timeline(
         df,
         x_start="Start",
         x_end="Finish",
         y="Grade",
         color="Grade",
-        color_discrete_map={g: grade_colors[g] for g in present_grades if g in grade_colors},
-        # Use only present grades to avoid showing unused categories
-        category_orders={"Grade": present_grades},
+        color_discrete_map=grade_colors,
+        category_orders={"Grade": sorted(produced_grades)},  # Only produced grades
     )
-
-    # Shutdown shading (expects indices into the 'dates' list)
+    
+    # Shutdown shading
     if line in shutdown_periods and shutdown_periods[line]:
-        sd_indices = shutdown_periods[line]
-        # Defensive checks to avoid index errors
-        sd_indices = [i for i in sd_indices if 0 <= i < len(dates)]
-        if sd_indices:
-            x0 = dates[min(sd_indices)]
-            x1 = dates[max(sd_indices)] + timedelta(days=1)
-            fig.add_vrect(
-                x0=x0,
-                x1=x1,
-                fillcolor="red",
-                opacity=0.12,
-                layer="below",
-                line_width=0,
-                annotation_text="Shutdown",
-                annotation_position="top left",
-                annotation_font_color="red"
-            )
-
+        sd = shutdown_periods[line]
+        x0 = dates[sd[0]]
+        x1 = dates[sd[-1]] + timedelta(days=1)
+        fig.add_vrect(
+            x0=x0, x1=x1,
+            fillcolor="red", opacity=0.12,
+            layer="below", line_width=0,
+            annotation_text="Shutdown",
+            annotation_position="top left",
+            annotation_font_color="red"
+        )
+    
     # Y-axis
     fig.update_yaxes(
         autorange="reversed",
@@ -130,12 +120,12 @@ def create_gantt_chart(
         linewidth=1,
         linecolor="black"
     )
-
-    # X-axis (improved readability)
+    
+    # X-axis
     fig.update_xaxes(
         tickformat="%d-%b",
-        dtick="D2",                # less crowded
-        tickangle=35,              # tilted for readability
+        dtick="D2",
+        tickangle=35,
         showgrid=True,
         gridcolor="lightgray",
         tickfont=dict(color="gray", size=12),
@@ -143,13 +133,13 @@ def create_gantt_chart(
         linewidth=1,
         linecolor="black"
     )
-
-    # Add padding to prevent congestion at edges
+    
+    # Layout
     fig.update_layout(
         xaxis=dict(
             range=[
-                pd.Timestamp(dates[0]) - pd.Timedelta(hours=12),
-                pd.Timestamp(dates[-1]) + pd.Timedelta(days=1)
+                dates[0] - timedelta(hours=12),
+                dates[-1] + timedelta(days=1)
             ]
         ),
         height=350,
@@ -171,7 +161,7 @@ def create_gantt_chart(
             font_color="gray"
         )
     )
-
+    
     return fig
 
 
