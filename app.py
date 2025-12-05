@@ -288,9 +288,9 @@ def render_preview_stage():
 
                 try:
                     styled_df = df_display.style.applymap(highlight_transitions)
-                    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+                    st.dataframe(styled_df, use_container_width=True)
                 except Exception:
-                    st.dataframe(df_display, use_container_width=True, hide_index=True)
+                    st.dataframe(df_display, use_container_width=True)
 
     st.markdown("---")
     render_section_divider()
