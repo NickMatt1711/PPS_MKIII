@@ -669,14 +669,7 @@ def build_and_solve_model(
     for grade in grades:
         for d in range(num_days):
             if (grade, d) in stockout_vars:
-    
-                daily_demand = demand_data[grade].get(dates[d], 0)
-                stockout_var = stockout_vars[(grade, d)]
-    
-                # Weight is proportional to actual demand that day
-                weight = stockout_penalty * daily_demand
-    
-                objective_terms.append(weight * stockout_var)
+                objective_terms.append(stockout_penalty * stockout_vars[(grade, d)])
 
     # 2. Inventory deficit penalties (SOFT)
     for (grade, d), deficit_var in inventory_deficit_penalties.items():
