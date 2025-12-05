@@ -666,35 +666,11 @@ def build_and_solve_model(
     objective_terms = []
     
     # 1. Stockout penalties (SOFT)
-    # Old Logic for penalty
     for grade in grades:
         for d in range(num_days):
             if (grade, d) in stockout_vars:
                 objective_terms.append(stockout_penalty * stockout_vars[(grade, d)])
-    
-   ''' # penalty = stockout_penalty * √(stockout) / √(demand_today)
-    epsilon = 1.0  # Small constant to avoid division by zero
-    
-    for grade in grades:
-        for d in range(num_days):
-            if (grade, d) in stockout_vars:
-                demand_today = demand_data[grade].get(dates[d], 0)
-                
-                if demand_today > 0:
-                    # Calculate normalized penalty coefficient
-                    # penalty_coeff = stockout_penalty * sqrt(1.0) / sqrt(demand_today + epsilon)
-                    # Multiply by 100 for better integer scaling in CP-SAT
-                    
-                    penalty_coeff = stockout_penalty * math.sqrt(1.0) / math.sqrt(demand_today + epsilon)
-                    scaled_penalty = int(penalty_coeff * 100)
-                    
-                    # Apply penalty: scaled_penalty * stockout_var
-                    objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
-                else:
-                    # If no demand, no stockout penalty
-                    pass
-    '''
-    
+
     # 2. Inventory deficit penalties (SOFT)
     for (grade, d), deficit_var in inventory_deficit_penalties.items():
         objective_terms.append(stockout_penalty * deficit_var)
