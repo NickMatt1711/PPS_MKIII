@@ -241,19 +241,39 @@ def build_and_solve_model(
     # This creates a fixed block of production
     material_running_map = {}
     for plant, (material, expected_days) in material_running_info.items():
-        material_running_map[plant] = {
-            'material': material,
-            'expected_days': min(expected_days, num_days)
-        }
-        
-        # Force the material to run for exactly expected_days
-        for d in range(min(expected_days, num_days)):
+        if expected_days > 0:
+            # If expected_days is specified (>0), force the material to run for exactly expected_days
+            forced_days = min(expected_days, num_days)
+            material_running_map[plant] = {
+                'material': material,
+                'expected_days': forced_days,
+                'is_fixed_block': True  # Flag to indicate this is a fixed block
+            }
+            
+            # Force the material to run for exactly expected_days
+            for d in range(forced_days):
+                if is_allowed_combination(material, plant):
+                    model.Add(get_is_producing_var(material, plant, d) == 1)
+                    # Force all other grades to 0
+                    for other_material in grades:
+                        if other_material != material and is_allowed_combination(other_material, plant):
+                            model.Add(get_is_producing_var(other_material, plant, d) == 0)
+        else:
+            # If expected_days is 0 (not specified), material must run on day 0 only
+            # Day 1 and onwards are decided by optimization
+            material_running_map[plant] = {
+                'material': material,
+                'expected_days': 1,  # Only day 0 is forced
+                'is_fixed_block': False  # Not a fixed block, just initial material
+            }
+            
+            # Force the material to run on day 0 only
             if is_allowed_combination(material, plant):
-                model.Add(get_is_producing_var(material, plant, d) == 1)
-                # Force all other grades to 0
+                model.Add(get_is_producing_var(material, plant, 0) == 1)
+                # Force all other grades to 0 on day 0
                 for other_material in grades:
                     if other_material != material and is_allowed_combination(other_material, plant):
-                        model.Add(get_is_producing_var(other_material, plant, d) == 0)
+                        model.Add(get_is_producing_var(other_material, plant, 0) == 0)
     
     # ========== NEW: PRE-SHUTDOWN AND RESTART GRADE CONSTRAINTS ==========
     if progress_callback:
@@ -424,7 +444,8 @@ def build_and_solve_model(
             material_running_days = material_running_map[line]['expected_days'] if has_material_running else 0
             
             # ========== FORCE CHANGEOVER AFTER MATERIAL RUNNING ==========
-            if has_material_running and material_running_grade == grade:
+            if has_material_running and material_running_grade == grade and material_running_info[line][1] > 0:
+                # Only force changeover if expected_days was specified (>0)
                 # This grade is forced for material_running_days
                 # The day after material running ends, we MUST NOT produce the same grade
                 if material_running_days < num_days:
@@ -444,9 +465,11 @@ def build_and_solve_model(
             
             for d in range(num_days):
                 # Check if this day is within material running block
+                # Only consider it a fixed block if expected_days was specified (>0)
                 is_in_material_block = (has_material_running and 
                                        material_running_grade == grade and 
-                                       d < material_running_days)
+                                       d < material_running_days and
+                                       material_running_info[line][1] > 0)
                 
                 if is_in_material_block:
                     continue  # Skip min-run constraint for material running days
@@ -467,7 +490,8 @@ def build_and_solve_model(
                         # Check if yesterday was material running
                         yesterday_in_material_block = (has_material_running and 
                                                       material_running_grade == grade and 
-                                                      (d - 1) < material_running_days)
+                                                      (d - 1) < material_running_days and
+                                                      material_running_info[line][1] > 0)
                         
                         if yesterday_in_material_block:
                             # Yesterday was forced material running
