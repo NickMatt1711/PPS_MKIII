@@ -1,12 +1,12 @@
 """
-CP-SAT Solver for production optimization with adaptive stockout weighting
+CP-SAT Solver for production optimization
 """
 
 from ortools.sat.python import cp_model
 import time
-from typing import Dict, List, Tuple, Optional
-from datetime import datetime
+from typing import Dict, List, Tuple
 from constants import SOLVER_NUM_WORKERS, SOLVER_RANDOM_SEED
+import math
 
 
 class SolutionCallback(cp_model.CpSolverSolutionCallback):
@@ -144,213 +144,6 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
         return len(self.solutions)
 
 
-def compute_adaptive_stockout_weights(
-    grades: List[str],
-    demand_data: Dict[str, Dict[datetime, int]],
-    dates: List[datetime],
-    allowed_lines: Dict[str, List[str]],
-    initial_inventory: Dict[str, int],
-    min_run_days: Dict[Tuple[str, str], int],
-    max_run_days: Dict[Tuple[str, str], int],
-    force_start_date: Dict[Tuple[str, str], datetime],
-    buffer_days: int = 3,
-    min_weight: float = 0.5,
-    max_weight: float = 5.0
-) -> Dict[str, float]:
-    """
-    Compute intelligent stockout penalty weights based on multiple factors.
-    
-    Factors considered:
-    1. Demand volume and variability
-    2. Production flexibility (number of eligible lines)
-    3. Inventory risk (current stock relative to demand)
-    4. Run constraints (min/max run days)
-    5. Temporal importance (urgency based on force start dates)
-    """
-    
-    num_days = len(dates)
-    weights = {}
-    
-    if not grades:
-        return weights
-    
-    # Phase 1: Calculate base metrics for each grade
-    metrics = {}
-    for grade in grades:
-        # Extract demand series
-        daily_demand = [demand_data[grade].get(date, 0) for date in dates]
-        total_demand = sum(daily_demand)
-        avg_daily_demand = total_demand / num_days if num_days > 0 else 0
-        
-        # Calculate demand variability (coefficient of variation)
-        if avg_daily_demand > 0:
-            demand_std = (sum((d - avg_daily_demand) ** 2 for d in daily_demand) / num_days) ** 0.5
-            cv_demand = demand_std / avg_daily_demand
-        else:
-            cv_demand = 0
-        
-        # Calculate days of coverage from opening inventory
-        opening_inv = initial_inventory.get(grade, 0)
-        days_coverage = opening_inv / avg_daily_demand if avg_daily_demand > 0 else float('inf')
-        
-        # Production flexibility
-        num_eligible_lines = len(allowed_lines.get(grade, []))
-        
-        # Run constraint severity - get min/max run for first eligible line
-        run_constraint_factor = 1.0
-        if allowed_lines.get(grade):
-            first_line = allowed_lines[grade][0]
-            min_run = min_run_days.get((grade, first_line), 1)
-            max_run = max_run_days.get((grade, first_line), float('inf'))
-            run_constraint_factor = min_run / max_run if max_run > 0 else 1.0
-        
-        # Temporal urgency (force start date proximity)
-        urgency_factor = 0.0
-        if allowed_lines.get(grade):
-            first_line = allowed_lines[grade][0]
-            force_start = force_start_date.get((grade, first_line))
-            if force_start:
-                try:
-                    start_idx = dates.index(force_start)
-                    days_until_force = max(0, start_idx)
-                    urgency_factor = max(0, 1 - (days_until_force / num_days))
-                except (ValueError, AttributeError):
-                    urgency_factor = 0.0
-        
-        # Determine if grade has low demand (below 1/3 of average)
-        avg_all_demand = sum(metrics.get(g, {}).get('avg_daily_demand', 0) for g in grades[:grades.index(grade)]) / max(len(grades[:grades.index(grade)]), 1)
-        is_low_demand = False
-        if grades.index(grade) > 0 and avg_all_demand > 0:
-            is_low_demand = avg_daily_demand < (avg_all_demand * 0.33)
-        
-        metrics[grade] = {
-            'total_demand': total_demand,
-            'avg_daily_demand': avg_daily_demand,
-            'cv_demand': cv_demand,
-            'days_coverage': days_coverage,
-            'num_lines': num_eligible_lines,
-            'run_constraint': run_constraint_factor,
-            'urgency': urgency_factor,
-            'is_low_demand': is_low_demand
-        }
-    
-    # Calculate average demand across all grades for comparison
-    all_avg_demand = sum(m['avg_daily_demand'] for m in metrics.values()) / len(metrics)
-    
-    # Phase 2: Calculate normalized scores for each factor
-    def normalize_values(values_dict, inverse=False):
-        """Normalize values to [0, 1] range"""
-        vals = [v for v in values_dict.values() if isinstance(v, (int, float))]
-        if not vals:
-            return {k: 0.5 for k in values_dict.keys()}
-        
-        min_val = min(vals)
-        max_val = max(vals)
-        
-        if max_val - min_val < 1e-6:
-            return {k: 0.5 for k in values_dict.keys()}
-        
-        normalized = {}
-        for k, v in values_dict.items():
-            if isinstance(v, (int, float)):
-                if inverse:
-                    # Higher original value gives lower normalized score
-                    norm = (max_val - v) / (max_val - min_val)
-                else:
-                    norm = (v - min_val) / (max_val - min_val)
-                normalized[k] = max(0, min(1, norm))  # Clamp to [0, 1]
-            else:
-                normalized[k] = 0.5
-        return normalized
-    
-    # Extract metrics for normalization
-    total_demands = {g: m['total_demand'] for g, m in metrics.items()}
-    avg_demands = {g: m['avg_daily_demand'] for g, m in metrics.items()}
-    cvs = {g: m['cv_demand'] for g, m in metrics.items()}
-    coverages = {g: m['days_coverage'] for g, m in metrics.items()}
-    line_counts = {g: m['num_lines'] for g, m in metrics.items()}
-    run_constraints = {g: m['run_constraint'] for g, m in metrics.items()}
-    urgencies = {g: m['urgency'] for g, m in metrics.items()}
-    
-    # Normalize (inverse for some, direct for others)
-    norm_total_demand = normalize_values(total_demands, inverse=True)  # Inverse: lower demand → higher score
-    norm_avg_demand = normalize_values(avg_demands, inverse=True)  # Inverse: lower daily demand → higher score
-    norm_cv = normalize_values(cvs, inverse=False)  # Direct: higher variability → higher score
-    norm_coverage = normalize_values(coverages, inverse=True)  # Inverse: lower coverage → higher score
-    norm_lines = normalize_values(line_counts, inverse=True)  # Inverse: fewer lines → higher score
-    norm_run = normalize_values(run_constraints, inverse=False)  # Direct: tighter constraints → higher score
-    norm_urgency = normalize_values(urgencies, inverse=False)  # Direct: more urgent → higher score
-    
-    # Phase 3: Calculate composite score with adaptive weighting
-    for grade in grades:
-        m = metrics[grade]
-        
-        # Base importance factors (can be tuned)
-        demand_factor = 0.35  # How much to weight demand characteristics
-        flexibility_factor = 0.25  # How much to weight production flexibility
-        risk_factor = 0.20  # How much to weight inventory risk
-        constraint_factor = 0.15  # How much to weight run constraints
-        urgency_factor = 0.05  # How much to weight temporal urgency
-        
-        # Calculate weighted composite score
-        composite_score = (
-            demand_factor * (norm_total_demand[grade] * 0.6 + norm_avg_demand[grade] * 0.3 + norm_cv[grade] * 0.1) +
-            flexibility_factor * norm_lines[grade] +
-            risk_factor * norm_coverage[grade] +
-            constraint_factor * norm_run[grade] +
-            urgency_factor * norm_urgency[grade]
-        )
-        
-        # Apply special boosting for very low-demand grades
-        if all_avg_demand > 0:
-            relative_size = m['avg_daily_demand'] / all_avg_demand
-            if relative_size < 0.3:  # Less than 30% of average
-                # Boost score for very small grades
-                boost_factor = 1.5 - (relative_size * 2)  # 1.5x to 0.9x boost
-                composite_score = min(1.0, composite_score * boost_factor)
-        
-        # Convert to weight in desired range with smooth transformation
-        # Use power transformation for smoother distribution
-        final_weight = min_weight + (max_weight - min_weight) * (composite_score ** 0.7)
-        
-        weights[grade] = round(final_weight, 2)
-    
-    # Phase 4: Ensure no grade gets extreme weight unless justified
-    weight_values = list(weights.values())
-    if len(weight_values) >= 3:
-        weight_values.sort()
-        n = len(weight_values)
-        
-        q1 = weight_values[n // 4]
-        q3 = weight_values[3 * n // 4]
-        iqr = q3 - q1
-        
-        if iqr > 0:  # Only moderate if there's variation
-            lower_bound = q1 - 1.5 * iqr
-            upper_bound = q3 + 1.5 * iqr
-            
-            for grade, weight in weights.items():
-                if weight < lower_bound:
-                    # Very low weight - check if justified
-                    m = metrics[grade]
-                    if m['avg_daily_demand'] > all_avg_demand * 0.5 and m['num_lines'] > 1:
-                        # High demand grade with very low weight - adjust upward
-                        weights[grade] = max(weight, q1 * 0.8)
-                elif weight > upper_bound:
-                    # Very high weight - check if justified
-                    m = metrics[grade]
-                    if m['days_coverage'] > 7 and m['num_lines'] > 1:
-                        # Good coverage and multiple lines - reduce weight
-                        weights[grade] = min(weight, q3 * 1.2)
-    
-    # Ensure all grades have weights
-    for grade in grades:
-        if grade not in weights:
-            weights[grade] = 1.0
-    
-    return weights
-
-
 def build_and_solve_model(
     grades: List[str],
     lines: List[str],
@@ -370,51 +163,19 @@ def build_and_solve_model(
     rerun_allowed: Dict,
     material_running_info: Dict,
     shutdown_periods: Dict,
-    pre_shutdown_grades: Dict,
-    restart_grades: Dict,
+    pre_shutdown_grades: Dict,  # NEW parameter
+    restart_grades: Dict,       # NEW parameter
     transition_rules: Dict,
     buffer_days: int,
     stockout_penalty: int,
     transition_penalty: int,
     time_limit_min: int,
-    progress_callback=None,
-    grade_priority_weights: Optional[Dict[str, float]] = None,
-    adaptive_weighting: bool = True,
-    min_weight: float = 0.5,
-    max_weight: float = 5.0
+    progress_callback=None
 ) -> Tuple[int, SolutionCallback, cp_model.CpSolver]:
-    """Build and solve the optimization model with adaptive stockout weighting"""
+    """Build and solve the optimization model"""
     
     if progress_callback:
         progress_callback(0.0, "Building optimization model...")
-    
-    # Calculate adaptive weights if not provided
-    if grade_priority_weights is None and adaptive_weighting:
-        if progress_callback:
-            progress_callback(0.05, "Computing adaptive stockout weights...")
-        
-        grade_priority_weights = compute_adaptive_stockout_weights(
-            grades=grades,
-            demand_data=demand_data,
-            dates=dates,
-            allowed_lines=allowed_lines,
-            initial_inventory=initial_inventory,
-            min_run_days=min_run_days,
-            max_run_days=max_run_days,
-            force_start_date=force_start_date,
-            buffer_days=buffer_days,
-            min_weight=min_weight,
-            max_weight=max_weight
-        )
-    
-    # Use default weights if still None
-    if grade_priority_weights is None:
-        grade_priority_weights = {grade: 1.0 for grade in grades}
-    
-    # Log the computed weights for debugging
-    print("Adaptive stockout weights:")
-    for grade, weight in sorted(grade_priority_weights.items(), key=lambda x: x[1], reverse=True):
-        print(f"  {grade}: {weight}")
     
     model = cp_model.CpModel()
     
@@ -476,6 +237,7 @@ def build_and_solve_model(
                 model.Add(sum(producing_vars) <= 1)
     
     # 3. Material running constraints (HARD)
+    # This creates a fixed block of production
     material_running_map = {}
     for plant, (material, expected_days) in material_running_info.items():
         material_running_map[plant] = {
@@ -645,6 +407,10 @@ def build_and_solve_model(
                 pass
     
     # ========== CORRECTED MIN/MAX RUN DAYS LOGIC ==========
+    # Material running creates a fixed block
+    # After material running ends, there MUST be a changeover
+    # Minimum run days applies to NEW runs started within planning horizon
+    
     for grade in grades:
         for line in allowed_lines[grade]:
             grade_plant_key = (grade, line)
@@ -666,6 +432,15 @@ def build_and_solve_model(
                         model.Add(prod_day_after == 0)  # Force changeover
             
             # ========== MINIMUM RUN DAYS CONSTRAINT ==========
+            # This applies to NEW runs started within planning horizon
+            # Material running block is excluded from min-run requirement
+            
+            # We'll track days where a new run could start
+            # A new run starts if:
+            # 1. Producing on day d
+            # 2. AND (day d is 0 OR not producing on day d-1)
+            # 3. AND day d is NOT within material running block for this grade
+            
             for d in range(num_days):
                 # Check if this day is within material running block
                 is_in_material_block = (has_material_running and 
@@ -681,6 +456,9 @@ def build_and_solve_model(
                 
                 # Check if this is start of a new run
                 if d == 0:
+                    # Day 0: If producing and not in material block, it's a start
+                    # But wait, what if material running starts on day 0? We already skipped
+                    # So this is a genuine new start
                     starts_new_run = prod_today
                 else:
                     prod_yesterday = get_is_producing_var(grade, line, d - 1)
@@ -693,6 +471,7 @@ def build_and_solve_model(
                         if yesterday_in_material_block:
                             # Yesterday was forced material running
                             # Today cannot be same grade (we already enforced changeover)
+                            # So this cannot be a continuation
                             continue
                         
                         # Create start indicator: producing today AND not producing yesterday
@@ -704,6 +483,10 @@ def build_and_solve_model(
                         continue
                 
                 # If this is start of a new run, enforce min_run days
+                # We need to ensure at least min_run consecutive days of production
+                # starting from day d
+                
+                # First, check if we have enough days remaining
                 if d + min_run > num_days:
                     continue  # Not enough days for min_run
                 
@@ -740,6 +523,8 @@ def build_and_solve_model(
                         model.Add(prod_var == 1).OnlyEnforceIf(starts_new_run)
             
             # ========== MAXIMUM RUN DAYS CONSTRAINT ==========
+            # This applies to ALL runs, including material running
+            
             for d in range(num_days - max_run):
                 # Check sequence of max_run + 1 consecutive days
                 consecutive_vars = []
@@ -880,31 +665,22 @@ def build_and_solve_model(
     
     objective_terms = []
     
-    # 1. Stockout penalties with ADAPTIVE WEIGHTS (SOFT)
+    # 1. Stockout penalties (SOFT)
     for grade in grades:
-        weight = grade_priority_weights.get(grade, 1.0)
-        # Scale by 100 to avoid floating point issues, then convert to int
-        scaled_penalty = int(stockout_penalty * weight * 100)
-        
         for d in range(num_days):
             if (grade, d) in stockout_vars:
-                objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
-    
+                objective_terms.append(stockout_penalty * stockout_vars[(grade, d)])
+
     # 2. Inventory deficit penalties (SOFT)
     for (grade, d), deficit_var in inventory_deficit_penalties.items():
-        # Use adaptive weight for inventory deficits too
-        weight = grade_priority_weights.get(grade, 1.0)
-        scaled_penalty = int(stockout_penalty * weight * 100)
-        objective_terms.append(scaled_penalty * deficit_var)
+        objective_terms.append(stockout_penalty * deficit_var)
     
     # 3. Closing inventory deficit penalties (SOFT)
     for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
-        # Use adaptive weight for closing inventory deficits
-        weight = grade_priority_weights.get(grade, 1.0)
-        scaled_penalty = int(stockout_penalty * weight * 100 * 3)  # 3x multiplier for closing inventory
-        objective_terms.append(scaled_penalty * closing_deficit_var)
+        objective_terms.append(stockout_penalty * closing_deficit_var * 3)
     
     # 4. Transition penalties (SOFT - for ALLOWED transitions only)
+    # Forbidden transitions are already prevented by HARD constraints
     for line in lines:
         for d in range(num_days - 1):
             for grade1 in grades:
