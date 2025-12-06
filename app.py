@@ -297,7 +297,9 @@ def render_preview_stage():
 
     # Configuration parameters (unchanged logic)
     st.markdown("### ⚙️ Optimization Parameters")
-    col1, col2, col3 = st.columns([1, 1, 2])
+
+    col1, col2 = st.columns([1, 1])
+    
     with col1:
         time_limit = st.number_input(
             "Time limit (minutes)",
@@ -307,7 +309,7 @@ def render_preview_stage():
             step=1,
             help="Maximum time for solver to find optimal solution"
         )
-    with col2:
+        
         buffer_days = st.number_input(
             "Buffer days",
             min_value=0,
@@ -316,7 +318,26 @@ def render_preview_stage():
             step=1,
             help="Additional days added to planning horizon for safety stock"
         )
-    with col3:
+    
+    with col2:
+        # Radio buttons for stockout penalty methodology
+        penalty_method = st.radio(
+            "Stockout Penalty Method",
+            options=[
+                "Standard",
+                "Square Root Normalisation",
+                "Percentage Normalisation"
+            ],
+            index=0,  # Default to Standard
+            horizontal=True,
+            help="""
+            • **Standard**: Linear penalty (stockout_penalty × stockout_qty)
+            • **Square Root Normalisation**: Normalized by demand √(stockout/demand)
+            • **Percentage Normalisation**: Penalty based on shortage percentage
+            """
+        )
+        
+        # Slider for optimization priority
         priority = st.select_slider(
             "Optimization Priority",
             options=[
@@ -329,8 +350,8 @@ def render_preview_stage():
             value="Balanced",
             help="Balance between avoiding stockouts vs. minimizing production changeovers"
         )
-
-    # Map to penalty values (existing map retained)
+    
+    # Map to penalty values (unchanged)
     priority_map = {
         "Minimize Stockouts Only": (100, 1),
         "Favor Fewer Stockouts": (10, 1),
@@ -339,14 +360,15 @@ def render_preview_stage():
         "Minimize Transitions Only": (1, 100)
     }
     stockout_penalty, transition_penalty = priority_map[priority]
-
-    # Update parameters in session (unchanged)
+    
+    # Update parameters in session state
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
         'stockout_penalty': int(stockout_penalty),
         'transition_penalty': int(transition_penalty),
-        'priority_label': priority  # Store user-friendly label
+        'penalty_method': penalty_method,  # NEW: Store selected methodology
+        'priority_label': priority
     }
 
     render_section_divider()
