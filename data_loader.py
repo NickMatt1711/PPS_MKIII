@@ -122,15 +122,20 @@ def process_plant_data(plant_df: pd.DataFrame) -> Dict:
         result['capacities'][plant] = row[PLANT_COLUMNS['capacity']]
         
         # Material running info
-        if pd.notna(row.get(PLANT_COLUMNS['material_running'])) and \
-           pd.notna(row.get(PLANT_COLUMNS['expected_days'])):
+        if pd.notna(row.get(PLANT_COLUMNS['material_running'])):
             try:
-                result['material_running'][plant] = (
-                    str(row[PLANT_COLUMNS['material_running']]).strip(),
-                    int(row[PLANT_COLUMNS['expected_days']])
-                )
-            except:
-                pass
+                material = str(row[PLANT_COLUMNS['material_running']]).strip()
+                # Check if expected_days is provided
+                if pd.notna(row.get(PLANT_COLUMNS['expected_days'])):
+                    expected_days = int(row[PLANT_COLUMNS['expected_days']])
+                else:
+                    expected_days = 0  # 0 means not specified
+                
+                result['material_running'][plant] = (material, expected_days)
+            except Exception as e:
+                # If there's an error converting to int, set expected_days to 0
+                material = str(row[PLANT_COLUMNS['material_running']]).strip()
+                result['material_running'][plant] = (material, 0)
         
         # Shutdown periods (will be processed later with dates)
         shutdown_start = row.get(PLANT_COLUMNS['shutdown_start'])
