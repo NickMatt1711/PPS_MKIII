@@ -239,8 +239,11 @@ def build_and_solve_model(
     
     # 3. Material running constraints (HARD)
     # If material running is specified, it MUST run on day 0
-    # If expected_days > 0, it MUST run for exactly that many days
-    # If expected_days = 0 (not specified), only day 0 is forced
+    # If expected_days is a positive integer, it MUST run for exactly that many days
+    # If expected_days is None (not specified), only day 0 is forced, rest is optimization decision
+    
+    material_running_map = {}
+    
     for plant, (material, expected_days) in material_running_info.items():
         # ALWAYS force the material to run on day 0
         if is_allowed_combination(material, plant):
@@ -256,8 +259,8 @@ def build_and_solve_model(
                     if other_var is not None:
                         model.Add(other_var == 0)
         
-        # If expected_days > 0, force continuation for the specified number of days
-        if expected_days > 0:
+        # If expected_days is specified (not None) and > 0, force continuation
+        if expected_days is not None and expected_days > 0:
             # Force the material to run for exactly expected_days
             # Start from day 1 (day 0 is already forced above)
             forced_days = min(expected_days, num_days)
@@ -274,6 +277,19 @@ def build_and_solve_model(
                             other_var = get_is_producing_var(other_material, plant, d)
                             if other_var is not None:
                                 model.Add(other_var == 0)
+            
+            # Store as fixed block for later logic
+            material_running_map[plant] = {
+                'material': material,
+                'expected_days': forced_days
+            }
+        else:
+            # expected_days is None - no forced continuation, just day 0
+            # Store with expected_days = 1 to indicate only day 0 is fixed
+            material_running_map[plant] = {
+                'material': material,
+                'expected_days': 1  # Only day 0 is forced
+            }
     
     # ========== NEW: PRE-SHUTDOWN AND RESTART GRADE CONSTRAINTS ==========
     if progress_callback:
@@ -444,14 +460,18 @@ def build_and_solve_model(
             material_running_days = material_running_map[line]['expected_days'] if has_material_running else 0
             
             # ========== FORCE CHANGEOVER AFTER MATERIAL RUNNING ==========
-            # Check if this line has material running with expected_days > 0
+            # Only force changeover if expected_days was explicitly specified
             if line in material_running_info:
-                material_grade, expected_days = material_running_info[line]
-                if material_grade == grade and expected_days > 0:
-                    # The day after material running ends, we MUST NOT produce the same grade
-                    # (forced changeover)
-                    if expected_days < num_days:
-                        prod_day_after = get_is_producing_var(grade, line, expected_days)
+                material_grade, original_expected_days = material_running_info[line]
+                # Check if this is in the map with forced days > 1
+                has_forced_block = (line in material_running_map and 
+                                  material_running_map[line]['expected_days'] > 1)
+                
+                if material_grade == grade and has_forced_block:
+                    # The day after material running block ends, we MUST NOT produce the same grade
+                    forced_days = material_running_map[line]['expected_days']
+                    if forced_days < num_days:
+                        prod_day_after = get_is_producing_var(grade, line, forced_days)
                         if prod_day_after is not None:
                             model.Add(prod_day_after == 0)  # Force changeover
             
