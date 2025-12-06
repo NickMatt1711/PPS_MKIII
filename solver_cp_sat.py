@@ -489,9 +489,10 @@ def build_and_solve_model(
                 # Check if this day is within material running block
                 # Only consider it a fixed block if expected_days was specified (>0)
                 is_in_material_block = False
-                if line in material_running_info:
-                    material_grade, expected_days = material_running_info[line]
-                    if material_grade == grade and expected_days > 0 and d < expected_days:
+                if line in material_running_map:
+                    material_grade = material_running_map[line]['material']
+                    expected_days = material_running_map[line]['expected_days']
+                    if material_grade == grade and d < expected_days:
                         is_in_material_block = True
                 
                 if is_in_material_block:
@@ -524,9 +525,10 @@ def build_and_solve_model(
                     if prod_yesterday is not None:
                         # Check if yesterday was material running
                         yesterday_in_material_block = False
-                        if line in material_running_info:
-                            material_grade, expected_days = material_running_info[line]
-                            if material_grade == grade and expected_days > 0 and (d - 1) < expected_days:
+                        if line in material_running_map:
+                            material_grade = material_running_map[line]['material']
+                            expected_days = material_running_map[line]['expected_days']
+                            if material_grade == grade and (d - 1) < expected_days:
                                 yesterday_in_material_block = True
                         
                         if yesterday_in_material_block:
@@ -646,8 +648,7 @@ def build_and_solve_model(
                 start_count_vars = []
                 for d in range(num_days):
                     # Skip if this is within material running block
-                    has_material_running = line in material_running_map
-                    if has_material_running:
+                    if line in material_running_map:
                         material_running_grade = material_running_map[line]['material']
                         material_running_days = material_running_map[line]['expected_days']
                         if material_running_grade == grade and d < material_running_days:
@@ -664,9 +665,12 @@ def build_and_solve_model(
                         prod_yesterday = get_is_producing_var(grade, line, d - 1)
                         if prod_yesterday is not None:
                             # Check if yesterday was material running
-                            yesterday_in_material = (has_material_running and 
-                                                    material_running_grade == grade and 
-                                                    (d - 1) < material_running_days)
+                            yesterday_in_material = False
+                            if line in material_running_map:
+                                material_running_grade = material_running_map[line]['material']
+                                material_running_days = material_running_map[line]['expected_days']
+                                yesterday_in_material = (material_running_grade == grade and 
+                                                        (d - 1) < material_running_days)
                             
                             if yesterday_in_material:
                                 # Yesterday was material running
