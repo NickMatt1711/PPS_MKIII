@@ -326,11 +326,9 @@ def render_preview_stage():
             options=[
                 "Standard",
                 "Square Root Normalisation",
-                "Percentage Normalisation"
-            ],
-            index=0,  # Default to Standard
+                "Percentage Normalisation"],
+            index=0,
             horizontal=True,
-            width="stretch",
             help="""
             • **Standard**: Linear penalty (stockout_penalty × stockout_qty)
             • **Square Root Normalisation**: Normalized by demand √(stockout/demand)
