@@ -341,9 +341,7 @@ def render_preview_stage():
             "Optimization Priority",
             options=[
                 "Minimize Stockouts Only",
-                "Favor Fewer Stockouts",
                 "Balanced",
-                "Favor Fewer Transitions",
                 "Minimize Transitions Only"
             ],
             value="Balanced",
@@ -353,9 +351,7 @@ def render_preview_stage():
     # Map to penalty values (unchanged)
     priority_map = {
         "Minimize Stockouts Only": (150, 1),
-        "Favor Fewer Stockouts": (10, 1),
         "Balanced": (10, 5),
-        "Favor Fewer Transitions": (10, 8),
         "Minimize Transitions Only": (1, 150)
     }
     stockout_penalty, transition_penalty = priority_map[priority]
