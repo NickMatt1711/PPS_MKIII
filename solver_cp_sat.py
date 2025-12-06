@@ -665,90 +665,120 @@ def build_and_solve_model(
     
     objective_terms = []
     
-    # 1. Stockout penalties (SOFT) - WITH DEMAND NORMALIZATION
-    # Using Option B: penalty = stockout_penalty * √(stockout) / √(demand_today)
-    epsilon = 1.0  # Small constant to avoid division by zero
-    
-    for grade in grades:
-        for d in range(num_days):
-            if (grade, d) in stockout_vars:
-                demand_today = demand_data[grade].get(dates[d], 0)
-                
-                if demand_today > 0:
-                    # Calculate normalized penalty coefficient
-                    # penalty_coeff = stockout_penalty * sqrt(1.0) / sqrt(demand_today + epsilon)
-                    # Multiply by 100 for better integer scaling in CP-SAT
-                    
-                    penalty_coeff = stockout_penalty * math.sqrt(1.0) / math.sqrt(demand_today + epsilon)
-                    scaled_penalty = int(penalty_coeff * 100)
-                    
-                    # Apply penalty: scaled_penalty * stockout_var
-                    objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
-                else:
-                    # If no demand, no stockout penalty
-                    pass
-    
-    # 2. Inventory deficit penalties (SOFT)
-    for (grade, d), deficit_var in inventory_deficit_penalties.items():
-        objective_terms.append(stockout_penalty * deficit_var)
-    
-    # 3. Closing inventory deficit penalties (SOFT)
-    for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
-        objective_terms.append(stockout_penalty * closing_deficit_var * 3)
-    
-    # 4. Transition penalties (SOFT - for ALLOWED transitions only)
-    # Forbidden transitions are already prevented by HARD constraints
-    for line in lines:
-        for d in range(num_days - 1):
-            for grade1 in grades:
-                if line not in allowed_lines[grade1]:
-                    continue
-                for grade2 in grades:
-                    if line not in allowed_lines[grade2] or grade1 == grade2:
-                        continue
-                    
-                    # Skip if this is a forbidden transition (already handled as HARD)
-                    if (transition_rules.get(line) and 
-                        grade1 in transition_rules[line] and 
-                        grade2 not in transition_rules[line][grade1]):
-                        continue
-                    
-                    # Only penalize ALLOWED transitions
-                    trans_var = model.NewBoolVar(f'trans_{line}_{d}_{grade1}_to_{grade2}')
-                    
-                    # Link transition variable to production decisions
-                    model.Add(trans_var <= is_producing[(grade1, line, d)])
-                    model.Add(trans_var <= is_producing[(grade2, line, d + 1)])
-                    model.Add(trans_var >= is_producing[(grade1, line, d)] + 
-                              is_producing[(grade2, line, d + 1)] - 1)
-                    
-                    objective_terms.append(transition_penalty * trans_var)
-    
-    # 5. Idle line penalty (SOFT - to minimize gaps, but not required)
-    idle_penalty = 500  # Lower than transition penalty to prioritize min runs
-    for line in lines:
-        for d in range(num_days):
-            if line in shutdown_periods and d in shutdown_periods[line]:
-                continue
-                
-            is_idle = model.NewBoolVar(f'idle_{line}_{d}')
+    # Configuration parameters for penalty tuning
+PERCENTAGE_PENALTY_WEIGHT = 100  # Penalty per 1% stockout (tune this: 50-200 range)
+epsilon = 1.0  # Small constant to avoid division by zero
+
+# 1. Stockout penalties (SOFT) - PERCENTAGE-BASED APPROACH
+# Formula: penalty = stockout_penalty * (stockout / demand) * PERCENTAGE_PENALTY_WEIGHT
+# This ensures equal treatment of service levels across all grades
+
+for grade in grades:
+    for d in range(num_days):
+        if (grade, d) in stockout_vars:
+            demand_today = demand_data[grade].get(dates[d], 0)
             
-            producing_vars = [
-                is_producing[(grade, line, d)] 
-                for grade in grades 
-                if (grade, line, d) in is_producing
-            ]
-            
-            if producing_vars:
-                model.Add(sum(producing_vars) == 0).OnlyEnforceIf(is_idle)
-                model.Add(sum(producing_vars) == 1).OnlyEnforceIf(is_idle.Not())
-                objective_terms.append(idle_penalty * is_idle)
+            if demand_today > 0:
+                # Calculate penalty coefficient based on percentage shortage
+                # penalty_coeff = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty) / demand_today
+                # Multiply by 100 for better integer scaling in CP-SAT
+                
+                penalty_per_unit = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty) / (demand_today + epsilon)
+                scaled_penalty = int(penalty_per_unit * 100)
+                
+                # Apply penalty: scaled_penalty * stockout_var
+                # Example: 10 MT stockout on 100 MT demand = 10% shortage
+                # Penalty = (100 * 10) / 100 * 10 = 1000 units
+                objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
+            else:
+                # If no demand today, no stockout penalty needed
+                pass
+
+# 2. Inventory deficit penalties (SOFT) - Also percentage-based for consistency
+# This penalizes falling below minimum inventory levels
+MIN_INV_VIOLATION_MULTIPLIER = 2  # Make min inventory violations more expensive
+
+for (grade, d), deficit_var in inventory_deficit_penalties.items():
+    daily_demand = demand_data[grade].get(dates[d], 0)
     
-    # Set the objective to minimize SOFT constraint violations
-    if objective_terms:
-        model.Minimize(sum(objective_terms))
+    if daily_demand > 0:
+        # Normalize min inventory violations by demand scale
+        penalty_coeff = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty * MIN_INV_VIOLATION_MULTIPLIER) / (daily_demand + epsilon)
+        scaled_penalty = int(penalty_coeff * 100)
+        objective_terms.append(scaled_penalty * deficit_var)
     else:
-        model.Minimize(0)
+        # Fallback for zero-demand days
+        objective_terms.append(stockout_penalty * MIN_INV_VIOLATION_MULTIPLIER * deficit_var)
+
+# 3. Closing inventory deficit penalties (SOFT)
+# Higher multiplier to ensure adequate inventory at planning horizon end
+for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
+    # Calculate average daily demand for this grade
+    total_demand = sum(demand_data[grade].get(dates[d], 0) for d in range(num_days))
+    avg_daily_demand = total_demand / num_days if num_days > 0 else 1
+    
+    if avg_daily_demand > 0:
+        penalty_coeff = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty * 3) / (avg_daily_demand + epsilon)
+        scaled_penalty = int(penalty_coeff * 100)
+        objective_terms.append(scaled_penalty * closing_deficit_var)
+    else:
+        objective_terms.append(stockout_penalty * closing_deficit_var * 3)
+
+# 4. Transition penalties (SOFT - for ALLOWED transitions only)
+# Forbidden transitions are already prevented by HARD constraints
+# Keep transitions fixed for now - can be demand-normalized later if needed
+
+for line in lines:
+    for d in range(num_days - 1):
+        for grade1 in grades:
+            if line not in allowed_lines[grade1]:
+                continue
+            for grade2 in grades:
+                if line not in allowed_lines[grade2] or grade1 == grade2:
+                    continue
+                
+                # Skip if this is a forbidden transition (already handled as HARD)
+                if (transition_rules.get(line) and 
+                    grade1 in transition_rules[line] and 
+                    grade2 not in transition_rules[line][grade1]):
+                    continue
+                
+                # Only penalize ALLOWED transitions
+                trans_var = model.NewBoolVar(f'trans_{line}_{d}_{grade1}_to_{grade2}')
+                
+                # Link transition variable to production decisions
+                model.Add(trans_var <= is_producing[(grade1, line, d)])
+                model.Add(trans_var <= is_producing[(grade2, line, d + 1)])
+                model.Add(trans_var >= is_producing[(grade1, line, d)] + 
+                          is_producing[(grade2, line, d + 1)] - 1)
+                
+                objective_terms.append(transition_penalty * trans_var)
+
+# 5. Idle line penalty (SOFT - to minimize gaps, but not required)
+idle_penalty = 500  # Lower than transition penalty to prioritize min runs
+for line in lines:
+    for d in range(num_days):
+        if line in shutdown_periods and d in shutdown_periods[line]:
+            continue
+            
+        is_idle = model.NewBoolVar(f'idle_{line}_{d}')
+        
+        producing_vars = [
+            is_producing[(grade, line, d)] 
+            for grade in grades 
+            if (grade, line, d) in is_producing
+        ]
+        
+        if producing_vars:
+            model.Add(sum(producing_vars) == 0).OnlyEnforceIf(is_idle)
+            model.Add(sum(producing_vars) == 1).OnlyEnforceIf(is_idle.Not())
+            objective_terms.append(idle_penalty * is_idle)
+
+# Set the objective to minimize SOFT constraint violations
+if objective_terms:
+    model.Minimize(sum(objective_terms))
+else:
+    model.Minimize(0)
     
     if progress_callback:
         progress_callback(0.8, "Solving optimization problem...")
