@@ -461,13 +461,13 @@ def render_optimization_stage():
             material_running_info=plant_data.get('material_running', {}),
             shutdown_periods=shutdown_periods,
             pre_shutdown_grades=plant_data.get('pre_shutdown_grades', {}),
-            # NEW restart grades already in original logic (left untouched)
             restart_grades=plant_data.get('restart_grades', {}),
             transition_rules=transition_rules,
             buffer_days=params['buffer_days'],
             stockout_penalty=params['stockout_penalty'],
             transition_penalty=params['transition_penalty'],
             time_limit_min=params['time_limit_min'],
+            penalty_method=params.get('penalty_method', 'Standard'),
             progress_callback=progress_callback
         )
 
