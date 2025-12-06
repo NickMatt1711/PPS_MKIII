@@ -163,13 +163,14 @@ def build_and_solve_model(
     rerun_allowed: Dict,
     material_running_info: Dict,
     shutdown_periods: Dict,
-    pre_shutdown_grades: Dict,  # NEW parameter
-    restart_grades: Dict,       # NEW parameter
+    pre_shutdown_grades: Dict,
+    restart_grades: Dict,  
     transition_rules: Dict,
     buffer_days: int,
     stockout_penalty: int,
     transition_penalty: int,
     time_limit_min: int,
+    penalty_method: str = "Standard",
     progress_callback=None
 ) -> Tuple[int, SolutionCallback, cp_model.CpSolver]:
     """Build and solve the optimization model"""
@@ -659,75 +660,104 @@ def build_and_solve_model(
     
     if progress_callback:
         progress_callback(0.7, "Building objective function...")
+
     
-    # ========== OBJECTIVE FUNCTION ==========
+     # ========== OBJECTIVE FUNCTION ==========
     # Only contains SOFT constraints with penalties
     
     objective_terms = []
-    
-    # Configuration parameters for penalty tuning
-    PERCENTAGE_PENALTY_WEIGHT = 100  # Penalty per 1% stockout (tune this: 50-200 range)
     epsilon = 1.0  # Small constant to avoid division by zero
     
-    # 1. Stockout penalties (SOFT) - PERCENTAGE-BASED APPROACH
-    # Formula: penalty = stockout_penalty * (stockout / demand) * PERCENTAGE_PENALTY_WEIGHT
-    # This ensures equal treatment of service levels across all grades
-    
-    for grade in grades:
-        for d in range(num_days):
-            if (grade, d) in stockout_vars:
-                demand_today = demand_data[grade].get(dates[d], 0)
-                
-                if demand_today > 0:
-                    # Calculate penalty coefficient based on percentage shortage
-                    # penalty_coeff = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty) / demand_today
-                    # Multiply by 100 for better integer scaling in CP-SAT
+    # 1. Stockout penalties (SOFT) - Multiple methods
+    if penalty_method == "Percentage Normalisation":
+        PERCENTAGE_PENALTY_WEIGHT = 100  # Penalty per 1% stockout
+        for grade in grades:
+            for d in range(num_days):
+                if (grade, d) in stockout_vars:
+                    demand_today = demand_data[grade].get(dates[d], 0)
                     
-                    penalty_per_unit = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty) / (demand_today + epsilon)
-                    scaled_penalty = int(penalty_per_unit * 100)
+                    if demand_today > 0:
+                        penalty_per_unit = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty) / (demand_today + epsilon)
+                        scaled_penalty = int(penalty_per_unit * 100)
+                        objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
+    
+    elif penalty_method == "Square Root Normalisation":
+        for grade in grades:
+            for d in range(num_days):
+                if (grade, d) in stockout_vars:
+                    demand_today = demand_data[grade].get(dates[d], 0)
                     
-                    # Apply penalty: scaled_penalty * stockout_var
-                    # Example: 10 MT stockout on 100 MT demand = 10% shortage
-                    # Penalty = (100 * 10) / 100 * 10 = 1000 units
-                    objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
-                else:
-                    # If no demand today, no stockout penalty needed
-                    pass
+                    if demand_today > 0:
+                        penalty_coeff = stockout_penalty * math.sqrt(1.0) / math.sqrt(demand_today + epsilon)
+                        scaled_penalty = int(penalty_coeff * 100)
+                        objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
     
-    # 2. Inventory deficit penalties (SOFT) - Also percentage-based for consistency
-    # This penalizes falling below minimum inventory levels
-    MIN_INV_VIOLATION_MULTIPLIER = 2  # Make min inventory violations more expensive
+    else:  # Standard method (default)
+        for grade in grades:
+            for d in range(num_days):
+                if (grade, d) in stockout_vars:
+                    objective_terms.append(stockout_penalty * stockout_vars[(grade, d)])
     
-    for (grade, d), deficit_var in inventory_deficit_penalties.items():
-        daily_demand = demand_data[grade].get(dates[d], 0)
-        
-        if daily_demand > 0:
-            # Normalize min inventory violations by demand scale
-            penalty_coeff = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty * MIN_INV_VIOLATION_MULTIPLIER) / (daily_demand + epsilon)
-            scaled_penalty = int(penalty_coeff * 100)
-            objective_terms.append(scaled_penalty * deficit_var)
-        else:
-            # Fallback for zero-demand days
-            objective_terms.append(stockout_penalty * MIN_INV_VIOLATION_MULTIPLIER * deficit_var)
+    # 2. Inventory deficit penalties (SOFT) - Adjusted based on method
+    if penalty_method == "Percentage Normalisation":
+        MIN_INV_VIOLATION_MULTIPLIER = 2  # Make min inventory violations more expensive
+        for (grade, d), deficit_var in inventory_deficit_penalties.items():
+            daily_demand = demand_data[grade].get(dates[d], 0)
+            
+            if daily_demand > 0:
+                penalty_coeff = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty * MIN_INV_VIOLATION_MULTIPLIER) / (daily_demand + epsilon)
+                scaled_penalty = int(penalty_coeff * 100)
+                objective_terms.append(scaled_penalty * deficit_var)
+            else:
+                objective_terms.append(stockout_penalty * MIN_INV_VIOLATION_MULTIPLIER * deficit_var)
+    
+    elif penalty_method == "Square Root Normalisation":
+        for (grade, d), deficit_var in inventory_deficit_penalties.items():
+            daily_demand = demand_data[grade].get(dates[d], 0)
+            
+            if daily_demand > 0:
+                penalty_coeff = stockout_penalty * math.sqrt(1.0) / math.sqrt(daily_demand + epsilon)
+                scaled_penalty = int(penalty_coeff * 100)
+                objective_terms.append(scaled_penalty * deficit_var)
+            else:
+                objective_terms.append(stockout_penalty * deficit_var)
+    
+    else:  # Standard method
+        for (grade, d), deficit_var in inventory_deficit_penalties.items():
+            objective_terms.append(stockout_penalty * deficit_var)
     
     # 3. Closing inventory deficit penalties (SOFT)
-    # Higher multiplier to ensure adequate inventory at planning horizon end
-    for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
-        # Calculate average daily demand for this grade
-        total_demand = sum(demand_data[grade].get(dates[d], 0) for d in range(num_days))
-        avg_daily_demand = total_demand / num_days if num_days > 0 else 1
-        
-        if avg_daily_demand > 0:
-            penalty_coeff = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty * 3) / (avg_daily_demand + epsilon)
-            scaled_penalty = int(penalty_coeff * 100)
-            objective_terms.append(scaled_penalty * closing_deficit_var)
-        else:
+    if penalty_method == "Percentage Normalisation":
+        for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
+            total_demand = sum(demand_data[grade].get(dates[d], 0) for d in range(num_days))
+            avg_daily_demand = total_demand / num_days if num_days > 0 else 1
+            
+            if avg_daily_demand > 0:
+                penalty_coeff = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty * 3) / (avg_daily_demand + epsilon)
+                scaled_penalty = int(penalty_coeff * 100)
+                objective_terms.append(scaled_penalty * closing_deficit_var)
+            else:
+                objective_terms.append(stockout_penalty * closing_deficit_var * 3)
+    
+    elif penalty_method == "Square Root Normalisation":
+        for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
+            total_demand = sum(demand_data[grade].get(dates[d], 0) for d in range(num_days))
+            avg_daily_demand = total_demand / num_days if num_days > 0 else 1
+            
+            if avg_daily_demand > 0:
+                penalty_coeff = stockout_penalty * 3 * math.sqrt(1.0) / math.sqrt(avg_daily_demand + epsilon)
+                scaled_penalty = int(penalty_coeff * 100)
+                objective_terms.append(scaled_penalty * closing_deficit_var)
+            else:
+                objective_terms.append(stockout_penalty * closing_deficit_var * 3)
+    
+    else:  # Standard method
+        for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
             objective_terms.append(stockout_penalty * closing_deficit_var * 3)
     
     # 4. Transition penalties (SOFT - for ALLOWED transitions only)
     # Forbidden transitions are already prevented by HARD constraints
-    # Keep transitions fixed for now - can be demand-normalized later if needed
-    
+    # This remains the same for all methods
     for line in lines:
         for d in range(num_days - 1):
             for grade1 in grades:
