@@ -350,6 +350,8 @@ def render_preview_stage():
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
         'penalty_method': penalty_method,
+        'stockout_penalty': stockout_penalty,
+        'transition_penalty': transition_penalty,
     }
     
     render_section_divider()
