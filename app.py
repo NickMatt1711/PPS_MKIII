@@ -341,7 +341,7 @@ def render_preview_stage():
             label_visibility="collapsed"
         )
 
-        stockout_penalty, Transition_penalty = (10,5)
+        stockout_penalty, transition_penalty = (10,5)
         st.session_state.selected_penalty_mode = penalty_method
 
     
