@@ -321,9 +321,6 @@ def render_preview_stage():
     
     with col2:
         st.markdown("### Optimization Mode")
-
-        stockout_penalty = params.get("stockout_penalty", 0)
-        transition_penalty = params.get("transition_penalty", 0)
     
         penalty_options = [
             "Standard",
