@@ -350,7 +350,6 @@ def render_preview_stage():
             'stockout_penalty': int(stockout_penalty),
             'transition_penalty': int(transition_penalty),
             'penalty_method': penalty_method,
-            'priority_label': penalty_method  # Use method name as priority label for display
         }
     
         render_section_divider()
