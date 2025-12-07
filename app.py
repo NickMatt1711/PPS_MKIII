@@ -297,63 +297,76 @@ def render_preview_stage():
 
     # Configuration parameters (unchanged logic)
     st.markdown("### ⚙️ Optimization Parameters")
-    
-    col1, col2 = st.columns([1.2, 1])
+
+    col1, col2 = st.columns([1, 1])
     
     with col1:
         time_limit = st.number_input(
-            "Time Limit (minutes)",
+            "Time limit (minutes)",
             min_value=1,
             max_value=120,
             value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['time_limit_min']),
             step=1,
-            help="Maximum time allocated for the solver."
+            help="Maximum time for solver to find optimal solution"
         )
-    
-        buffer_days = st.slider(
-            "Buffer Days",
+        
+        buffer_days = st.number_input(
+            "Buffer days",
             min_value=0,
             max_value=7,
             value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['buffer_days']),
-            help="Safety stock coverage based on number of days.",
-            key="buffer_slider"
+            step=1,
+            help="Additional days added to planning horizon for safety stock"
         )
     
     with col2:
-        # Radio buttons for optimization methodology
+        # Radio buttons for stockout penalty methodology
         penalty_method = st.radio(
-            "Optimization Method",
+            "Stockout Penalty Method",
             options=[
                 "Standard",
-                "Minimize Stockouts",
-                "Minimize Transitions", 
-                "Ensure All Grades Production"
-            ],
+                "Square Root Normalisation",
+                "Percentage Normalisation"],
             index=0,
             horizontal=True,
             help="""
-            • **Standard**: Linear penalty (stockout_penalty × stockout_qty) with transition minimization
-            • **Minimize Stockouts**: Horizon lookahead inventory reserve to prevent stockouts
-            • **Minimize Transitions**: Run-start minimisation to reduce changeovers  
-            • **Ensure All Grades Production**: Penalty based on shortage percentage
+            • **Standard**: Linear penalty (stockout_penalty × stockout_qty)
+            • **Square Root Normalisation**: Normalized by demand √(stockout/demand)
+            • **Percentage Normalisation**: Penalty based on shortage percentage
             """
         )
         
-        # Fixed penalty values for all methods
-        stockout_penalty = 10  # Default stockout penalty
-        transition_penalty = 5  # Default transition penalty
-        
-        # Update parameters in session state
-        st.session_state[SS_OPTIMIZATION_PARAMS] = {
-            'time_limit_min': int(time_limit),
-            'buffer_days': int(buffer_days),
-            'stockout_penalty': int(stockout_penalty),
-            'transition_penalty': int(transition_penalty),
-            'penalty_method': penalty_method,
-        }
+        # Slider for optimization priority
+        priority = st.select_slider(
+            "Optimization Priority",
+            options=[
+                "Minimize Stockouts Only",
+                "Balanced",
+                "Minimize Transitions Only"
+            ],
+            value="Balanced",
+            help="Balance between avoiding stockouts vs. minimizing production changeovers"
+        )
     
-        render_section_divider()
-    # -----------------------------------------------------------------
+    # Map to penalty values (unchanged)
+    priority_map = {
+        "Minimize Stockouts Only": (10000, 1),
+        "Balanced": (10, 5),
+        "Minimize Transitions Only": (1, 150)
+    }
+    stockout_penalty, transition_penalty = priority_map[priority]
+    
+    # Update parameters in session state
+    st.session_state[SS_OPTIMIZATION_PARAMS] = {
+        'time_limit_min': int(time_limit),
+        'buffer_days': int(buffer_days),
+        'stockout_penalty': int(stockout_penalty),
+        'transition_penalty': int(transition_penalty),
+        'penalty_method': penalty_method,  # NEW: Store selected methodology
+        'priority_label': priority
+    }
+
+    render_section_divider()
 
     # Navigation buttons (unchanged)
     col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
