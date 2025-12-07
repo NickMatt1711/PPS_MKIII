@@ -225,6 +225,7 @@ def render_upload_stage():
 
 
 # ========== STAGE 1: PREVIEW ==========
+# ========== STAGE 1: PREVIEW ==========
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Review data and configure optimization")
@@ -296,98 +297,100 @@ def render_preview_stage():
     st.markdown("---")
     render_section_divider()
 
-    # Configuration parameters (unchanged logic)
-   
-    # --- Placeholder Constants for Runnable Example ---
-    SS_OPTIMIZATION_PARAMS = 'optimization_params'
-    # Simulate session state initialization if not present
-    if SS_OPTIMIZATION_PARAMS not in st.session_state:
-        st.session_state[SS_OPTIMIZATION_PARAMS] = {}
+    # Configuration parameters with proper method handling
+    st.markdown("### ⚙️ Optimization Configuration")
     
-    # --- Define the Options and their Descriptions ---
-    OPTIMIZATION_METHODS = {
-        "Standard": {
-            "title": "Standard",
-            "description": "Balanced approach with linear penalties and typical business constraints."
-        },
-        "Ensure All Grades' Production": {
-            "title": "Ensure All Grades' Production",
-            "description": "Penalties normalized by demand to ensure fair treatment of low-demand grades."
-        },
-        "Minimize Stockouts": {
-            "title": "Minimize Stockouts",
-            "description": "Uses horizon-lookahead inventory reserves (3-day window) to prevent shortfalls."
-        },
-        "Minimize Transitions": {
-            "title": "Minimize Transitions",
-            "description": "Minimizes the number of production run starts to reduce changeover/setup time."
-        }
-    }
+    # Create columns for configuration
+    col_params, col_method = st.columns([1, 2])
     
-    # --- Streamlit Application Setup (Simulating the 'col2' environment) ---
-    def render_optimization_selector():
-        st.title("Optimization Configuration")
-        # Create two columns for the new layout
-        col_1, col_2, col_methods = st.columns([1,1,2])
+    with col_params:
+        # Basic parameters
+        time_limit = st.number_input(
+            "Time Limit (min)", 
+            min_value=1, 
+            max_value=60, 
+            value=10, 
+            step=1,
+            help="Maximum time allowed for the solver to find a solution"
+        )
+        
+        buffer_days = st.slider(
+            "Production Buffer Days", 
+            1, 7, 3,
+            help="Number of days at the end of horizon where min closing inventory applies"
+        )
     
-        with col_1:
-            # Placeholder input controls
-            buffer_days = st.slider("Production Buffer Days", 1, 7, 3)
-         
-        with col_2:    
-            # Changed st.slider to st.number_input for direct numeric entry
-            time_limit = st.number_input(
-                "Time Limit (min)", 
-                min_value=1, 
-                max_value=60, 
-                value=10, 
-                step=1
-            )
-    
-        # --- Column 2: Optimization Method Selector ---
-        with col_methods:
-            # 1. Segmented Control (Horizontal Radio)
-            method_options = list(OPTIMIZATION_METHODS.keys())
-            
-            # Get the current selection (default to "Standard")
-            default_index = method_options.index(st.session_state[SS_OPTIMIZATION_PARAMS].get('penalty_method', 'Standard'))
-    
-            selected_method_key = st.radio(
-                "Select the primary goal for the optimization run:",
-                options=method_options,
-                index=default_index,
-                horizontal=True, # Critical for the "Segmented Control" feel
-                key='penalty_method_radio_key'
-            )
-            
-    
-        # --- Parameter Logic (Full-width after columns) ---
-        lookahead_days = buffer_days # Default
-        if selected_method_key == "Minimize Stockouts":
-            stockout_penalty = 10000
-            transition_penalty = 1
-        elif selected_method_key == "Minimize Transitions":
-            stockout_penalty = 1
-            transition_penalty = 1000
-        else:  # Standard
-            stockout_penalty = 10
-            transition_penalty = 5
-    
-        # Map the selected method and update parameters in session state
-        st.session_state[SS_OPTIMIZATION_PARAMS] = {
-            'time_limit_min': int(time_limit), # Ensure time_limit is cast to int
-            'buffer_days': int(buffer_days),
-            'stockout_penalty': int(stockout_penalty),
-            'transition_penalty': int(transition_penalty),
-            'penalty_method': selected_method_key, # Use the key from the new selector
-            'lookahead_days': lookahead_days
+    with col_method:
+        # Optimization method selector
+        OPTIMIZATION_METHODS = {
+            "Standard": {
+                "title": "Standard",
+                "description": "Balanced approach with linear penalties and typical business constraints.",
+                "stockout_penalty": 10,
+                "transition_penalty": 5
+            },
+            "Ensure All Grades' Production": {
+                "title": "Ensure All Grades' Production",
+                "description": "Penalties normalized by demand to ensure fair treatment of low-demand grades.",
+                "stockout_penalty": 10,  # Will be normalized by demand in solver
+                "transition_penalty": 5
+            },
+            "Minimize Stockouts": {
+                "title": "Minimize Stockouts",
+                "description": "Uses horizon-lookahead inventory reserves (3-day window) to prevent shortfalls.",
+                "stockout_penalty": 10000,
+                "transition_penalty": 1
+            },
+            "Minimize Transitions": {
+                "title": "Minimize Transitions",
+                "description": "Minimizes the number of production run starts to reduce changeover/setup time.",
+                "stockout_penalty": 1,
+                "transition_penalty": 1000
+            }
         }
         
-    
-    # Execute the rendering function
-    render_optimization_selector()
+        method_options = list(OPTIMIZATION_METHODS.keys())
+        
+        # Get current selection
+        current_params = st.session_state.get(SS_OPTIMIZATION_PARAMS, {})
+        current_method = current_params.get('penalty_method', 'Standard')
+        
+        selected_method = st.radio(
+            "Select the primary optimization goal:",
+            options=method_options,
+            index=method_options.index(current_method) if current_method in method_options else 0,
+            horizontal=True,
+            key='penalty_method_selector'
+        )
+        
+        # Show method description
+        st.info(OPTIMIZATION_METHODS[selected_method]["description"])
+        
+        # Show penalty values for the selected method
+        st.markdown(f"**Penalty Configuration:**")
+        st.markdown(f"- Stockout Penalty: `{OPTIMIZATION_METHODS[selected_method]['stockout_penalty']}`")
+        st.markdown(f"- Transition Penalty: `{OPTIMIZATION_METHODS[selected_method]['transition_penalty']}`")
+        
+        # For "Minimize Stockouts" method, show lookahead days
+        lookahead_days = buffer_days  # Default
+        if selected_method == "Minimize Stockouts":
+            lookahead_days = st.slider(
+                "Lookahead Days", 
+                1, 7, 3,
+                help="Number of days to look ahead for inventory planning"
+            )
 
-    # Navigation buttons (unchanged)
+    # Update session state with all parameters
+    st.session_state[SS_OPTIMIZATION_PARAMS] = {
+        'time_limit_min': int(time_limit),
+        'buffer_days': int(buffer_days),
+        'stockout_penalty': int(OPTIMIZATION_METHODS[selected_method]['stockout_penalty']),
+        'transition_penalty': int(OPTIMIZATION_METHODS[selected_method]['transition_penalty']),
+        'penalty_method': selected_method,
+        'lookahead_days': int(lookahead_days) if selected_method == "Minimize Stockouts" else 3
+    }
+
+    # Navigation buttons
     col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
     with col_nav1:
         if st.button("← Back to Upload", use_container_width=True):
@@ -395,6 +398,8 @@ def render_preview_stage():
             st.rerun()
     with col_nav3:
         if st.button("🎯 Run Optimization →", use_container_width=True, type="primary"):
+            # Show confirmation with selected method
+            st.success(f"Starting optimization with **{selected_method}** method...")
             st.session_state[SS_STAGE] = STAGE_OPTIMIZING
             st.rerun()
 
