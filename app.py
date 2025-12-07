@@ -298,27 +298,32 @@ def render_preview_stage():
     # Configuration parameters (unchanged logic)
     st.markdown("### ⚙️ Optimization Parameters")
     
-    col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns([1.1, 1])
     
     with col1:
+        st.markdown("<div class='param-section-title fade-in'>Solver Settings</div>", unsafe_allow_html=True)
+    
         time_limit = st.number_input(
-            "Time limit (minutes)",
+            "Time Limit (minutes)",
             min_value=1,
             max_value=120,
             value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['time_limit_min']),
             step=1,
+            help="Maximum time allocated for the solver."
         )
     
-        buffer_days = st.number_input(
-            "Buffer days",
+        buffer_days = st.slider(
+            "Buffer Days",
             min_value=0,
             max_value=7,
             value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['buffer_days']),
-            step=1,
+            help="Safety stock coverage based on number of days.",
+            key="buffer_slider"
         )
     
+    
     with col2:
-        st.markdown("#### Penalty Method")
+        st.markdown("<div class='param-section-title fade-in'>Optimization Mode</div>", unsafe_allow_html=True)
     
         penalty_options = [
             "Standard",
@@ -327,53 +332,37 @@ def render_preview_stage():
             "Minimize Transitions"
         ]
     
-        # Single radio input (mutually exclusive)
+        if "selected_penalty_mode" not in st.session_state:
+            st.session_state.selected_penalty_mode = "Standard"
+    
+        # Render animated card grid
+        card_html = "<div class='option-grid fade-in'>"
+        for opt in penalty_options:
+            css_class = "option-card-selected" if opt == st.session_state.selected_penalty_mode else "option-card"
+            card_html += f"""
+            <div class='{css_class}' onclick="document.getElementById('{opt}').click()">
+                {opt}
+            </div>
+            """
+        card_html += "</div>"
+    
+        st.markdown(card_html, unsafe_allow_html=True)
+    
         penalty_method = st.radio(
-            "Select Optimization Mode",
+            "",
             penalty_options,
-            index=0,
-            label_visibility="collapsed"
+            index=penalty_options.index(st.session_state.selected_penalty_mode),
+            key="hidden_penalty_radio",
+            label_visibility="collapsed",
         )
     
-        # 2×2 layout visualization
-        st.markdown("""
-        <style>
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: -20px;
-        }
-        .grid-item {
-            padding: 10px;
-            border: 1px solid #444444;
-            border-radius: 8px;
-            background: #1e1e1e;
-            text-align: center;
-            font-size: 14px;
-        }
-        .selected {
-            border: 2px solid #4CAF50;
-            background: #2b2b2b;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-    
-        # Display grid with selected highlight
-        html_grid = "<div class='grid-container'>"
-        for opt in penalty_options:
-            css = "grid-item selected" if opt == penalty_method else "grid-item"
-            html_grid += f"<div class='{css}'>{opt}</div>"
-        html_grid += "</div>"
-    
-        st.markdown(html_grid, unsafe_allow_html=True)
+        st.session_state.selected_penalty_mode = penalty_method
     
     
+    # ---------------------- SYNC WITH SESSION STATE ----------------------
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
-        'stockout_penalty': int(stockout_penalty),
-        'transition_penalty': int(transition_penalty),
         'penalty_method': penalty_method,
     }
     
