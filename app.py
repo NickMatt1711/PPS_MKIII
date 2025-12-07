@@ -322,7 +322,7 @@ def render_preview_stage():
         )
     
     with col2:
-        st.markdown("<div class='param-section-title fade-in'>Optimization Mode</div>", unsafe_allow_html=True)
+        st.markdown("### Optimization Mode")
     
         penalty_options = [
             "Standard",
@@ -331,50 +331,16 @@ def render_preview_stage():
             "Minimize Transitions"
         ]
     
-        # Initialize persistent selection
+        # Default selection if not in session state
         if "selected_penalty_mode" not in st.session_state:
             st.session_state.selected_penalty_mode = "Standard"
     
-        # -------- JS Helper (safe, should be added here only) --------
-        st.markdown("""
-        <script>
-        window.selectRadioByText = function(text) {
-            const labels = document.querySelectorAll('label');
-            for (let i=0; i<labels.length; i++) {
-                if (labels[i].innerText.trim() === text) {
-                    labels[i].click();
-                    return;
-                }
-            }
-        }
-        </script>
-        """, unsafe_allow_html=True)
-    
-        # -------- Render cards --------
-        card_html = "<div class='option-grid fade-in'>"
-        for opt in penalty_options:
-            selected = (opt == st.session_state.selected_penalty_mode)
-            css = "option-card-selected" if selected else "option-card"
-    
-            card_html += f"""
-                <div class='{css}' onclick="window.selectRadioByText('{opt}');">
-                    {opt}
-                </div>
-            """
-        card_html += "</div>"
-    
-        st.markdown(card_html, unsafe_allow_html=True)
-    
-        # -------- Hidden radio (backend state) --------
         penalty_method = st.radio(
-            "hidden_penalty_radio",
+            "Choose optimization method:",
             penalty_options,
             index=penalty_options.index(st.session_state.selected_penalty_mode),
-            key="hidden_penalty_radio",
-            label_visibility="hidden"
         )
     
-        # Sync session state
         st.session_state.selected_penalty_mode = penalty_method
 
     
@@ -382,15 +348,11 @@ def render_preview_stage():
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
-        'penalty_method': st.session_state.get("hidden_penalty_radio", st.session_state.selected_penalty_mode),
+        'penalty_method': penalty_method,
     }
     
     render_section_divider()
     # -----------------------------------------------------------------
-
-
-
-
 
     # Navigation buttons (unchanged)
     col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
