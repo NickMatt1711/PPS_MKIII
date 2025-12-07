@@ -338,7 +338,7 @@ def render_preview_stage():
             penalty_options,
             horizontal,
             index=penalty_options.index(st.session_state.selected_penalty_mode),
-        )
+            )
     
         st.session_state.selected_penalty_mode = penalty_method
 
