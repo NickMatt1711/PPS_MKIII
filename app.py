@@ -334,20 +334,27 @@ def render_preview_stage():
     
         if "selected_penalty_mode" not in st.session_state:
             st.session_state.selected_penalty_mode = "Standard"
-    
+
         # Render animated card grid
         card_html = "<div class='option-grid fade-in'>"
+        
         for opt in penalty_options:
-            css_class = "option-card-selected" if opt == st.session_state.selected_penalty_mode else "option-card"
-            card_html += f"""
-            <div class='{css_class}' onclick="document.getElementById('{opt}').click()">
-                {opt}
-            </div>
-            """
+            css_class = (
+                "option-card-selected"
+                if opt == st.session_state.selected_penalty_mode
+                else "option-card"
+            )
+            card_html += (
+                f"<div class='{css_class}' onclick=\"document.getElementById('{opt}').click()\">"
+                f"{opt}"
+                "</div>"
+            )
+        
         card_html += "</div>"
-    
+        
+        # Render HTML as real HTML
         st.markdown(card_html, unsafe_allow_html=True)
-    
+
         penalty_method = st.radio(
             "",
             penalty_options,
