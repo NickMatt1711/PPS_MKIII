@@ -96,17 +96,25 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
                         solution['is_producing'][line][date_key] = grade
                         break
 
-        # Count transitions (from run starts)
+        # Count transitions (actual grade changes, not run starts)
         transition_count_per_line = {line: 0 for line in self.lines}
         total_transitions = 0
 
         for line in self.lines:
-            for grade in self.grades:
-                for d in range(self.num_days):
+            last_grade = None
+            for d in range(self.num_days):
+                current_grade = None
+                for grade in self.grades:
                     key = (grade, line, d)
-                    if key in self.run_starts and self.Value(self.run_starts[key]) == 1:
+                    if key in self.is_producing and self.Value(self.is_producing[key]) == 1:
+                        current_grade = grade
+                        break
+                
+                if current_grade is not None:
+                    if last_grade is not None and current_grade != last_grade:
                         transition_count_per_line[line] += 1
                         total_transitions += 1
+                    last_grade = current_grade
 
         solution['transitions'] = {
             'per_line': transition_count_per_line,
