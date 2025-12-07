@@ -327,11 +327,10 @@ def render_preview_stage():
     # --- Streamlit Application Setup (Simulating the 'col2' environment) ---
     def render_optimization_selector():
         st.title("Optimization Configuration")
-    
+        st.subheader("Configuration Inputs")
         # Create two columns for the new layout
         col_1, col_2, col_methods = st.columns([1,1,2])
     
-        st.subheader("Configuration Inputs")
         with col_1:
             # Placeholder input controls
             buffer_days = st.slider("Production Buffer Days", 1, 7, 3)
@@ -387,10 +386,6 @@ def render_preview_stage():
             'lookahead_days': lookahead_days
         }
         
-        # Display current state for confirmation (for debugging)
-        st.markdown("---")
-        st.caption("Current Optimization Parameters:")
-        st.json(st.session_state[SS_OPTIMIZATION_PARAMS])
     
     # Execute the rendering function
     render_optimization_selector()
