@@ -600,60 +600,29 @@ def build_and_solve_model(
     if penalty_method == "Minimize Stockouts":
         for grade in grades:
             for d in range(num_days - lookahead_days):
-                # Calculate cumulative future demand over lookahead window
-                future_demands = []
-                for offset in range(1, lookahead_days + 1):
-                    future_demands.append(demand_data[grade].get(dates[d + offset], 0))
+                # Calculate future demand over lookahead window
+                future_demand = sum(
+                    demand_data[grade].get(dates[d + offset], 0)
+                    for offset in range(lookahead_days)
+                )
                 
-                total_future_demand = sum(future_demands)
+                # Calculate potential future production
+                future_production = sum(
+                    sum(get_production_var(grade, line, d + offset) for line in allowed_lines[grade])
+                    for offset in range(lookahead_days)
+                )
                 
-                if total_future_demand == 0:
-                    continue  # Skip if no future demand
+                # Reserve requirement: current inventory should cover (future demand - future production)
+                reserve_needed = model.NewIntVar(0, 100000, f'reserve_needed_{grade}_{d}')
+                model.Add(reserve_needed >= future_demand - future_production)
+                model.Add(reserve_needed >= 0)
                 
-                # For each future day, check if we need inventory buffer TODAY
-                for offset in range(1, lookahead_days + 1):
-                    future_day = d + offset
-                    if future_day >= num_days:
-                        break
-                    
-                    demand_at_future_day = demand_data[grade].get(dates[future_day], 0)
-                    
-                    if demand_at_future_day == 0:
-                        continue
-                    
-                    # Calculate how much production capacity is available between now and that future day
-                    max_production_until_future = 0
-                    for day_offset in range(offset + 1):  # d, d+1, ..., future_day
-                        check_day = d + day_offset
-                        if check_day >= num_days:
-                            break
-                        # Check if this day is a shutdown day for any allowed line
-                        available_capacity = 0
-                        for line in allowed_lines[grade]:
-                            if line not in shutdown_periods or check_day not in shutdown_periods.get(line, []):
-                                available_capacity += capacities[line]
-                        max_production_until_future += available_capacity
-                    
-                    # Total demand from d+1 to future_day
-                    cumulative_demand = sum(
-                        demand_data[grade].get(dates[d + off], 0)
-                        for off in range(1, offset + 1)
-                    )
-                    
-                    # Required inventory at day d = cumulative_demand - max_production_until_future
-                    required_inventory = max(0, cumulative_demand - max_production_until_future)
-                    
-                    if required_inventory > 0:
-                        # HARD CONSTRAINT: Must have this inventory today
-                        model.Add(inventory_vars[(grade, d)] >= required_inventory)
-                    else:
-                        # SOFT: Encourage safety buffer (30% of future demand)
-                        safety_buffer = int(demand_at_future_day * 0.3)
-                        if safety_buffer > 0:
-                            lookahead_deficit = model.NewIntVar(0, 100000, f'lookahead_deficit_{grade}_{d}_{offset}')
-                            model.Add(lookahead_deficit >= safety_buffer - inventory_vars[(grade, d)])
-                            model.Add(lookahead_deficit >= 0)
-                            lookahead_deficit_penalties[(grade, d, offset)] = lookahead_deficit
+                # Deficit if current inventory < reserve needed
+                lookahead_deficit = model.NewIntVar(0, 100000, f'lookahead_deficit_{grade}_{d}')
+                model.Add(lookahead_deficit >= reserve_needed - inventory_vars[(grade, d)])
+                model.Add(lookahead_deficit >= 0)
+                
+                lookahead_deficit_penalties[(grade, d)] = lookahead_deficit
     
     if progress_callback:
         progress_callback(0.7, "Building objective function...")
@@ -712,15 +681,14 @@ def build_and_solve_model(
         for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
             objective_terms.append(stockout_penalty * closing_deficit_var * 3)
     
-    # NEW: Lookahead deficit penalties (much higher penalty)
+    # NEW: Lookahead deficit penalties
     if penalty_method == "Minimize Stockouts":
-        LOOKAHEAD_PENALTY_MULTIPLIER = 100  # Very high to enforce proactive planning
-        for key, lookahead_deficit_var in lookahead_deficit_penalties.items():
+        LOOKAHEAD_PENALTY_MULTIPLIER = 5
+        for (grade, d), lookahead_deficit_var in lookahead_deficit_penalties.items():
             objective_terms.append(stockout_penalty * LOOKAHEAD_PENALTY_MULTIPLIER * lookahead_deficit_var)
     
     # NEW: Run-start minimization for transition penalty
     if penalty_method == "Minimize Transitions":
-        # Use much higher penalty for run starts and REMOVE idle line penalty
         for line in lines:
             for grade in grades:
                 for d in range(num_days):
@@ -751,26 +719,25 @@ def build_and_solve_model(
                         
                         objective_terms.append(transition_penalty * trans_var)
     
-    # Idle line penalty - ONLY for non-transition-focused methods
-    if penalty_method != "Minimize Transitions":
-        idle_penalty = 500
-        for line in lines:
-            for d in range(num_days):
-                if line in shutdown_periods and d in shutdown_periods[line]:
-                    continue
-                    
-                is_idle = model.NewBoolVar(f'idle_{line}_{d}')
+    # Idle line penalty
+    idle_penalty = 500
+    for line in lines:
+        for d in range(num_days):
+            if line in shutdown_periods and d in shutdown_periods[line]:
+                continue
                 
-                producing_vars = [
-                    is_producing[(grade, line, d)] 
-                    for grade in grades 
-                    if (grade, line, d) in is_producing
-                ]
-                
-                if producing_vars:
-                    model.Add(sum(producing_vars) == 0).OnlyEnforceIf(is_idle)
-                    model.Add(sum(producing_vars) == 1).OnlyEnforceIf(is_idle.Not())
-                    objective_terms.append(idle_penalty * is_idle)
+            is_idle = model.NewBoolVar(f'idle_{line}_{d}')
+            
+            producing_vars = [
+                is_producing[(grade, line, d)] 
+                for grade in grades 
+                if (grade, line, d) in is_producing
+            ]
+            
+            if producing_vars:
+                model.Add(sum(producing_vars) == 0).OnlyEnforceIf(is_idle)
+                model.Add(sum(producing_vars) == 1).OnlyEnforceIf(is_idle.Not())
+                objective_terms.append(idle_penalty * is_idle)
     
     if objective_terms:
         model.Minimize(sum(objective_terms))
