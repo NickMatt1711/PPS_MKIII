@@ -298,7 +298,7 @@ def render_preview_stage():
     # Configuration parameters (unchanged logic)
     st.markdown("### ⚙️ Optimization Parameters")
     
-    col1, col2 = st.columns([1.1, 1])
+    col1, col2 = st.columns([1.2, 1])
     
     with col1:
         st.markdown("<div class='param-section-title fade-in'>Solver Settings</div>", unsafe_allow_html=True)
@@ -321,7 +321,6 @@ def render_preview_stage():
             key="buffer_slider"
         )
     
-    
     with col2:
         st.markdown("<div class='param-section-title fade-in'>Optimization Mode</div>", unsafe_allow_html=True)
     
@@ -332,48 +331,102 @@ def render_preview_stage():
             "Minimize Transitions"
         ]
     
+        # Initialize selected state
         if "selected_penalty_mode" not in st.session_state:
             st.session_state.selected_penalty_mode = "Standard"
-
-        # Render animated card grid
+    
+        # --- tiny JS helper: finds a radio option by label text and clicks it ---
+        # This is robust (searches labels) and is safe to include once.
+        js_helper = """
+        <script>
+        window.selectRadioByText = function(text) {
+            try {
+                // 1) Try labels (most Streamlit versions use labels)
+                const labels = document.querySelectorAll('label');
+                for (let i=0; i<labels.length; i++) {
+                    const lab = labels[i];
+                    if (lab.innerText && lab.innerText.trim() === text) {
+                        // find an input within or before/after label
+                        const possibleInput = lab.querySelector('input') || lab.previousElementSibling && lab.previousElementSibling.querySelector('input') || lab.nextElementSibling && lab.nextElementSibling.querySelector('input');
+                        if (possibleInput) { possibleInput.click(); return; }
+                        // fallback: click the label itself
+                        lab.click();
+                        return;
+                    }
+                }
+                // 2) fallback: span text inside radiogroup
+                const radiogroupSpans = document.querySelectorAll('div[role=\"radiogroup\"] span, div[role=\"radiogroup\"] label');
+                for (let i=0;i<radiogroupSpans.length;i++){
+                    const s = radiogroupSpans[i];
+                    if (s.innerText && s.innerText.trim() === text) {
+                        s.click();
+                        return;
+                    }
+                }
+                // 3) Last resort: click any element that contains the text
+                const all = document.querySelectorAll('*');
+                for (let i=0;i<all.length;i++){
+                    if (all[i].innerText && all[i].innerText.trim() === text) { all[i].click(); return; }
+                }
+            } catch(e) { console.warn('selectRadioByText error', e); }
+        }
+        </script>
+        """
+        st.markdown(js_helper, unsafe_allow_html=True)
+    
+        # Build card HTML with safe onclick to call helper
         card_html = "<div class='option-grid fade-in'>"
-        
         for opt in penalty_options:
-            css_class = (
-                "option-card-selected"
-                if opt == st.session_state.selected_penalty_mode
-                else "option-card"
-            )
+            selected = (opt == st.session_state.selected_penalty_mode)
+            css_class = "option-card-selected" if selected else "option-card"
+            # Use a real button inside a tiny form so that keyboard/enter works in most environments
+            # onclick calls selectRadioByText to click the hidden radio as well.
             card_html += (
-                f"<div class='{css_class}' onclick=\"document.getElementById('{opt}').click()\">"
-                f"{opt}"
-                "</div>"
+                f"<form action='' method='post' style='margin:0;padding:0;'>"
+                f"<button class='{css_class}' type='submit' name='mode' value='{opt}' "
+                f"onclick=\"window.selectRadioByText('{opt}');\">"
+                f"{opt}</button></form>"
             )
-        
         card_html += "</div>"
-        
-        # Render HTML as real HTML
+    
         st.markdown(card_html, unsafe_allow_html=True)
-
+    
+        # Hidden radio for Streamlit state (kept as authoritative backend)
+        # On each rerun this radio will reflect selected_penalty_mode (kept in session state)
+        if "hidden_penalty_radio" not in st.session_state:
+            st.session_state.hidden_penalty_radio = st.session_state.selected_penalty_mode
+    
         penalty_method = st.radio(
-            "",
+            "hidden_penalty_radio",
             penalty_options,
             index=penalty_options.index(st.session_state.selected_penalty_mode),
             key="hidden_penalty_radio",
-            label_visibility="collapsed",
+            label_visibility="hidden"
         )
     
-        st.session_state.selected_penalty_mode = penalty_method
+        # If a mode form submitted, it will appear in request as st.session_state['mode'] on rerun
+        # So capture that and set selected mode (this ensures clicks update visual selection)
+        if "mode" in st.session_state and st.session_state["mode"] in penalty_options:
+            st.session_state.selected_penalty_mode = st.session_state["mode"]
+            # sync the hidden radio too
+            st.session_state["hidden_penalty_radio"] = st.session_state["mode"]
+            # remove 'mode' so subsequent reruns don't repeatedly re-process
+            try:
+                del st.session_state["mode"]
+            except Exception:
+                pass
     
-    
-    # ---------------------- SYNC WITH SESSION STATE ----------------------
+    # ---------------- Update session params ----------------
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
-        'penalty_method': penalty_method,
+        'penalty_method': st.session_state.get("hidden_penalty_radio", st.session_state.selected_penalty_mode),
     }
     
     render_section_divider()
+    # -----------------------------------------------------------------
+
+
 
 
 
