@@ -787,6 +787,8 @@ THEMED OPTION CARDS
   transition: all 0.18s ease;
   font-size: 0.95rem;
   font-weight: 600;
+  display: flex;
+  flex: 1;
   color: var(--md-sys-color-on-surface);
   min-height: 56px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.04);
