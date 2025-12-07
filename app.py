@@ -320,41 +320,29 @@ def render_preview_stage():
         )
     
     with col2:
-        # Radio buttons for stockout penalty methodology
+        # Radio buttons for optimization method
         penalty_method = st.radio(
-            "Stockout Penalty Method",
+            "Optimization Method",
             options=[
                 "Standard",
-                "Square Root Normalisation",
-                "Percentage Normalisation"],
+                "Ensure All Grades' Production",
+                "Minimize Stockouts",
+                "Minimize Transitions"
+            ],
             index=0,
-            horizontal=True,
             help="""
-            • **Standard**: Linear penalty (stockout_penalty × stockout_qty)
-            • **Square Root Normalisation**: Normalized by demand √(stockout/demand)
-            • **Percentage Normalisation**: Penalty based on shortage percentage
+            • **Standard**: Balanced approach with linear penalties
+            • **Ensure All Grades' Production**: Penalties normalized by demand to ensure fair treatment
+            • **Minimize Stockouts**: Uses horizon-lookahead inventory reserves (3-day window)
+            • **Minimize Transitions**: Minimizes number of production run starts
             """
         )
         
-        # Slider for optimization priority
-        priority = st.select_slider(
-            "Optimization Priority",
-            options=[
-                "Minimize Stockouts Only",
-                "Balanced",
-                "Minimize Transitions Only"
-            ],
-            value="Balanced",
-            help="Balance between avoiding stockouts vs. minimizing production changeovers"
-        )
+        lookahead_days = buffer_days  # Default
     
-    # Map to penalty values (unchanged)
-    priority_map = {
-        "Minimize Stockouts Only": (10000, 1),
-        "Balanced": (10, 5),
-        "Minimize Transitions Only": (1, 150)
-    }
-    stockout_penalty, transition_penalty = priority_map[priority]
+    # Map to penalty values based on method
+    stockout_penalty = 10
+    transition_penalty = 5
     
     # Update parameters in session state
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
@@ -362,8 +350,8 @@ def render_preview_stage():
         'buffer_days': int(buffer_days),
         'stockout_penalty': int(stockout_penalty),
         'transition_penalty': int(transition_penalty),
-        'penalty_method': penalty_method,  # NEW: Store selected methodology
-        'priority_label': priority
+        'penalty_method': penalty_method,
+        'lookahead_days': lookahead_days
     }
 
     render_section_divider()
