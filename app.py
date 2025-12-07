@@ -297,7 +297,7 @@ def render_preview_stage():
 
     # Configuration parameters (unchanged logic)
     st.markdown("### ⚙️ Optimization Parameters")
-
+    
     col1, col2 = st.columns([1, 1])
     
     with col1:
@@ -309,7 +309,7 @@ def render_preview_stage():
             step=1,
             help="Maximum time for solver to find optimal solution"
         )
-        
+    
         buffer_days = st.number_input(
             "Buffer days",
             min_value=0,
@@ -320,53 +320,77 @@ def render_preview_stage():
         )
     
     with col2:
-        # Radio buttons for stockout penalty methodology
-        penalty_method = st.radio(
-            "Stockout Penalty Method",
-            options=[
-                "Standard",
-                "Square Root Normalisation",
-                "Percentage Normalisation"],
-            index=0,
-            horizontal=True,
-            help="""
-            • **Standard**: Linear penalty (stockout_penalty × stockout_qty)
-            • **Square Root Normalisation**: Normalized by demand √(stockout/demand)
-            • **Percentage Normalisation**: Penalty based on shortage percentage
-            """
-        )
-        
-        # Slider for optimization priority
-        priority = st.select_slider(
-            "Optimization Priority",
-            options=[
-                "Minimize Stockouts Only",
-                "Balanced",
-                "Minimize Transitions Only"
-            ],
-            value="Balanced",
-            help="Balance between avoiding stockouts vs. minimizing production changeovers"
-        )
+        st.markdown("#### Penalty Method")
     
-    # Map to penalty values (unchanged)
+        # Two-row layout for 4 penalty modes
+        r1c1, r1c2 = st.columns(2)
+        r2c1, r2c2 = st.columns(2)
+    
+        with r1c1:
+            opt1 = st.radio(
+                " ",
+                ["Standard"],
+                index=0,
+                key="pm_std"
+            )
+    
+        with r1c2:
+            opt2 = st.radio(
+                " ",
+                ["Ensure All Grades Production"],
+                index=0,
+                key="pm_all"
+            )
+    
+        with r2c1:
+            opt3 = st.radio(
+                " ",
+                ["Minimize Stockouts"],
+                index=0,
+                key="pm_stock"
+            )
+    
+        with r2c2:
+            opt4 = st.radio(
+                " ",
+                ["Minimize Transitions"],
+                index=0,
+                key="pm_trans"
+            )
+    
+        # Resolve which radio is selected
+        selected_methods = [
+            st.session_state["pm_std"],
+            st.session_state["pm_all"],
+            st.session_state["pm_stock"],
+            st.session_state["pm_trans"]
+        ]
+    
+        # Only one can be different from empty string
+        penalty_method = next(filter(lambda x: x != "", selected_methods))
+    
+    # Fixed priority mapping (slider removed)
+    # Recommended default values
     priority_map = {
-        "Minimize Stockouts Only": (10000, 1),
-        "Balanced": (10, 5),
-        "Minimize Transitions Only": (1, 150)
+        "Standard": (10, 5),
+        "Ensure All Grades Production": (10, 5),
+        "Minimize Stockouts": (10000, 1),
+        "Minimize Transitions": (1, 150)
     }
-    stockout_penalty, transition_penalty = priority_map[priority]
     
-    # Update parameters in session state
+    stockout_penalty, transition_penalty = priority_map[penalty_method]
+    
+    # Update session state
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
         'stockout_penalty': int(stockout_penalty),
         'transition_penalty': int(transition_penalty),
-        'penalty_method': penalty_method,  # NEW: Store selected methodology
-        'priority_label': priority
+        'penalty_method': penalty_method,
     }
-
+    
     render_section_divider()
+
 
     # Navigation buttons (unchanged)
     col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
