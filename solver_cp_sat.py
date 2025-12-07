@@ -643,14 +643,17 @@ def build_and_solve_model(
                     # Required inventory at day d = cumulative_demand - max_production_until_future
                     required_inventory = max(0, cumulative_demand - max_production_until_future)
                     
+                    # SOFT CONSTRAINT with very high penalty (replaces hard constraint)
                     if required_inventory > 0:
-                        # HARD CONSTRAINT: Must have this inventory today
-                        model.Add(inventory_vars[(grade, d)] >= required_inventory)
+                        lookahead_deficit = model.NewIntVar(0, 100000, f'lookahead_required_deficit_{grade}_{d}_{offset}')
+                        model.Add(lookahead_deficit >= required_inventory - inventory_vars[(grade, d)])
+                        model.Add(lookahead_deficit >= 0)
+                        lookahead_deficit_penalties[(grade, d, offset)] = lookahead_deficit
                     else:
                         # SOFT: Encourage safety buffer (30% of future demand)
                         safety_buffer = int(demand_at_future_day * 0.3)
                         if safety_buffer > 0:
-                            lookahead_deficit = model.NewIntVar(0, 100000, f'lookahead_deficit_{grade}_{d}_{offset}')
+                            lookahead_deficit = model.NewIntVar(0, 100000, f'lookahead_safety_deficit_{grade}_{d}_{offset}')
                             model.Add(lookahead_deficit >= safety_buffer - inventory_vars[(grade, d)])
                             model.Add(lookahead_deficit >= 0)
                             lookahead_deficit_penalties[(grade, d, offset)] = lookahead_deficit
@@ -714,7 +717,7 @@ def build_and_solve_model(
     
     # NEW: Lookahead deficit penalties (much higher penalty)
     if penalty_method == "Minimize Stockouts":
-        LOOKAHEAD_PENALTY_MULTIPLIER = 100  # Very high to enforce proactive planning
+        LOOKAHEAD_PENALTY_MULTIPLIER = 1000  # Very high to enforce proactive planning
         for key, lookahead_deficit_var in lookahead_deficit_penalties.items():
             objective_terms.append(stockout_penalty * LOOKAHEAD_PENALTY_MULTIPLIER * lookahead_deficit_var)
     
