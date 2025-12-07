@@ -758,87 +758,107 @@ FILE UPLOADER - Enhanced Native Styling
     border-top: 1px solid rgba(10, 116, 218, 0.1);
 }
 
+/* Global Styles */
+.stApp, html, body {
+  background: var(--md-sys-color-background) !important;
+  font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
+  color: var(--md-sys-color-on-background);
+}
 
-/* -------- GLOBAL FADE-IN -------- */
-    .fade-in {
-        animation: fadeIn 0.7s ease-in-out;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(6px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+/* =============================
+FADE-IN ANIMATION
+============================= */
+.fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-    /* -------- CARD HOVER ANIMATION -------- */
-    @keyframes cardHover {
-        0% { transform: translateY(0px); }
-        100% { transform: translateY(-4px); }
-    }
+/* =============================
+SOLVER CARD SELECTOR (NEW)
+============================= */
 
-    /* -------- CARD SELECTED GLOW PULSE -------- */
-    @keyframes glowPulse {
-        0% { box-shadow: 0 0 10px rgba(76,175,80,0.3); }
-        50% { box-shadow: 0 0 16px rgba(76,175,80,0.55); }
-        100% { box-shadow: 0 0 10px rgba(76,175,80,0.3); }
-    }
+.option-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 12px;
+}
 
-    /* -------- SLIDER ANIMATION -------- */
-    @keyframes sliderPulse {
-        0% { box-shadow: 0 0 4px rgba(76,175,80,0.2); }
-        50% { box-shadow: 0 0 10px rgba(76,175,80,0.4); }
-        100% { box-shadow: 0 0 4px rgba(76,175,80,0.2); }
-    }
+.option-card, .option-card-selected {
+    padding: 1rem 1.25rem;
+    border-radius: var(--md-shape-corner-medium);
+    background: var(--md-sys-color-surface);
+    border: 2px solid var(--md-sys-color-outline);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
 
-    /* -------- TITLES -------- */
-    .param-section-title {
-        font-size: 20px !important;
-        font-weight: 600;
-        padding-bottom: 6px;
-        color: #f0f0f0;
-        animation: fadeIn 0.7s ease-in-out;
-    }
+.option-card:hover {
+    border-color: var(--md-sys-color-primary);
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    transform: translateY(-2px);
+}
 
-    /* -------- CARD GRID -------- */
-    .option-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 14px;
-        margin-top: 6px;
-    }
+.option-card-selected {
+    border-color: var(--md-sys-color-primary);
+    background: linear-gradient(135deg, #0A74DA22, #4BA3F422);
+    color: var(--md-sys-color-primary);
+    box-shadow: 0 4px 10px rgba(10, 116, 218, 0.15);
+}
 
-    /* -------- BASE CARD -------- */
-    .option-card, .option-card-selected {
-        padding: 18px;
-        border-radius: 12px;
-        background-color: #1e1e1e;
-        text-align: center;
-        cursor: pointer;
-        transition: 0.25s ease;
-        font-size: 15px;
-        font-weight: 500;
-        color: #e0e0e0;
-        box-shadow: 0px 0px 8px rgba(0,0,0,0.4);
-        animation: fadeIn 0.5s ease-in-out;
-    }
+/* Remove native button styling */
+.option-card, .option-card-selected {
+    border: none !important;
+    outline: none !important;
+}
 
-    /* -------- HOVER ANIMATION -------- */
-    .option-card:hover {
-        animation: cardHover 0.25s forwards;
-        background-color: #292929;
-        border: 1px solid #666 !important;
-    }
+/* Hide radio group completely */
+div[role="radiogroup"] {
+    display: none !important;
+}
 
-    /* -------- SELECTED CARD (with glow pulse) -------- */
-    .option-card-selected {
-        border: 2px solid #4CAF50 !important;
-        background-color: #29392d !important;
-        color: #d3ffd6 !important;
-        animation: glowPulse 2.2s infinite ease-in-out;
-    }
+/* =============================
+SLIDER ENHANCEMENT
+============================= */
+.stSlider > div > div > div {
+    background: var(--md-sys-color-primary) !important;
+    height: 6px !important;
+    border-radius: 4px;
+}
+.stSlider > div > div > div[data-baseweb="slider"] div[role="slider"] {
+    background: var(--md-sys-color-primary) !important;
+    border: 3px solid var(--md-sys-color-primary-container) !important;
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50%;
+}
 
-    div[role="radiogroup"] {
-        display: none !important;
-    }
+/* =============================
+Primary Buttons, Cards, Tabs, Metrics
+(unchanged from your theme)
+============================= */
 
+.stButton>button[kind="primary"],
+.stButton>button:not([kind]),
+button[data-testid="stDownloadButton"] {
+  background: linear-gradient(135deg, #0A74DA, #4BA3F4) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  border-radius: var(--md-shape-corner-large) !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  border: none !important;
+  transition: all 0.2s ease;
+}
     
 """
 
