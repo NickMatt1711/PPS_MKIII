@@ -758,51 +758,53 @@ FILE UPLOADER - Enhanced Native Styling
     border-top: 1px solid rgba(10, 116, 218, 0.1);
 }
 
-/* ===== Optimization Card Grid ===== */
+/* -------- OPTION GRID -------- */
 .option-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
+    margin-top: 6px;
     width: 100%;
-    margin-top: 8px;
 }
 
-/* ===== Base Card ===== */
+/* -------- CARD BASE -------- */
 .option-card, .option-card-selected {
     width: 100%;
-    padding: 14px 18px;
-    border-radius: 10px;
-    background: white;
-    border: 1.5px solid #D0D7E2;
-    font-size: 0.95rem;
-    font-weight: 600;
+    padding: 16px;
+    border-radius: 12px;
+    background-color: #1e1e1e;
     text-align: center;
     cursor: pointer;
-    transition: 0.18s ease;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    transition: 0.25s ease;
+    font-size: 15px;
+    font-weight: 500;
+    color: #e0e0e0;
+    box-shadow: 0px 0px 8px rgba(0,0,0,0.4);
+    border: 1px solid #333;
 }
 
-/* Hover */
 .option-card:hover {
-    border-color: #0A74DA;
-    background: #E6F0FA;
-    color: #0A2E5C;
-    transform: translateY(-3px);
+    background-color: #292929;
+    transform: translateY(-4px);
+    border: 1px solid #777;
 }
 
-/* Selected */
+/* SELECTED CARD */
 .option-card-selected {
-    border-color: #0A74DA;
-    background: #E6F0FA;
-    color: #0A2E5C;
-    box-shadow: 0 4px 10px rgba(10,116,218,0.12);
+    background-color: #29392d !important;
+    border: 2px solid #4CAF50 !important;
+    color: #d3ffd6 !important;
+    animation: glowPulse 2s infinite ease-in-out;
 }
 
-/* Hide Streamlit radio */
-div[role="radiogroup"] {
+@keyframes glowPulse {
+    0% { box-shadow: 0 0 10px rgba(76,175,80,0.3); }
+    50% { box-shadow: 0 0 20px rgba(76,175,80,0.6); }
+    100% { box-shadow: 0 0 10px rgba(76,175,80,0.3); }
+}
+
+/* FIX STREAMLIT RADIO SPACING */
+div[data-baseweb="radio"] {
     display: none !important;
 }
 
@@ -816,20 +818,7 @@ def apply_custom_css():
     """Inject Material 3 corporate theme with enhanced UX."""
     st.markdown(f"<style>{CUSTOM_CSS}</style>", unsafe_allow_html=True)
 
-# 🔹 Add JS helper here (only once)
-st.markdown("""
-<script>
-window.selectPenaltyMode = function(labelText) {
-    const labels = document.querySelectorAll('label');
-    for (let i = 0; i < labels.length; i++) {
-        if (labels[i].innerText.trim() === labelText.trim()) {
-            labels[i].click();
-            return;
-        }
-    }
-};
-</script>
-""", unsafe_allow_html=True)
+
 
 # -------------------------------
 # HEADER
