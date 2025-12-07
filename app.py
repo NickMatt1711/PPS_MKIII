@@ -307,7 +307,6 @@ def render_preview_stage():
             max_value=120,
             value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['time_limit_min']),
             step=1,
-            help="Maximum time for solver to find optimal solution"
         )
     
         buffer_days = st.number_input(
@@ -316,51 +315,60 @@ def render_preview_stage():
             max_value=7,
             value=int(st.session_state[SS_OPTIMIZATION_PARAMS]['buffer_days']),
             step=1,
-            help="Additional days added to planning horizon for safety stock"
         )
     
     with col2:
         st.markdown("#### Penalty Method")
     
-        # Two-row layout for 4 penalty modes
-        r1c1, r1c2 = st.columns(2)
-        r2c1, r2c2 = st.columns(2)
+        penalty_options = [
+            "Standard",
+            "Ensure All Grades Production",
+            "Minimize Stockouts",
+            "Minimize Transitions"
+        ]
     
-        with r1c1:
-            opt1 = st.radio(
-                " ",
-                ["Standard"],
-                index=0,
-                key="pm_std"
-            )
+        # Single radio input (mutually exclusive)
+        penalty_method = st.radio(
+            "Select Optimization Mode",
+            penalty_options,
+            index=0,
+            label_visibility="collapsed"
+        )
     
-        with r1c2:
-            opt2 = st.radio(
-                " ",
-                ["Ensure All Grades Production"],
-                index=0,
-                key="pm_all"
-            )
+        # 2×2 layout visualization
+        st.markdown("""
+        <style>
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: -20px;
+        }
+        .grid-item {
+            padding: 10px;
+            border: 1px solid #444444;
+            border-radius: 8px;
+            background: #1e1e1e;
+            text-align: center;
+            font-size: 14px;
+        }
+        .selected {
+            border: 2px solid #4CAF50;
+            background: #2b2b2b;
+        }
+        </style>
+        """, unsafe_allow_html=True)
     
-        with r2c1:
-            opt3 = st.radio(
-                " ",
-                ["Minimize Stockouts"],
-                index=0,
-                key="pm_stock"
-            )
+        # Display grid with selected highlight
+        html_grid = "<div class='grid-container'>"
+        for opt in penalty_options:
+            css = "grid-item selected" if opt == penalty_method else "grid-item"
+            html_grid += f"<div class='{css}'>{opt}</div>"
+        html_grid += "</div>"
     
-        with r2c2:
-            opt4 = st.radio(
-                " ",
-                ["Minimize Transitions"],
-                index=0,
-                key="pm_trans"
-            )
+        st.markdown(html_grid, unsafe_allow_html=True)
     
     
-    
-    # Update session state
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
@@ -370,6 +378,7 @@ def render_preview_stage():
     }
     
     render_section_divider()
+
 
 
     # Navigation buttons (unchanged)
