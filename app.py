@@ -337,8 +337,8 @@ def render_preview_stage():
             },
             "Minimize Stockouts": {
                 "title": "Minimize Stockouts",
-                "description": "Uses horizon-lookahead inventory reserves (3-day window) to prevent shortfalls.",
-                "stockout_penalty": 10000,
+                "description": "Uses horizon-lookahead inventory reserves to prevent shortfalls.",
+                "stockout_penalty": 1000,
                 "transition_penalty": 1
             },
             "Minimize Transitions": {
@@ -366,19 +366,7 @@ def render_preview_stage():
         # Show method description
         st.info(OPTIMIZATION_METHODS[selected_method]["description"])
         
-        # Show penalty values for the selected method
-        st.markdown(f"**Penalty Configuration:**")
-        st.markdown(f"- Stockout Penalty: `{OPTIMIZATION_METHODS[selected_method]['stockout_penalty']}`")
-        st.markdown(f"- Transition Penalty: `{OPTIMIZATION_METHODS[selected_method]['transition_penalty']}`")
-        
-        # For "Minimize Stockouts" method, show lookahead days
-        lookahead_days = buffer_days  # Default
-        if selected_method == "Minimize Stockouts":
-            lookahead_days = st.slider(
-                "Lookahead Days", 
-                1, 7, 3,
-                help="Number of days to look ahead for inventory planning"
-            )
+
 
     # Update session state with all parameters
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
@@ -387,7 +375,7 @@ def render_preview_stage():
         'stockout_penalty': int(OPTIMIZATION_METHODS[selected_method]['stockout_penalty']),
         'transition_penalty': int(OPTIMIZATION_METHODS[selected_method]['transition_penalty']),
         'penalty_method': selected_method,
-        'lookahead_days': int(lookahead_days) if selected_method == "Minimize Stockouts" else 3
+        'lookahead_days': int(lookahead_days)
     }
 
     # Navigation buttons
