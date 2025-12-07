@@ -329,11 +329,10 @@ def render_preview_stage():
         st.title("Optimization Configuration")
     
         # Create two columns for the new layout
-        col_1, col2, col_methods = st.columns([1,1,2])
+        col_1, col_2, col_methods = st.columns([1,1,2])
     
         # --- Column 1: Input Controls (Buffer Days and Time Limit) ---
         with col_1:
-            st.subheader("Configuration Inputs")
             # Placeholder input controls
             buffer_days = st.slider("Production Buffer Days", 1, 7, 3)
          
