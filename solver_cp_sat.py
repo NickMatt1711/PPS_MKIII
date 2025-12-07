@@ -603,26 +603,34 @@ def build_and_solve_model(
                 # Calculate future demand over lookahead window
                 future_demand = sum(
                     demand_data[grade].get(dates[d + offset], 0)
-                    for offset in range(lookahead_days)
+                    for offset in range(1, lookahead_days + 1)  # Start from d+1
                 )
                 
-                # Calculate potential future production
-                future_production = sum(
-                    sum(get_production_var(grade, line, d + offset) for line in allowed_lines[grade])
-                    for offset in range(lookahead_days)
-                )
+                if future_demand == 0:
+                    continue  # Skip if no future demand
                 
-                # Reserve requirement: current inventory should cover (future demand - future production)
-                reserve_needed = model.NewIntVar(0, 100000, f'reserve_needed_{grade}_{d}')
-                model.Add(reserve_needed >= future_demand - future_production)
-                model.Add(reserve_needed >= 0)
+                # Calculate maximum possible future production over lookahead window
+                max_future_production = sum(
+                    capacities[line] for line in allowed_lines[grade]
+                ) * lookahead_days
                 
-                # Deficit if current inventory < reserve needed
-                lookahead_deficit = model.NewIntVar(0, 100000, f'lookahead_deficit_{grade}_{d}')
-                model.Add(lookahead_deficit >= reserve_needed - inventory_vars[(grade, d)])
-                model.Add(lookahead_deficit >= 0)
+                # Net future deficit = future_demand - max_possible_production
+                net_future_deficit = max(0, future_demand - max_future_production)
                 
-                lookahead_deficit_penalties[(grade, d)] = lookahead_deficit
+                if net_future_deficit > 0:
+                    # HARD CONSTRAINT: Must have at least this much inventory today
+                    model.Add(inventory_vars[(grade, d)] >= net_future_deficit)
+                else:
+                    # SOFT CONSTRAINT: Encourage maintaining safety buffer
+                    # Calculate recommended buffer (50% of future demand that can't be covered by max production)
+                    recommended_buffer = int(future_demand * 0.3)
+                    
+                    if recommended_buffer > 0:
+                        lookahead_deficit = model.NewIntVar(0, 100000, f'lookahead_deficit_{grade}_{d}')
+                        model.Add(lookahead_deficit >= recommended_buffer - inventory_vars[(grade, d)])
+                        model.Add(lookahead_deficit >= 0)
+                        
+                        lookahead_deficit_penalties[(grade, d)] = lookahead_deficit
     
     if progress_callback:
         progress_callback(0.7, "Building objective function...")
