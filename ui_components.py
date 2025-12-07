@@ -758,63 +758,53 @@ FILE UPLOADER - Enhanced Native Styling
     border-top: 1px solid rgba(10, 116, 218, 0.1);
 }
 
-/* Global Styles */
-.stApp, html, body {
-  background: var(--md-sys-color-background) !important;
-  font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
-  color: var(--md-sys-color-on-background);
+/* ===== Optimization Card Grid ===== */
+.option-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: 100%;
+    margin-top: 8px;
 }
 
-/* Fade-in */
-.fade-in { animation: fadeIn 0.5s ease-in-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
-
-/* =============================
-THEMED OPTION CARDS
-(uses corporate color tokens)
-============================= */
-.option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
-
+/* ===== Base Card ===== */
 .option-card, .option-card-selected {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px 18px;
-  border-radius: var(--md-shape-corner-medium);
-  background: var(--md-sys-color-surface);
-  border: 1px solid var(--md-sys-color-outline);
-  cursor: pointer;
-  transition: all 0.18s ease;
-  font-size: 0.95rem;
-  font-weight: 600;
-  display: flex;
-  flex: 1;
-  color: var(--md-sys-color-on-surface);
-  min-height: 56px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-  text-align: center;
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: white;
+    border: 1.5px solid #D0D7E2;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.18s ease;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.07);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+/* Hover */
 .option-card:hover {
-  border-color: var(--md-sys-color-primary);
-  background: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
-  transform: translateY(-3px);
+    border-color: #0A74DA;
+    background: #E6F0FA;
+    color: #0A2E5C;
+    transform: translateY(-3px);
 }
 
+/* Selected */
 .option-card-selected {
-  border-color: var(--md-sys-color-primary);
-  background: linear-gradient(135deg, rgba(10,116,218,0.08), rgba(75,163,244,0.06));
-  color: var(--md-sys-color-primary);
-  box-shadow: 0 6px 18px rgba(10,116,218,0.08);
+    border-color: #0A74DA;
+    background: #E6F0FA;
+    color: #0A2E5C;
+    box-shadow: 0 4px 10px rgba(10,116,218,0.12);
 }
 
-/* Hide the actual Streamlit radio group (we still keep it for state) */
-div[role="radiogroup"] { display: none !important; }
-
-/* Style sliders to match theme */
-.stSlider > div > div > div { background: linear-gradient(90deg, #0A74DA, #4BA3F4) !important; height: 6px !important; border-radius: 6px; }
-.stSlider > div > div > div[data-baseweb="slider"] div[role="slider"] { background: #0A74DA !important; border: 3px solid #E6F0FA !important; width: 20px !important; height: 20px !important; }
+/* Hide Streamlit radio */
+div[role="radiogroup"] {
+    display: none !important;
+}
 
     
 """
