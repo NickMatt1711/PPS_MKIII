@@ -358,27 +358,7 @@ def render_preview_stage():
                 key="pm_trans"
             )
     
-        # Resolve which radio is selected
-        selected_methods = [
-            st.session_state["pm_std"],
-            st.session_state["pm_all"],
-            st.session_state["pm_stock"],
-            st.session_state["pm_trans"]
-        ]
     
-        # Only one can be different from empty string
-        penalty_method = next(filter(lambda x: x != "", selected_methods))
-    
-    # Fixed priority mapping (slider removed)
-    # Recommended default values
-    priority_map = {
-        "Standard": (10, 5),
-        "Ensure All Grades Production": (10, 5),
-        "Minimize Stockouts": (10000, 1),
-        "Minimize Transitions": (1, 150)
-    }
-    
-    stockout_penalty, transition_penalty = priority_map[penalty_method]
     
     # Update session state
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
