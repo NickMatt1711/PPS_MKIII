@@ -301,9 +301,9 @@ def render_preview_stage():
     st.markdown("### ⚙️ Optimization Configuration")
     
     # Create columns for configuration
-    col_params, col_method = st.columns([1, 2])
+    col_1, col_2, col_method = st.columns([0.5, 1, 2])
     
-    with col_params:
+    with col_1:
         # Basic parameters
         time_limit = st.number_input(
             "Time Limit (min)", 
@@ -313,7 +313,7 @@ def render_preview_stage():
             step=1,
             help="Maximum time allowed for the solver to find a solution"
         )
-        
+    with col_2:    
         buffer_days = st.slider(
             "Production Buffer Days", 
             1, 7, 3,
@@ -364,7 +364,7 @@ def render_preview_stage():
         )
         
         # Show method description
-        st.info(OPTIMIZATION_METHODS[selected_method]["description"])
+        # st.info(OPTIMIZATION_METHODS[selected_method]["description"])
         
         lookahead_days = buffer_days
 
@@ -386,8 +386,6 @@ def render_preview_stage():
             st.rerun()
     with col_nav3:
         if st.button("🎯 Run Optimization →", use_container_width=True, type="primary"):
-            # Show confirmation with selected method
-            st.success(f"Starting optimization with **{selected_method}** method...")
             st.session_state[SS_STAGE] = STAGE_OPTIMIZING
             st.rerun()
 
