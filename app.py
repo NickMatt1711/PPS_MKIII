@@ -297,6 +297,7 @@ def render_preview_stage():
     render_section_divider()
 
     # Configuration parameters (unchanged logic)
+   
     # --- Placeholder Constants for Runnable Example ---
     SS_OPTIMIZATION_PARAMS = 'optimization_params'
     # Simulate session state initialization if not present
@@ -327,47 +328,57 @@ def render_preview_stage():
     def render_optimization_selector():
         st.title("Optimization Configuration")
     
-        # Placeholder input controls
-        buffer_days = st.slider("Inventory Buffer Days", 1, 10, 3)
-        
-        # UPDATED: Changed st.slider to st.number_input for direct numeric entry
-        time_limit = st.number_input(
-            "Time Limit (min)", 
-            min_value=1, 
-            max_value=60, 
-            value=10, 
-            step=1
-        )
+        # Create two columns for the new layout
+        col_inputs, col_methods = st.columns(2)
     
-        # Use a container or column for the new UI element
-        st.subheader("Optimization Method")
+        # --- Column 1: Input Controls (Buffer Days and Time Limit) ---
+        with col_inputs:
+            st.subheader("Configuration Inputs")
+            # Placeholder input controls
+            buffer_days = st.slider("ProductionBuffer Days", 1, 7, 3)
+            
+            # Changed st.slider to st.number_input for direct numeric entry
+            time_limit = st.number_input(
+                "Time Limit (min)", 
+                min_value=1, 
+                max_value=60, 
+                value=10, 
+                step=1
+            )
     
-        # 1. Segmented Control (Horizontal Radio)
-        # The keys of the dictionary are the options
-        method_options = list(OPTIMIZATION_METHODS.keys())
-        
-        # Get the current selection (default to "Standard")
-        default_index = method_options.index(st.session_state[SS_OPTIMIZATION_PARAMS].get('penalty_method', 'Standard'))
+        # --- Column 2: Optimization Method Selector ---
+        with col_methods:
+            st.subheader("Optimization Method")
     
-        selected_method_key = st.radio(
-            "Select the primary goal for the optimization run:",
-            options=method_options,
-            index=default_index,
-            horizontal=True, # Critical for the "Segmented Control" feel
-            key='penalty_method_radio_key'
-        )
-        
-        # 2. Dynamic Description Panel
-        selected_method_data = OPTIMIZATION_METHODS[selected_method_key]
-        
-        st.info(
-            f"**{selected_method_data['title']}:** {selected_method_data['description']}"
-        )
+            # 1. Segmented Control (Horizontal Radio)
+            method_options = list(OPTIMIZATION_METHODS.keys())
+            
+            # Get the current selection (default to "Standard")
+            default_index = method_options.index(st.session_state[SS_OPTIMIZATION_PARAMS].get('penalty_method', 'Standard'))
     
-        # --- Parameter Logic (from original snippet) ---
+            selected_method_key = st.radio(
+                "Select the primary goal for the optimization run:",
+                options=method_options,
+                index=default_index,
+                horizontal=True, # Critical for the "Segmented Control" feel
+                key='penalty_method_radio_key'
+            )
+            
+    
+        # --- Parameter Logic (Full-width after columns) ---
         lookahead_days = buffer_days # Default
-        stockout_penalty = 10
-        transition_penalty = 5
+        if penalty_method == "Minimize Stockouts":
+            stockout_penalty = 1000
+            transition_penalty = 5
+        elif penalty_method == "Minimize Transitions":
+            stockout_penalty = 5  # Keep stockouts somewhat important
+            transition_penalty = 1000  # Very high penalty for each run start
+        elif penalty_method == "Ensure All Grades' Production":
+            stockout_penalty = 10
+            transition_penalty = 5
+        else:  # Standard
+            stockout_penalty = 10
+            transition_penalty = 5
     
         # Map the selected method and update parameters in session state
         st.session_state[SS_OPTIMIZATION_PARAMS] = {
