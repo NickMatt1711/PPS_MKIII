@@ -571,6 +571,7 @@ def build_and_solve_model(
     inventory_deficit_penalties = {}
     closing_inventory_deficit_penalties = {}
     lookahead_deficit_penalties = {}
+    production_priority_bonuses = {}  # For "Minimize Stockouts" mode
     
     # 1. Minimum inventory (SOFT)
     for grade in grades:
