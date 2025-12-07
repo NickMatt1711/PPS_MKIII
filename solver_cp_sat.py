@@ -409,10 +409,6 @@ def build_and_solve_model(
             min_run = min_run_days.get(grade_plant_key, 1)
             max_run = max_run_days.get(grade_plant_key, 9999)
             
-            # EXCEPTION: For "Minimize Stockouts", relax min run days to allow flexibility
-            if penalty_method == "Minimize Stockouts":
-                min_run = 1  # Override to allow single-day runs for flexibility
-            
             # Define run start variables
             for d in range(num_days):
                 key = (grade, line, d)
@@ -457,51 +453,50 @@ def build_and_solve_model(
                         if prod_day_after is not None:
                             model.Add(prod_day_after == 0)
             
-            # Minimum run days - ONLY if not in "Minimize Stockouts" mode
-            if penalty_method != "Minimize Stockouts":
-                for d in range(num_days):
-                    is_in_material_block = False
-                    if line in material_running_map:
-                        material_grade = material_running_map[line]['material']
-                        expected_days = material_running_map[line]['expected_days']
-                        if material_grade == grade and d < expected_days:
-                            is_in_material_block = True
+            # Minimum run days
+            for d in range(num_days):
+                is_in_material_block = False
+                if line in material_running_map:
+                    material_grade = material_running_map[line]['material']
+                    expected_days = material_running_map[line]['expected_days']
+                    if material_grade == grade and d < expected_days:
+                        is_in_material_block = True
+                
+                if is_in_material_block:
+                    continue
+                
+                key = (grade, line, d)
+                if key not in run_starts:
+                    continue
+                
+                if d + min_run > num_days:
+                    continue
+                
+                run_days_vars = []
+                valid_for_min_run = True
+                
+                for offset in range(min_run):
+                    day_idx = d + offset
+                    if day_idx >= num_days:
+                        valid_for_min_run = False
+                        break
                     
-                    if is_in_material_block:
-                        continue
+                    if line in shutdown_periods and day_idx in shutdown_periods[line]:
+                        valid_for_min_run = False
+                        break
                     
-                    key = (grade, line, d)
-                    if key not in run_starts:
-                        continue
-                    
-                    if d + min_run > num_days:
-                        continue
-                    
-                    run_days_vars = []
-                    valid_for_min_run = True
-                    
-                    for offset in range(min_run):
-                        day_idx = d + offset
-                        if day_idx >= num_days:
-                            valid_for_min_run = False
-                            break
-                        
-                        if line in shutdown_periods and day_idx in shutdown_periods[line]:
-                            valid_for_min_run = False
-                            break
-                        
-                        prod_var = get_is_producing_var(grade, line, day_idx)
-                        if prod_var is not None:
-                            run_days_vars.append(prod_var)
-                        else:
-                            valid_for_min_run = False
-                            break
-                    
-                    if not valid_for_min_run or len(run_days_vars) < min_run:
-                        continue
-                    
-                    for prod_var in run_days_vars[:min_run]:
-                        model.Add(prod_var == 1).OnlyEnforceIf(run_starts[key])
+                    prod_var = get_is_producing_var(grade, line, day_idx)
+                    if prod_var is not None:
+                        run_days_vars.append(prod_var)
+                    else:
+                        valid_for_min_run = False
+                        break
+                
+                if not valid_for_min_run or len(run_days_vars) < min_run:
+                    continue
+                
+                for prod_var in run_days_vars[:min_run]:
+                    model.Add(prod_var == 1).OnlyEnforceIf(run_starts[key])
             
             # Maximum run days
             for d in range(num_days - max_run):
