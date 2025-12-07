@@ -349,9 +349,9 @@ def render_preview_stage():
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
-        'penalty_method': penalty_method,
-        'stockout_penalty': stockout_penalty,
-        'transition_penalty': transition_penalty,
+        'stockout_penalty': int(stockout_penalty),
+        'transition_penalty': int(transition_penalty),
+        'penalty_method': penalty_method, 
     }
     
     render_section_divider()
