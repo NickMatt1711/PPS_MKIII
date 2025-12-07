@@ -366,7 +366,7 @@ def render_preview_stage():
         # Show method description
         st.info(OPTIMIZATION_METHODS[selected_method]["description"])
         
-
+        lookahead_days = buffer_days
 
     # Update session state with all parameters
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
