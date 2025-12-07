@@ -301,7 +301,7 @@ def render_preview_stage():
     st.markdown("### ⚙️ Optimization Configuration")
     
     # Create columns for configuration
-    col_1, col_2, col_method = st.columns([0.5, 1, 2])
+    col_1, b1, col_2, b2, col_method = st.columns([0.5, 0.2, 1, 0.2, 2])
     
     with col_1:
         # Basic parameters
