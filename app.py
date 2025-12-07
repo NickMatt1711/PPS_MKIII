@@ -320,41 +320,40 @@ def render_preview_stage():
         )
     
     with col2:
-        st.markdown("### Optimization Mode")
-    
-        penalty_options = [
-            "Standard",
-            "Ensure All Grades Production",
-            "Minimize Stockouts",
-            "Minimize Transitions"
-        ]
-    
-        # Default selection if not in session state
-        if "selected_penalty_mode" not in st.session_state:
-            st.session_state.selected_penalty_mode = "Standard"
-    
+        # Radio buttons for optimization methodology
         penalty_method = st.radio(
-            "",
-            penalty_options,
-            index=penalty_options.index(st.session_state.selected_penalty_mode),
+            "Optimization Method",
+            options=[
+                "Standard",
+                "Minimize Stockouts",
+                "Minimize Transitions", 
+                "Ensure All Grades Production"
+            ],
+            index=0,
             horizontal=True,
-            label_visibility="collapsed"
+            help="""
+            • **Standard**: Linear penalty (stockout_penalty × stockout_qty) with transition minimization
+            • **Minimize Stockouts**: Horizon lookahead inventory reserve to prevent stockouts
+            • **Minimize Transitions**: Run-start minimisation to reduce changeovers  
+            • **Ensure All Grades Production**: Penalty based on shortage percentage
+            """
         )
-
-        stockout_penalty, transition_penalty = (10,5)
-        st.session_state.selected_penalty_mode = penalty_method
-
+        
+        # Fixed penalty values for all methods
+        stockout_penalty = 100  # Default stockout penalty
+        transition_penalty = 50  # Default transition penalty
+        
+        # Update parameters in session state
+        st.session_state[SS_OPTIMIZATION_PARAMS] = {
+            'time_limit_min': int(time_limit),
+            'buffer_days': int(buffer_days),
+            'stockout_penalty': int(stockout_penalty),
+            'transition_penalty': int(transition_penalty),
+            'penalty_method': penalty_method,
+            'priority_label': penalty_method  # Use method name as priority label for display
+        }
     
-    # ---------------- Update session params ----------------
-    st.session_state[SS_OPTIMIZATION_PARAMS] = {
-        'time_limit_min': int(time_limit),
-        'buffer_days': int(buffer_days),
-        'stockout_penalty': stockout_penalty,
-        'transition_penalty': transition_penalty,
-        'penalty_method': penalty_method, 
-    }
-    
-    render_section_divider()
+        render_section_divider()
     # -----------------------------------------------------------------
 
     # Navigation buttons (unchanged)
