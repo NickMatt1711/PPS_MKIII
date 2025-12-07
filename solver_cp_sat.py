@@ -599,7 +599,7 @@ def build_and_solve_model(
                 diff = abs(demand_series[i] - demand_series[i-1])
                 daily_diffs.append(diff)
             
-            avg_daily_diff = sum(daily_diffs) / max(1, len(daily_diffs))
+            avg_daily_diff = sum(daily_diffs) / max(1, len(daily_diffs)) if daily_diffs else 0
             variability = avg_daily_diff / max(1, avg_daily) if avg_daily > 0 else 0
             
             # Calculate production capability
@@ -646,7 +646,8 @@ def build_and_solve_model(
             
             # Ensure minimum buffer
             min_buffer = metrics['avg_daily'] * 2
-            dynamic_safety_stocks[grade] = max(min_inventory[grade], min_buffer, safety_stock)
+            # Convert to integer for CP-SAT
+            dynamic_safety_stocks[grade] = int(math.ceil(max(min_inventory[grade], min_buffer, safety_stock)))
         
         # ========== STEP 3: Risk-Weighted Stockout Penalties ==========
         risk_weighted_penalties = {}
@@ -661,7 +662,7 @@ def build_and_solve_model(
                          scarcity_factor) / 6
             
             penalty_multiplier = 1.0 + risk_score * 3
-            risk_weighted_penalties[grade] = stockout_penalty * penalty_multiplier
+            risk_weighted_penalties[grade] = int(stockout_penalty * penalty_multiplier)
         
         # ========== STEP 4: Production Target Constraints ==========
         total_capacity_all = sum(capacities[line] for line in lines) * num_days
@@ -676,7 +677,8 @@ def build_and_solve_model(
                 max_possible = sum(capacities[line] for line in allowed_lines[grade]) * num_days
                 achievable_share = min(demand_share * 1.2, max_possible / total_capacity_all)
                 
-                min_production_target = total_capacity_all * achievable_share * 0.8
+                # Convert to integer for CP-SAT
+                min_production_target = int(math.ceil(total_capacity_all * achievable_share * 0.8))
                 
                 total_production_vars = []
                 for line in allowed_lines[grade]:
@@ -690,6 +692,7 @@ def build_and_solve_model(
                     model.Add(total_production == sum(total_production_vars))
                     
                     shortfall = model.NewIntVar(0, 1000000, f'prod_shortfall_{grade}')
+                    # Use integer values
                     model.Add(shortfall >= min_production_target - total_production)
                     model.Add(shortfall >= 0)
                     
@@ -705,7 +708,7 @@ def build_and_solve_model(
                 for offset in range(1, lookahead_window + 1):
                     future_demand += demand_data[grade].get(dates[d + offset], 0)
                 
-                if future_demand > 0:
+                if future_demand > 0 and metrics['daily_capacity_share'] > 0:
                     daily_capacity = metrics['daily_capacity_share']
                     effective_days = lookahead_window * 0.6
                     achievable_production = daily_capacity * effective_days
@@ -718,7 +721,9 @@ def build_and_solve_model(
                         inventory_shortfall = model.NewIntVar(0, 100000, f'lookahead_shortfall_{grade}_{d}')
                         current_inventory = inventory_vars[(grade, d)]
                         
-                        model.Add(inventory_shortfall >= required_inventory - current_inventory)
+                        # Convert to integer for CP-SAT
+                        required_inventory_int = int(math.ceil(required_inventory))
+                        model.Add(inventory_shortfall >= required_inventory_int - current_inventory)
                         model.Add(inventory_shortfall >= 0)
                         
                         urgency_factor = 1.0 + (lookahead_window / 5)
