@@ -619,14 +619,11 @@ def build_and_solve_model(
                 'utilization': utilization,
                 'peak_factor': peak_factor,
                 'is_critical': is_critical,
-                'priority_multiplier': 5.0 if is_critical else 1.0  # 5x higher penalty for critical grades
+                'priority_multiplier': 5.0 if is_critical else 1.0
             }
         
         # ========== ADJUSTED PENALTIES ==========
-        # Increase stockout penalties significantly for all grades
-        base_stockout_multiplier = 10  # 10x higher than standard mode
-        
-        # Critical grades get even higher penalties
+        # Critical grades get higher penalties
         critical_penalty_multiplier = {}
         for grade in grades:
             if grade_criticality[grade]['is_critical']:
@@ -664,7 +661,7 @@ def build_and_solve_model(
                     lookahead_deficit_penalties[(grade, d)] = inventory_shortfall
         
         # ========== DYNAMIC SAFETY STOCK ==========
-        # Simple: 2 days of average demand for critical grades, 1 day for others
+        # Simple: 3 days of average demand for critical grades, 1.5 days for others
         dynamic_safety_stocks = {}
         for grade in grades:
             avg_daily = grade_criticality[grade]['total_demand'] / num_days if num_days > 0 else 0
@@ -696,7 +693,7 @@ def build_and_solve_model(
         # Allow more flexibility to switch to needed grades
         effective_transition_penalty = max(1, transition_penalty // 20)  # 5% of normal
         
-        # ========== OBJECTIVE FUNCTION ==========
+        # ========== OBJECTIVE FUNCTION FOR MINIMIZE STOCKOUTS ==========
         objective_terms = []
         
         # 1. High stockout penalties (PRIORITY 1)
@@ -788,61 +785,10 @@ def build_and_solve_model(
     epsilon = 1.0
     
     if penalty_method == "Minimize Stockouts":
-        # ========== ENHANCED OBJECTIVE FOR MINIMIZE STOCKOUTS ==========
-        
-        # 1. Risk-weighted stockout penalties (HIGH PRIORITY)
-        for grade in grades:
-            for d in range(num_days):
-                if (grade, d) in stockout_vars:
-                    penalty = risk_weighted_penalties[grade]
-                    objective_terms.append(penalty * stockout_vars[(grade, d)])
-        
-        # 2. Dynamic inventory deficits (MEDIUM PRIORITY)
-        for (grade, d), deficit_var in inventory_deficit_penalties.items():
-            weight = grade_metrics[grade]['priority_factor']
-            penalty = stockout_penalty * weight * 0.5
-            objective_terms.append(penalty * deficit_var)
-        
-        # 3. Lookahead deficits (HIGH PRIORITY for near-term)
-        for (grade, d), (shortfall_var, urgency_factor) in lookahead_deficit_penalties.items():
-            penalty = risk_weighted_penalties[grade] * urgency_factor
-            objective_terms.append(penalty * shortfall_var)
-        
-        # 4. Production target shortfalls (LOW-MEDIUM PRIORITY)
-        for grade, shortfall_var in production_target_shortfalls.items():
-            penalty = stockout_penalty * 0.3
-            objective_terms.append(penalty * shortfall_var)
-        
-        # 5. Reduced transition penalties
-        effective_transition_penalty = max(1, transition_penalty // 5)
-        
-        # Use run starts for transition counting
-        for line in lines:
-            for grade in grades:
-                for d in range(num_days):
-                    key = (grade, line, d)
-                    if key in run_starts:
-                        objective_terms.append(effective_transition_penalty * run_starts[key])
-        
-        # 6. Minimal idle penalty (only to break ties)
-        idle_penalty = 50
-        for line in lines:
-            for d in range(num_days):
-                if line in shutdown_periods and d in shutdown_periods[line]:
-                    continue
-                    
-                is_idle = model.NewBoolVar(f'idle_{line}_{d}')
-                
-                producing_vars = [
-                    is_producing[(grade, line, d)] 
-                    for grade in grades 
-                    if (grade, line, d) in is_producing
-                ]
-                
-                if producing_vars:
-                    model.Add(sum(producing_vars) == 0).OnlyEnforceIf(is_idle)
-                    model.Add(sum(producing_vars) == 1).OnlyEnforceIf(is_idle.Not())
-                    objective_terms.append(idle_penalty * is_idle)
+        # Already handled in the soft constraints section above
+        # Just add a dummy term to avoid empty objective
+        if not objective_terms:
+            model.Minimize(0)
     
     elif penalty_method == "Ensure All Grades' Production":
         PERCENTAGE_PENALTY_WEIGHT = 100
