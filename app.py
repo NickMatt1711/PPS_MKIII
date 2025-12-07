@@ -327,7 +327,6 @@ def render_preview_stage():
     # --- Streamlit Application Setup (Simulating the 'col2' environment) ---
     def render_optimization_selector():
         st.title("Optimization Configuration")
-        st.subheader("Configuration Inputs")
         # Create two columns for the new layout
         col_1, col_2, col_methods = st.columns([1,1,2])
     
@@ -347,8 +346,6 @@ def render_preview_stage():
     
         # --- Column 2: Optimization Method Selector ---
         with col_methods:
-            st.subheader("Optimization Method")
-    
             # 1. Segmented Control (Horizontal Radio)
             method_options = list(OPTIMIZATION_METHODS.keys())
             
