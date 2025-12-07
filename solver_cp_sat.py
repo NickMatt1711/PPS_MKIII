@@ -596,64 +596,83 @@ def build_and_solve_model(
             
             closing_inventory_deficit_penalties[grade] = closing_deficit_var
     
-    # NEW: Horizon-lookahead inventory reserve constraints
+    # ========== ENHANCED "MINIMIZE STOCKOUTS" LOGIC ==========
     if penalty_method == "Minimize Stockouts":
+        # Pre-calculate realistic capacity allocation for each grade
+        # based on demand proportions and line sharing
+        grade_capacity_factors = {}
+        total_demand_per_grade = {}
+        
+        # Calculate total demand for each grade
         for grade in grades:
-            for d in range(num_days - lookahead_days):
-                # Calculate cumulative future demand over lookahead window
-                future_demands = []
-                for offset in range(1, lookahead_days + 1):
-                    future_demands.append(demand_data[grade].get(dates[d + offset], 0))
-                
-                total_future_demand = sum(future_demands)
-                
-                if total_future_demand == 0:
-                    continue  # Skip if no future demand
-                
-                # For each future day, check if we need inventory buffer TODAY
-                for offset in range(1, lookahead_days + 1):
+            total_demand = sum(demand_data[grade].get(date, 0) for date in dates)
+            total_demand_per_grade[grade] = total_demand
+        
+        total_all_demand = sum(total_demand_per_grade.values())
+        
+        # Calculate capacity factor for each grade (what % of total capacity they can realistically get)
+        for grade in grades:
+            if total_all_demand > 0:
+                demand_ratio = total_demand_per_grade[grade] / total_all_demand
+            else:
+                demand_ratio = 1.0 / len(grades) if grades else 0
+            
+            # Adjust based on number of lines available to this grade
+            num_allowed_lines = len(allowed_lines[grade])
+            total_lines = len(lines)
+            line_factor = num_allowed_lines / total_lines if total_lines > 0 else 0
+            
+            # Combined factor (weighted average)
+            capacity_factor = 0.7 * demand_ratio + 0.3 * line_factor
+            grade_capacity_factors[grade] = capacity_factor
+        
+        # Apply lookahead constraints
+        for grade in grades:
+            # Calculate realistic daily production capacity for this grade
+            total_available_capacity = 0
+            for line in allowed_lines[grade]:
+                total_available_capacity += capacities[line]
+            
+            realistic_daily_capacity = total_available_capacity * grade_capacity_factors[grade]
+            
+            # Skip if no realistic capacity
+            if realistic_daily_capacity <= 0:
+                continue
+            
+            # For each day in the planning horizon
+            for d in range(num_days - 1):  # Look ahead from each day
+                # Calculate cumulative demand in the lookahead period
+                cumulative_lookahead_demand = 0
+                for offset in range(1, min(lookahead_days + 1, num_days - d)):
                     future_day = d + offset
-                    if future_day >= num_days:
-                        break
-                    
-                    demand_at_future_day = demand_data[grade].get(dates[future_day], 0)
-                    
-                    if demand_at_future_day == 0:
-                        continue
-                    
-                    # Calculate how much production capacity is available between now and that future day
-                    max_production_until_future = 0
-                    for day_offset in range(offset + 1):  # d, d+1, ..., future_day
-                        check_day = d + day_offset
-                        if check_day >= num_days:
-                            break
-                        # Check if this day is a shutdown day for any allowed line
-                        available_capacity = 0
-                        for line in allowed_lines[grade]:
-                            if line not in shutdown_periods or check_day not in shutdown_periods.get(line, []):
-                                available_capacity += capacities[line]
-                        max_production_until_future += available_capacity
-                    
-                    # Total demand from d+1 to future_day
-                    cumulative_demand = sum(
-                        demand_data[grade].get(dates[d + off], 0)
-                        for off in range(1, offset + 1)
-                    )
-                    
-                    # Required inventory at day d = cumulative_demand - max_production_until_future
-                    required_inventory = max(0, cumulative_demand - max_production_until_future)
-                    
-                    if required_inventory > 0:
-                        # HARD CONSTRAINT: Must have this inventory today
-                        model.Add(inventory_vars[(grade, d)] >= required_inventory)
-                    else:
-                        # SOFT: Encourage safety buffer (30% of future demand)
-                        safety_buffer = int(demand_at_future_day * 0.3)
-                        if safety_buffer > 0:
-                            lookahead_deficit = model.NewIntVar(0, 100000, f'lookahead_deficit_{grade}_{d}_{offset}')
-                            model.Add(lookahead_deficit >= safety_buffer - inventory_vars[(grade, d)])
-                            model.Add(lookahead_deficit >= 0)
-                            lookahead_deficit_penalties[(grade, d, offset)] = lookahead_deficit
+                    cumulative_lookahead_demand += demand_data[grade].get(dates[future_day], 0)
+                
+                # If no future demand, skip
+                if cumulative_lookahead_demand <= 0:
+                    continue
+                
+                # Calculate how much we can produce in the lookahead period
+                # Consider that we might not be able to produce every day (transitions, other grades)
+                achievable_production = realistic_daily_capacity * lookahead_days * 0.8  # 80% utilization
+                
+                # Calculate required starting inventory
+                required_starting_inventory = max(0, cumulative_lookahead_demand - achievable_production)
+                
+                if required_starting_inventory > 0:
+                    # Add soft constraint: try to have this inventory today
+                    inventory_shortfall = model.NewIntVar(0, 100000, f'stockout_prevent_{grade}_{d}')
+                    model.Add(inventory_shortfall >= required_starting_inventory - inventory_vars[(grade, d)])
+                    model.Add(inventory_shortfall >= 0)
+                    lookahead_deficit_penalties[(grade, d)] = inventory_shortfall
+                
+                # Also add buffer for safety stock (1 day of average demand)
+                avg_daily_demand = total_demand_per_grade[grade] / num_days if num_days > 0 else 0
+                if avg_daily_demand > 0:
+                    safety_buffer = avg_daily_demand * 1.5  # 1.5 days of average demand
+                    safety_deficit = model.NewIntVar(0, 100000, f'safety_buffer_{grade}_{d}')
+                    model.Add(safety_deficit >= safety_buffer - inventory_vars[(grade, d)])
+                    model.Add(safety_deficit >= 0)
+                    lookahead_deficit_penalties[(grade, d, 'safety')] = safety_deficit
     
     if progress_callback:
         progress_callback(0.7, "Building objective function...")
@@ -662,7 +681,7 @@ def build_and_solve_model(
     objective_terms = []
     epsilon = 1.0
     
-    # Stockout penalties
+    # Stockout penalties - with method-specific adjustments
     if penalty_method == "Ensure All Grades' Production":
         PERCENTAGE_PENALTY_WEIGHT = 100
         for grade in grades:
@@ -712,15 +731,27 @@ def build_and_solve_model(
         for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
             objective_terms.append(stockout_penalty * closing_deficit_var * 3)
     
-    # NEW: Lookahead deficit penalties (much higher penalty)
+    # Lookahead deficit penalties for "Minimize Stockouts"
     if penalty_method == "Minimize Stockouts":
-        LOOKAHEAD_PENALTY_MULTIPLIER = 100  # Very high to enforce proactive planning
+        LOOKAHEAD_PENALTY_MULTIPLIER = 50  # Moderate penalty to encourage inventory building
+        SAFETY_BUFFER_MULTIPLIER = 30  # Lower penalty for safety buffer violations
+        
         for key, lookahead_deficit_var in lookahead_deficit_penalties.items():
-            objective_terms.append(stockout_penalty * LOOKAHEAD_PENALTY_MULTIPLIER * lookahead_deficit_var)
+            if len(key) == 3 and key[2] == 'safety':
+                # Safety buffer deficit
+                objective_terms.append(stockout_penalty * SAFETY_BUFFER_MULTIPLIER * lookahead_deficit_var)
+            else:
+                # Critical lookahead deficit
+                objective_terms.append(stockout_penalty * LOOKAHEAD_PENALTY_MULTIPLIER * lookahead_deficit_var)
+        
+        # Also reduce transition penalty weight for this mode
+        effective_transition_penalty = max(1, transition_penalty // 10)
+    else:
+        effective_transition_penalty = transition_penalty
     
-    # NEW: Run-start minimization for transition penalty
+    # Transition penalties (method-specific)
     if penalty_method == "Minimize Transitions":
-        # Use much higher penalty for run starts and REMOVE idle line penalty
+        # Use run starts for transition counting
         for line in lines:
             for grade in grades:
                 for d in range(num_days):
@@ -728,7 +759,7 @@ def build_and_solve_model(
                     if key in run_starts:
                         objective_terms.append(transition_penalty * run_starts[key])
     else:
-        # Standard pairwise transitions
+        # Standard pairwise transitions with method-specific penalty
         for line in lines:
             for d in range(num_days - 1):
                 for grade1 in grades:
@@ -749,11 +780,11 @@ def build_and_solve_model(
                         model.Add(trans_var >= is_producing[(grade1, line, d)] + 
                                   is_producing[(grade2, line, d + 1)] - 1)
                         
-                        objective_terms.append(transition_penalty * trans_var)
+                        objective_terms.append(effective_transition_penalty * trans_var)
     
     # Idle line penalty - ONLY for non-transition-focused methods
     if penalty_method != "Minimize Transitions":
-        idle_penalty = 500
+        idle_penalty = 500 if penalty_method != "Minimize Stockouts" else 100  # Lower for stockout mode
         for line in lines:
             for d in range(num_days):
                 if line in shutdown_periods and d in shutdown_periods[line]:
