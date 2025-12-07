@@ -301,8 +301,6 @@ def render_preview_stage():
     col1, col2 = st.columns([1.2, 1])
     
     with col1:
-        st.markdown("<div class='param-section-title fade-in'>Solver Settings</div>", unsafe_allow_html=True)
-    
         time_limit = st.number_input(
             "Time Limit (minutes)",
             min_value=1,
@@ -336,8 +334,9 @@ def render_preview_stage():
             st.session_state.selected_penalty_mode = "Standard"
     
         penalty_method = st.radio(
-            "Choose optimization method:",
+            labal_visibility = "collapsed",
             penalty_options,
+            horizontal,
             index=penalty_options.index(st.session_state.selected_penalty_mode),
         )
     
