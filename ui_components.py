@@ -797,30 +797,6 @@ FILE UPLOADER - Enhanced Native Styling
         animation: fadeIn 0.7s ease-in-out;
     }
 
-    /* -------- INPUT FIELD STYLING -------- */
-    div[data-baseweb="input"] > div {
-        border-radius: 8px !important;
-        border: 1px solid #444 !important;
-        background-color: #1e1e1e !important;
-        color: white !important;
-        animation: fadeIn 0.7s ease-in-out;
-    }
-
-    /* -------- SLIDER STYLING + PULSE -------- */
-    .stSlider > div > div > div > div {
-        background: linear-gradient(90deg, #4CAF50, #2e7d32) !important;
-        height: 6px !important;
-        border-radius: 4px !important;
-        animation: sliderPulse 2.4s infinite ease-in-out;
-    }
-
-    .stSlider > div > div > div[data-baseweb="slider"] div[role="slider"] {
-        background-color: #4CAF50 !important;
-        border: 2px solid #66bb6a !important;
-        height: 22px !important;
-        width: 22px !important;
-    }
-
     /* -------- CARD GRID -------- */
     .option-grid {
         display: grid;
@@ -857,6 +833,10 @@ FILE UPLOADER - Enhanced Native Styling
         background-color: #29392d !important;
         color: #d3ffd6 !important;
         animation: glowPulse 2.2s infinite ease-in-out;
+    }
+
+    div[role="radiogroup"] {
+        display: none !important;
     }
 
     
