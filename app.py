@@ -331,7 +331,7 @@ def render_preview_stage():
         # Create two columns for the new layout
         col_1, col_2, col_methods = st.columns([1,1,2])
     
-        # --- Column 1: Input Controls (Buffer Days and Time Limit) ---
+        st.subheader("Configuration Inputs")
         with col_1:
             # Placeholder input controls
             buffer_days = st.slider("Production Buffer Days", 1, 7, 3)
