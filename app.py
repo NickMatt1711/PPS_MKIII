@@ -340,8 +340,8 @@ def render_preview_stage():
         )
         
         # Fixed penalty values for all methods
-        stockout_penalty = 100  # Default stockout penalty
-        transition_penalty = 50  # Default transition penalty
+        stockout_penalty = 10  # Default stockout penalty
+        transition_penalty = 5  # Default transition penalty
         
         # Update parameters in session state
         st.session_state[SS_OPTIMIZATION_PARAMS] = {
