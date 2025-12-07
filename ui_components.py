@@ -816,6 +816,20 @@ def apply_custom_css():
     """Inject Material 3 corporate theme with enhanced UX."""
     st.markdown(f"<style>{CUSTOM_CSS}</style>", unsafe_allow_html=True)
 
+# 🔹 Add JS helper here (only once)
+st.markdown("""
+<script>
+window.selectPenaltyMode = function(labelText) {
+    const labels = document.querySelectorAll('label');
+    for (let i = 0; i < labels.length; i++) {
+        if (labels[i].innerText.trim() === labelText.trim()) {
+            labels[i].click();
+            return;
+        }
+    }
+};
+</script>
+""", unsafe_allow_html=True)
 
 # -------------------------------
 # HEADER
