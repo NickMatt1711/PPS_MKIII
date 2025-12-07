@@ -341,8 +341,18 @@ def render_preview_stage():
         lookahead_days = buffer_days  # Default
     
     # Map to penalty values based on method
-    stockout_penalty = 10
-    transition_penalty = 5
+    if penalty_method == "Minimize Stockouts":
+        stockout_penalty = 10000
+        transition_penalty = 5
+    elif penalty_method == "Minimize Transitions":
+        stockout_penalty = 1
+        transition_penalty = 1000 
+    elif penalty_method == "Ensure All Grades' Production":
+        stockout_penalty = 10
+        transition_penalty = 5
+    else:  # Standard
+        stockout_penalty = 10
+        transition_penalty = 5
     
     # Update parameters in session state
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
