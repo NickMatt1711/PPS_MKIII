@@ -765,100 +765,55 @@ FILE UPLOADER - Enhanced Native Styling
   color: var(--md-sys-color-on-background);
 }
 
-/* =============================
-FADE-IN ANIMATION
-============================= */
-.fade-in {
-    animation: fadeIn 0.6s ease-in-out;
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+/* Fade-in */
+.fade-in { animation: fadeIn 0.5s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
 
 /* =============================
-SOLVER CARD SELECTOR (NEW)
+THEMED OPTION CARDS
+(uses corporate color tokens)
 ============================= */
-
-.option-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-top: 12px;
-}
+.option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
 
 .option-card, .option-card-selected {
-    padding: 1rem 1.25rem;
-    border-radius: var(--md-shape-corner-medium);
-    background: var(--md-sys-color-surface);
-    border: 2px solid var(--md-sys-color-outline);
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--md-sys-color-on-surface);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 18px;
+  border-radius: var(--md-shape-corner-medium);
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  min-height: 56px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  text-align: center;
 }
 
 .option-card:hover {
-    border-color: var(--md-sys-color-primary);
-    background: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-    transform: translateY(-2px);
+  border-color: var(--md-sys-color-primary);
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  transform: translateY(-3px);
 }
 
 .option-card-selected {
-    border-color: var(--md-sys-color-primary);
-    background: linear-gradient(135deg, #0A74DA22, #4BA3F422);
-    color: var(--md-sys-color-primary);
-    box-shadow: 0 4px 10px rgba(10, 116, 218, 0.15);
+  border-color: var(--md-sys-color-primary);
+  background: linear-gradient(135deg, rgba(10,116,218,0.08), rgba(75,163,244,0.06));
+  color: var(--md-sys-color-primary);
+  box-shadow: 0 6px 18px rgba(10,116,218,0.08);
 }
 
-/* Remove native button styling */
-.option-card, .option-card-selected {
-    border: none !important;
-    outline: none !important;
-}
+/* Hide the actual Streamlit radio group (we still keep it for state) */
+div[role="radiogroup"] { display: none !important; }
 
-/* Hide radio group completely */
-div[role="radiogroup"] {
-    display: none !important;
-}
+/* Style sliders to match theme */
+.stSlider > div > div > div { background: linear-gradient(90deg, #0A74DA, #4BA3F4) !important; height: 6px !important; border-radius: 6px; }
+.stSlider > div > div > div[data-baseweb="slider"] div[role="slider"] { background: #0A74DA !important; border: 3px solid #E6F0FA !important; width: 20px !important; height: 20px !important; }
 
-/* =============================
-SLIDER ENHANCEMENT
-============================= */
-.stSlider > div > div > div {
-    background: var(--md-sys-color-primary) !important;
-    height: 6px !important;
-    border-radius: 4px;
-}
-.stSlider > div > div > div[data-baseweb="slider"] div[role="slider"] {
-    background: var(--md-sys-color-primary) !important;
-    border: 3px solid var(--md-sys-color-primary-container) !important;
-    width: 20px !important;
-    height: 20px !important;
-    border-radius: 50%;
-}
-
-/* =============================
-Primary Buttons, Cards, Tabs, Metrics
-(unchanged from your theme)
-============================= */
-
-.stButton>button[kind="primary"],
-.stButton>button:not([kind]),
-button[data-testid="stDownloadButton"] {
-  background: linear-gradient(135deg, #0A74DA, #4BA3F4) !important;
-  color: var(--md-sys-color-on-primary) !important;
-  border-radius: var(--md-shape-corner-large) !important;
-  padding: 0.75rem 1.5rem !important;
-  font-weight: 500 !important;
-  font-size: 0.875rem !important;
-  border: none !important;
-  transition: all 0.2s ease;
-}
     
 """
 
