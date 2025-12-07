@@ -575,172 +575,185 @@ def build_and_solve_model(
     
     # ========== ENHANCED "MINIMIZE STOCKOUTS" LOGIC ==========
     if penalty_method == "Minimize Stockouts":
-        # ========== STEP 1: Calculate Grade Criticality Metrics ==========
         if progress_callback:
-            progress_callback(0.65, "Calculating grade criticality metrics...")
+            progress_callback(0.65, "Calculating stockout minimization parameters...")
         
-        grade_metrics = {}
-        total_demand_all = 0
-        avg_daily_demand_all = 0
-        
-        for grade in grades:
-            demand_series = []
-            for d in range(num_days):
-                demand = demand_data[grade].get(dates[d], 0)
-                demand_series.append(demand)
-                total_demand_all += demand
-            
-            avg_daily = sum(demand_series) / max(1, num_days)
-            avg_daily_demand_all += avg_daily
-            
-            # Calculate variability (simple moving range)
-            daily_diffs = []
-            for i in range(1, len(demand_series)):
-                diff = abs(demand_series[i] - demand_series[i-1])
-                daily_diffs.append(diff)
-            
-            avg_daily_diff = sum(daily_diffs) / max(1, len(daily_diffs)) if daily_diffs else 0
-            variability = avg_daily_diff / max(1, avg_daily) if avg_daily > 0 else 0
-            
-            # Calculate production capability
-            total_line_capacity = 0
-            for line in allowed_lines[grade]:
-                if line in capacities:
-                    total_line_capacity += capacities[line]
-            
-            daily_capacity_share = total_line_capacity
-            
-            # Stockout risk score
-            demand_intensity = avg_daily / max(1, daily_capacity_share) if daily_capacity_share > 0 else 999
-            
-            grade_metrics[grade] = {
-                'avg_daily': avg_daily,
-                'variability': variability,
-                'demand_intensity': demand_intensity,
-                'daily_capacity_share': daily_capacity_share,
-                'priority_factor': max(1.0, variability * demand_intensity * 2)
-            }
-        
-        avg_daily_demand_all = avg_daily_demand_all / len(grades) if grades else 0
-        
-        # ========== STEP 2: Dynamic Safety Stock Calculation ==========
-        dynamic_safety_stocks = {}
-        for grade in grades:
-            metrics = grade_metrics[grade]
-            
-            # Estimate lead time (days until we can produce this grade)
-            avg_min_run = 0
-            count = 0
-            for line in allowed_lines[grade]:
-                key = (grade, line)
-                if key in min_run_days:
-                    avg_min_run += min_run_days[key]
-                    count += 1
-            avg_min_run = avg_min_run / max(1, count)
-            
-            lead_time = max(1, math.ceil(avg_min_run * 0.5))
-            
-            # Safety stock formula: buffer for variability during lead time
-            safety_multiplier = 1.5 + metrics['variability'] * 2
-            safety_stock = metrics['avg_daily'] * lead_time * safety_multiplier
-            
-            # Ensure minimum buffer
-            min_buffer = metrics['avg_daily'] * 2
-            # Convert to integer for CP-SAT
-            dynamic_safety_stocks[grade] = int(math.ceil(max(min_inventory[grade], min_buffer, safety_stock)))
-        
-        # ========== STEP 3: Risk-Weighted Stockout Penalties ==========
-        risk_weighted_penalties = {}
-        for grade in grades:
-            metrics = grade_metrics[grade]
-            
-            line_availability_factor = len(allowed_lines[grade]) / max(1, len(lines))
-            scarcity_factor = 2.0 - line_availability_factor
-            
-            risk_score = (metrics['variability'] * 3 + 
-                         metrics['demand_intensity'] * 2 + 
-                         scarcity_factor) / 6
-            
-            penalty_multiplier = 1.0 + risk_score * 3
-            risk_weighted_penalties[grade] = int(stockout_penalty * penalty_multiplier)
-        
-        # ========== STEP 4: Production Target Constraints ==========
-        total_capacity_all = sum(capacities[line] for line in lines) * num_days
+        # ========== SIMPLIFIED STRATEGY ==========
+        # 1. Identify critical grades based on demand vs capacity
+        grade_criticality = {}
+        total_daily_capacity = sum(capacities[line] for line in lines) * num_days
         
         for grade in grades:
-            metrics = grade_metrics[grade]
+            # Calculate total demand
             total_demand = sum(demand_data[grade].get(dates[d], 0) for d in range(num_days))
             
-            if total_demand > 0 and total_demand_all > 0:
-                demand_share = total_demand / total_demand_all
-                
-                max_possible = sum(capacities[line] for line in allowed_lines[grade]) * num_days
-                achievable_share = min(demand_share * 1.2, max_possible / total_capacity_all)
-                
-                # Convert to integer for CP-SAT
-                min_production_target = int(math.ceil(total_capacity_all * achievable_share * 0.8))
-                
-                total_production_vars = []
-                for line in allowed_lines[grade]:
-                    for d in range(num_days):
-                        key = (grade, line, d)
-                        if key in production:
-                            total_production_vars.append(production[key])
-                
-                if total_production_vars:
-                    total_production = model.NewIntVar(0, 1000000, f'total_prod_{grade}')
-                    model.Add(total_production == sum(total_production_vars))
-                    
-                    shortfall = model.NewIntVar(0, 1000000, f'prod_shortfall_{grade}')
-                    # Use integer values
-                    model.Add(shortfall >= min_production_target - total_production)
-                    model.Add(shortfall >= 0)
-                    
-                    production_target_shortfalls[grade] = shortfall
-        
-        # ========== STEP 5: Enhanced Lookahead Logic ==========
-        for grade in grades:
-            metrics = grade_metrics[grade]
+            # Calculate available production capacity for this grade
+            grade_capacity = 0
+            for line in allowed_lines[grade]:
+                if line in capacities:
+                    grade_capacity += capacities[line] * num_days
             
-            for d in range(num_days - 1):
-                lookahead_window = min(5, num_days - d - 1)
-                future_demand = 0
-                for offset in range(1, lookahead_window + 1):
-                    future_demand += demand_data[grade].get(dates[d + offset], 0)
-                
-                if future_demand > 0 and metrics['daily_capacity_share'] > 0:
-                    daily_capacity = metrics['daily_capacity_share']
-                    effective_days = lookahead_window * 0.6
-                    achievable_production = daily_capacity * effective_days
-                    
-                    required_inventory = max(0, future_demand - achievable_production)
-                    variability_buffer = metrics['avg_daily'] * metrics['variability'] * 2
-                    required_inventory += variability_buffer
-                    
-                    if required_inventory > 0:
-                        inventory_shortfall = model.NewIntVar(0, 100000, f'lookahead_shortfall_{grade}_{d}')
-                        current_inventory = inventory_vars[(grade, d)]
-                        
-                        # Convert to integer for CP-SAT
-                        required_inventory_int = int(math.ceil(required_inventory))
-                        model.Add(inventory_shortfall >= required_inventory_int - current_inventory)
-                        model.Add(inventory_shortfall >= 0)
-                        
-                        urgency_factor = 1.0 + (lookahead_window / 5)
-                        lookahead_deficit_penalties[(grade, d)] = (inventory_shortfall, urgency_factor)
+            # Criticality score: demand / capacity ratio
+            if grade_capacity > 0:
+                utilization = total_demand / grade_capacity
+            else:
+                utilization = 999  # Very high if no capacity
+            
+            # Demand variability
+            daily_demands = [demand_data[grade].get(dates[d], 0) for d in range(num_days)]
+            avg_demand = total_demand / num_days if num_days > 0 else 0
+            
+            if avg_demand > 0:
+                # Calculate max daily demand relative to average
+                max_daily = max(daily_demands)
+                peak_factor = max_daily / avg_demand
+            else:
+                peak_factor = 1.0
+            
+            # Critical grades: high utilization OR high peak demand
+            is_critical = (utilization > 0.8) or (peak_factor > 2.0)
+            
+            grade_criticality[grade] = {
+                'total_demand': total_demand,
+                'grade_capacity': grade_capacity,
+                'utilization': utilization,
+                'peak_factor': peak_factor,
+                'is_critical': is_critical,
+                'priority_multiplier': 5.0 if is_critical else 1.0  # 5x higher penalty for critical grades
+            }
         
-        # ========== STEP 6: Dynamic Inventory Deficits ==========
+        # ========== ADJUSTED PENALTIES ==========
+        # Increase stockout penalties significantly for all grades
+        base_stockout_multiplier = 10  # 10x higher than standard mode
+        
+        # Critical grades get even higher penalties
+        critical_penalty_multiplier = {}
+        for grade in grades:
+            if grade_criticality[grade]['is_critical']:
+                # Critical grades: 20x standard penalty
+                critical_penalty_multiplier[grade] = 20
+            else:
+                # Non-critical grades: 10x standard penalty
+                critical_penalty_multiplier[grade] = 10
+        
+        # ========== FOCUSED LOOKAHEAD ==========
+        # Only look ahead for critical grades
+        lookahead_deficit_penalties = {}
+        
+        for grade in grades:
+            if not grade_criticality[grade]['is_critical']:
+                continue
+                
+            # For critical grades, ensure we have inventory for next 3 days
+            for d in range(num_days - 3):
+                future_demand = 0
+                for offset in range(1, 4):  # Next 3 days
+                    if d + offset < num_days:
+                        future_demand += demand_data[grade].get(dates[d + offset], 0)
+                
+                if future_demand > 0:
+                    # Simple: need at least future demand as inventory
+                    required_inventory = future_demand
+                    inventory_shortfall = model.NewIntVar(0, 100000, f'critical_lookahead_{grade}_{d}')
+                    current_inventory = inventory_vars[(grade, d)]
+                    
+                    model.Add(inventory_shortfall >= required_inventory - current_inventory)
+                    model.Add(inventory_shortfall >= 0)
+                    
+                    # High penalty for not having enough inventory for future demand
+                    lookahead_deficit_penalties[(grade, d)] = inventory_shortfall
+        
+        # ========== DYNAMIC SAFETY STOCK ==========
+        # Simple: 2 days of average demand for critical grades, 1 day for others
+        dynamic_safety_stocks = {}
+        for grade in grades:
+            avg_daily = grade_criticality[grade]['total_demand'] / num_days if num_days > 0 else 0
+            if grade_criticality[grade]['is_critical']:
+                # Critical: 3 days of safety stock
+                safety_days = 3
+            else:
+                # Non-critical: 1.5 days of safety stock
+                safety_days = 1.5
+            
+            safety_stock = int(avg_daily * safety_days)
+            dynamic_safety_stocks[grade] = max(min_inventory[grade], safety_stock)
+        
+        # ========== INVENTORY DEFICIT PENALTIES ==========
+        inventory_deficit_penalties = {}
         for grade in grades:
             target_inventory = dynamic_safety_stocks[grade]
             if target_inventory > 0:
                 for d in range(num_days):
                     inventory_tomorrow = inventory_vars[(grade, d + 1)]
                     
-                    deficit_var = model.NewIntVar(0, 100000, f'dynamic_inv_deficit_{grade}_{d}')
+                    deficit_var = model.NewIntVar(0, 100000, f'safety_deficit_{grade}_{d}')
                     model.Add(deficit_var >= target_inventory - inventory_tomorrow)
                     model.Add(deficit_var >= 0)
                     
                     inventory_deficit_penalties[(grade, d)] = deficit_var
+        
+        # ========== REDUCED TRANSITION PENALTY ==========
+        # Allow more flexibility to switch to needed grades
+        effective_transition_penalty = max(1, transition_penalty // 20)  # 5% of normal
+        
+        # ========== OBJECTIVE FUNCTION ==========
+        objective_terms = []
+        
+        # 1. High stockout penalties (PRIORITY 1)
+        for grade in grades:
+            for d in range(num_days):
+                if (grade, d) in stockout_vars:
+                    multiplier = critical_penalty_multiplier[grade]
+                    penalty = stockout_penalty * multiplier
+                    objective_terms.append(penalty * stockout_vars[(grade, d)])
+        
+        # 2. Safety stock inventory deficits (PRIORITY 2)
+        for (grade, d), deficit_var in inventory_deficit_penalties.items():
+            if grade_criticality[grade]['is_critical']:
+                # Higher penalty for critical grades
+                penalty = stockout_penalty * 8
+            else:
+                penalty = stockout_penalty * 3
+            objective_terms.append(penalty * deficit_var)
+        
+        # 3. Critical lookahead penalties (PRIORITY 1.5)
+        for (grade, d), shortfall_var in lookahead_deficit_penalties.items():
+            # Very high penalty for not preparing for future demand of critical grades
+            penalty = stockout_penalty * 15
+            objective_terms.append(penalty * shortfall_var)
+        
+        # 4. Minimal transition penalty
+        for line in lines:
+            for grade in grades:
+                for d in range(num_days):
+                    key = (grade, line, d)
+                    if key in run_starts:
+                        objective_terms.append(effective_transition_penalty * run_starts[key])
+        
+        # 5. Minimal idle penalty (just to break ties)
+        idle_penalty = 10
+        for line in lines:
+            for d in range(num_days):
+                if line in shutdown_periods and d in shutdown_periods[line]:
+                    continue
+                    
+                is_idle = model.NewBoolVar(f'idle_{line}_{d}')
+                
+                producing_vars = [
+                    is_producing[(grade, line, d)] 
+                    for grade in grades 
+                    if (grade, line, d) in is_producing
+                ]
+                
+                if producing_vars:
+                    model.Add(sum(producing_vars) == 0).OnlyEnforceIf(is_idle)
+                    model.Add(sum(producing_vars) == 1).OnlyEnforceIf(is_idle.Not())
+                    objective_terms.append(idle_penalty * is_idle)
+        
+        if objective_terms:
+            model.Minimize(sum(objective_terms))
+        else:
+            model.Minimize(0)
     
     else:
         # ========== STANDARD MINIMUM INVENTORY (SOFT) ==========
