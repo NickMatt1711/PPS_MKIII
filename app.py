@@ -331,71 +331,41 @@ def render_preview_stage():
             "Minimize Transitions"
         ]
     
-        # Initialize selected state
+        # Initialize persistent selection
         if "selected_penalty_mode" not in st.session_state:
             st.session_state.selected_penalty_mode = "Standard"
     
-        # --- tiny JS helper: finds a radio option by label text and clicks it ---
-        # This is robust (searches labels) and is safe to include once.
-        js_helper = """
+        # -------- JS Helper (safe, should be added here only) --------
+        st.markdown("""
         <script>
         window.selectRadioByText = function(text) {
-            try {
-                // 1) Try labels (most Streamlit versions use labels)
-                const labels = document.querySelectorAll('label');
-                for (let i=0; i<labels.length; i++) {
-                    const lab = labels[i];
-                    if (lab.innerText && lab.innerText.trim() === text) {
-                        // find an input within or before/after label
-                        const possibleInput = lab.querySelector('input') || lab.previousElementSibling && lab.previousElementSibling.querySelector('input') || lab.nextElementSibling && lab.nextElementSibling.querySelector('input');
-                        if (possibleInput) { possibleInput.click(); return; }
-                        // fallback: click the label itself
-                        lab.click();
-                        return;
-                    }
+            const labels = document.querySelectorAll('label');
+            for (let i=0; i<labels.length; i++) {
+                if (labels[i].innerText.trim() === text) {
+                    labels[i].click();
+                    return;
                 }
-                // 2) fallback: span text inside radiogroup
-                const radiogroupSpans = document.querySelectorAll('div[role=\"radiogroup\"] span, div[role=\"radiogroup\"] label');
-                for (let i=0;i<radiogroupSpans.length;i++){
-                    const s = radiogroupSpans[i];
-                    if (s.innerText && s.innerText.trim() === text) {
-                        s.click();
-                        return;
-                    }
-                }
-                // 3) Last resort: click any element that contains the text
-                const all = document.querySelectorAll('*');
-                for (let i=0;i<all.length;i++){
-                    if (all[i].innerText && all[i].innerText.trim() === text) { all[i].click(); return; }
-                }
-            } catch(e) { console.warn('selectRadioByText error', e); }
+            }
         }
         </script>
-        """
-        st.markdown(js_helper, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
     
-        # Build card HTML with safe onclick to call helper
+        # -------- Render cards --------
         card_html = "<div class='option-grid fade-in'>"
         for opt in penalty_options:
             selected = (opt == st.session_state.selected_penalty_mode)
-            css_class = "option-card-selected" if selected else "option-card"
-            # Use a real button inside a tiny form so that keyboard/enter works in most environments
-            # onclick calls selectRadioByText to click the hidden radio as well.
-            card_html += (
-                f"<form action='' method='post' style='margin:0;padding:0;'>"
-                f"<button class='{css_class}' type='submit' name='mode' value='{opt}' "
-                f"onclick=\"window.selectRadioByText('{opt}');\">"
-                f"{opt}</button></form>"
-            )
+            css = "option-card-selected" if selected else "option-card"
+    
+            card_html += f"""
+                <div class='{css}' onclick="window.selectRadioByText('{opt}');">
+                    {opt}
+                </div>
+            """
         card_html += "</div>"
     
         st.markdown(card_html, unsafe_allow_html=True)
     
-        # Hidden radio for Streamlit state (kept as authoritative backend)
-        # On each rerun this radio will reflect selected_penalty_mode (kept in session state)
-        if "hidden_penalty_radio" not in st.session_state:
-            st.session_state.hidden_penalty_radio = st.session_state.selected_penalty_mode
-    
+        # -------- Hidden radio (backend state) --------
         penalty_method = st.radio(
             "hidden_penalty_radio",
             penalty_options,
@@ -404,17 +374,9 @@ def render_preview_stage():
             label_visibility="hidden"
         )
     
-        # If a mode form submitted, it will appear in request as st.session_state['mode'] on rerun
-        # So capture that and set selected mode (this ensures clicks update visual selection)
-        if "mode" in st.session_state and st.session_state["mode"] in penalty_options:
-            st.session_state.selected_penalty_mode = st.session_state["mode"]
-            # sync the hidden radio too
-            st.session_state["hidden_penalty_radio"] = st.session_state["mode"]
-            # remove 'mode' so subsequent reruns don't repeatedly re-process
-            try:
-                del st.session_state["mode"]
-            except Exception:
-                pass
+        # Sync session state
+        st.session_state.selected_penalty_mode = penalty_method
+
     
     # ---------------- Update session params ----------------
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
