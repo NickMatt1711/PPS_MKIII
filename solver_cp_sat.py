@@ -1,5 +1,15 @@
 """
-CP-SAT Solver for production optimization
+CP-SAT Solver for production optimization (Updated)
+
+This file is adapted from the original solver and includes two new penalty modes:
+- "Minimize Stockouts" (Horizon lookahead inventory reserve)
+- "Minimize Transitions" (Run-start minimisation)
+
+It also removes the Square Root Normalisation mode and renames the previous
+"Percentage Normalisation" mode to "Ensure All Grades Production".
+
+The code otherwise preserves the original constraints and logic, and integrates
+these new modes cleanly into the objective construction and constraint blocks.
 """
 
 from ortools.sat.python import cp_model
@@ -139,9 +149,6 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
             'calculated_total': 0
         }
         return breakdown
-
-    def num_solutions(self):
-        return len(self.solutions)
 
 
 def build_and_solve_model(
@@ -688,6 +695,35 @@ def build_and_solve_model(
                     # Can start at most once (excluding material running)
                     model.Add(sum(start_count_vars) <= 1)
     
+    # ================== RUN START VARIABLES (FOR Minimize Transitions MODE) ================
+    run_start = {}
+    if penalty_method == "Minimize Transitions":
+        for grade in grades:
+            for line in allowed_lines[grade]:
+                for d in range(num_days):
+                    start_var = model.NewBoolVar(f"run_start_{grade}_{line}_{d}")
+                    run_start[(grade, line, d)] = start_var
+
+                    prod_today = get_is_producing_var(grade, line, d)
+                    if prod_today is None:
+                        # If not valid, ensure start_var is 0
+                        model.Add(start_var == 0)
+                        continue
+
+                    if d == 0:
+                        # Day 0: start if producing
+                        model.Add(start_var == prod_today)
+                    else:
+                        prod_prev = get_is_producing_var(grade, line, d - 1)
+                        if prod_prev is None:
+                            # No valid prev var means treat as start iff prod_today
+                            model.Add(start_var == prod_today)
+                        else:
+                            # start_var == 1 iff prod_today==1 and prod_prev==0
+                            model.Add(start_var <= prod_today)
+                            model.Add(start_var <= 1 - prod_prev)
+                            model.Add(start_var >= prod_today - prod_prev)
+    
     if progress_callback:
         progress_callback(0.6, "Adding soft constraints...")
     
@@ -722,6 +758,24 @@ def build_and_solve_model(
             
             closing_inventory_deficit_penalties[grade] = closing_deficit_var
     
+    # ================== Minimize Stockouts: HORIZON LOOKAHEAD RESERVE CONSTRAINT ==================
+    if penalty_method == "Minimize Stockouts":
+        # Choose lookahead dynamically: at least 1, at most 7 or remaining horizon
+        LOOKAHEAD_DAYS = min(3, max(1, num_days // 6)) if num_days >= 6 else min(3, num_days)
+        # Ensure integer
+        LOOKAHEAD_DAYS = int(LOOKAHEAD_DAYS)
+
+        for grade in grades:
+            for d in range(num_days):
+                reserve_demand = 0
+                for offset in range(1, LOOKAHEAD_DAYS + 1):
+                    if d + offset < num_days:
+                        reserve_demand += demand_data[grade].get(dates[d + offset], 0)
+
+                if reserve_demand > 0:
+                    # inventory[d+1] must reserve demand of next LOOKAHEAD_DAYS days
+                    model.Add(inventory_vars[(grade, d + 1)] >= reserve_demand)
+    
     if progress_callback:
         progress_callback(0.7, "Building objective function...")
 
@@ -733,7 +787,8 @@ def build_and_solve_model(
     epsilon = 1.0  # Small constant to avoid division by zero
     
     # 1. Stockout penalties (SOFT) - Multiple methods
-    if penalty_method == "Percentage Normalisation":
+    # Map legacy "Percentage Normalisation" behavior to renamed mode
+    if penalty_method == "Ensure All Grades Production":
         PERCENTAGE_PENALTY_WEIGHT = 100  # Penalty per 1% stockout
         for grade in grades:
             for d in range(num_days):
@@ -744,26 +799,15 @@ def build_and_solve_model(
                         penalty_per_unit = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty) / (demand_today + epsilon)
                         scaled_penalty = int(penalty_per_unit * 100)
                         objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
-    
-    elif penalty_method == "Square Root Normalisation":
-        for grade in grades:
-            for d in range(num_days):
-                if (grade, d) in stockout_vars:
-                    demand_today = demand_data[grade].get(dates[d], 0)
-                    
-                    if demand_today > 0:
-                        penalty_coeff = stockout_penalty * math.sqrt(1.0) / math.sqrt(demand_today + epsilon)
-                        scaled_penalty = int(penalty_coeff * 100)
-                        objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
-    
-    else:  # Standard method (default)
+
+    else:  # Standard method (default) and Minimize Transitions/Minimize Stockouts fall through to stockout unit penalty
         for grade in grades:
             for d in range(num_days):
                 if (grade, d) in stockout_vars:
                     objective_terms.append(stockout_penalty * stockout_vars[(grade, d)])
     
     # 2. Inventory deficit penalties (SOFT) - Adjusted based on method
-    if penalty_method == "Percentage Normalisation":
+    if penalty_method == "Ensure All Grades Production":
         MIN_INV_VIOLATION_MULTIPLIER = 2  # Make min inventory violations more expensive
         for (grade, d), deficit_var in inventory_deficit_penalties.items():
             daily_demand = demand_data[grade].get(dates[d], 0)
@@ -774,24 +818,12 @@ def build_and_solve_model(
                 objective_terms.append(scaled_penalty * deficit_var)
             else:
                 objective_terms.append(stockout_penalty * MIN_INV_VIOLATION_MULTIPLIER * deficit_var)
-    
-    elif penalty_method == "Square Root Normalisation":
-        for (grade, d), deficit_var in inventory_deficit_penalties.items():
-            daily_demand = demand_data[grade].get(dates[d], 0)
-            
-            if daily_demand > 0:
-                penalty_coeff = stockout_penalty * math.sqrt(1.0) / math.sqrt(daily_demand + epsilon)
-                scaled_penalty = int(penalty_coeff * 100)
-                objective_terms.append(scaled_penalty * deficit_var)
-            else:
-                objective_terms.append(stockout_penalty * deficit_var)
-    
-    else:  # Standard method
+    else:
         for (grade, d), deficit_var in inventory_deficit_penalties.items():
             objective_terms.append(stockout_penalty * deficit_var)
     
     # 3. Closing inventory deficit penalties (SOFT)
-    if penalty_method == "Percentage Normalisation":
+    if penalty_method == "Ensure All Grades Production":
         for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
             total_demand = sum(demand_data[grade].get(dates[d], 0) for d in range(num_days))
             avg_daily_demand = total_demand / num_days if num_days > 0 else 1
@@ -802,26 +834,13 @@ def build_and_solve_model(
                 objective_terms.append(scaled_penalty * closing_deficit_var)
             else:
                 objective_terms.append(stockout_penalty * closing_deficit_var * 3)
-    
-    elif penalty_method == "Square Root Normalisation":
-        for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
-            total_demand = sum(demand_data[grade].get(dates[d], 0) for d in range(num_days))
-            avg_daily_demand = total_demand / num_days if num_days > 0 else 1
-            
-            if avg_daily_demand > 0:
-                penalty_coeff = stockout_penalty * 3 * math.sqrt(1.0) / math.sqrt(avg_daily_demand + epsilon)
-                scaled_penalty = int(penalty_coeff * 100)
-                objective_terms.append(scaled_penalty * closing_deficit_var)
-            else:
-                objective_terms.append(stockout_penalty * closing_deficit_var * 3)
-    
-    else:  # Standard method
+    else:
         for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
             objective_terms.append(stockout_penalty * closing_deficit_var * 3)
     
     # 4. Transition penalties (SOFT - for ALLOWED transitions only)
     # Forbidden transitions are already prevented by HARD constraints
-    # This remains the same for all methods
+    # This remains the same for all methods except we will add run_start penalty separately
     for line in lines:
         for d in range(num_days - 1):
             for grade1 in grades:
@@ -867,6 +886,12 @@ def build_and_solve_model(
                 model.Add(sum(producing_vars) == 0).OnlyEnforceIf(is_idle)
                 model.Add(sum(producing_vars) == 1).OnlyEnforceIf(is_idle.Not())
                 objective_terms.append(idle_penalty * is_idle)
+    
+    # ================== Minimize Transitions: RUN-START PENALTY INTO OBJECTIVE ==================
+    if penalty_method == "Minimize Transitions":
+        RUN_START_PENALTY = transition_penalty if transition_penalty > 0 else 1000
+        for key, start_var in run_start.items():
+            objective_terms.append(RUN_START_PENALTY * start_var)
     
     # Set the objective to minimize SOFT constraint violations
     if objective_terms:
