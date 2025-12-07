@@ -329,14 +329,15 @@ def render_preview_stage():
         st.title("Optimization Configuration")
     
         # Create two columns for the new layout
-        col_inputs, col_methods = st.columns(2)
+        col_1, col2, col_methods = st.columns([1,1,2])
     
         # --- Column 1: Input Controls (Buffer Days and Time Limit) ---
-        with col_inputs:
+        with col_1:
             st.subheader("Configuration Inputs")
             # Placeholder input controls
-            buffer_days = st.slider("ProductionBuffer Days", 1, 7, 3)
-            
+            buffer_days = st.slider("Production Buffer Days", 1, 7, 3)
+         
+        with col_2:    
             # Changed st.slider to st.number_input for direct numeric entry
             time_limit = st.number_input(
                 "Time Limit (min)", 
@@ -367,8 +368,15 @@ def render_preview_stage():
     
         # --- Parameter Logic (Full-width after columns) ---
         lookahead_days = buffer_days # Default
-        stockout_penalty = 10
-        transition_penalty = 5
+        if selected_method_key == "Minimize Stockouts":
+            stockout_penalty = 10000
+            transition_penalty = 1
+        elif selected_method_key == "Minimize Transitions":
+            stockout_penalty = 1
+            transition_penalty = 1000
+        else:  # Standard
+            stockout_penalty = 10
+            transition_penalty = 5
     
         # Map the selected method and update parameters in session state
         st.session_state[SS_OPTIMIZATION_PARAMS] = {
