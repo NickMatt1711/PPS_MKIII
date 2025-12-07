@@ -334,11 +334,13 @@ def render_preview_stage():
             st.session_state.selected_penalty_mode = "Standard"
     
         penalty_method = st.radio(
-            labal_visibility = "collapsed",
+            "",
             penalty_options,
-            horizontal,
             index=penalty_options.index(st.session_state.selected_penalty_mode),
-            )
+            horizontal=True,
+            label_visibility="collapsed"
+        )
+
     
         st.session_state.selected_penalty_mode = penalty_method
 
