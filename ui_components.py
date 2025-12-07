@@ -758,6 +758,108 @@ FILE UPLOADER - Enhanced Native Styling
     border-top: 1px solid rgba(10, 116, 218, 0.1);
 }
 
+
+/* -------- GLOBAL FADE-IN -------- */
+    .fade-in {
+        animation: fadeIn 0.7s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* -------- CARD HOVER ANIMATION -------- */
+    @keyframes cardHover {
+        0% { transform: translateY(0px); }
+        100% { transform: translateY(-4px); }
+    }
+
+    /* -------- CARD SELECTED GLOW PULSE -------- */
+    @keyframes glowPulse {
+        0% { box-shadow: 0 0 10px rgba(76,175,80,0.3); }
+        50% { box-shadow: 0 0 16px rgba(76,175,80,0.55); }
+        100% { box-shadow: 0 0 10px rgba(76,175,80,0.3); }
+    }
+
+    /* -------- SLIDER ANIMATION -------- */
+    @keyframes sliderPulse {
+        0% { box-shadow: 0 0 4px rgba(76,175,80,0.2); }
+        50% { box-shadow: 0 0 10px rgba(76,175,80,0.4); }
+        100% { box-shadow: 0 0 4px rgba(76,175,80,0.2); }
+    }
+
+    /* -------- TITLES -------- */
+    .param-section-title {
+        font-size: 20px !important;
+        font-weight: 600;
+        padding-bottom: 6px;
+        color: #f0f0f0;
+        animation: fadeIn 0.7s ease-in-out;
+    }
+
+    /* -------- INPUT FIELD STYLING -------- */
+    div[data-baseweb="input"] > div {
+        border-radius: 8px !important;
+        border: 1px solid #444 !important;
+        background-color: #1e1e1e !important;
+        color: white !important;
+        animation: fadeIn 0.7s ease-in-out;
+    }
+
+    /* -------- SLIDER STYLING + PULSE -------- */
+    .stSlider > div > div > div > div {
+        background: linear-gradient(90deg, #4CAF50, #2e7d32) !important;
+        height: 6px !important;
+        border-radius: 4px !important;
+        animation: sliderPulse 2.4s infinite ease-in-out;
+    }
+
+    .stSlider > div > div > div[data-baseweb="slider"] div[role="slider"] {
+        background-color: #4CAF50 !important;
+        border: 2px solid #66bb6a !important;
+        height: 22px !important;
+        width: 22px !important;
+    }
+
+    /* -------- CARD GRID -------- */
+    .option-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-top: 6px;
+    }
+
+    /* -------- BASE CARD -------- */
+    .option-card, .option-card-selected {
+        padding: 18px;
+        border-radius: 12px;
+        background-color: #1e1e1e;
+        text-align: center;
+        cursor: pointer;
+        transition: 0.25s ease;
+        font-size: 15px;
+        font-weight: 500;
+        color: #e0e0e0;
+        box-shadow: 0px 0px 8px rgba(0,0,0,0.4);
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    /* -------- HOVER ANIMATION -------- */
+    .option-card:hover {
+        animation: cardHover 0.25s forwards;
+        background-color: #292929;
+        border: 1px solid #666 !important;
+    }
+
+    /* -------- SELECTED CARD (with glow pulse) -------- */
+    .option-card-selected {
+        border: 2px solid #4CAF50 !important;
+        background-color: #29392d !important;
+        color: #d3ffd6 !important;
+        animation: glowPulse 2.2s infinite ease-in-out;
+    }
+
+    
 """
 
 # -------------------------------
