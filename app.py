@@ -360,43 +360,48 @@ def render_preview_stage():
         # Helper: Convert slider position to ratio
         def compute_log_ratio(position: int):
             # position = 0 to 100
-            # 50 = balanced (1:1)
             if position == 50:
                 return 1, 1
     
             # convert -1 to +1
             log_pos = (position - 50) / 50.0
-            factor = 200 ** abs(log_pos)   # 1→200 log scale
+            factor = 200 ** abs(log_pos)
     
-            if log_pos > 0:    # stockout priority side
+            if log_pos > 0:    # stockout priority
                 return round(factor), 1
-            else:              # transition priority side
+            else:              # transition priority
                 return 1, round(factor)
     
     
-        # Default position for 10:5 (ratio ≈ 2:1)
-        # 2:1 corresponds to log_pos ≈ 0.301 → slider ≈ 65
+        # Default slider location for ratio 2:1 (≈10:5)
         DEFAULT_SLIDER_POS = 65
     
+        # Compute ratio *before* slider so label stays accurate
+        current_slider = st.session_state.get("ratio_slider_val", DEFAULT_SLIDER_POS)
+        current_stockout, current_transition = compute_log_ratio(current_slider)
+    
+        # Show the ratio AS the label instead of value
+        st.markdown(
+            f"**Selected Ratio: Stockout `{current_stockout}` : Transition `{current_transition}`**"
+        )
+    
+        # Slider (position hidden from user, only ratio shown)
         slider_val = st.slider(
-            "Priority Balance",
+            "",
             min_value=0,
             max_value=100,
-            value=DEFAULT_SLIDER_POS,
-            help="Shift left for transition priority, right for stockout priority.\n(Logarithmic scaling)"
+            value=current_slider,
+            label_visibility="collapsed"
         )
     
+        # Update state + compute final penalties
+        st.session_state["ratio_slider_val"] = slider_val
         stockout_penalty, transition_penalty = compute_log_ratio(slider_val)
-    
-        # Show current ratio
-        st.write(
-            f"**Selected Penalty Ratio:** "
-            f"Stockout `{stockout_penalty}` : Transition `{transition_penalty}`"
-        )
     
     else:
         stockout_penalty = OPTIMIZATION_METHODS[selected_method]["stockout_penalty"]
         transition_penalty = OPTIMIZATION_METHODS[selected_method]["transition_penalty"]
+
 
 
 
