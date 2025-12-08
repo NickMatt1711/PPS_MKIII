@@ -225,7 +225,6 @@ def render_upload_stage():
 
 
 # ========== STAGE 1: PREVIEW ==========
-# ========== STAGE 1: PREVIEW ==========
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
     render_header(f"{APP_ICON} {APP_TITLE}", "Review data and configure optimization")
@@ -278,7 +277,6 @@ def render_preview_stage():
                 st.markdown(f"**{sheet_name}**")
                 df_display = excel_data[sheet_name].copy()
 
-                # Style transition matrix
                 def highlight_transitions(val):
                     if pd.notna(val):
                         val_str = str(val).strip().lower()
@@ -297,81 +295,118 @@ def render_preview_stage():
     st.markdown("---")
     render_section_divider()
 
-    # Configuration parameters with proper method handling
+    # Configuration parameters UI
     st.markdown("### ⚙️ Optimization Configuration")
-    
-    # Create columns for configuration
+
     col_1, b1, col_2, b2, col_method = st.columns([0.5, 0.2, 1, 0.2, 2])
-    
+
+    # --- Time Limit ---
     with col_1:
-        # Basic parameters
         time_limit = st.number_input(
-            "Time Limit (min)", 
-            min_value=1, 
-            max_value=60, 
-            value=10, 
+            "Time Limit (min)",
+            min_value=1,
+            max_value=60,
+            value=10,
             step=1,
-            help="Maximum time allowed for the solver to find a solution"
+            help="Maximum time allowed for the solver"
         )
-    with col_2:    
-        buffer_days = st.slider(
-            "Production Buffer Days", 
-            1, 7, 3,
-            help="Number of days at the end of horizon where min closing inventory applies"
+
+    # --- Buffer Days (Selectbox instead of Slider) ---
+    with col_2:
+        buffer_days = st.selectbox(
+            "Production Buffer Days",
+            options=[1, 2, 3, 4, 5, 6, 7],
+            index=2,
+            help="Slack Days at end of Production horizon"
         )
-    
+
+    # --- Optimization Method Selection ---
     with col_method:
-        # Optimization method selector
         OPTIMIZATION_METHODS = {
             "Standard": {
                 "title": "Standard",
-                "description": "Balanced approach with linear penalties and typical business constraints.",
+                "description": "Linear penalties with typical business constraints.",
                 "stockout_penalty": 10,
                 "transition_penalty": 5
             },
             "Ensure All Grades' Production": {
                 "title": "Ensure All Grades' Production",
-                "description": "Penalties normalized by demand to ensure fair treatment of low-demand grades.",
-                "stockout_penalty": 10,  # Will be normalized by demand in solver
+                "description": "Demand-normalized penalties for fair treatment of low-volume grades.",
+                "stockout_penalty": 10,
                 "transition_penalty": 5
             }
         }
-        
+
         method_options = list(OPTIMIZATION_METHODS.keys())
-        
-        # Get current selection
+
         current_params = st.session_state.get(SS_OPTIMIZATION_PARAMS, {})
         current_method = current_params.get('penalty_method', 'Standard')
-        
+
         selected_method = st.radio(
             "Select optimization method:",
             options=method_options,
-            index=method_options.index(current_method) if current_method in method_options else 0,
+            index=method_options.index(current_method)
+                if current_method in method_options else 0,
             horizontal=True,
-            key='penalty_method_selector',
-            help="Standard: Linear penalties. Ensure All Grades: Demand-normalized penalties for balanced production."
+            key="penalty_method_selector",
+            help="Choose penalty approach."
         )
-        
 
-    # Update session state with all parameters
+    # --- Penalty Ratio (Standard Mode Only) ---
+    if selected_method == "Standard":
+
+        st.markdown("### ⚖️ Penalty Ratio (Stockout : Transition)")
+
+        # Logarithmic scale: 1 → 200
+        ratio_scale = [1, 2, 5, 10, 20, 50, 100, 200]
+
+        col_s, col_t = st.columns(2)
+
+        with col_s:
+            stockout_weight = st.selectbox(
+                "Stockout Weight",
+                options=ratio_scale,
+                index=3,  # default = 10
+                help="Higher value = prioritize avoiding stockouts"
+            )
+
+        with col_t:
+            transition_weight = st.selectbox(
+                "Transition Weight",
+                options=ratio_scale,
+                index=1,  # default = 5
+                help="Higher value = prioritize minimizing transitions"
+            )
+
+        stockout_penalty = stockout_weight
+        transition_penalty = transition_weight
+
+    else:
+        stockout_penalty = OPTIMIZATION_METHODS[selected_method]["stockout_penalty"]
+        transition_penalty = OPTIMIZATION_METHODS[selected_method]["transition_penalty"]
+
+    # --- Store updated parameters ---
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
-        'stockout_penalty': int(OPTIMIZATION_METHODS[selected_method]['stockout_penalty']),
-        'transition_penalty': int(OPTIMIZATION_METHODS[selected_method]['transition_penalty']),
+        'stockout_penalty': int(stockout_penalty),
+        'transition_penalty': int(transition_penalty),
         'penalty_method': selected_method
     }
 
-    # Navigation buttons
+    # --- Navigation Buttons ---
     col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
+
     with col_nav1:
         if st.button("← Back to Upload", use_container_width=True):
             st.session_state[SS_STAGE] = STAGE_UPLOAD
             st.rerun()
+
     with col_nav3:
         if st.button("🎯 Run Optimization →", use_container_width=True, type="primary"):
             st.session_state[SS_STAGE] = STAGE_OPTIMIZING
             st.rerun()
+
 
 
 # ========== STAGE 2: OPTIMIZATION IN PROGRESS ==========
