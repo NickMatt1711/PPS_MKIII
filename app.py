@@ -315,7 +315,7 @@ def render_preview_stage():
     with col_2:
         buffer_days = st.segmented_control(
             "Production Buffer Days",
-            options=[1, 2, 3, 4, 5, 6, 7],
+            options=[0,1, 2, 3, 4, 5, 6, 7],
             default=3,
             help="Slack Days at end of Production horizon"
         )
@@ -352,57 +352,52 @@ def render_preview_stage():
             help="Choose penalty approach."
         )
 
-    # --- Penalty Balance Slider (Standard Mode Only) ---
+    # --- Penalty Ratio (Standard Mode Only) ---
     if selected_method == "Standard":
     
-        st.markdown("### ⚖️ Penalty Balance (Stockout ↔ Transition)")
-        st.markdown(
-            "<div style='opacity:0.8;margin-top:-0.5rem;'>"
-            "Move the balance toward <strong>Stockout</strong> or <strong>Transition</strong> to set relative penalty importance."
-            "</div>",
-            unsafe_allow_html=True
-        )
+        st.markdown("### ⚖️ Penalty Priority (Transition ↔ Balanced ↔ Stockout)")
     
-        # Mapping function: slider (0–100) → ratio (1:200 ↔ 200:1)
-        def ratio_from_slider(x):
-            # x = 0 → 100; center 50 = 1:1
-            if x == 50:
+        # Helper: Convert slider position to ratio
+        def compute_log_ratio(position: int):
+            # position = 0 to 100
+            # 50 = balanced (1:1)
+            if position == 50:
                 return 1, 1
     
-            log_pos = (x - 50) / 50   # -1 → +1
-            factor = 200 ** abs(log_pos)
+            # convert -1 to +1
+            log_pos = (position - 50) / 50.0
+            factor = 200 ** abs(log_pos)   # 1→200 log scale
     
-            if log_pos > 0:     # toward stockout
+            if log_pos > 0:    # stockout priority side
                 return round(factor), 1
-            else:               # toward transition
+            else:              # transition priority side
                 return 1, round(factor)
     
-        # Default 2:1 → approx slider ≈ 65
-        slider_default = 65
     
-        balance_val = st.slider(
-            "Penalty Balance",
+        # Default position for 10:5 (ratio ≈ 2:1)
+        # 2:1 corresponds to log_pos ≈ 0.301 → slider ≈ 65
+        DEFAULT_SLIDER_POS = 65
+    
+        slider_val = st.slider(
+            "Priority Balance",
             min_value=0,
             max_value=100,
-            value=slider_default,
-            help="Left = Transition more important; Right = Stockout more important"
+            value=DEFAULT_SLIDER_POS,
+            help="Shift left for transition priority, right for stockout priority.\n(Logarithmic scaling)"
         )
     
-        stockout_penalty, transition_penalty = ratio_from_slider(balance_val)
+        stockout_penalty, transition_penalty = compute_log_ratio(slider_val)
     
-        st.markdown(
-            f"<div style='margin-top:0.5rem;'>"
-            f"<strong>Selected Ratio:</strong> Stockout "
-            f"<span style='color:#2ecc71;font-weight:700;'>{stockout_penalty}</span> "
-            f": Transition "
-            f"<span style='color:#e67e22;font-weight:700;'>{transition_penalty}</span>"
-            f"</div>",
-            unsafe_allow_html=True
+        # Show current ratio
+        st.write(
+            f"**Selected Penalty Ratio:** "
+            f"Stockout `{stockout_penalty}` : Transition `{transition_penalty}`"
         )
     
     else:
-        stockout_penalty = OPTIMIZATION_METHODS[selected_method]['stockout_penalty']
-        transition_penalty = OPTIMIZATION_METHODS[selected_method]['transition_penalty']
+        stockout_penalty = OPTIMIZATION_METHODS[selected_method]["stockout_penalty"]
+        transition_penalty = OPTIMIZATION_METHODS[selected_method]["transition_penalty"]
+
 
 
     # --- Store updated parameters ---
