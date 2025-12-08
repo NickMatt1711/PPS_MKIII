@@ -334,18 +334,6 @@ def render_preview_stage():
                 "description": "Penalties normalized by demand to ensure fair treatment of low-demand grades.",
                 "stockout_penalty": 10,  # Will be normalized by demand in solver
                 "transition_penalty": 5
-            },
-            "Minimize Stockouts": {
-                "title": "Minimize Stockouts",
-                "description": "Uses horizon-lookahead inventory reserves to prevent shortfalls.",
-                "stockout_penalty": 1000,
-                "transition_penalty": 1
-            },
-            "Minimize Transitions": {
-                "title": "Minimize Transitions",
-                "description": "Minimizes the number of production run starts to reduce changeover/setup time.",
-                "stockout_penalty": 1,
-                "transition_penalty": 1000
             }
         }
         
@@ -356,17 +344,14 @@ def render_preview_stage():
         current_method = current_params.get('penalty_method', 'Standard')
         
         selected_method = st.radio(
-            "Select the primary optimization goal:",
+            "Select optimization method:",
             options=method_options,
             index=method_options.index(current_method) if current_method in method_options else 0,
             horizontal=True,
-            key='penalty_method_selector'
+            key='penalty_method_selector',
+            help="Standard: Linear penalties. Ensure All Grades: Demand-normalized penalties for balanced production."
         )
         
-        # Show method description
-        # st.info(OPTIMIZATION_METHODS[selected_method]["description"])
-        
-        lookahead_days = buffer_days
 
     # Update session state with all parameters
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
@@ -374,8 +359,7 @@ def render_preview_stage():
         'buffer_days': int(buffer_days),
         'stockout_penalty': int(OPTIMIZATION_METHODS[selected_method]['stockout_penalty']),
         'transition_penalty': int(OPTIMIZATION_METHODS[selected_method]['transition_penalty']),
-        'penalty_method': selected_method,
-        'lookahead_days': int(lookahead_days)
+        'penalty_method': selected_method
     }
 
     # Navigation buttons
