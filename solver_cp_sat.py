@@ -169,6 +169,7 @@ def build_and_solve_model(
     transition_penalty: int,
     time_limit_min: int,
     penalty_method: str = "Standard",
+    lookahead_days: int = 3,
     progress_callback=None
 ) -> Tuple[int, SolutionCallback, cp_model.CpSolver]:
     """Build and solve the optimization model"""
@@ -569,44 +570,230 @@ def build_and_solve_model(
     # ========== SOFT CONSTRAINTS ==========
     inventory_deficit_penalties = {}
     closing_inventory_deficit_penalties = {}
+    lookahead_deficit_penalties = {}
+    production_target_shortfalls = {}
     
-    # Standard minimum inventory (SOFT) - Used by both modes
-    for grade in grades:
-        for d in range(num_days):
-            if min_inventory[grade] > 0:
-                min_inv_value = int(min_inventory[grade])
-                inventory_tomorrow = inventory_vars[(grade, d + 1)]
-                
-                deficit_var = model.NewIntVar(0, 100000, f'inv_deficit_{grade}_{d}')
-                model.Add(deficit_var >= min_inv_value - inventory_tomorrow)
-                model.Add(deficit_var >= 0)
-                
-                inventory_deficit_penalties[(grade, d)] = deficit_var
+    # ========== ENHANCED "MINIMIZE STOCKOUTS" LOGIC ==========
+    if penalty_method == "Minimize Stockouts":
+        if progress_callback:
+            progress_callback(0.65, "Calculating stockout minimization parameters...")
         
-        # Minimum closing inventory (SOFT)
-        if min_closing_inventory[grade] > 0 and buffer_days > 0:
-            closing_inventory = inventory_vars[(grade, num_days - buffer_days)]
-            min_closing = min_closing_inventory[grade]
+        # ========== SIMPLIFIED STRATEGY ==========
+        # 1. Identify critical grades based on demand vs capacity
+        grade_criticality = {}
+        total_daily_capacity = sum(capacities[line] for line in lines) * num_days
+        
+        for grade in grades:
+            # Calculate total demand
+            total_demand = sum(demand_data[grade].get(dates[d], 0) for d in range(num_days))
             
-            closing_deficit_var = model.NewIntVar(0, 100000, f'closing_deficit_{grade}')
-            model.Add(closing_deficit_var >= min_closing - closing_inventory)
-            model.Add(closing_deficit_var >= 0)
+            # Calculate available production capacity for this grade
+            grade_capacity = 0
+            for line in allowed_lines[grade]:
+                if line in capacities:
+                    grade_capacity += capacities[line] * num_days
             
-            closing_inventory_deficit_penalties[grade] = closing_deficit_var
+            # Criticality score: demand / capacity ratio
+            if grade_capacity > 0:
+                utilization = total_demand / grade_capacity
+            else:
+                utilization = 999  # Very high if no capacity
+            
+            # Demand variability
+            daily_demands = [demand_data[grade].get(dates[d], 0) for d in range(num_days)]
+            avg_demand = total_demand / num_days if num_days > 0 else 0
+            
+            if avg_demand > 0:
+                # Calculate max daily demand relative to average
+                max_daily = max(daily_demands)
+                peak_factor = max_daily / avg_demand
+            else:
+                peak_factor = 1.0
+            
+            # Critical grades: high utilization OR high peak demand
+            is_critical = (utilization > 0.8) or (peak_factor > 2.0)
+            
+            grade_criticality[grade] = {
+                'total_demand': total_demand,
+                'grade_capacity': grade_capacity,
+                'utilization': utilization,
+                'peak_factor': peak_factor,
+                'is_critical': is_critical,
+                'priority_multiplier': 5.0 if is_critical else 1.0
+            }
+        
+        # ========== ADJUSTED PENALTIES ==========
+        # Critical grades get higher penalties
+        critical_penalty_multiplier = {}
+        for grade in grades:
+            if grade_criticality[grade]['is_critical']:
+                # Critical grades: 20x standard penalty
+                critical_penalty_multiplier[grade] = 20
+            else:
+                # Non-critical grades: 10x standard penalty
+                critical_penalty_multiplier[grade] = 10
+        
+        # ========== FOCUSED LOOKAHEAD ==========
+        # Only look ahead for critical grades
+        lookahead_deficit_penalties = {}
+        
+        for grade in grades:
+            if not grade_criticality[grade]['is_critical']:
+                continue
+                
+            # For critical grades, ensure we have inventory for next 3 days
+            for d in range(num_days - 3):
+                future_demand = 0
+                for offset in range(1, 4):  # Next 3 days
+                    if d + offset < num_days:
+                        future_demand += demand_data[grade].get(dates[d + offset], 0)
+                
+                if future_demand > 0:
+                    # Simple: need at least future demand as inventory
+                    required_inventory = future_demand
+                    inventory_shortfall = model.NewIntVar(0, 100000, f'critical_lookahead_{grade}_{d}')
+                    current_inventory = inventory_vars[(grade, d)]
+                    
+                    model.Add(inventory_shortfall >= required_inventory - current_inventory)
+                    model.Add(inventory_shortfall >= 0)
+                    
+                    # High penalty for not having enough inventory for future demand
+                    lookahead_deficit_penalties[(grade, d)] = inventory_shortfall
+        
+        # ========== DYNAMIC SAFETY STOCK ==========
+        # Simple: 3 days of average demand for critical grades, 1.5 days for others
+        dynamic_safety_stocks = {}
+        for grade in grades:
+            avg_daily = grade_criticality[grade]['total_demand'] / num_days if num_days > 0 else 0
+            if grade_criticality[grade]['is_critical']:
+                # Critical: 3 days of safety stock
+                safety_days = 3
+            else:
+                # Non-critical: 1.5 days of safety stock
+                safety_days = 1.5
+            
+            safety_stock = int(avg_daily * safety_days)
+            dynamic_safety_stocks[grade] = max(min_inventory[grade], safety_stock)
+        
+        # ========== INVENTORY DEFICIT PENALTIES ==========
+        inventory_deficit_penalties = {}
+        for grade in grades:
+            target_inventory = dynamic_safety_stocks[grade]
+            if target_inventory > 0:
+                for d in range(num_days):
+                    inventory_tomorrow = inventory_vars[(grade, d + 1)]
+                    
+                    deficit_var = model.NewIntVar(0, 100000, f'safety_deficit_{grade}_{d}')
+                    model.Add(deficit_var >= target_inventory - inventory_tomorrow)
+                    model.Add(deficit_var >= 0)
+                    
+                    inventory_deficit_penalties[(grade, d)] = deficit_var
+        
+        # ========== REDUCED TRANSITION PENALTY ==========
+        # Allow more flexibility to switch to needed grades
+        effective_transition_penalty = max(1, transition_penalty // 20)  # 5% of normal
+        
+        # ========== OBJECTIVE FUNCTION FOR MINIMIZE STOCKOUTS ==========
+        objective_terms = []
+        
+        # 1. High stockout penalties (PRIORITY 1)
+        for grade in grades:
+            for d in range(num_days):
+                if (grade, d) in stockout_vars:
+                    multiplier = critical_penalty_multiplier[grade]
+                    penalty = stockout_penalty * multiplier
+                    objective_terms.append(penalty * stockout_vars[(grade, d)])
+        
+        # 2. Safety stock inventory deficits (PRIORITY 2)
+        for (grade, d), deficit_var in inventory_deficit_penalties.items():
+            if grade_criticality[grade]['is_critical']:
+                # Higher penalty for critical grades
+                penalty = stockout_penalty * 8
+            else:
+                penalty = stockout_penalty * 3
+            objective_terms.append(penalty * deficit_var)
+        
+        # 3. Critical lookahead penalties (PRIORITY 1.5)
+        for (grade, d), shortfall_var in lookahead_deficit_penalties.items():
+            # Very high penalty for not preparing for future demand of critical grades
+            penalty = stockout_penalty * 15
+            objective_terms.append(penalty * shortfall_var)
+        
+        # 4. Minimal transition penalty
+        for line in lines:
+            for grade in grades:
+                for d in range(num_days):
+                    key = (grade, line, d)
+                    if key in run_starts:
+                        objective_terms.append(effective_transition_penalty * run_starts[key])
+        
+        # 5. Minimal idle penalty (just to break ties)
+        idle_penalty = 10
+        for line in lines:
+            for d in range(num_days):
+                if line in shutdown_periods and d in shutdown_periods[line]:
+                    continue
+                    
+                is_idle = model.NewBoolVar(f'idle_{line}_{d}')
+                
+                producing_vars = [
+                    is_producing[(grade, line, d)] 
+                    for grade in grades 
+                    if (grade, line, d) in is_producing
+                ]
+                
+                if producing_vars:
+                    model.Add(sum(producing_vars) == 0).OnlyEnforceIf(is_idle)
+                    model.Add(sum(producing_vars) == 1).OnlyEnforceIf(is_idle.Not())
+                    objective_terms.append(idle_penalty * is_idle)
+        
+        if objective_terms:
+            model.Minimize(sum(objective_terms))
+        else:
+            model.Minimize(0)
+    
+    else:
+        # ========== STANDARD MINIMUM INVENTORY (SOFT) ==========
+        for grade in grades:
+            for d in range(num_days):
+                if min_inventory[grade] > 0:
+                    min_inv_value = int(min_inventory[grade])
+                    inventory_tomorrow = inventory_vars[(grade, d + 1)]
+                    
+                    deficit_var = model.NewIntVar(0, 100000, f'inv_deficit_{grade}_{d}')
+                    model.Add(deficit_var >= min_inv_value - inventory_tomorrow)
+                    model.Add(deficit_var >= 0)
+                    
+                    inventory_deficit_penalties[(grade, d)] = deficit_var
+            
+            # Minimum closing inventory (SOFT)
+            if min_closing_inventory[grade] > 0 and buffer_days > 0:
+                closing_inventory = inventory_vars[(grade, num_days - buffer_days)]
+                min_closing = min_closing_inventory[grade]
+                
+                closing_deficit_var = model.NewIntVar(0, 100000, f'closing_deficit_{grade}')
+                model.Add(closing_deficit_var >= min_closing - closing_inventory)
+                model.Add(closing_deficit_var >= 0)
+                
+                closing_inventory_deficit_penalties[grade] = closing_deficit_var
     
     if progress_callback:
         progress_callback(0.7, "Building objective function...")
     
     # ========== OBJECTIVE FUNCTION ==========
     objective_terms = []
-    # Build objective function based on selected mode
     epsilon = 1.0
     
-    if penalty_method == "Ensure All Grades' Production":
-        # ========== ENSURE ALL GRADES' PRODUCTION MODE ==========
+    if penalty_method == "Minimize Stockouts":
+        # Already handled in the soft constraints section above
+        # Just add a dummy term to avoid empty objective
+        if not objective_terms:
+            model.Minimize(0)
+    
+    elif penalty_method == "Ensure All Grades' Production":
         PERCENTAGE_PENALTY_WEIGHT = 100
         
-        # 1. Stockout penalties with demand normalization
+        # Stockout penalties
         for grade in grades:
             for d in range(num_days):
                 if (grade, d) in stockout_vars:
@@ -617,7 +804,7 @@ def build_and_solve_model(
                         scaled_penalty = int(penalty_per_unit * 100)
                         objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
         
-        # 2. Inventory deficit penalties with normalization
+        # Inventory deficit penalties
         MIN_INV_VIOLATION_MULTIPLIER = 2
         for (grade, d), deficit_var in inventory_deficit_penalties.items():
             daily_demand = demand_data[grade].get(dates[d], 0)
@@ -629,7 +816,7 @@ def build_and_solve_model(
             else:
                 objective_terms.append(stockout_penalty * MIN_INV_VIOLATION_MULTIPLIER * deficit_var)
         
-        # 3. Closing inventory deficit penalties with normalization
+        # Closing inventory deficit penalties
         for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
             total_demand = sum(demand_data[grade].get(dates[d], 0) for d in range(num_days))
             avg_daily_demand = total_demand / num_days if num_days > 0 else 1
@@ -641,7 +828,10 @@ def build_and_solve_model(
             else:
                 objective_terms.append(stockout_penalty * closing_deficit_var * 3)
         
-        # 4. Transition penalties (standard pairwise)
+        # Transition penalties
+        effective_transition_penalty = transition_penalty
+        
+        # Standard pairwise transitions
         for line in lines:
             for d in range(num_days - 1):
                 for grade1 in grades:
@@ -662,9 +852,9 @@ def build_and_solve_model(
                         model.Add(trans_var >= is_producing[(grade1, line, d)] + 
                                   is_producing[(grade2, line, d + 1)] - 1)
                         
-                        objective_terms.append(transition_penalty * trans_var)
+                        objective_terms.append(effective_transition_penalty * trans_var)
         
-        # 5. Idle line penalty
+        # Idle line penalty
         idle_penalty = 500
         for line in lines:
             for d in range(num_days):
@@ -684,24 +874,48 @@ def build_and_solve_model(
                     model.Add(sum(producing_vars) == 1).OnlyEnforceIf(is_idle.Not())
                     objective_terms.append(idle_penalty * is_idle)
     
-    else:  # Standard mode
-        # ========== STANDARD MODE ==========
-        
-        # 1. Stockout penalties (linear)
+    elif penalty_method == "Minimize Transitions":
+        # Stockout penalties
         for grade in grades:
             for d in range(num_days):
                 if (grade, d) in stockout_vars:
                     objective_terms.append(stockout_penalty * stockout_vars[(grade, d)])
         
-        # 2. Inventory deficit penalties
+        # Use run starts for transition counting
+        for line in lines:
+            for grade in grades:
+                for d in range(num_days):
+                    key = (grade, line, d)
+                    if key in run_starts:
+                        objective_terms.append(transition_penalty * run_starts[key])
+        
+        # Inventory deficit penalties
         for (grade, d), deficit_var in inventory_deficit_penalties.items():
             objective_terms.append(stockout_penalty * deficit_var)
         
-        # 3. Closing inventory deficit penalties
+        # Closing inventory deficit penalties
+        for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
+            objective_terms.append(stockout_penalty * closing_deficit_var * 3)
+    
+    else:  # Standard mode
+        # Stockout penalties
+        for grade in grades:
+            for d in range(num_days):
+                if (grade, d) in stockout_vars:
+                    objective_terms.append(stockout_penalty * stockout_vars[(grade, d)])
+        
+        # Inventory deficit penalties
+        for (grade, d), deficit_var in inventory_deficit_penalties.items():
+            objective_terms.append(stockout_penalty * deficit_var)
+        
+        # Closing inventory deficit penalties
         for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
             objective_terms.append(stockout_penalty * closing_deficit_var * 3)
         
-        # 4. Transition penalties (standard pairwise)
+        # Transition penalties
+        effective_transition_penalty = transition_penalty
+        
+        # Standard pairwise transitions
         for line in lines:
             for d in range(num_days - 1):
                 for grade1 in grades:
@@ -722,9 +936,9 @@ def build_and_solve_model(
                         model.Add(trans_var >= is_producing[(grade1, line, d)] + 
                                   is_producing[(grade2, line, d + 1)] - 1)
                         
-                        objective_terms.append(transition_penalty * trans_var)
+                        objective_terms.append(effective_transition_penalty * trans_var)
         
-        # 5. Idle line penalty
+        # Idle line penalty
         idle_penalty = 500
         for line in lines:
             for d in range(num_days):
@@ -743,8 +957,6 @@ def build_and_solve_model(
                     model.Add(sum(producing_vars) == 0).OnlyEnforceIf(is_idle)
                     model.Add(sum(producing_vars) == 1).OnlyEnforceIf(is_idle.Not())
                     objective_terms.append(idle_penalty * is_idle)
-    
-    
     
     if objective_terms:
         model.Minimize(sum(objective_terms))
