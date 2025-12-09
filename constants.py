@@ -47,8 +47,8 @@ PLANT_COLUMNS = {
     'expected_days': 'Expected Run Days',
     'shutdown_start': 'Shutdown Start Date',
     'shutdown_end': 'Shutdown End Date',
-    'pre_shutdown_grade': 'Pre Shutdown Grade',
-    'restart_grade': 'Restart Grade',
+    'pre_shutdown_grade': 'Pre Shutdown Grade',      # ✅ ADDED
+    'restart_grade': 'Restart Grade',                 # ✅ ADDED
 }
 
 INVENTORY_COLUMNS = {
@@ -73,3 +73,9 @@ SS_SOLUTION = "solution"
 SS_SOLVER_STATUS = "solver_status"
 SS_GRADE_COLORS = "grade_colors"
 SS_THEME = "app_theme"
+
+# Penalty method options (for UI)
+PENALTY_METHODS = [
+    "Standard",
+    "Ensure All Grades' Production"
+]
