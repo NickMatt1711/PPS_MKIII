@@ -321,12 +321,6 @@ def build_and_solve_model(
             except:
                 pass
     
-"""
-CP-SAT Solver - Part 2: Run constraints, transitions, and objective function
-Continue from Part 1
-"""
-
-# CONTINUATION OF build_and_solve_model() function from Part 1
 
     # FIX #3: Run start definitions (exclude material running)
     for grade in grades:
