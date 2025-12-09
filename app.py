@@ -370,8 +370,8 @@ def render_preview_stage():
         # Curated ratios (log-like) from stockout-heavy to transition-heavy
         # Internally use r = stockout / transition (float)
         ratio_values = [
-            200, 100, 50, 40, 30, 20, 10, 8, 5, 4, 3, 2, 1,
-            1/2, 1/3, 1/4, 1/5, 1/8, 1/10, 1/20, 1/30, 1/40, 1/50, 1/100, 1/200
+            200, 100, 150, 50, 40, 30, 20, 10, 8, 5, 4, 3, 2, 1,
+            1/2, 1/3, 1/4, 1/5, 1/8, 1/10, 1/20, 1/30, 1/40, 1/50, 1/100, 1/150, 1/200
         ]
 
         def format_ratio_label(r: float) -> str:
