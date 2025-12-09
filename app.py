@@ -227,9 +227,12 @@ def render_upload_stage():
 # ========== STAGE 1: PREVIEW ==========
 def render_preview_stage():
     """Stage 1: Preview data and configure parameters"""
+
+    # --- Header & Progress ---
     render_header(f"{APP_ICON} {APP_TITLE}", "Review data and configure optimization")
     render_stage_progress(STAGE_MAP.get(STAGE_PREVIEW, 1))
 
+    # --- Get uploaded Excel content from session ---
     excel_data = st.session_state.get(SS_EXCEL_DATA)
     if not excel_data:
         render_alert("No data found. Please upload a file first.", "error")
@@ -238,13 +241,16 @@ def render_preview_stage():
             st.rerun()
         return
 
+    # =========================
+    # 1) DATA PREVIEW
+    # =========================
     st.markdown("### 📊 Data Preview")
 
-    # Required sheets and transition detection
+    # Required sheets and auto-detected transition matrices
     required_sheets = ['Plant', 'Inventory', 'Demand']
     transition_sheets = [k for k in excel_data.keys() if k.startswith('Transition_')]
 
-    # Create tabs for required sheets + transition
+    # Create tabs for required sheets + combine transition matrices
     all_sheets = required_sheets + (['Transition Matrices'] if transition_sheets else [])
     tabs = st.tabs(all_sheets)
 
@@ -253,24 +259,25 @@ def render_preview_stage():
         with tabs[idx]:
             if sheet_name in excel_data:
                 df_display = excel_data[sheet_name].copy()
-                # Format datetime columns
+
+                # Attempt to format datetime columns for display
                 try:
-                    if sheet_name == 'Plant':
-                        for col in df_display.select_dtypes(include=['datetime']).columns[:2]:
-                            df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
-                    elif sheet_name == 'Inventory':
-                        for col in df_display.select_dtypes(include=['datetime']).columns[:2]:
+                    datetime_cols = df_display.select_dtypes(include=['datetime']).columns
+                    if sheet_name in ('Plant', 'Inventory'):
+                        for col in datetime_cols[:2]:
                             df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
                     elif sheet_name == 'Demand':
-                        for col in df_display.select_dtypes(include=['datetime']).columns[:1]:
+                        for col in datetime_cols[:1]:
                             df_display[col] = df_display[col].dt.strftime('%d-%b-%y')
                 except Exception:
+                    # Gracefully ignore if no datetime columns or conversion fails
                     pass
+
                 st.dataframe(df_display, use_container_width=True, hide_index=True)
             else:
                 st.info(f"Sheet {sheet_name} not found in uploaded file.")
 
-    # Render transition matrices
+    # Render transition matrices if present
     if transition_sheets:
         with tabs[-1]:
             for sheet_name in transition_sheets:
@@ -295,12 +302,14 @@ def render_preview_stage():
     st.markdown("---")
     render_section_divider()
 
-    # Configuration parameters UI
+    # =========================
+    # 2) CONFIGURATION UI
+    # =========================
     st.markdown("### ⚙️ Optimization Configuration")
 
     col_1, b1, col_2, b2, col_method = st.columns([0.5, 0.2, 1, 0.2, 2])
 
-    # --- Time Limit ---
+    # --- Time Limit (mins) ---
     with col_1:
         time_limit = st.number_input(
             "Time Limit (min)",
@@ -311,21 +320,22 @@ def render_preview_stage():
             help="Maximum time allowed for the solver"
         )
 
-    # --- Buffer Days (Selectbox instead of Slider) ---
+    # --- Buffer Days (segmented control) ---
     with col_2:
         buffer_days = st.segmented_control(
             "Production Buffer Days",
-            options=[0,1, 2, 3, 4, 5, 6, 7],
+            options=[0, 1, 2, 3, 4, 5, 6, 7],
             default=3,
             help="Slack Days at end of Production horizon"
         )
 
-    # --- Optimization Method Selection ---
+    # --- Optimization Method ---
     with col_method:
         OPTIMIZATION_METHODS = {
             "Standard": {
                 "title": "Standard",
                 "description": "Linear penalties with typical business constraints.",
+                # Base penalties (will be overridden by ratio picker below)
                 "stockout_penalty": 10,
                 "transition_penalty": 5
             },
@@ -338,74 +348,95 @@ def render_preview_stage():
         }
 
         method_options = list(OPTIMIZATION_METHODS.keys())
-
         current_params = st.session_state.get(SS_OPTIMIZATION_PARAMS, {})
         current_method = current_params.get('penalty_method', 'Standard')
 
         selected_method = st.radio(
             "Select optimization method:",
             options=method_options,
-            index=method_options.index(current_method)
-                if current_method in method_options else 0,
+            index=method_options.index(current_method) if current_method in method_options else 0,
             horizontal=True,
             key="penalty_method_selector",
             help="Choose penalty approach."
         )
 
-    # --- Penalty Ratio (Standard Mode Only) ---
+    # =========================
+    # 2a) Penalty Ratio (Standard Only)
+    # =========================
     if selected_method == "Standard":
-    
-        st.markdown("### ⚖️ Penalty Priority (Transition ↔ Balanced ↔ Stockout)")
-    
-        # Helper: Convert slider position to ratio
-        def compute_log_ratio(position: int):
-            # position = 0 to 100
-            if position == 50:
-                return 1, 1
-    
-            # convert -1 to +1
-            log_pos = (position - 50) / 50.0
-            factor = 200 ** abs(log_pos)
-    
-            if log_pos > 0:    # stockout priority
-                return round(factor), 1
-            else:              # transition priority
-                return 1, round(factor)
-    
-    
-        # Default slider location for ratio 2:1 (≈10:5)
-        DEFAULT_SLIDER_POS = 65
-    
-        # Compute ratio *before* slider so label stays accurate
-        current_slider = st.session_state.get("ratio_slider_val", DEFAULT_SLIDER_POS)
-        current_stockout, current_transition = compute_log_ratio(current_slider)
-    
-        # Show the ratio AS the label instead of value
-        st.markdown(
-            f"**Selected Ratio: Stockout `{current_stockout}` : Transition `{current_transition}`**"
+        st.markdown("### ⚖️ Penalty Priority (Transition ↔ 2:1 Balance ↔ Stockout)")
+        st.caption("Select from specific ratios (logarithmically spaced). Default is 2:1.")
+
+        # Curated ratios (log-like) from stockout-heavy to transition-heavy
+        # Internally use r = stockout / transition (float)
+        ratio_values = [
+            200, 100, 50, 40, 30, 20, 10, 8, 5, 4, 3, 2, 1,
+            1/2, 1/3, 1/4, 1/5, 1/8, 1/10, 1/20, 1/30, 1/40, 1/50, 1/100, 1/200
+        ]
+
+        def format_ratio_label(r: float) -> str:
+            """Format for UI, e.g., '200:1' or '1:50'."""
+            if r >= 1.0:
+                return f"{int(round(r))}:1"
+            else:
+                return f"1:{int(round(1.0 / r))}"
+
+        # Determine default based on previous session (if any), else 2:1
+        def nearest_ratio_option(target_r: float) -> float:
+            """Pick the ratio option closest to target in log-space."""
+            import math
+            # Guard against zeros
+            target_r = max(min(target_r, 200.0), 1/200.0)
+            log_target = math.log(target_r)
+            best = ratio_values[0]
+            best_dist = float('inf')
+            for opt in ratio_values:
+                dist = abs(math.log(opt) - log_target)
+                if dist < best_dist:
+                    best_dist = dist
+                    best = opt
+            return best
+
+        # Try to recover prior choice from SS_OPTIMIZATION_PARAMS
+        if current_method == "Standard":
+            prev_stockout = current_params.get('stockout_penalty', None)
+            prev_transition = current_params.get('transition_penalty', None)
+            if prev_stockout and prev_transition and prev_stockout > 0 and prev_transition > 0:
+                previous_ratio = prev_stockout / prev_transition
+                default_ratio = nearest_ratio_option(previous_ratio)
+            else:
+                default_ratio = 2.0
+        else:
+            default_ratio = 2.0
+
+        selected_ratio = st.select_slider(
+            "Penalty ratio (stockout : transition)",
+            options=ratio_values,
+            value=default_ratio,
+            format_func=format_ratio_label,
+            help="Move right for stockout priority (e.g., 50:1); left for transition priority (e.g., 1:50).",
+            key="ratio_select_slider"
         )
-    
-        # Slider (position hidden from user, only ratio shown)
-        slider_val = st.slider(
-            "",
-            min_value=0,
-            max_value=100,
-            value=current_slider,
-            label_visibility="collapsed"
-        )
-    
-        # Update state + compute final penalties
-        st.session_state["ratio_slider_val"] = slider_val
-        stockout_penalty, transition_penalty = compute_log_ratio(slider_val)
-    
+
+        # Compute integer penalties from the selected ratio
+        if selected_ratio >= 1.0:
+            stockout_penalty = int(round(selected_ratio))
+            transition_penalty = 1
+            st.markdown(f"**Selected Ratio:** `{format_ratio_label(selected_ratio)}` &mdash; Stockout priority")
+        else:
+            inv = int(round(1.0 / selected_ratio))
+            stockout_penalty = 1
+            transition_penalty = inv
+            st.markdown(f"**Selected Ratio:** `{format_ratio_label(selected_ratio)}` &mdash; Transition priority")
+
     else:
+        # Non-standard mode: use method defaults (you may adjust later in solver)
         stockout_penalty = OPTIMIZATION_METHODS[selected_method]["stockout_penalty"]
         transition_penalty = OPTIMIZATION_METHODS[selected_method]["transition_penalty"]
 
-
-
-
-    # --- Store updated parameters ---
+    # =========================
+    # 3) STORE PARAMETERS
+    # =========================
     st.session_state[SS_OPTIMIZATION_PARAMS] = {
         'time_limit_min': int(time_limit),
         'buffer_days': int(buffer_days),
@@ -414,7 +445,9 @@ def render_preview_stage():
         'penalty_method': selected_method
     }
 
-    # --- Navigation Buttons ---
+    # =========================
+    # 4) NAVIGATION
+    # =========================
     col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
 
     with col_nav1:
@@ -426,6 +459,7 @@ def render_preview_stage():
         if st.button("🎯 Run Optimization →", use_container_width=True, type="primary"):
             st.session_state[SS_STAGE] = STAGE_OPTIMIZING
             st.rerun()
+
 
 
 
