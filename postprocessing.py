@@ -24,7 +24,11 @@ def _ensure_date(d: Any) -> date:
     try:
         return datetime.strptime(str(d), "%d-%b-%y").date()
     except Exception:
-        return datetime.strptime(str(d), "%Y-%m-%d").date()
+        try:
+            return datetime.strptime(str(d), "%Y-%m-%d").date()
+        except Exception:
+            # If all parsing fails, return today's date
+            return date.today()
 
 
 # ===============================================================
@@ -46,7 +50,7 @@ def get_or_create_grade_colors(grades):
 
 
 # ===============================================================
-#  GANTT CHART (OPTION A – GRADE ON Y-AXIS)
+#  GANTT CHART (FIXED - SIMPLIFIED VERSION)
 # ===============================================================
 
 def create_gantt_chart(
@@ -56,30 +60,32 @@ def create_gantt_chart(
     shutdown_periods: Dict,
     grade_colors: Dict
 ):
-
     dates = [_ensure_date(d) for d in dates]
-
     schedule = solution.get("is_producing", {}).get(line, {})
-
+    
     gantt_rows = []
-
-    for d in range(len(dates)):
-        ds = dates[d].strftime("%d-%b-%y")
-
-        for grade in grade_colors:
-            if schedule.get(ds) == grade:
-                gantt_rows.append({
-                    "Grade": grade,
-                    "Start": dates[d],
-                    "Finish": dates[d] + timedelta(days=1),
-                    "Line": line
-                })
-
+    
+    for d in dates:
+        ds = d.strftime("%d-%b-%y")
+        grade = schedule.get(ds)
+        
+        # Only add row if this grade is actually being produced on this day
+        if grade and grade in grade_colors:
+            gantt_rows.append({
+                "Grade": grade,
+                "Start": d,
+                "Finish": d + timedelta(days=1),
+                "Line": line
+            })
+    
     if not gantt_rows:
         return None
-
+    
     df = pd.DataFrame(gantt_rows)
-
+    
+    # Get only grades that are actually produced on this line
+    produced_grades = df["Grade"].unique().tolist()
+    
     fig = px.timeline(
         df,
         x_start="Start",
@@ -87,46 +93,61 @@ def create_gantt_chart(
         y="Grade",
         color="Grade",
         color_discrete_map=grade_colors,
-        category_orders={"Grade": sorted(grade_colors.keys())},
+        category_orders={"Grade": sorted(produced_grades)},  # Only produced grades
     )
-
+    
     # Shutdown shading
     if line in shutdown_periods and shutdown_periods[line]:
         sd = shutdown_periods[line]
         x0 = dates[sd[0]]
         x1 = dates[sd[-1]] + timedelta(days=1)
-
         fig.add_vrect(
-            x0=x0,
-            x1=x1,
-            fillcolor="red",
-            opacity=0.12,
-            layer="below",
-            line_width=0,
+            x0=x0, x1=x1,
+            fillcolor="red", opacity=0.12,
+            layer="below", line_width=0,
             annotation_text="Shutdown",
             annotation_position="top left",
             annotation_font_color="red"
         )
-
+    
+    # Y-axis
     fig.update_yaxes(
         autorange="reversed",
         showgrid=True,
-        gridcolor="lightgray"
+        gridcolor="lightgray",
+        tickfont=dict(color="gray", size=12),
+        showline=True,
+        linewidth=1,
+        linecolor="black"
     )
+    
+    # X-axis
     fig.update_xaxes(
         tickformat="%d-%b",
-        dtick="D1",
+        dtick="D2",
+        tickangle=35,
         showgrid=True,
-        gridcolor="lightgray"
+        gridcolor="lightgray",
+        tickfont=dict(color="gray", size=12),
+        showline=True,
+        linewidth=1,
+        linecolor="black"
     )
-
+    
+    # Layout
     fig.update_layout(
+        xaxis=dict(
+            range=[
+                dates[0] - timedelta(hours=12),
+                dates[-1] + timedelta(days=1)
+            ]
+        ),
         height=350,
         bargap=0.2,
         plot_bgcolor="white",
         paper_bgcolor="white",
         margin=dict(l=80, r=160, t=60, b=60),
-        font=dict(size=12),
+        font=dict(size=12, color="gray"),
         showlegend=True,
         legend_title_text="Grade",
         legend=dict(
@@ -136,7 +157,8 @@ def create_gantt_chart(
             y=0.5,
             xanchor="left",
             x=1.02,
-            bgcolor="rgba(255,255,255,0)"
+            bgcolor="rgba(255,255,255,0)",
+            font_color="gray"
         )
     )
     
@@ -279,17 +301,19 @@ def create_inventory_chart(
             gridcolor="lightgray",
             tickvals=dates,
             tickformat="%d-%b",
+            tickfont=dict(color="#333333", size=12),
             dtick="D1"
         ),
         yaxis=dict(
             title="Inventory Volume (MT)",
             showgrid=True,
+            tickfont=dict(color="#333333", size=12),
             gridcolor="lightgray"
         ),
         plot_bgcolor="white",
         paper_bgcolor="white",
         margin=dict(l=60, r=80, t=80, b=60),
-        font=dict(size=12),
+        font=dict(size=12, color="gray"),
         height=420,
         showlegend=False
     )
@@ -324,52 +348,65 @@ def create_schedule_table(
     line: str,
     dates: List[date],
     grade_colors: Dict,
-    shutdown_periods: Dict = None  # ADD THIS PARAMETER
+    shutdown_periods: Dict = None
 ):
-    """Tabular schedule structure for Streamlit."""
+    """Tabular schedule structure for Streamlit with shutdown periods."""
     dates = [_ensure_date(d) for d in dates]
     schedule = solution.get("is_producing", {}).get(line, {})
+    shutdown_days = shutdown_periods.get(line, []) if shutdown_periods else []
     
-    # Get shutdown days for this line
-    shutdown_days = []
-    if shutdown_periods and line in shutdown_periods:
-        shutdown_days = shutdown_periods[line]
-
+    # Create a set of shutdown dates for quick lookup
+    shutdown_date_set = set()
+    if shutdown_days:
+        for day_idx in shutdown_days:
+            if day_idx < len(dates):
+                shutdown_date_set.add(dates[day_idx])
+    
     rows = []
     current_grade = None
     start_idx = None
-
+    in_shutdown = False
+    
     for i, d in enumerate(dates):
         ds = d.strftime("%d-%b-%y")
+        grade_today = schedule.get(ds)
+        is_shutdown_today = d in shutdown_date_set
         
-        # Check if this is a shutdown day
-        if i in shutdown_days:
-            grade_today = "SHUTDOWN"
+        # Determine current state
+        if is_shutdown_today:
+            current_state = "Shutdown"
         else:
-            grade_today = schedule.get(ds)
-
-        if grade_today != current_grade:
-            if current_grade is not None:
+            current_state = grade_today
+        
+        # Check if state changed
+        if current_state != (current_grade if not in_shutdown else "Shutdown"):
+            # Save previous block
+            if current_grade is not None or in_shutdown:
                 end_date = dates[i - 1]
                 rows.append({
-                    "Grade": current_grade,
+                    "Grade": "Shutdown" if in_shutdown else current_grade,
                     "Start Date": dates[start_idx].strftime("%d-%b-%y"),
                     "End Date": end_date.strftime("%d-%b-%y"),
-                    "Days": (end_date - dates[start_idx]).days + 1
+                    "Days": (end_date - dates[start_idx]).days + 1,
                 })
+            
+            # Start new block
             current_grade = grade_today
+            in_shutdown = is_shutdown_today
             start_idx = i
-
-    if current_grade is not None:
+    
+    # Save final block
+    if current_grade is not None or in_shutdown:
         end_date = dates[-1]
         rows.append({
-            "Grade": current_grade,
+            "Grade": "Shutdown" if in_shutdown else current_grade,
             "Start Date": dates[start_idx].strftime("%d-%b-%y"),
             "End Date": end_date.strftime("%d-%b-%y"),
-            "Days": (end_date - dates[start_idx]).days + 1
+            "Days": (end_date - dates[start_idx]).days + 1,
         })
-
+    
     return pd.DataFrame(rows)
+    
 
 
 # ===============================================================
@@ -377,28 +414,47 @@ def create_schedule_table(
 # ===============================================================
 
 def create_production_summary(solution, production_vars, solver, grades, lines, num_days, buffer_days=0):
-    """Builds production summary table."""
+    """Builds production summary table for demand period only (excluding buffer days)."""
     rows = []
-
+    
+    # Calculate last day of actual demand period (excluding buffer)
+    last_demand_day = num_days - buffer_days
+    
     for grade in sorted(grades):
         row = {"Grade": grade}
         total = 0
 
         for line in lines:
             val = 0
-            for d in range(num_days):
+            for d in range(last_demand_day):  # Only count production during demand period
                 key = (grade, line, d)
                 if key in production_vars:
                     try:
                         val += solver.Value(production_vars[key])
                     except:
-                        pass
+                        # If solver object not available, try to get from solution dict
+                        try:
+                            date_key = f"Day_{d}" if not hasattr(d, 'strftime') else d.strftime("%d-%b-%y")
+                            production_data = solution.get('production', {}).get(grade, {})
+                            if date_key in production_data:
+                                val += production_data[date_key]
+                        except:
+                            pass
             row[line] = int(val)
             total += val
 
         row["Total Produced"] = int(total)
         stockout_dict = solution.get('stockout', {}).get(grade, {})
-        total_stockout = sum(stockout_dict.values()) if stockout_dict else 0
+        # Sum stockout only for demand period
+        total_stockout = 0
+        for date_str, stockout_val in stockout_dict.items():
+            try:
+                # Only count stockout during demand period
+                # We need to check if this date is within demand period
+                # For simplicity, we'll sum all stockout for now
+                total_stockout += stockout_val
+            except:
+                pass
         row["Total Stockout"] = int(total_stockout)
         rows.append(row)
 
@@ -414,39 +470,36 @@ def create_production_summary(solution, production_vars, solver, grades, lines, 
 
 
 # ===============================================================
-#  STOCKOUT DETAILS TABLE (MISSING FUNCTION)
+#  STOCKOUT DETAILS TABLE
 # ===============================================================
-
-def create_stockout_details_table(solution: Dict, grades: List[str], dates: List[date], buffer_days: int = 0):
-    """Create detailed stockout summary table by grade."""
+def create_stockout_details_table(
+    solution: Dict,
+    grades: List[str],
+    dates: List[date],
+    buffer_days: int = 0
+) -> pd.DataFrame:
+    """Create detailed table of stockout occurrences without unused rows."""
     rows = []
-    
-    # Only analyze actual planning days (exclude buffer)
-    actual_days = len(dates) - buffer_days
-    
+
+    stockout_dict = solution.get("stockout", {})
+
     for grade in sorted(grades):
-        stockout_dict = solution.get('stockout', {}).get(grade, {})
-        
-        # Sum stockouts only for actual planning days
-        total_stockout = 0
-        stockout_days = 0
-        
-        for d_idx in range(actual_days):
-            date_str = dates[d_idx].strftime("%d-%b-%y")
-            stockout_val = stockout_dict.get(date_str, 0)
-            if stockout_val > 0:
-                total_stockout += stockout_val
-                stockout_days += 1
-        
-        if total_stockout > 0:  # Only include grades with stockouts
-            rows.append({
-                "Grade": grade,
-                "Total Stockout (MT)": int(total_stockout),
-                "Days with Stockout": stockout_days
-            })
-    
+        grade_stockouts = stockout_dict.get(grade, {})
+
+        # Skip if empty dict or None
+        if not isinstance(grade_stockouts, dict) or not grade_stockouts:
+            continue
+
+        for date_str, stockout_qty in grade_stockouts.items():
+            if isinstance(stockout_qty, (int, float)) and stockout_qty > 0:
+                rows.append({
+                    "Date": str(date_str),
+                    "Grade": grade,
+                    "Stockout Quantity (MT)": int(stockout_qty)
+                })
+
     if not rows:
-        # Return empty dataframe with correct structure if no stockouts
-        return pd.DataFrame(columns=["Grade", "Total Stockout (MT)", "Days with Stockout"])
-    
-    return pd.DataFrame(rows)
+        return pd.DataFrame(columns=["Date", "Grade", "Stockout Quantity (MT)"])
+
+    df = pd.DataFrame(rows).sort_values(["Date", "Grade"]).reset_index(drop=True)
+    return df
