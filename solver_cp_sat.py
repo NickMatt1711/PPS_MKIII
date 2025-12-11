@@ -247,32 +247,11 @@ def build_and_solve_model(
                         model.Add(other_var == 0)
             # If expected_days is specified (not None) and > 0, force continuation
             if expected_days is not None and expected_days > 0:
-                # Force the material to run for exactly expected_days
-                # Start from day 1 (day 0 is already forced above)
-                forced_days = min(expected_days, num_days)
-                for d in range(1, forced_days):
-                    if d < num_days and is_allowed_combination(material, plant):
-                        var = get_is_producing_var(material, plant, d)
-                        if var is not None:
-                            model.Add(var == 1)
-                    # Force all other grades to 0
-                    for other_material in grades:
-                        if other_material != material and is_allowed_combination(other_material, plant):
-                            other_var = get_is_producing_var(other_material, plant, d)
-                            if other_var is not None:
-                                model.Add(other_var == 0)
-                # Store as fixed block for later logic
-                material_running_map[plant] = {
-                    'material': material,
-                    'expected_days': forced_days
-                }
-            else:
-                # expected_days is None - no forced continuation, just day 0
-                # Store with expected_days = 1 to indicate only day 0 is fixed
-                material_running_map[plant] = {
-                    'material': material,
-                    'expected_days': 1  # Only day 0 is forced
-                }
+                end_day = expected_days
+                if end_day < num_days and is_allowed_combination(material, plant):
+                    next_day_var = get_is_producing_var(material, plant, end_day)
+                    if next_day_var is not None:
+                        model.Add(next_day_var == 0)  # Force transition after block
 
     # ========== NEW: PRE-SHUTDOWN AND RESTART GRADE CONSTRAINTS ==========
     if progress_callback:
@@ -651,15 +630,19 @@ def build_and_solve_model(
 
     # 1. Stockout penalties (SOFT) - Two methods
     if penalty_method == "Ensure All Grades' Production":
-        PERCENTAGE_PENALTY_WEIGHT = 100  # Penalty per 1% stockout
         for grade in grades:
+            # Total demand over entire horizon
+            total_demand = sum(demand_data[grade].get(dates[d], 0) for d in range(num_days))
+            if total_demand <= 0:
+                continue
+    
+            # Penalty such that cost = stockout_percentage × stockout_penalty
+            per_unit_penalty = int(stockout_penalty * 10000 / total_demand)
+    
             for d in range(num_days):
                 if (grade, d) in stockout_vars:
-                    demand_today = demand_data[grade].get(dates[d], 0)
-                    if demand_today > 0:
-                        penalty_per_unit = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty) / (demand_today + epsilon)
-                        scaled_penalty = int(penalty_per_unit * 100)
-                        objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
+                    objective_terms.append(per_unit_penalty * stockout_vars[(grade, d)])
+
     else:  # Standard method (default)
         for grade in grades:
             for d in range(num_days):
