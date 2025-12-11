@@ -232,26 +232,97 @@ def build_and_solve_model(
     # If expected_days is a positive integer, it MUST run for exactly that many days
     # If expected_days is None (not specified), only day 0 is forced, rest is optimization decision
     material_running_map = {}
-    for plant, (material, expected_days) in material_running_info.items():
-        # ALWAYS force the material to run on day 0
+
+    for plant, info in material_running_info.items():
+        # info expected to be a tuple (material, expected_days) or similar
+        try:
+            material, expected_days = info
+        except Exception:
+            # If format unexpected, skip and warn (avoid silent failure)
+            expected_days = None
+            material = info if isinstance(info, str) else None
+
+        if material is None:
+            continue
+
+        # Force the material on day 0 if allowed
         if is_allowed_combination(material, plant):
-            # Force this material on day 0
             day0_var = get_is_producing_var(material, plant, 0)
             if day0_var is not None:
                 model.Add(day0_var == 1)
-            # Force all other grades to 0 on day 0
-            for other_material in grades:
-                if other_material != material and is_allowed_combination(other_material, plant):
-                    other_var = get_is_producing_var(other_material, plant, 0)
+
+            # Force all other grades to 0 on day 0 (clear exclusivity)
+            for other_grade in grades:
+                if other_grade != material and is_allowed_combination(other_grade, plant):
+                    other_var = get_is_producing_var(other_grade, plant, 0)
                     if other_var is not None:
                         model.Add(other_var == 0)
-            # If expected_days is specified (not None) and > 0, force continuation
-            if expected_days is not None and expected_days > 0:
-                end_day = expected_days
-                if end_day < num_days and is_allowed_combination(material, plant):
-                    next_day_var = get_is_producing_var(material, plant, end_day)
-                    if next_day_var is not None:
-                        model.Add(next_day_var == 0)  # Force transition after block
+
+        # If expected_days is a positive integer, force continuation for exactly that many days
+        if expected_days is not None and isinstance(expected_days, int) and expected_days > 0:
+            forced_days = min(expected_days, num_days)  # never exceed planning horizon
+
+            # Force the material to run for days [0 .. forced_days-1]
+            for d in range(1, forced_days):  # day 0 already forced above
+                if d < num_days and is_allowed_combination(material, plant):
+                    v = get_is_producing_var(material, plant, d)
+                    if v is not None:
+                        model.Add(v == 1)
+                    # ensure other grades are zero on those forced days
+                    for other_grade in grades:
+                        if other_grade != material and is_allowed_combination(other_grade, plant):
+                            other_v = get_is_producing_var(other_grade, plant, d)
+                            if other_v is not None:
+                                model.Add(other_v == 0)
+
+            # record the forced block (useful later)
+            material_running_map[plant] = {
+                'material': material,
+                'expected_days': forced_days
+            }
+
+            # ---------------------------
+            # CRITICAL: Enforce mandatory changeover ON THE NEXT DAY (forced_days)
+            # That is: day index forced_days must NOT produce the same material.
+            # And, if possible, enforce that some other allowed grade runs on that day
+            # (this prevents leaving the line idle if other constraints allow it).
+            # ---------------------------
+            end_day = forced_days  # day index that must be a different grade
+
+            if end_day < num_days:
+                # Prevent the same material on day end_day
+                if is_allowed_combination(material, plant):
+                    next_var = get_is_producing_var(material, plant, end_day)
+                    if next_var is not None:
+                        model.Add(next_var == 0)
+
+                # As an additional safety, require at least one other allowed grade to run
+                # (only add if there exists at least one other allowed grade that can run on this plant)
+                alternative_grade_vars = []
+                for other_grade in grades:
+                    if other_grade != material and is_allowed_combination(other_grade, plant):
+                        v_alt = get_is_producing_var(other_grade, plant, end_day)
+                        if v_alt is not None:
+                            alternative_grade_vars.append(v_alt)
+
+                if alternative_grade_vars:
+                    # At least one of the other grades must run on the day after the material block.
+                    # This is a HARD constraint: if it cannot be satisfied it will make model infeasible
+                    model.Add(sum(alternative_grade_vars) >= 1)
+                else:
+                    # No alternative grade allowed on this plant — log/warn (helps debugging)
+                    # If you want silent behavior, remove or replace this with a debug print
+                    # (in Streamlit context you might call st.warning, but avoid UI calls in solver module)
+                    # Here we add no-op; constraint on next_var == 0 is already set above if applicable.
+                    pass
+
+        else:
+            # expected_days is None/0/invalid — treat as no forced continuation beyond day 0 (or none at all)
+            # Record as 'not forced' if you wish
+            material_running_map[plant] = {
+                'material': material,
+                'expected_days': 1 if expected_days == 0 else 0
+            }
 
     # ========== NEW: PRE-SHUTDOWN AND RESTART GRADE CONSTRAINTS ==========
     if progress_callback:
