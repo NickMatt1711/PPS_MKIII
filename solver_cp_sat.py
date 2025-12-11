@@ -163,13 +163,14 @@ def build_and_solve_model(
     rerun_allowed: Dict,
     material_running_info: Dict,
     shutdown_periods: Dict,
-    pre_shutdown_grades: Dict,  # NEW parameter
-    restart_grades: Dict,       # NEW parameter
+    pre_shutdown_grades: Dict,
+    restart_grades: Dict,  
     transition_rules: Dict,
     buffer_days: int,
     stockout_penalty: int,
     transition_penalty: int,
     time_limit_min: int,
+    penalty_method: str = "Standard",
     progress_callback=None
 ) -> Tuple[int, SolutionCallback, cp_model.CpSolver]:
     """Build and solve the optimization model"""
@@ -237,22 +238,58 @@ def build_and_solve_model(
                 model.Add(sum(producing_vars) <= 1)
     
     # 3. Material running constraints (HARD)
-    # This creates a fixed block of production
+    # If material running is specified, it MUST run on day 0
+    # If expected_days is a positive integer, it MUST run for exactly that many days
+    # If expected_days is None (not specified), only day 0 is forced, rest is optimization decision
+    
     material_running_map = {}
+    
     for plant, (material, expected_days) in material_running_info.items():
-        material_running_map[plant] = {
-            'material': material,
-            'expected_days': min(expected_days, num_days)
-        }
+        # ALWAYS force the material to run on day 0
+        if is_allowed_combination(material, plant):
+            # Force this material on day 0
+            day0_var = get_is_producing_var(material, plant, 0)
+            if day0_var is not None:
+                model.Add(day0_var == 1)
+            
+            # Force all other grades to 0 on day 0
+            for other_material in grades:
+                if other_material != material and is_allowed_combination(other_material, plant):
+                    other_var = get_is_producing_var(other_material, plant, 0)
+                    if other_var is not None:
+                        model.Add(other_var == 0)
         
-        # Force the material to run for exactly expected_days
-        for d in range(min(expected_days, num_days)):
-            if is_allowed_combination(material, plant):
-                model.Add(get_is_producing_var(material, plant, d) == 1)
-                # Force all other grades to 0
-                for other_material in grades:
-                    if other_material != material and is_allowed_combination(other_material, plant):
-                        model.Add(get_is_producing_var(other_material, plant, d) == 0)
+        # If expected_days is specified (not None) and > 0, force continuation
+        if expected_days is not None and expected_days > 0:
+            # Force the material to run for exactly expected_days
+            # Start from day 1 (day 0 is already forced above)
+            forced_days = min(expected_days, num_days)
+            
+            for d in range(1, forced_days):
+                if d < num_days and is_allowed_combination(material, plant):
+                    var = get_is_producing_var(material, plant, d)
+                    if var is not None:
+                        model.Add(var == 1)
+                    
+                    # Force all other grades to 0
+                    for other_material in grades:
+                        if other_material != material and is_allowed_combination(other_material, plant):
+                            other_var = get_is_producing_var(other_material, plant, d)
+                            if other_var is not None:
+                                model.Add(other_var == 0)
+            
+            # Store as fixed block for later logic
+            material_running_map[plant] = {
+                'material': material,
+                'expected_days': forced_days
+            }
+        else:
+            # expected_days is None - no forced continuation, just day 0
+            # Store with expected_days = 1 to indicate only day 0 is fixed
+            material_running_map[plant] = {
+                'material': material,
+                'expected_days': 1  # Only day 0 is forced
+            }
     
     # ========== NEW: PRE-SHUTDOWN AND RESTART GRADE CONSTRAINTS ==========
     if progress_callback:
@@ -423,13 +460,20 @@ def build_and_solve_model(
             material_running_days = material_running_map[line]['expected_days'] if has_material_running else 0
             
             # ========== FORCE CHANGEOVER AFTER MATERIAL RUNNING ==========
-            if has_material_running and material_running_grade == grade:
-                # This grade is forced for material_running_days
-                # The day after material running ends, we MUST NOT produce the same grade
-                if material_running_days < num_days:
-                    prod_day_after = get_is_producing_var(grade, line, material_running_days)
-                    if prod_day_after is not None:
-                        model.Add(prod_day_after == 0)  # Force changeover
+            # Only force changeover if expected_days was explicitly specified
+            if line in material_running_info:
+                material_grade, original_expected_days = material_running_info[line]
+                # Check if this is in the map with forced days > 1
+                has_forced_block = (line in material_running_map and 
+                                  material_running_map[line]['expected_days'] > 1)
+                
+                if material_grade == grade and has_forced_block:
+                    # The day after material running block ends, we MUST NOT produce the same grade
+                    forced_days = material_running_map[line]['expected_days']
+                    if forced_days < num_days:
+                        prod_day_after = get_is_producing_var(grade, line, forced_days)
+                        if prod_day_after is not None:
+                            model.Add(prod_day_after == 0)  # Force changeover
             
             # ========== MINIMUM RUN DAYS CONSTRAINT ==========
             # This applies to NEW runs started within planning horizon
@@ -443,9 +487,13 @@ def build_and_solve_model(
             
             for d in range(num_days):
                 # Check if this day is within material running block
-                is_in_material_block = (has_material_running and 
-                                       material_running_grade == grade and 
-                                       d < material_running_days)
+                # Only consider it a fixed block if expected_days was specified (>0)
+                is_in_material_block = False
+                if line in material_running_map:
+                    material_grade = material_running_map[line]['material']
+                    expected_days = material_running_map[line]['expected_days']
+                    if material_grade == grade and d < expected_days:
+                        is_in_material_block = True
                 
                 if is_in_material_block:
                     continue  # Skip min-run constraint for material running days
@@ -456,17 +504,32 @@ def build_and_solve_model(
                 
                 # Check if this is start of a new run
                 if d == 0:
-                    # Day 0: If producing and not in material block, it's a start
-                    # But wait, what if material running starts on day 0? We already skipped
-                    # So this is a genuine new start
-                    starts_new_run = prod_today
+                    # Day 0: Check if this is forced material running
+                    # If it's forced material running, it's not considered a "new start" for min-run constraints
+                    is_forced_material = False
+                    if line in material_running_info:
+                        material_grade, expected_days = material_running_info[line]
+                        if material_grade == grade:
+                            is_forced_material = True
+                    
+                    if is_forced_material:
+                        # This is forced material running on day 0
+                        # Don't treat it as a new start for min-run constraints
+                        continue
+                    else:
+                        # Otherwise, treat day 0 as a potential new start
+                        starts_new_run = prod_today
+
                 else:
                     prod_yesterday = get_is_producing_var(grade, line, d - 1)
                     if prod_yesterday is not None:
                         # Check if yesterday was material running
-                        yesterday_in_material_block = (has_material_running and 
-                                                      material_running_grade == grade and 
-                                                      (d - 1) < material_running_days)
+                        yesterday_in_material_block = False
+                        if line in material_running_map:
+                            material_grade = material_running_map[line]['material']
+                            expected_days = material_running_map[line]['expected_days']
+                            if material_grade == grade and (d - 1) < expected_days:
+                                yesterday_in_material_block = True
                         
                         if yesterday_in_material_block:
                             # Yesterday was forced material running
@@ -585,8 +648,7 @@ def build_and_solve_model(
                 start_count_vars = []
                 for d in range(num_days):
                     # Skip if this is within material running block
-                    has_material_running = line in material_running_map
-                    if has_material_running:
+                    if line in material_running_map:
                         material_running_grade = material_running_map[line]['material']
                         material_running_days = material_running_map[line]['expected_days']
                         if material_running_grade == grade and d < material_running_days:
@@ -603,9 +665,12 @@ def build_and_solve_model(
                         prod_yesterday = get_is_producing_var(grade, line, d - 1)
                         if prod_yesterday is not None:
                             # Check if yesterday was material running
-                            yesterday_in_material = (has_material_running and 
-                                                    material_running_grade == grade and 
-                                                    (d - 1) < material_running_days)
+                            yesterday_in_material = False
+                            if line in material_running_map:
+                                material_running_grade = material_running_map[line]['material']
+                                material_running_days = material_running_map[line]['expected_days']
+                                yesterday_in_material = (material_running_grade == grade and 
+                                                        (d - 1) < material_running_days)
                             
                             if yesterday_in_material:
                                 # Yesterday was material running
@@ -659,28 +724,104 @@ def build_and_solve_model(
     
     if progress_callback:
         progress_callback(0.7, "Building objective function...")
+
     
-    # ========== OBJECTIVE FUNCTION ==========
+     # ========== OBJECTIVE FUNCTION ==========
     # Only contains SOFT constraints with penalties
     
     objective_terms = []
+    epsilon = 1.0  # Small constant to avoid division by zero
     
-    # 1. Stockout penalties (SOFT)
-    for grade in grades:
-        for d in range(num_days):
-            if (grade, d) in stockout_vars:
-                objective_terms.append(stockout_penalty * stockout_vars[(grade, d)])
-
-    # 2. Inventory deficit penalties (SOFT)
-    for (grade, d), deficit_var in inventory_deficit_penalties.items():
-        objective_terms.append(stockout_penalty * deficit_var)
+    # 1. Stockout penalties (SOFT) - Multiple methods
+    if penalty_method == "Percentage Normalisation":
+        PERCENTAGE_PENALTY_WEIGHT = 100  # Penalty per 1% stockout
+        for grade in grades:
+            for d in range(num_days):
+                if (grade, d) in stockout_vars:
+                    demand_today = demand_data[grade].get(dates[d], 0)
+                    
+                    if demand_today > 0:
+                        penalty_per_unit = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty) / (demand_today + epsilon)
+                        scaled_penalty = int(penalty_per_unit * 100)
+                        objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
+    
+    elif penalty_method == "Square Root Normalisation":
+        for grade in grades:
+            for d in range(num_days):
+                if (grade, d) in stockout_vars:
+                    demand_today = demand_data[grade].get(dates[d], 0)
+                    
+                    if demand_today > 0:
+                        penalty_coeff = stockout_penalty * math.sqrt(1.0) / math.sqrt(demand_today + epsilon)
+                        scaled_penalty = int(penalty_coeff * 100)
+                        objective_terms.append(scaled_penalty * stockout_vars[(grade, d)])
+    
+    else:  # Standard method (default)
+        for grade in grades:
+            for d in range(num_days):
+                if (grade, d) in stockout_vars:
+                    objective_terms.append(stockout_penalty * stockout_vars[(grade, d)])
+    
+    # 2. Inventory deficit penalties (SOFT) - Adjusted based on method
+    if penalty_method == "Percentage Normalisation":
+        MIN_INV_VIOLATION_MULTIPLIER = 2  # Make min inventory violations more expensive
+        for (grade, d), deficit_var in inventory_deficit_penalties.items():
+            daily_demand = demand_data[grade].get(dates[d], 0)
+            
+            if daily_demand > 0:
+                penalty_coeff = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty * MIN_INV_VIOLATION_MULTIPLIER) / (daily_demand + epsilon)
+                scaled_penalty = int(penalty_coeff * 100)
+                objective_terms.append(scaled_penalty * deficit_var)
+            else:
+                objective_terms.append(stockout_penalty * MIN_INV_VIOLATION_MULTIPLIER * deficit_var)
+    
+    elif penalty_method == "Square Root Normalisation":
+        for (grade, d), deficit_var in inventory_deficit_penalties.items():
+            daily_demand = demand_data[grade].get(dates[d], 0)
+            
+            if daily_demand > 0:
+                penalty_coeff = stockout_penalty * math.sqrt(1.0) / math.sqrt(daily_demand + epsilon)
+                scaled_penalty = int(penalty_coeff * 100)
+                objective_terms.append(scaled_penalty * deficit_var)
+            else:
+                objective_terms.append(stockout_penalty * deficit_var)
+    
+    else:  # Standard method
+        for (grade, d), deficit_var in inventory_deficit_penalties.items():
+            objective_terms.append(stockout_penalty * deficit_var)
     
     # 3. Closing inventory deficit penalties (SOFT)
-    for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
-        objective_terms.append(stockout_penalty * closing_deficit_var * 3)
+    if penalty_method == "Percentage Normalisation":
+        for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
+            total_demand = sum(demand_data[grade].get(dates[d], 0) for d in range(num_days))
+            avg_daily_demand = total_demand / num_days if num_days > 0 else 1
+            
+            if avg_daily_demand > 0:
+                penalty_coeff = (PERCENTAGE_PENALTY_WEIGHT * stockout_penalty * 3) / (avg_daily_demand + epsilon)
+                scaled_penalty = int(penalty_coeff * 100)
+                objective_terms.append(scaled_penalty * closing_deficit_var)
+            else:
+                objective_terms.append(stockout_penalty * closing_deficit_var * 3)
+    
+    elif penalty_method == "Square Root Normalisation":
+        for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
+            total_demand = sum(demand_data[grade].get(dates[d], 0) for d in range(num_days))
+            avg_daily_demand = total_demand / num_days if num_days > 0 else 1
+            
+            if avg_daily_demand > 0:
+                penalty_coeff = stockout_penalty * 3 * math.sqrt(1.0) / math.sqrt(avg_daily_demand + epsilon)
+                scaled_penalty = int(penalty_coeff * 100)
+                objective_terms.append(scaled_penalty * closing_deficit_var)
+            else:
+                objective_terms.append(stockout_penalty * closing_deficit_var * 3)
+    
+    else:  # Standard method
+        for grade, closing_deficit_var in closing_inventory_deficit_penalties.items():
+            objective_terms.append(stockout_penalty * closing_deficit_var * 3)
     
     # 4. Transition penalties (SOFT - for ALLOWED transitions only)
     # Forbidden transitions are already prevented by HARD constraints
+    # This remains the same for all methods
     for line in lines:
         for d in range(num_days - 1):
             for grade1 in grades:
