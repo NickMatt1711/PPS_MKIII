@@ -172,16 +172,28 @@ def build_and_solve_model(
     # Material running logic
     # =========================
     for l, info in material_running_info.items():
-        # Backward-compatible: info is (material, expected_days)
+    
+        # info comes from app.py as a tuple: (material, expected_days)
         g, exp = info
     
-        if exp is None or exp == 0:
-            model.Add(is_producing[(g, l, 0)] == 1)
-        else:
-            for d in range(min(exp, num_days)):
-                model.Add(is_producing[(g, l, d)] == 1)
+        # Safety guard (fail fast, readable error)
+        if not isinstance(info, tuple) or len(info) != 2:
+            raise ValueError(
+                f"material_running_info[{l}] must be (material, expected_days), got {info}"
+            )
     
-            if exp < num_days:
+        if exp is None or exp == 0:
+            # Produce on day 0 only
+            if (g, l, 0) in is_producing:
+                model.Add(is_producing[(g, l, 0)] == 1)
+        else:
+            # Force exact run
+            for d in range(min(exp, num_days)):
+                if (g, l, d) in is_producing:
+                    model.Add(is_producing[(g, l, d)] == 1)
+    
+            # Mandatory changeover
+            if exp < num_days and (g, l, exp) in is_producing:
                 model.Add(is_producing[(g, l, exp)] == 0)
 
 
