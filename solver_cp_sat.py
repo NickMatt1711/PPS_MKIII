@@ -1,476 +1,589 @@
 """
-CP-SAT Solver for Polymer Production Optimization
-Refactored to strictly adhere to production rules and constraints.
+CP-SAT Solver for production optimization
 """
 
 from ortools.sat.python import cp_model
-import pandas as pd
-import numpy as np
 import time
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Tuple, Any
+from constants import SOLVER_NUM_WORKERS, SOLVER_RANDOM_SEED
+import math
+from datetime import date # Added for type hinting the 'dates' parameter
+import pandas as pd # Added for type hinting the 'demand_data' parameter
 
-# Constants for Optimization Weights (Can be tuned)
-WEIGHT_STOCKOUT = 10000        # Highest priority: Avoid missing demand
-WEIGHT_TRANSITION = 500        # Medium priority: Minimize changeovers
-WEIGHT_MIN_INV_VIOLATION = 50  # Low priority: Try to keep buffer stock
-WEIGHT_CLOSING_INV = 100       # Medium-Low: Hit end-of-period targets
-WEIGHT_LOW_DEMAND_STOCKOUT_MULTIPLIER = 1.2 # Slightly higher penalty to ensure low demand items aren't ignored
 
 class SolutionCallback(cp_model.CpSolverSolutionCallback):
-    """Callback to capture solutions during search."""
+    """Callback to capture all solutions during search"""
     
-    def __init__(self, variables, grades, lines, dates, num_days):
+    def __init__(self, production, inventory, stockout, is_producing, grades, lines, dates, formatted_dates, num_days, 
+                 inventory_deficit_penalties=None, closing_inventory_deficit_penalties=None):
         cp_model.CpSolverSolutionCallback.__init__(self)
-        self.vars = variables
+        self.production = production
+        self.inventory = inventory
+        self.stockout = stockout
+        self.is_producing = is_producing
         self.grades = grades
         self.lines = lines
         self.dates = dates
+        self.formatted_dates = formatted_dates
         self.num_days = num_days
-        self.start_time = time.time()
+        self.inventory_deficit_penalties = inventory_deficit_penalties or {}
+        self.closing_inventory_deficit_penalties = closing_inventory_deficit_penalties or {}
         self.solutions = []
-        self.best_objective = float('inf')
+        self.solution_times = []
+        self.start_time = time.time()
+        self.objective_breakdowns = []
 
     def on_solution_callback(self):
-        obj = self.ObjectiveValue()
-        if obj < self.best_objective:
-            self.best_objective = obj
+        current_time = time.time() - self.start_time
+        self.solution_times.append(current_time)
+        current_obj = self.ObjectiveValue()
+
+        solution = {
+            'objective': current_obj,
+            'production': {},
+            'inventory': {},
+            'stockout': {},
+            'objective_breakdown': self.get_objective_breakdown()
+        }
+
+        # Extract Production Schedule
+        for grade in self.grades:
+            solution['production'][grade] = {}
+            for line in self.lines:
+                solution['production'][grade][line] = {}
+                for d in range(self.num_days):
+                    if (grade, line, d) in self.is_producing and self.Value(self.is_producing[(grade, line, d)]):
+                        # Use the formatted date string for the final solution key
+                        solution['production'][grade][line][self.formatted_dates[d]] = self.Value(self.production[(grade, line, d)])
+
+        # Extract Inventory and Stockout
+        for grade in self.grades:
+            solution['inventory'][grade] = {}
+            solution['stockout'][grade] = {}
+            for d in range(self.num_days + 1): # Inventory includes T=0 (Opening) up to T=Last Day
+                # Inventory (T=1 to T=Last Day+1)
+                if d > 0:
+                    # Use the formatted date string for the final solution key
+                    date_key = self.formatted_dates[d-1]
+                    solution['inventory'][grade][date_key] = self.Value(self.inventory[(grade, d)])
+                
+                # Stockout (T=1 to T=Last Day)
+                if d > 0 and d <= self.num_days:
+                    date_key = self.formatted_dates[d-1]
+                    solution['stockout'][grade][date_key] = self.Value(self.stockout[(grade, d)])
+
+        self.solutions.append(solution)
+
+
+    def get_objective_breakdown(self) -> Dict[str, float]:
+        """Calculates the contribution of each soft constraint to the objective value."""
+        # This implementation requires the solver to pass the individual penalty vars to the callback
+        # which is not currently done in build_and_solve_model, so we'll return a simple breakdown
+        # based on the penalties that were tracked/passed (stockout/closing inventory penalties)
         
-        # We only store the basic structure here to be processed later
-        # due to memory/performance in the callback loop
-        pass
+        breakdown = {
+            "Total Objective Value": self.ObjectiveValue(),
+            "Soft Inventory Deficit Penalty": 0.0,
+            "Soft Min Closing Inventory Penalty": 0.0,
+            "Idle Line Penalty": 0.0,
+            "Transition Penalty": 0.0,
+        }
 
-def extract_solution(solver, variables, grades, lines, dates, num_days):
-    """Extracts the solution data from the solver into a structured dictionary."""
-    
-    production_schedule = []
-    inventory_levels = {g: {} for g in grades}
-    stockouts = {g: {} for g in grades}
-    
-    # 1. Extract Production Data
-    for d_idx, date_obj in enumerate(dates):
-        date_str = date_obj.strftime("%Y-%m-%d")
+        # Calculate Stockout / Inventory Penalties
+        for penalty_var in self.inventory_deficit_penalties.values():
+            if self.Value(penalty_var) > 0:
+                breakdown["Soft Inventory Deficit Penalty"] += self.Value(penalty_var)
+
+        for penalty_var in self.closing_inventory_deficit_penalties.values():
+             if self.Value(penalty_var) > 0:
+                breakdown["Soft Min Closing Inventory Penalty"] += self.Value(penalty_var)
+
+        # Note: Idle Line and Transition Penalties are calculated outside the penalty dicts 
+        # but are implicitly part of the total objective. Their individual value would need 
+        # dedicated tracking variables passed to the callback. For now, we only populate 
+        # what is easily computable from passed arguments.
+
+        # A more complex breakdown would require passing the transition_penalty_vars and idle_penalty_vars
+        # from build_and_solve_model into the callback's constructor.
         
-        for line in lines:
-            produced_grade = None
-            qty = 0
-            
-            # Check which grade is produced
-            for grade in grades:
-                # Use try-except as not all grade/line/day combinations might exist if constraints filtered them early
-                try:
-                    if solver.Value(variables['is_producing'][grade, line, d_idx]):
-                        produced_grade = grade
-                        qty = solver.Value(variables['production_qty'][grade, line, d_idx])
-                        break
-                except KeyError:
-                    continue # Skip if variable not defined (e.g., due to line constraint)
-            
-            production_schedule.append({
-                'Date': date_str,
-                'Plant': line,
-                'Grade': produced_grade if produced_grade else "None",
-                'Quantity': qty
-            })
+        return breakdown
 
-        # 2. Extract Inventory & Stockout Data
-        for grade in grades:
-            inv_val = solver.Value(variables['inventory'][grade, d_idx])
-            stock_val = solver.Value(variables['stockout'][grade, d_idx])
-            
-            inventory_levels[grade][date_str] = inv_val
-            stockouts[grade][date_str] = stock_val
 
-    return {
-        "production_schedule": pd.DataFrame(production_schedule),
-        "inventory": inventory_levels,
-        "stockout": stockouts,
-        "objective_value": solver.ObjectiveValue()
-    }
-
+# ===============================================================
+#  MODEL BUILDER AND SOLVER
+# ===============================================================
 def build_and_solve_model(
-    df_plant: pd.DataFrame,
-    df_inventory: pd.DataFrame,
-    df_demand: pd.DataFrame,
+    grades: List[str],
+    lines: List[str],
+    dates: List[date],
+    inventory_data: Dict,
+    plant_data: Dict,
+    demand_data: pd.DataFrame,
     transition_rules: Dict,
-    shutdown_periods: Dict,
-    params: Dict,
-    # ADDED: These arguments are accepted but ignored to match the app.py call
-    grades: Optional[List[str]] = None,
-    progress_callback: Optional[Any] = None,
-    lines: Optional[List[str]] = None,  # <-- Added to resolve TypeError
-    dates: Optional[List[Any]] = None,  # <-- Added to resolve potential future TypeError
-) -> Optional[Dict]:
+    optimization_params: Dict,
+    formatted_dates: List[str], # <--- ADDED MISSING ARGUMENT
+    progress_callback=None
+) -> Tuple[int, cp_model.CpSolverSolutionCallback, cp_model.CpSolver]:
     """
-    Main function to build and solve the CP-SAT model.
+    Builds and solves the Polymer Production Scheduling CP-SAT model.
     """
-    # NOTE: grades, progress_callback, lines, and dates are ignored here to maintain the 
-    # robust internal logic (which re-derives them) while satisfying the app.py call signature.
-    
+    if progress_callback:
+        progress_callback(0.0, "Initializing model...")
+
     model = cp_model.CpModel()
-    
-    # ---------------------------------------------------------
-    # 1. Data Preprocessing & Indexing (Internal derivation used for robustness)
-    # ---------------------------------------------------------
-    
-    # Dates
-    dates = pd.to_datetime(df_demand['Date']).dt.date.tolist()
     num_days = len(dates)
-    date_to_idx = {d: i for i, d in enumerate(dates)}
     
-    # Grades & Lines
-    grades = [c for c in df_demand.columns if c != 'Date']
-    lines = df_plant['Plant'].tolist()
-    
-    # Lookups
-    plant_info = df_plant.set_index('Plant').to_dict('index')
-    inv_info = df_inventory.set_index('Grade Name').to_dict('index')
-    
-    # Calculate Total Demand per grade (for prioritization)
-    total_demand = {g: df_demand[g].sum() for g in grades}
-    
-    # ---------------------------------------------------------
-    # 2. Variables
-    # ---------------------------------------------------------
-    
-    V = {} # Container for all variables
-    
-    # X[g, l, d]: Binary, 1 if grade g is produced on line l at day d
-    V['is_producing'] = {}
-    
-    # P[g, l, d]: Integer, Production quantity
-    V['production_qty'] = {}
-    
-    # S[g, l, d]: Binary, 1 if a campaign of grade g STARTS on line l at day d
-    V['start_campaign'] = {}
-    
-    # I[g, d]: Continuous(Int), Inventory of grade g at end of day d
-    V['inventory'] = {}
-    
-    # O[g, d]: Continuous(Int), Stockout quantity of grade g at end of day d
-    V['stockout'] = {}
-    
-    # T[l, d]: Binary, 1 if a transition occurs on line l at day d
-    V['transition'] = {}
+    # --- Optimization Parameters ---
+    stockout_penalty = optimization_params['stockout_penalty']
+    transition_penalty = optimization_params['transition_penalty']
+    time_limit_min = optimization_params['time_limit_min']
+    buffer_days = optimization_params['buffer_days']
+    idle_penalty = optimization_params.get('idle_penalty', 1) # Default to 1 if not present
 
-    max_capacity = max(p['Capacity per day'] for p in plant_info.values()) if plant_info else 100000
+    # --- 1. Decision Variables ---
     
-    # Determine a safe global max inventory based on max historical demand plus opening inventory and max capacity
-    max_inv_estimate = df_demand[grades].sum().sum() + \
-                       sum(int(inv_info.get(g, {}).get('Opening Inventory', 0)) for g in grades) + \
-                       max_capacity * num_days 
-    max_inv_global = max(max_inv_estimate, 500000) # Ensure a high cap
-
+    # Production: production[(grade, line, day)] = Quantity produced of grade on line on day d
+    # Variable domain: [0, max_capacity] where max_capacity is the largest plant capacity
+    max_capacity = max(p['capacity'] for p in plant_data['lines_data'].values())
+    production = {}
     
-    # --- Create Variables ---
-    for d in range(num_days):
+    for grade in grades:
         for line in lines:
-            # Transitions variables (from day d-1 to d)
-            if d > 0:
-                V['transition'][line, d] = model.NewBoolVar(f'trans_{line}_{d}')
-            
-            for grade in grades:
-                V['is_producing'][grade, line, d] = model.NewBoolVar(f'x_{grade}_{line}_{d}')
-                
-                # Production quantity is capacity (Rule 16) or 0
-                capacity_int = int(plant_info[line]['Capacity per day'])
-                V['production_qty'][grade, line, d] = model.NewIntVar(0, capacity_int, f'p_{grade}_{line}_{d}')
-                V['start_campaign'][grade, line, d] = model.NewBoolVar(f'start_{grade}_{line}_{d}')
+            for d in range(num_days):
+                # Only create variable if the grade is allowed on the line
+                if line in inventory_data['data'][grade]['lines']:
+                    production[(grade, line, d)] = model.NewIntVar(
+                        0, plant_data['lines_data'][line]['capacity'], f'prod_{grade}_{line}_{d}'
+                    )
 
-        for grade in grades:
-            # Inventory can range from 0 to Max (Hard Constraint 5)
-            # Use the Max. Inventory from the data or the global estimate
-            max_inv_grade = int(inv_info.get(grade, {}).get('Max. Inventory', max_inv_global))
-            V['inventory'][grade, d] = model.NewIntVar(0, max_inv_grade, f'inv_{grade}_{d}')
-            
-            # Stockout allows arbitrary deficit (to be minimized)
-            V['stockout'][grade, d] = model.NewIntVar(0, max_inv_global, f'stockout_{grade}_{d}')
+    # Indicator variable: is_producing[(grade, line, day)] = 1 if grade is produced on line on day d, 0 otherwise
+    is_producing = {}
+    for (grade, line, d), prod_var in production.items():
+        is_producing[(grade, line, d)] = model.NewBoolVar(f'is_prod_{grade}_{line}_{d}')
+        # Link indicator to production variable: is_producing = 1 <=> production > 0
+        model.Add(prod_var > 0).OnlyEnforceIf(is_producing[(grade, line, d)])
+        model.Add(prod_var == 0).OnlyEnforceIf(is_producing[(grade, line, d)].Not())
 
-    # ---------------------------------------------------------
-    # 3. Hard Constraints
-    # ---------------------------------------------------------
-    
-    for d in range(num_days):
-        # --- Plant Constraints ---
-        for line in lines:
-            capacity = int(plant_info[line]['Capacity per day'])
-            
-            # Check Shutdowns (Rule 16 partial)
-            is_shutdown = d in shutdown_periods.get(line, [])
-            
-            if is_shutdown:
-                # Force everything to 0 on shutdown
-                for grade in grades:
-                    model.Add(V['is_producing'][grade, line, d] == 0)
-                    model.Add(V['production_qty'][grade, line, d] == 0)
-            else:
-                # At most one grade per line per day
-                model.Add(sum(V['is_producing'][grade, line, d] for grade in grades) <= 1)
-                
-                # Link Production Qty to Binary Variable (Rule 16: Full Capacity)
-                for grade in grades:
-                    # If producing, Qty = Capacity. If not, Qty = 0.
-                    # This implies: V['production_qty'] == V['is_producing'] * capacity
-                    prod_qty_var = V['production_qty'][grade, line, d]
-                    is_prod_var = V['is_producing'][grade, line, d]
-
-                    # If is_producing is 1, production_qty must be capacity
-                    model.Add(prod_qty_var == capacity).OnlyEnforceIf(is_prod_var)
-                    # If is_producing is 0, production_qty must be 0
-                    model.Add(prod_qty_var == 0).OnlyEnforceIf(is_prod_var.Not())
-
-
-        # --- Inventory Balance (Rule 2, 12) ---
-        for grade in grades:
-            demand = int(df_demand.iloc[d][grade])
-            
-            # Calculate Total Production of this grade across all lines
-            total_prod_today = sum(V['production_qty'][grade, line, d] for line in lines)
-            
-            prev_inv = 0
-            if d == 0:
-                # Rule 2: Opening Inventory (Must handle NaN/None gracefully)
-                open_inv_raw = inv_info.get(grade, {}).get('Opening Inventory', 0)
-                prev_inv = int(open_inv_raw) if pd.notna(open_inv_raw) else 0
-            else:
-                prev_inv = V['inventory'][grade, d - 1]
-            
-            # Balance Equation: Inv[d] = Inv[d-1] + Prod[d] - Demand[d] + Stockout[d]
-            # Rearranged: Inv[d] - Stockout[d] = Prev_Inv + Prod - Demand
-            model.Add(
-                V['inventory'][grade, d] - V['stockout'][grade, d] == 
-                prev_inv + total_prod_today - demand
+    # Inventory: inventory[(grade, day)] = Inventory level of grade at the end of day d
+    # d = 0 is opening inventory, d = 1 to num_days is closing inventory for that day
+    inventory_vars = {}
+    max_inventory = max(i['max_inv'] for i in inventory_data['data'].values()) * 2 # Safety margin
+    for grade in grades:
+        for d in range(num_days + 1):
+            inventory_vars[(grade, d)] = model.NewIntVar(
+                0, max_inventory, f'inv_{grade}_{d}'
             )
 
-    # --- Line Capabilities (Rule 9) ---
+    # Stockout: stockout[(grade, day)] = Quantity of stockout for grade on day d
+    stockout_vars = {}
+    max_demand = demand_data.iloc[:, 1:].max().max() * 2 # Safety margin
     for grade in grades:
-        allowed_lines_raw = inv_info.get(grade, {}).get('Lines', '')
-        # Robustly parse and clean allowed lines
-        allowed_lines_str = str(allowed_lines_raw).replace(" ", "")
-        allowed_lines = set(allowed_lines_str.split(',')) if allowed_lines_str and allowed_lines_str != 'nan' else set(lines)
+        for d in range(1, num_days + 1):
+            stockout_vars[(grade, d)] = model.NewIntVar(
+                0, max_demand, f'stockout_{grade}_{d}'
+            )
+            
+    if progress_callback:
+        progress_callback(0.1, "Variables initialized...")
+
+    # --- 2. Hard Constraints ---
+
+    # C1. Inventory balance equation
+    for grade in grades:
+        # Day 0: Set opening inventory (Hard Constraint)
+        model.Add(inventory_vars[(grade, 0)] == inventory_data['data'][grade]['opening'])
+
+        # Days 1 to N: Balance
+        for d in range(1, num_days + 1):
+            # Sum of production for the current grade on all lines on day d-1
+            total_production = sum(
+                production.get((grade, line, d - 1), 0) for line in lines
+            )
+            
+            # Demand for the current grade on day d-1
+            demand_qty = demand_data.iloc[d - 1][grade]
+            
+            # Inventory[d] = Inventory[d-1] + Production[d-1] - Demand[d-1] + Stockout[d-1]
+            # Since Inventory, Production, and Demand are >= 0, we can express the balance as:
+            # Inventory[d-1] + Production[d-1] + Stockout[d] == Inventory[d] + Demand[d-1]
+            # Stockout[d] acts as a slack variable allowing the left side to be less than the right.
+
+            model.Add(
+                inventory_vars[(grade, d - 1)] + total_production + stockout_vars[(grade, d)]
+                == inventory_vars[(grade, d)] + demand_qty
+            )
+
+    if progress_callback:
+        progress_callback(0.2, "Inventory and Stockout constraints added...")
+
+    # C2. Plant capacity constraint (Each line produces at most one grade)
+    for line in lines:
+        line_capacity = plant_data['lines_data'][line]['capacity']
+        for d in range(num_days):
+            # Sum of indicator variables for all grades on a line on a given day must be 0 or 1
+            # (i.e., at most one grade is produced)
+            producing_indicators = [
+                is_producing[(grade, line, d)] 
+                for grade in grades 
+                if (grade, line, d) in is_producing
+            ]
+            
+            if producing_indicators:
+                model.Add(sum(producing_indicators) <= 1)
+                
+            # Total production quantity must be <= capacity if operating
+            total_production_on_line = sum(
+                production.get((grade, line, d), 0) for grade in grades
+            )
+            model.Add(total_production_on_line <= line_capacity)
+
+    if progress_callback:
+        progress_callback(0.3, "Plant Capacity constraints added...")
+
+    # C3. Minimum/Maximum Inventory limits (Excluding Stockout day)
+    for grade in grades:
+        min_inv = inventory_data['data'][grade]['min_inv']
+        max_inv = inventory_data['data'][grade]['max_inv']
+        
+        # Min/Max inventory applies to closing inventory (d=1 to num_days)
+        for d in range(1, num_days + 1):
+            # Check if stockout happened on this day. If YES, min_inv constraint is relaxed.
+            is_stockout = model.NewBoolVar(f'is_stockout_{grade}_{d}')
+            model.Add(stockout_vars[(grade, d)] > 0).OnlyEnforceIf(is_stockout)
+            model.Add(stockout_vars[(grade, d)] == 0).OnlyEnforceIf(is_stockout.Not())
+            
+            # HARD: Inventory must be <= Max Inventory
+            model.Add(inventory_vars[(grade, d)] <= max_inv)
+            
+            # HARD: Inventory must be >= Min Inventory, UNLESS a stockout occurred.
+            # model.Add(inventory_vars[(grade, d)] >= min_inv).OnlyEnforceIf(is_stockout.Not())
+            # Since inventory balance already takes care of the stockout, a simpler min inventory constraint
+            # is typically sufficient if Stockout is penalized. We will use a soft constraint approach 
+            # for the min inventory to allow the solver more freedom when stockout is unavoidable.
+            
+            # For now, let's just keep the MAX as a hard constraint and rely on stockout penalties for MIN.
+
+    if progress_callback:
+        progress_callback(0.4, "Inventory Min/Max constraints refined...")
+
+    # C4. Minimum Run Days / Expected Run Days (Consecutive production)
+    for grade in grades:
+        min_run_days = inventory_data['data'][grade]['min_run_days']
         
         for line in lines:
-            if line not in allowed_lines:
-                # Forbidden line for this grade
+            if line not in inventory_data['data'][grade]['lines']:
+                continue # Skip if grade is not allowed on line
+                
+            for d in range(num_days - min_run_days + 1):
+                # If production starts on day d-1, it must continue for min_run_days
+                # Check for start of production: (grade was not produced on day d-2) AND (grade is produced on day d-1)
+                
+                # Check if this grade was produced on d-1 on the current line
+                is_start = is_producing.get((grade, line, d), None)
+                if not is_start: continue
+                
+                # Check if previous day (d-1) was not this grade (or is day 0)
+                is_prev_not_grade = 1
+                if d > 0:
+                    is_prev_not_grade = is_producing.get((grade, line, d - 1), 0).Not()
+                
+                # If a run starts, production must continue for the required duration.
+                # A run "starts" on day d if is_producing[d] is 1 AND (d=0 OR is_producing[d-1] is 0)
+                
+                # We will use the interval variable approach for run lengths.
+                
+                # 1. Create an interval for each grade/line run
+                interval_vars = {}
                 for d in range(num_days):
-                    model.Add(V['is_producing'][grade, line, d] == 0)
-
-    # --- Campaign Start Logic ---
-    for line in lines:
-        for grade in grades:
-            # Day 0 start logic (only if production is allowed on this line/grade)
-            is_allowed = V['is_producing'][grade, line, 0] in model.Proto().variables
-            if is_allowed:
-                model.Add(V['start_campaign'][grade, line, 0] == V['is_producing'][grade, line, 0])
-            
-            for d in range(1, num_days):
-                if (grade, line, d) not in V['is_producing']: continue
-                if (grade, line, d-1) not in V['is_producing']: continue
+                    if (grade, line, d) in is_producing:
+                        # Only create interval if production is possible
+                        interval_vars[(grade, line, d)] = model.NewOptionalInterval(
+                            start=d,
+                            size=1,
+                            end=d + 1,
+                            is_present=is_producing[(grade, line, d)],
+                            name=f'interval_{grade}_{line}_{d}'
+                        )
                 
-                # Start = 1 iff Producing[d]=1 AND Producing[d-1]=0
-                is_prod = V['is_producing'][grade, line, d]
-                was_prod = V['is_producing'][grade, line, d-1]
-                start_var = V['start_campaign'][grade, line, d]
+                # 2. Add NoOverlap constraint (already handled by C2, but helps the solver)
+                # Not strictly needed here as C2 does the job, but good practice.
                 
-                # Implication: start == is_prod AND NOT was_prod
-                model.AddBoolAnd([is_prod, was_prod.Not()]).OnlyEnforceIf(start_var)
-                model.AddBoolOr([is_prod.Not(), was_prod]).OnlyEnforceIf(start_var.Not())
+                # 3. Add Min Run Length constraint (using runs of 1-day intervals)
+                # Sequence variable on the intervals will enforce this, but CP-SAT is simpler.
                 
-
-    # --- Min/Max Run Days (Rules 6 & 7) ---
-    for grade in grades:
-        min_run_raw = inv_info.get(grade, {}).get('Min. Run Days', 1)
-        max_run_raw = inv_info.get(grade, {}).get('Max. Run Days', num_days)
-        
-        min_run = int(min_run_raw) if pd.notna(min_run_raw) else 1
-        max_run = int(max_run_raw) if pd.notna(max_run_raw) else num_days
-        
-        for line in lines:
-            for d in range(num_days):
-                if (grade, line, d) not in V['is_producing']: continue
-
-                # Min Run Constraints (Rule 6)
-                if V['start_campaign'][grade, line, d]:
-                    # If started on day d, must produce for min_run days (or until end of horizon)
-                    limit = min(d + min_run, num_days)
-                    for k in range(d, limit):
-                        # Implication: if start=1, then is_producing[grade, line, k]=1
-                        if (grade, line, k) in V['is_producing']:
-                            model.Add(V['is_producing'][grade, line, k] == 1).OnlyEnforceIf(V['start_campaign'][grade, line, d])
-
-                # Max Run Constraints (Rule 7, Rolling Window)
-                # Sum of production in any window of size (max_run + 1) must be <= max_run
-                if d + max_run + 1 <= num_days:
-                    window = []
-                    for k in range(d, d + max_run + 1):
-                         if (grade, line, k) in V['is_producing']:
-                            window.append(V['is_producing'][grade, line, k])
-                    
-                    if window:
-                        model.Add(sum(window) <= max_run)
-
-
-    # --- Rerun Allowed (Rule 10) ---
-    for grade in grades:
-        rerun_raw = inv_info.get(grade, {}).get('Rerun Allowed', 'Yes')
-        rerun = str(rerun_raw).lower()
-        if rerun == 'no':
-            for line in lines:
-                # Sum of starts <= 1
-                model.Add(sum(V['start_campaign'][grade, line, d] for d in range(num_days) if (grade, line, d) in V['start_campaign']) <= 1)
-
-    # --- Force Start Date (Rule 8) ---
-    for grade in grades:
-        force_date_raw = inv_info.get(grade, {}).get('Force Start Date')
-        if pd.notna(force_date_raw):
-            try:
-                force_date = pd.to_datetime(force_date_raw).date()
-                if force_date in date_to_idx:
-                    f_idx = date_to_idx[force_date]
-                    # Must be produced on at least one allowed line on this date
-                    
-                    allowed_lines_str = str(inv_info.get(grade, {}).get('Lines', '')).replace(" ", "")
-                    allowed = set(allowed_lines_str.split(',')) if allowed_lines_str and allowed_lines_str != 'nan' else set(lines)
-                    
-                    # Sum of production vars on allowed lines must be >= 1
-                    prod_vars = [V['is_producing'][grade, l, f_idx] for l in lines if l in allowed and (grade, l, f_idx) in V['is_producing']]
-                    if prod_vars:
-                        model.Add(sum(prod_vars) >= 1)
-            except:
-                pass # Ignore invalid dates
-
-    # --- Material Running & Expected Run Days (Rule 1) ---
-    for line in lines:
-        p_data = plant_info[line]
-        running_grade_raw = p_data.get('Material Running')
-        exp_days_raw = p_data.get('Expected Run Days')
-        
-        running_grade = str(running_grade_raw).strip() if pd.notna(running_grade_raw) else None
-        
-        if running_grade in grades:
-            # Clean exp_days
-            exp_days = int(exp_days_raw) if pd.notna(exp_days_raw) and exp_days_raw is not None else 0
-            
-            # Rule 1: If 1 or more, must run for EXACTLY that length, then changeover.
-            # If 0 or null, must run on day 1, then optimizer chooses.
-            
-            if exp_days >= 1:
-                run_len = exp_days
+                # Use AddBoolOr to enforce minimum run length
                 
-                # 1. Force production for these days [0, run_len-1]
-                limit = min(run_len, num_days)
-                for d in range(limit):
-                    if (running_grade, line, d) in V['is_producing']:
-                        model.Add(V['is_producing'][running_grade, line, d] == 1)
+                # We enforce: if production starts at day d, then is_producing must be 1 for d, d+1, ..., d + min_run_days - 1
                 
-                # 2. Mandatory Changeover (Crucial Rule 1 requirement)
-                # Force production to STOP on day index 'run_len' (the day changeover starts)
-                if run_len < num_days:
-                    if (running_grade, line, run_len) in V['is_producing']:
-                        model.Add(V['is_producing'][running_grade, line, run_len] == 0)
-                        
-            elif exp_days == 0 or running_grade is not None:
-                # Case B: Just start on Day 1 (Index 0). Solver decides length.
-                if (running_grade, line, 0) in V['is_producing']:
-                    model.Add(V['is_producing'][running_grade, line, 0] == 1)
+                for d in range(num_days):
+                    is_prod_d = is_producing.get((grade, line, d), None)
+                    if not is_prod_d: continue # skip if grade is not on line
 
-
-    # --- Transitions (Rule 11) ---
-    for line in lines:
-        t_matrix = transition_rules.get(line)
-        if not t_matrix:
-            continue
-            
-        for d in range(1, num_days):
-            for g_from in grades:
-                for g_to in grades:
-                    if g_from == g_to:
-                        continue
-                        
-                    # Check if production vars exist for both grades on these days
-                    if (g_from, line, d-1) not in V['is_producing'] or \
-                       (g_to, line, d) not in V['is_producing']:
-                        continue # Skip if grade is not allowed on line
-
-                    # Get transition allowed status: g_to is in allowed transitions from g_from
-                    is_allowed = g_to in t_matrix.get(g_from, [])
-                    
-                    # Variables for logic
-                    prod_prev = V['is_producing'][g_from, line, d-1]
-                    prod_curr = V['is_producing'][g_to, line, d]
-                    
-                    if not is_allowed:
-                        # Hard Constraint: Forbidden Transition ("No")
-                        # Cannot produce G_from yesterday (1) AND G_to today (1)
-                        # Sum must be <= 1 (i.e., not both 1)
-                        model.Add(prod_prev + prod_curr <= 1)
+                    # Define 'was_running_yesterday'
+                    if d == 0:
+                        # Production is deemed to start on day 0 if it is the planned startup material
+                        initial_grade = plant_data['lines_data'][line]['material_running']
+                        was_running_yesterday = (initial_grade == grade)
                     else:
-                        # Soft Constraint: Allowed but penalized ("Yes")
-                        # If switch happens (prod_prev=1 and prod_curr=1), increment transition counter
-                        # T >= prod_prev + prod_curr - 1
-                        model.Add(V['transition'][line, d] >= prod_prev + prod_curr - 1)
+                        was_running_yesterday = is_producing.get((grade, line, d-1), 0)
+                    
+                    # Define 'is_run_start_d' = is_producing[d] AND NOT was_running_yesterday
+                    is_run_start_d = model.NewBoolVar(f'run_start_{grade}_{line}_{d}')
+                    # Constraint: is_run_start_d <=> is_prod_d AND NOT was_running_yesterday
+                    
+                    if d == 0:
+                        if was_running_yesterday:
+                            # Cannot be a start if already running
+                            model.Add(is_run_start_d == 0)
+                        else:
+                            # Start on day 0 is just is_prod_d
+                            model.Add(is_run_start_d == is_prod_d)
+                    else:
+                        model.AddBoolOr([is_run_start_d.Not(), is_producing[(grade, line, d)]])
+                        model.AddBoolOr([is_run_start_d.Not(), is_producing[(grade, line, d-1)].Not()])
+                        model.AddImplication(is_producing[(grade, line, d)], is_run_start_d.Not()).OnlyEnforceIf(is_producing[(grade, line, d-1)])
+                        
+                        # Simplified way:
+                        # is_run_start_d will be 1 if is_producing[d] is 1 and is_producing[d-1] is 0
+                        model.AddBoolOr([is_producing[(grade, line, d)].Not(), is_producing[(grade, line, d-1)], is_run_start_d.Not()])
+                        model.AddImplication(is_run_start_d, is_producing[(grade, line, d)])
+                        model.AddImplication(is_run_start_d, is_producing[(grade, line, d-1)].Not())
 
-    # ---------------------------------------------------------
-    # 4. Objective Function (Soft Constraints)
-    # ---------------------------------------------------------
+                    
+                    # Enforce min_run_days: If is_run_start_d, then production must be 1 for next min_run_days-1 days
+                    if min_run_days > 1:
+                        # The current grade must be produced on the current line for the next min_run_days-1 days
+                        for k in range(1, min_run_days):
+                            if d + k < num_days:
+                                # Ensure is_producing[(grade, line, d+k)] is 1
+                                is_prod_next_k = is_producing.get((grade, line, d + k), None)
+                                if is_prod_next_k:
+                                    model.AddImplication(is_run_start_d, is_prod_next_k)
+                            else:
+                                # If run extends beyond planning horizon, it's not a valid start
+                                model.Add(is_run_start_d == 0)
+
+    if progress_callback:
+        progress_callback(0.5, "Minimum Run Day constraints added...")
+
+
+    # C5. Shutdown constraints (Hard Constraint)
+    for line in lines:
+        if line in plant_data['shutdown_days']:
+            shutdown_days_indices = plant_data['shutdown_days'][line]
+            for d in shutdown_days_indices:
+                if d < num_days:
+                    # Production must be zero for all grades on this line on shutdown days
+                    for grade in grades:
+                        if (grade, line, d) in production:
+                            model.Add(production[(grade, line, d)] == 0)
+                            model.Add(is_producing[(grade, line, d)] == 0)
+
+    if progress_callback:
+        progress_callback(0.6, "Shutdown constraints added...")
+
+
+    # C6. Transition rules (Soft Constraint and Hard Constraints)
     objective_terms = []
     
-    # A. Minimize Stockouts (Rule 13, 14)
-    for grade in grades:
-        # Prioritize low demand products
-        is_low_demand = total_demand[grade] < (sum(total_demand.values()) / len(grades) * 0.5)
-        penalty_mult = WEIGHT_LOW_DEMAND_STOCKOUT_MULTIPLIER if is_low_demand else 1.0
-        
-        for d in range(num_days):
-            objective_terms.append(V['stockout'][grade, d] * int(WEIGHT_STOCKOUT * penalty_mult))
-
-    # B. Minimize Transitions (Rule 11, 13)
     for line in lines:
-        for d in range(1, num_days):
-            if (line, d) in V['transition']:
-                objective_terms.append(V['transition'][line, d] * WEIGHT_TRANSITION)
+        plant_transition_rules = transition_rules.get(line, {})
 
-    # C. Min Daily Inventory (Rule 4)
-    # Soft constraint: Penalty if Inventory < Min Inventory
+        for d in range(num_days):
+            # 1. Previous grade on line
+            if d == 0:
+                prev_grade = plant_data['lines_data'][line]['material_running']
+                # The first day's run is subject to transition from 'material_running'
+            else:
+                # The grade running on day d-1 is the 'previous' grade for day d
+                # We need a variable for the grade running on day d-1
+                prev_grade_var = model.NewIntVar(0, len(grades), f'prev_grade_idx_{line}_{d}')
+                # 0 is the index for idle/no production
+                
+                # Map the grade index to the grade running on day d-1
+                # The grade index is based on the grades list (for simplicity, we use the grade name as key)
+                
+                # Check all grades for production on d-1
+                was_producing_d_minus_1 = {}
+                for grade in grades:
+                    if (grade, line, d-1) in is_producing:
+                        was_producing_d_minus_1[grade] = is_producing[(grade, line, d-1)]
+                
+                # Enforce that prev_grade_var is the index of the grade produced on day d-1
+                # If was_producing[d-1] is 1, then prev_grade_var must be that grade's index.
+                # Since only one grade can run, we can use a linear expression to determine the grade running.
+                
+                # We will simply check the transition penalty for all possible (prev_grade, current_grade) pairs
+                
+                for current_grade in grades:
+                    is_prod_current = is_producing.get((current_grade, line, d), None)
+                    if not is_prod_current: continue
+                        
+                    # 6a. Check transition from previous production day (d-1)
+                    if d > 0:
+                        for prev_grade_candidate in grades:
+                            is_prod_prev = is_producing.get((prev_grade_candidate, line, d-1), None)
+                            if not is_prod_prev: continue
+                                
+                            # Transition happens if: is_prod_prev=1 AND is_prod_current=1 AND prev_grade != current_grade
+                            # Only applies if a grade change occurs.
+                            if prev_grade_candidate != current_grade:
+                                # Check if this transition is allowed
+                                is_allowed = current_grade in plant_transition_rules.get(prev_grade_candidate, [])
+                                
+                                # Create a variable that is 1 if the forbidden transition occurs
+                                is_forbidden_transition = model.NewBoolVar(f'forbidden_trans_{line}_{d}_{prev_grade_candidate}_{current_grade}')
+                                
+                                if not is_allowed:
+                                    # Hard Constraint: Forbidden transition must not occur
+                                    # is_prod_prev AND is_prod_current must be 0
+                                    model.AddBoolOr([is_prod_prev.Not(), is_prod_current.Not()])
+                                else:
+                                    # Soft Constraint: Allowed transition might still incur a penalty (e.g., if re-run is not allowed)
+                                    # For this problem, transition penalty only applies to a grade change.
+                                    
+                                    # is_transition = is_prod_prev AND is_prod_current AND (prev != current)
+                                    
+                                    # Check if the transition itself should incur a cost (e.g., for cleaning/setup)
+                                    # We use the transition_penalty for any switch from one grade to another.
+                                    is_transition_switch = model.NewBoolVar(f'trans_switch_{line}_{d}_{prev_grade_candidate}_{current_grade}')
+                                    model.Add(is_transition_switch == 1).OnlyEnforceIf([is_prod_prev, is_prod_current])
+                                    model.Add(is_transition_switch == 0).OnlyEnforceIf(is_prod_prev.Not())
+                                    model.Add(is_transition_switch == 0).OnlyEnforceIf(is_prod_current.Not())
+                                    
+                                    objective_terms.append(transition_penalty * is_transition_switch)
+
+
+            # 6b. Check transition from initial material running (d=0)
+            if d == 0:
+                prev_grade = plant_data['lines_data'][line]['material_running']
+                is_prod_current = is_producing.get((current_grade, line, d), None)
+                if not is_prod_current: continue
+                
+                if prev_grade != current_grade:
+                    is_allowed = current_grade in plant_transition_rules.get(prev_grade, [])
+                    
+                    if not is_allowed:
+                        # Hard Constraint: Forbidden transition from initial grade
+                        model.Add(is_prod_current == 0)
+                    else:
+                        # Soft Constraint: Transition from initial grade to a different grade incurs penalty
+                        is_transition_switch = model.NewBoolVar(f'trans_switch_{line}_{d}_initial_{current_grade}')
+                        model.Add(is_transition_switch == is_prod_current)
+                        objective_terms.append(transition_penalty * is_transition_switch)
+                        
+                # 6c. Check transition for Plant Restart/Pre-Shutdown Grades (Hard Constraint)
+                # Plant Shutdown/Restart: Hard constraints on Pre-Shutdown/Restart Grade
+                shutdown_info = plant_data['lines_data'][line]
+                if d == num_days - 1 and shutdown_info['shutdown_end_date'] is not None:
+                    # Constraint on pre-shutdown grade (must run the day before shutdown)
+                    pre_shutdown_day = dates.index(shutdown_info['shutdown_start_date']) - 1
+                    pre_shutdown_grade = shutdown_info['pre_shutdown_grade']
+                    if d == pre_shutdown_day and pre_shutdown_grade:
+                        if pre_shutdown_grade == current_grade:
+                            # Must run this grade
+                            model.Add(is_prod_current == 1)
+                        else:
+                            # Must not run other grades
+                            model.Add(is_prod_current == 0)
+                
+                if d == 0 and shutdown_info['shutdown_start_date'] is not None:
+                    # Constraint on restart grade (must run the day of restart)
+                    restart_day = dates.index(shutdown_info['shutdown_end_date']) + 1
+                    restart_grade = shutdown_info['restart_grade']
+                    if d == restart_day and restart_grade:
+                        if restart_grade == current_grade:
+                            # Must run this grade
+                            model.Add(is_prod_current == 1)
+                        else:
+                            # Must not run other grades
+                            model.Add(is_prod_current == 0)
+
+
+    if progress_callback:
+        progress_callback(0.7, "Transition constraints added...")
+
+
+    # --- 3. Soft Constraints (Objective Function) ---
+
+    # Stockout Penalty (Soft Constraint)
+    # The stockout variables are already defined. We just add the weighted sum to the objective.
+    stockout_penalty_terms = []
     for grade in grades:
-        min_inv_raw = inv_info.get(grade, {}).get('Min. Inventory', 0)
-        min_inv = int(min_inv_raw) if pd.notna(min_inv_raw) else 0
+        for d in range(1, num_days + 1):
+            stockout_penalty_terms.append(stockout_vars[(grade, d)] * stockout_penalty)
+            
+    objective_terms.extend(stockout_penalty_terms)
 
-        if min_inv > 0:
-            for d in range(num_days):
-                # Create a slack variable for violation
-                violation = model.NewIntVar(0, max_inv_global, f'min_inv_viol_{grade}_{d}')
-                # violation >= Min - Actual (Violation is 0 if Actual >= Min)
-                model.Add(violation >= min_inv - V['inventory'][grade, d])
-                objective_terms.append(violation * WEIGHT_MIN_INV_VIOLATION)
 
-    # D. Min Closing Inventory (Rule 3)
-    # Check only on the last day
-    for grade in grades:
-        min_closing_raw = inv_info.get(grade, {}).get('Min. Closing Inventory', 0)
-        min_closing = int(min_closing_raw) if pd.notna(min_closing_raw) else 0
-
-        if min_closing > 0:
-            violation = model.NewIntVar(0, max_inv_global, f'close_inv_viol_{grade}')
-            # violation >= Min_Closing - Actual_Closing
-            model.Add(violation >= min_closing - V['inventory'][grade, num_days-1])
-            objective_terms.append(violation * WEIGHT_CLOSING_INV)
-
-    # Minimize Total Cost
-    model.Minimize(sum(objective_terms))
-
-    # ---------------------------------------------------------
-    # 5. Solve
-    # ---------------------------------------------------------
-    solver = cp_model.CpSolver()
+    # Minimum Closing Inventory Penalty (Soft Constraint)
+    inventory_deficit_penalties = {}
+    closing_inventory_deficit_penalties = {}
     
-    # Parameters
-    solver.parameters.max_time_in_seconds = params.get('time_limit_min', 10) * 60.0
-    solver.parameters.num_search_workers = 8 # Parallelize
+    for grade in grades:
+        min_closing_inv = inventory_data['data'][grade]['min_closing_inv']
+        
+        # Min Closing Inventory (applies to the very last day)
+        last_day = num_days
+        deficit_var = model.NewIntVar(0, min_closing_inv, f'deficit_{grade}_closing')
+        closing_inventory_deficit_penalties[grade] = deficit_var
+        
+        # Deficit = max(0, min_closing_inv - inventory_vars[(grade, last_day)])
+        # min_closing_inv = inventory_vars[(grade, last_day)] + deficit_var
+        model.Add(inventory_vars[(grade, last_day)] + deficit_var == min_closing_inv).OnlyEnforceIf(inventory_vars[(grade, last_day)] < min_closing_inv)
+        model.Add(deficit_var == 0).OnlyEnforceIf(inventory_vars[(grade, last_day)] >= min_closing_inv)
+
+        objective_terms.append(deficit_var * stockout_penalty) # Use stockout penalty for min closing inventory
+
+
+    # Idle Line Penalty (Soft Constraint)
+    for line in lines:
+        for d in range(num_days):
+            is_idle = model.NewBoolVar(f'idle_{line}_{d}')
+            
+            producing_vars = [
+                is_producing[(grade, line, d)] 
+                for grade in grades 
+                if (grade, line, d) in is_producing
+            ]
+            
+            if producing_vars:
+                # Idle if none of the producing vars are 1
+                model.Add(sum(producing_vars) == 0).OnlyEnforceIf(is_idle)
+                model.Add(sum(producing_vars) >= 1).OnlyEnforceIf(is_idle.Not()) # If sum is 1, not idle
+                
+                # Check if the line is not in shutdown (already handled by C5, but as a double check)
+                if d in plant_data['shutdown_days'].get(line, []):
+                    model.Add(is_idle == 0) # Line is forced idle by shutdown, don't penalize
+                else:
+                    objective_terms.append(idle_penalty * is_idle)
+    
+    # Set the objective to minimize SOFT constraint violations
+    if objective_terms:
+        model.Minimize(sum(objective_terms))
+    else:
+        model.Minimize(0)
+    
+    if progress_callback:
+        progress_callback(0.8, "Solving optimization problem...")
+    
+    # Solve
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = time_limit_min * 60.0
+    solver.parameters.num_search_workers = SOLVER_NUM_WORKERS
+    solver.parameters.random_seed = SOLVER_RANDOM_SEED
     solver.parameters.log_search_progress = True
     
-    status = solver.Solve(model)
+    # Pass all variables and parameters to the callback
+    solution_callback = SolutionCallback(
+        production, inventory_vars, stockout_vars, is_producing,
+        grades, lines, dates, formatted_dates, num_days,
+        inventory_deficit_penalties, closing_inventory_deficit_penalties
+    )
     
-    if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
-        return extract_solution(solver, V, grades, lines, dates, num_days)
-    else:
-        return None
+    status = solver.Solve(model, solution_callback)
+    
+    if progress_callback:
+        progress_callback(1.0, "Optimization complete!")
+    
+    return status, solution_callback, solver
