@@ -172,17 +172,18 @@ def build_and_solve_model(
     # Material running logic
     # =========================
     for l, info in material_running_info.items():
-        g = info["material"]
-        exp = info["expected_days"]
-
+        # Backward-compatible: info is (material, expected_days)
+        g, exp = info
+    
         if exp is None or exp == 0:
             model.Add(is_producing[(g, l, 0)] == 1)
         else:
-            for d in range(exp):
+            for d in range(min(exp, num_days)):
                 model.Add(is_producing[(g, l, d)] == 1)
-
+    
             if exp < num_days:
                 model.Add(is_producing[(g, l, exp)] == 0)
+
 
     # =========================
     # Run-length constraints
