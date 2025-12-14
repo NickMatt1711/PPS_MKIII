@@ -96,18 +96,20 @@ def build_and_solve_model(
     params: Dict,
     # ADDED: These arguments are accepted but ignored to match the app.py call
     grades: Optional[List[str]] = None,
-    progress_callback: Optional[Any] = None 
+    progress_callback: Optional[Any] = None,
+    lines: Optional[List[str]] = None,  # <-- Added to resolve TypeError
+    dates: Optional[List[Any]] = None,  # <-- Added to resolve potential future TypeError
 ) -> Optional[Dict]:
     """
     Main function to build and solve the CP-SAT model.
     """
-    # NOTE: grades and progress_callback are ignored here to maintain the 
-    # robust internal logic while satisfying the app.py call signature.
+    # NOTE: grades, progress_callback, lines, and dates are ignored here to maintain the 
+    # robust internal logic (which re-derives them) while satisfying the app.py call signature.
     
     model = cp_model.CpModel()
     
     # ---------------------------------------------------------
-    # 1. Data Preprocessing & Indexing
+    # 1. Data Preprocessing & Indexing (Internal derivation used for robustness)
     # ---------------------------------------------------------
     
     # Dates
